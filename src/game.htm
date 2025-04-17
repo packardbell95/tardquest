@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>TARDQUEST</title>
+    <style>
+        /* ===== Scrollbar CSS ===== */
+        /* Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #fff #000;
+        }
+
+        /* Chrome, Edge, and Safari */
+        *::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #000;
+            border-radius: 0px;
+            border: 0px solid #fff;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: monospace;
+            white-space: pre;
+            padding: 20px;
+            display: flex;
+            box-sizing: content-box;
+        }
+
+        a:visited,
+        a:link {
+            color: #fff;
+        }
+
+        #ui {
+            display: flex;
+        }
+
+        #game {
+            font-size: var(--viewport-font-size);
+            white-space: pre-wrap;
+            margin-bottom: auto;
+            margin-top: calc(var(--viewport-font-size) * 2);
+        }
+
+
+        #viewportContainer {
+            --viewport-font-size: 13px;
+
+            position: absolute;
+            /* or absolute/fixed if you want to float it */
+
+            left: 250px;
+            top: 140px;
+            border: 2px solid #fff;
+            padding-top: 10px;
+            padding-left: 4px;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 360px;
+            height: 338px;
+            /* Match or exceed #game's min-height */
+            overflow-y: scroll;
+            overflow-x: hidden;
+            box-sizing: content-box;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+
+        #sidePanel {
+            margin-left: 0px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #battleLog,
+        #minimap {
+            background: #000;
+            border: 2px solid #fff;
+            padding: 10px;
+            width: 570px;
+            height: auto;
+        }
+
+        #battleLog {
+            height: 90px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #minimap {
+            height: 166px;
+            width: 216px;
+            padding: 2px;
+            white-space: pre;
+            font-size: 12px;
+            border-top: 0;
+        }
+
+        #inputBox {
+            display: none;
+            /* This ensures it's hidden initially */
+        }
+
+        #inputBox input {
+            background-color: black;
+            color: white;
+            border: none;
+            font-size: 13px;
+            width: 210px;
+            z-index: 9;
+        }
+
+        .menus {
+            position: absolute;
+            border: solid white 2px;
+            border-top: 0;
+            top: 314px;
+            width: 212px;
+            height: 163px;
+            overflow: hidden;
+            /*
+                overflow-y: auto;
+                overflow-x: hidden;
+            */
+            line-height: 0px;
+            font-size: 10px;
+            padding: 4px;
+            padding-top: 9px;
+        }
+
+        #controls {
+            top: 4px;
+            left: 4px;
+            font-size: 14px;
+            white-space: pre;
+        }
+
+
+        .player {
+            color: #2aff00;
+        }
+
+        .wall {
+            color: #e9ff00;
+        }
+
+        .explored {
+            color: #fff;
+        }
+
+        .unexplored {
+            color: #545454;
+        }
+
+        .exit {
+            color: #f00;
+        }
+  </style>
+</head>
+<body>
+  <div class="menus">
+        <a href="https://xxthemilkman69xx.neocities.org/dungeon/title.html">TITLE</a>  <a href="https://xxthemilkman69xx.neocities.org/dungeon/game.html">RESET</a>  <a href="#" id="musicToggle">Toggle Music</a>
+
+        <p><strong>KEY</strong></p>
+        <p><span class="wall">#</span> Wall</p><p>  It's a fucking wall</p>
+        <p>H Healing Tile</p><p>  Heals you to max HP</p>
+        <p><span class="exit">E</span> Exit</p><p>  Touch to exit the dungeon</p>
+        <p><span class="player">↑</span> Player</p><p>  It's you!</p>
+        <p><span class="unexplored">?</span> Undiscovered</p><p>  Who knows</p>
+      </div>
+  <div id="viewportContainer">
+    <div id="controls">↑/W:      Move Forward
+↓/S:      Move Backward
+←/A, →/D: Turn</div>
+    <div id="game">||     /#####\     ||
+||    |#######|    ||
+||   |#########|   ||
+||                 ||
+||   Welcome to... ||
+++----TARDQUEST----++
+LV: 1  EXP: 0/10  N
+HP: 20 DEF: 5 PRS: 5
+</div>
+  </div>
+  <div id="ui">
+    <div id="sidePanel">
+      <div id="battleLog"></div>
+      <div id="minimap"><span class="unexplored">?</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="wall">#</span><span class="player">↑</span><span class="explored">.</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br></div>
+      <div id="inputBox">
+        <input type="text" id="persuadeInput" placeholder="Say your piece...">
+      </div>
+    </div>
+  </div>
+
+    <script>
+        const
+            WIDTH = 30,
+            HEIGHT = 11;
+        const DIRECTIONS = ['N', 'E', 'S', 'W'];
+        const DX = [0, 1, 0, -1];
+        const DY = [-1, 0, 1, 0];
+        let seenTiles = Array.from({
+            length: HEIGHT
+        }, () => Array(WIDTH).fill(false));
+
+        const player = {
+            x: 1,
+            y: 1,
+            dir: 0,
+            hp: 20,
+            maxHp: 20,
+            defense: 5,
+            persuasion: 5,
+            exp: 0,
+            level: 1,
+            inCombat: false,
+            levelingUp: false
+        };
+
+        const enemies = [
+            {
+                name: "SNAIL SENTINEL",
+                hp: 10,
+                attack: [1, 4]
+            },
+            {
+                name: "STUPID DOG",
+                hp: 6,
+                attack: [2, 5]
+            },
+            {
+                name: "KEEPER OF THE TOILET BOWL",
+                hp: 15,
+                attack: [3, 7]
+            }
+        ];
+
+        const sfx = {
+            footstep: new Audio('https://files.catbox.moe/o0ka4u.wav'),
+            turn: new Audio('https://files.catbox.moe/heur5b.wav'),
+            attack: new Audio('https://files.catbox.moe/0ggtsm.wav'),
+            run: new Audio('https://files.catbox.moe/f6eyem.wav'),
+            persuade: new Audio('https://files.catbox.moe/e7n7vo.wav'),
+        };
+
+        const music = {
+            exploration: new Audio('https://files.catbox.moe/hmgkva.wav'),
+            battle: new Audio('https://files.catbox.moe/3ajd4i.mp3'),
+        };
+        music.exploration.loop = true;
+        music.battle.loop = true;
+
+        let currentMusic = null;
+        let currentEnemy = null;
+        let party = [];
+        let gameOver = false;
+        let awaitingPersuasionText = false;
+        let battleLog = [];
+        let MAP = [];
+        let exit = {
+            x: WIDTH - 2,
+            y: HEIGHT - 2
+        };
+
+        function generateMap() {
+            // Fill in walls
+            for (let y = 0; y < HEIGHT; y++) {
+                MAP[y] = [];
+                for (let x = 0; x < WIDTH; x++) {
+                    MAP[y][x] = '#';
+                    // Uncomment this to see the full map
+                    // seenTiles[y][x] = true;
+                }
+            }
+
+            // Carve out a path
+            let position = {
+                x: player.x,
+                y: player.y,
+            };
+
+            let stack = null;
+            do {
+                stack = carvePath([position]);
+            } while (stack === null);
+
+            for (let i in stack) {
+                MAP[stack[i].y][stack[i].x] = '.';
+            }
+
+            for (let i=0; i<10; i++) {
+                dissolveMap();
+            }
+
+            MAP[player.y][player.x] = '.';
+            MAP[exit.y][exit.x] = 'E';
+        }
+
+        function carvePath(stack) {
+            const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+            const step = Math.random() < 0.5 ? -1 : 1;
+            let lastPosition = stack[stack.length - 1];
+
+            for (let i=0; i<2; i++) {
+                const nextPosition = {
+                    x: lastPosition.x + (direction === 'horizontal' ? step : 0),
+                    y: lastPosition.y + (direction === 'vertical' ? step : 0),
+                };
+
+                const atMapEdge =
+                    nextPosition.x === 0 ||
+                    nextPosition.y === 0 ||
+                    nextPosition.x === WIDTH - 1 ||
+                    nextPosition.y === HEIGHT - 1;
+
+                if (atMapEdge) {
+                    return null;
+                }
+
+                const alreadyVisited = stack.find((cell) =>
+                    cell.x === nextPosition.x && cell.y === nextPosition.y
+                );
+                if (alreadyVisited) {
+                    return null;
+                }
+
+                stack.push(nextPosition);
+
+                const reachedEnd =
+                    nextPosition.x === exit.x &&
+                    nextPosition.y === exit.y;
+
+                if (reachedEnd) {
+                    return stack;
+                }
+
+                lastPosition = nextPosition;
+            }
+
+            let result;
+            for (let i=0; i<100; i++) {
+                result = carvePath(stack);
+                if (result) {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        function dissolveMap() {
+            let dissolvePoints = [];
+            for (let y = 2; y < HEIGHT - 2; y++) {
+                for (let x = 2; x < WIDTH - 2; x++) {
+                    const isDissolvePoint = MAP[y][x] === '#' && (
+                        (MAP[y - 1][x] === '#' ? 1 : 0) +
+                        (MAP[y + 1][x] === '#' ? 1 : 0) +
+                        (MAP[y][x - 1] === '#' ? 1 : 0) +
+                        (MAP[y][x + 1] === '#' ? 1 : 0)
+                    ) === 3;
+
+                    if (isDissolvePoint) {
+                        dissolvePoints.push({x, y});
+                    }
+                }
+            }
+
+            const totalPointsToDissolve = Math.floor(dissolvePoints.length / 2);
+            if (totalPointsToDissolve < 1) {
+                return;
+            }
+
+            for (let i = 0; i < totalPointsToDissolve; i++) {
+                const index = Math.floor(Math.random() * dissolvePoints.length);
+                const dissolvePoint = dissolvePoints[index];
+                MAP[dissolvePoint.y][dissolvePoint.x] = '.';
+                dissolvePoints = dissolvePoints.splice(index, 1);
+            }
+        }
+
+        function updateSeenTiles() {
+            seenTiles[player.y][player.x] = true;
+            for (let i = 0; i < 4; i++) {
+                let nx = player.x + DX[i];
+                let ny = player.y + DY[i];
+                if (nx >= 0 && ny >= 0 && nx < WIDTH && ny < HEIGHT) {
+                    seenTiles[ny][nx] = true;
+                }
+            }
+        }
+
+        function drawMinimap() {
+            let out = '';
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    let tile = '';
+                    let tileClass = '';
+                    if (x === player.x && y === player.y) {
+                        const arrow = ['↑', '→', '↓', '←'][player.dir];
+                        tile = arrow;
+                        tileClass = 'player';
+                    } else if (!seenTiles[y][x]) {
+                        tile = '?';
+                        tileClass = 'unexplored';
+                    } else {
+                        switch (MAP[y][x]) {
+                            case '#':
+                                tile = '#';
+                                tileClass = 'wall';
+                                break;
+                            case 'E':
+                                tile = 'E';
+                                tileClass = 'exit';
+                                break;
+                            default:
+                                tile = '.';
+                                tileClass = 'explored';
+                        }
+                    }
+                    out += `<span class="${tileClass}">${tile}</span>`;
+                }
+                out += '<br>';
+            }
+            document.getElementById('minimap').innerHTML = out;
+        }
+
+        function updateBattleLog(entry) {
+            battleLog.push(entry);
+            if (battleLog.length > 6) battleLog.shift();
+            document.getElementById("battleLog").textContent = battleLog.join("\n");
+        }
+
+        function playMusic(type) {
+            if (currentMusic === type) {
+                return;
+            }
+
+            for (let key in music) {
+                music[key].pause();
+                music[key].currentTime = 0;
+            }
+            currentMusic = type;
+            music[type].play().catch(err => console.error("Error playing music", err));
+        }
+
+        function playSFX(name) {
+            if (sfx[name]) {
+                sfx[name].currentTime = 0;
+                sfx[name].play();
+            }
+        }
+
+        function wallSlice(d) {
+            return {
+                3: "||     /#####\\     ||\n",
+                2: "||    |#######|    ||\n",
+                1: "||   |#########|   ||\n"
+            } [d];
+        }
+
+        function corridorSlice(d) {
+            return {
+                3: "||     /     \\     ||\n",
+                2: "||    |       |    ||\n",
+                1: "||   |         |   ||\n"
+            } [d];
+        }
+
+        function exitSlice(d) {
+            return {
+                3: "||     /  E  \\     ||\n",
+                2: "||    |   E   |    ||\n",
+                1: "||   |    E    |   ||\n"
+            } [d];
+        }
+
+        function healSlice(d) {
+            return {
+                3: "||     /  +  \\     ||\n",
+                2: "||    |   +   |    ||\n",
+                1: "||   |    +    |   ||\n"
+            } [d];
+        }
+
+
+        function getEnemyArt() {
+            switch (currentEnemy?.name) {
+                case "SNAIL SENTINEL":
+                    return `
+   ___   |_|
+  /   \\_/@ @
+__\\_______^/
+      `;
+                case "STUPID DOG":
+                    return `
+/\\__/\\
+|@  @|
+|(00)|
+ )vv(
+      `;
+                case "KEEPER OF THE TOILET BOWL":
+                    return `
+   _______
+  |       |
+  |_______|=)
+ -----------         ^
+ |         |    O____|
+ \\_________/   /|    |
+    |   |       |    |
+    |___|      / \\   |
+      `;
+                default:
+                    return '';
+            }
+        }
+
+
+        function render() {
+            updateSeenTiles();
+            drawMinimap();
+            let output = "";
+
+            // If the player is leveling up
+            if (player.levelingUp) {
+                output +=
+                    "=== LEVEL UP! ===\nChoose a stat to increase:\nH: Max HP\nD: Defense\nP: Persuasion\n";
+                document.getElementById('game').textContent = output;
+                return;
+            }
+
+            // If the player is in combat
+            if (player.inCombat) {
+                output +=
+                    `+-----------------------+\n${getEnemyArt()}\n+-----------------------+\n`;
+                output +=
+                    `A wild ${currentEnemy.name} appears\n\nLVL: ${player.level}  EXP: ${player.exp}/${player.level * 10}\n`;
+                output +=
+                    `HP: ${player.hp} DEF: ${player.defense} PRS: ${player.persuasion}\n`;
+
+                if (party.length > 0) {
+                    output += `\nYour Party:\n`;
+                    party.forEach(member => {
+                        output += `- ${member.name} (HP: ${member.hp})\n`;
+                    });
+                }
+
+                if (!awaitingPersuasionText) {
+                    document.getElementById("controls").textContent =
+                        "A: Attack | R: Run | P: Persuade";
+                }
+            } else {
+                // Exploration mode
+                for (let d = 3; d >= 1; d--) {
+                    let tx = player.x + DX[player.dir] * d;
+                    let ty = player.y + DY[player.dir] * d;
+                    let tile = getTile(tx, ty);
+                    output += tile === '#' ? wallSlice(d) :
+                        tile === 'E' ? exitSlice(d) :
+                        tile === 'H' ? healSlice(d) :
+                        corridorSlice(d);
+                }
+                output +=
+                    "||                 ||\n||   Welcome to... ||\n++----TARDQUEST----++\n";
+                output +=
+                    `LV: ${player.level}  EXP: ${player.exp}/${player.level * 10}  ${DIRECTIONS[player.dir]}\n`;
+                output +=
+                    `HP: ${player.hp} DEF: ${player.defense} PRS: ${player.persuasion}\n`;
+
+                if (party.length > 0) {
+                    output += `\nYour Party:\n`;
+                    party.forEach(member => {
+                        output += `- ${member.name} (HP: ${member.hp})\n`;
+                    });
+                }
+
+                document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn";
+            }
+
+            if (player.hp <= 0) {
+                output += '\nGood job! You died.';
+                gameOver = true;
+                setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
+            }
+
+            document.getElementById('game').textContent = output;
+        }
+
+        function getTile(x, y) {
+            return x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT ? '#' : MAP[y][x];
+        }
+
+        function move(direction) {
+            if (player.inCombat || gameOver) {
+                return;
+            }
+
+            playSFX('footstep');
+            let nx, ny, randomEncounterChance;
+            if (direction === 'forward') {
+                nx = player.x + DX[player.dir];
+                ny = player.y + DY[player.dir];
+                randomEncounterChance = 0.25;
+            } else {
+                nx = player.x - DX[player.dir];
+                ny = player.y - DY[player.dir];
+                randomEncounterChance = 0.5;
+            }
+
+            const tile = getTile(nx, ny);
+            if (tile !== '#') {
+                player.x = nx;
+                player.y = ny;
+                if (tile === 'H') {
+                    player.hp = player.maxHp;
+                    MAP[ny][nx] = '.';
+                    updateBattleLog("You healed to full HP.");
+                } else if (tile === 'E') {
+                    updateBattleLog("You actually won? what");
+                    gameOver = true;
+                    setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html",
+                        5000);
+                } else if (Math.random() < 0.2) {
+                    MAP[ny][nx] = 'H';
+                } else if (Math.random() < randomEncounterChance) {
+                    startEncounter();
+                }
+            }
+        }
+
+        function turnLeft() {
+            if (player.inCombat || gameOver) {
+                return;
+            }
+
+            playSFX('turn');
+            player.dir = (player.dir + 3) % 4;
+        }
+
+        function turnRight() {
+            if (player.inCombat || gameOver) {
+                return;
+            }
+
+            playSFX('turn');
+            player.dir = (player.dir + 1) % 4;
+        }
+
+        function startEncounter() {
+            currentEnemy = structuredClone(
+                enemies[Math.floor(Math.random() * enemies.length)]
+            );
+
+            player.inCombat = true;
+            party.forEach(member => member.healedThisBattle = false);
+            updateBattleLog(`A wild ${currentEnemy.name} appears`);
+            playMusic('battle');
+        }
+
+        function playerAttack() {
+            if (!player.inCombat || awaitingPersuasionText) {
+                return;
+            }
+
+            playSFX('attack');
+            const dmg = Math.floor(Math.random() * 5) + 2;
+            currentEnemy.hp -= dmg;
+            updateBattleLog(`You deal ${dmg} HP to ${currentEnemy.name}`);
+
+            party.forEach(member => {
+                if (!member.healedThisBattle && Math.random() < 0.2) {
+                    let healed = Math.ceil(player.maxHp * 0.02);
+                    player.hp = Math.min(player.maxHp, player.hp + healed);
+                    member.healedThisBattle = true;
+                    updateBattleLog(
+                        `${member.name} tended your wounds (+${healed} HP)`
+                    );
+                }
+            });
+
+            if (currentEnemy.hp <= 0) {
+                updateBattleLog(
+                    `${currentEnemy.name} was beaten to a fucking pulp!`);
+                player.inCombat = false;
+                currentEnemy = null;
+                player.exp += 5;
+                playMusic('exploration');
+                party = party.filter(a => a.hp > 0);
+                if (player.exp >= player.level * 10) {
+                    player.level++;
+                    player.levelingUp = true;
+                }
+            } else {
+                enemyAttack();
+            }
+            render();
+        }
+
+        function enemyAttack() {
+            const targetAllies = party.filter(a => a.hp > 0);
+            if (targetAllies.length && Math.random() < 0.5) {
+                const target = targetAllies[
+                    Math.floor(Math.random() * targetAllies.length)
+                ];
+                const dmg = Math.floor(Math.random() * 4) + 1;
+                target.hp -= dmg;
+                updateBattleLog(
+                    `${currentEnemy.name} deals ${dmg} HP to your ${target.name}`
+                );
+                if (target.hp <= 0) {
+                    updateBattleLog(`Your ${target.name} has been eviscerated...`);
+                }
+            } else {
+                const dmg = Math.floor(Math.random() * 5) + 1;
+                player.hp -= dmg;
+                updateBattleLog(`${currentEnemy.name} deals ${dmg} HP to you`);
+                if (player.hp <= 0) gameOver = true;
+            }
+        }
+
+        function tryRun() {
+            if (!player.inCombat || awaitingPersuasionText) {
+                return;
+            }
+
+            playSFX('run');
+            if (Math.random() < 0.5) {
+                updateBattleLog("YOU: Gee willikers, I'm outta here!");
+                player.inCombat = false;
+                currentEnemy = null;
+                playMusic('exploration');
+            } else {
+                updateBattleLog("Couldn't escape!");
+                enemyAttack();
+            }
+            render();
+        }
+
+        function tryPersuade(e) {
+            e?.preventDefault();
+            playSFX('persuade');
+            awaitingPersuasionText = true;
+
+            // Show the input box
+            document.getElementById("inputBox").style.display = "flex";
+
+            const input = document.getElementById("persuadeInput");
+            input.value = "";
+            input.focus();
+        }
+
+        document.getElementById("persuadeInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                const message = e.target.value;
+                updateBattleLog(`YOU: "${message}"`);
+                e.target.value = "";
+                awaitingPersuasionText = false;
+
+                // Hide the input box after persuasion
+                document.getElementById("inputBox").style.display = "none";
+
+                if (Math.random() < 0.4) {
+                    const newAlly = {
+                        name: currentEnemy.name,
+                        hp: Math.floor(currentEnemy.hp / 2),
+                        healedThisBattle: false
+                    };
+                    party.push(newAlly);
+                    updateBattleLog(
+                        `${currentEnemy.name} joined your party!`);
+                    player.inCombat = false;
+                    currentEnemy = null;
+                    playMusic('exploration');
+                } else {
+                    updateBattleLog(`${currentEnemy.name} doesn't care...`);
+                    enemyAttack();
+                }
+                render();
+            }
+        });
+
+
+        function handleLevelUpInput(key) {
+            switch (key) {
+                case 'h':
+                    player.maxHp += 5;
+                    break;
+                case 'd':
+                    player.defense += 2;
+                    break;
+                case 'p':
+                    player.persuasion += 2;
+                    break;
+                default:
+                    return;
+            }
+            player.hp = player.maxHp;
+            player.exp = 0;
+            player.levelingUp = false;
+            render();
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver || awaitingPersuasionText) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (player.levelingUp) {
+                return handleLevelUpInput(key);
+            }
+
+            if (player.inCombat) {
+                // Combat mode
+                switch (key) {
+                    case 'a':
+                        playerAttack();
+                        break;
+                    case 'r':
+                        tryRun();
+                        break;
+                    case 'p':
+                        tryPersuade(e);
+                        break;
+                }
+            } else {
+                // Exploration mode
+                switch (key) {
+                    case 'w':
+                    case 'arrowup':
+                        move('forward');
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        move('backward');
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        turnLeft();
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        turnRight();
+                        break;
+                }
+            }
+
+            render();
+        });
+
+        generateMap();
+        playMusic('exploration');
+        render();
+        let musicEnabled = true;
+
+        document.getElementById('musicToggle').addEventListener('click', () => {
+            musicEnabled = !musicEnabled;
+            const btn = document.getElementById('musicToggle');
+            btn.textContent = musicEnabled ? "Toggle Music" :
+                "Toggle Music";
+
+            for (let key in music) {
+                music[key].muted = !musicEnabled;
+                if (!musicEnabled) {
+                    music[key].pause();
+                } else if (currentMusic) {
+                    music[currentMusic].play().catch(err => console.error(
+                        "Music play error:", err));
+                }
+            }
+        });
+    </script>
+
+
+</body></html>
