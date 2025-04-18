@@ -175,7 +175,7 @@
         <p><strong>KEY</strong></p>
         <p><span class="wall">#</span> Wall</p><p>  It's a fucking wall</p>
         <p>H Healing Tile</p><p>  Heals you to max HP</p>
-        <p><span class="exit">E</span> Exit</p><p>  Touch to exit the dungeon</p>
+        <p><span class="exit">E</span> Exit</p><p>  Touch to exit the current floor</p>
         <p><span class="player">↑</span> Player</p><p>  It's you!</p>
         <p><span class="unexplored">?</span> Undiscovered</p><p>  Who knows</p>
       </div>
@@ -267,6 +267,7 @@ HP: 20 DEF: 5 PRS: 5
         let gameOver = false;
         let awaitingPersuasionText = false;
         let battleLog = [];
+        let floor = 1;
         let MAP = [];
         let exit = {
             x: WIDTH - 2,
@@ -274,11 +275,14 @@ HP: 20 DEF: 5 PRS: 5
         };
 
         function generateMap() {
+            setExitPosition();
+
             // Fill in walls
             for (let y = 0; y < HEIGHT; y++) {
                 MAP[y] = [];
                 for (let x = 0; x < WIDTH; x++) {
                     MAP[y][x] = '#';
+                    seenTiles[y][x] = false;
                     // Uncomment this to see the full map
                     // seenTiles[y][x] = true;
                 }
@@ -305,6 +309,46 @@ HP: 20 DEF: 5 PRS: 5
 
             MAP[player.y][player.x] = '.';
             MAP[exit.y][exit.x] = 'E';
+        }
+
+        /**
+         * Places the exit based on the player's current position
+         *
+         * This will set the exit in either the opposite side or opposite corner
+         * of where the player currently resides on the map
+         */
+        function setExitPosition() {
+            const margin = 2;
+            const possiblePositions = [['x', 'y'], ['x'], ['y']];
+            const positions = possiblePositions[
+                Math.floor(Math.random() * possiblePositions.length)
+            ];
+
+            for (let p in positions) {
+                if (positions[p] === 'x') {
+                    const exitOffsetX = Math.round(Math.random() * Math.round(WIDTH / 10));
+                    if (player.x < WIDTH / margin) {
+                        // Player is on the left side of the map
+                        // Put the exit on the right
+                        exit.x = WIDTH - margin - exitOffsetX;
+                    } else {
+                        // Player is on the right side of the map
+                        // Put the exit on the left
+                        exit.x = margin + exitOffsetX;
+                    }
+                } else {
+                    const exitOffsetY = Math.round(Math.random() * Math.round(HEIGHT / 10));
+                    if (player.y < HEIGHT / margin) {
+                        // Player is at the top of the map
+                        // Put the exit on the bottom
+                        exit.y = HEIGHT - margin - exitOffsetY;
+                    } else {
+                        // Player is at the bottom of the map
+                        // Put the exit on the top
+                        exit.y = margin + exitOffsetY;
+                    }
+                }
+            }
         }
 
         function carvePath(stack) {
@@ -588,7 +632,7 @@ __\\_______^/
             }
 
             if (player.hp <= 0) {
-                output += '\nGood job! You died.';
+                output += `\nGood job! You died on floor ${floor}.`;
                 gameOver = true;
                 setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
             }
@@ -626,10 +670,7 @@ __\\_______^/
                     MAP[ny][nx] = '.';
                     updateBattleLog("You healed to full HP.");
                 } else if (tile === 'E') {
-                    updateBattleLog("You actually won? what");
-                    gameOver = true;
-                    setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html",
-                        5000);
+                    descend();
                 } else if (Math.random() < 0.2) {
                     MAP[ny][nx] = 'H';
                 } else if (Math.random() < randomEncounterChance) {
@@ -789,7 +830,6 @@ __\\_______^/
             }
         });
 
-
         function handleLevelUpInput(key) {
             switch (key) {
                 case 'h':
@@ -857,6 +897,34 @@ __\\_______^/
 
             render();
         });
+
+        function descend() {
+            floor++;
+            updateBattleLog(`Descending into floor ${floor}...`);
+            if (Math.random() < 0.5) {
+                const flavorText = [
+                    "The stale air fills your nostrils.",
+                    "You feel like you're being watched.",
+                    "A chill creeps down your spine.",
+                    "Your torch flickers strangely in the windless corridor.",
+                    "A draft carries the scent of mildew, ash, and Lemon Pledge.",
+                    "You hear a dog yipping in the distance.",
+                    "An empty snail shell lies cracked on the stairs.",
+                    "A growl echoes through the hallway.",
+                    "A faint smell of urinal cake wafts up from below.",
+                    "You hear a toilet flush in the distance.",
+                    "There's graffiti on the wall: \"Beware the snail!\"",
+                    "You smell something pungent. Possibly ancient evil. Possibly cheese.",
+                    "You hear a groan, as if the dungeon itself is aware of your presence.",
+                    "Somewhere ahead, something clanks. You sincerely hope it's plumbing.",
+                    "You hear a plunger plunging menacingly.",
+                ];
+
+                const logLine = flavorText[Math.floor(Math.random() * flavorText.length)];
+                updateBattleLog(logLine);
+            }
+            generateMap();
+        }
 
         generateMap();
         playMusic('exploration');
