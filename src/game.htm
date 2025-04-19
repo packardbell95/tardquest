@@ -518,13 +518,15 @@ const enemies = [
 
         function updateBattleLog(entry) {
             battleLog.push(entry);
-            if (battleLog.length > 50) {
-                battleLog.shift();
-            }
-
+            const battleLogElement = document.getElementById("battleLog");
             const entryElement = document.createElement("div");
             entryElement.append(entry);
-            document.getElementById("battleLog").prepend(entryElement);
+            battleLogElement.prepend(entryElement);
+
+            if (battleLog.length > 50) {
+                battleLog.shift();
+                battleLogElement.removeChild(battleLogElement.lastElementChild);
+            }
         }
 
         function playMusic(type) {
