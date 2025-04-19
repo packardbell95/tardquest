@@ -227,8 +227,7 @@ HP: 20 DEF: 5 PRS: 5
             inCombat: false,
             levelingUp: false
         };
-
-        const enemies = [
+const enemies = [
             {
                 name: "SNAIL SENTINEL",
                 hp: 10,
@@ -240,9 +239,24 @@ HP: 20 DEF: 5 PRS: 5
                 attack: [2, 5]
             },
             {
+                name: "WANG RAT",
+                hp: 5,
+                attack: [3, 5]
+            },
+            {
                 name: "KEEPER OF THE TOILET BOWL",
                 hp: 15,
                 attack: [3, 7]
+            },
+            {
+                name: "MYSTERIOUS SCOOTER",
+                hp: 12,
+                attack: [3, 6]
+            },
+            {
+                name: "BADASS FLAMING SKELETON",
+                hp: 13,
+                attack: [4, 9]
             }
         ];
 
@@ -564,6 +578,39 @@ __\\_______^/
     |   |       |    |
     |___|      / \\   |
       `;
+                      case "MYSTERIOUS SCOOTER":
+                    return `
+       [~~]=====[~~]
+            ||
+            ||
+            ||
+            ||
+(O)======(O)===O)  
+      `;
+                            case "BADASS FLAMING SKELETON":
+                    return `
+      |\\ |\\ |\\ |\\ |\\ /| /|
+          _______         /|
+    |\\   /   \\   \\      /|
+  |\\     | [ ]  [ ]        /|
+    |\\   |        |          /|
+         \\ \\=====/     //   /|
+ |\\       \\______\\    ()/    /|
+  |\\       ||        //   /|
+     O==[==||==]====O      /|
+|\\   || [==||==]       /| /|
+  |\\ () [==||==]  /|  /| /|
+      `;
+                      case "WANG RAT":
+    return `
+       ______
+    (|/      \\|)
+      \\O    o/___________________
+     --\\-()-/--        __|__|__|_\\
+        \\__/__________/
+        _|  _|  _|  _|
+    `;
+
                 default:
                     return '';
             }
