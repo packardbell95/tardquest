@@ -96,6 +96,10 @@
             height: 90px;
             overflow: hidden;
             text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-x: hidden;
+            overflow-y: scroll;
         }
 
         #minimap {
@@ -196,7 +200,7 @@ HP: 20 DEF: 5 PRS: 5
   <div id="ui">
     <div id="sidePanel">
       <div id="battleLog"></div>
-      <div id="minimap"><span class="unexplored">?</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="wall">#</span><span class="player">↑</span><span class="explored">.</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br></div>
+      <div id="minimap"><span class="unexplored">?</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="wall">#</span><span class="player">↑</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="explored">.</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br></div>
       <div id="inputBox">
         <input type="text" id="persuadeInput" placeholder="Say your piece...">
       </div>
@@ -227,7 +231,6 @@ HP: 20 DEF: 5 PRS: 5
             inCombat: false,
             levelingUp: false
         };
-
         const enemies = [
             {
                 name: "SNAIL SENTINEL",
@@ -240,10 +243,36 @@ HP: 20 DEF: 5 PRS: 5
                 attack: [2, 5]
             },
             {
+                name: "WANG RAT",
+                hp: 5,
+                attack: [3, 5]
+            },
+            {
                 name: "KEEPER OF THE TOILET BOWL",
                 hp: 15,
                 attack: [3, 7]
+            },
+            {
+                name: "MYSTERIOUS SCOOTER",
+                hp: 12,
+                attack: [3, 6]
+            },
+            {
+                name: "BADASS FLAMING SKELETON",
+                hp: 13,
+                attack: [4, 9]
             }
+        ];
+        const defeatMessages = [
+          "was beaten to a fucking pulp!",
+          "had their bollocks slammed against the hard concrete wall!",
+          "got their face scraped along the floor!",
+          "died from a nosebleed. Alright then?",
+          "was pulverized before they could activate ther anti-retard orbital laser.",
+          "pancaked their diaper and died from embarassment. Gross.",
+          "left the server.",
+          "picked their nose, and died picking their nose.",
+          "got bored and jumped down a 'bottomless' hole. You heard a scream, and the sound was absolutely not faint."
         ];
 
         const sfx = {
@@ -480,10 +509,21 @@ HP: 20 DEF: 5 PRS: 5
         }
 
         function updateBattleLog(entry) {
-            battleLog.push(entry);
-            if (battleLog.length > 6) battleLog.shift();
-            document.getElementById("battleLog").textContent = battleLog.join("\n");
-        }
+    battleLog.push(entry);
+    if (battleLog.length > 50) battleLog.shift();
+
+    const logContainer = document.getElementById("battleLog");
+    logContainer.innerHTML = [...battleLog]
+        .slice()
+        .reverse()
+        .map((msg, i) => {
+            const lightness = 100 - (i * 15); // Fade effect
+            const color = `hsl(0, 0%, ${Math.max(lightness, 50)}%)`; // Prevent it from getting too dark
+            return `<div style="color: ${color};">${msg}</div>`;
+        })
+        .join("");
+}
+
 
         function playMusic(type) {
             if (currentMusic === type) {
@@ -564,6 +604,39 @@ __\\_______^/
     |   |       |    |
     |___|      / \\   |
       `;
+                      case "MYSTERIOUS SCOOTER":
+                    return `
+       [~~]=====[~~]
+            ||
+            ||
+            ||
+            ||
+(O)======(O)===O)  
+      `;
+                            case "BADASS FLAMING SKELETON":
+                    return `
+      |\\ |\\ |\\ |\\ |\\ /| /|
+          _______         /|
+    |\\   /   \\   \\      /|
+  |\\     | [ ]  [ ]        /|
+    |\\   |        |          /|
+         \\ \\=====/     //   /|
+ |\\       \\______\\    ()/    /|
+  |\\       ||        //   /|
+     O==[==||==]====O      /|
+|\\   || [==||==]       /| /|
+  |\\ () [==||==]  /|  /| /|
+      `;
+                      case "WANG RAT":
+    return `
+       ______
+    (|/      \\|)
+      \\O    o/___________________
+     --\\-()-/--        __|__|__|_\\
+        \\__/__________/
+        _|  _|  _|  _|
+    `;
+
                 default:
                     return '';
             }
@@ -730,8 +803,8 @@ __\\_______^/
             });
 
             if (currentEnemy.hp <= 0) {
-                updateBattleLog(
-                    `${currentEnemy.name} was beaten to a fucking pulp!`);
+                const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
+                updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
                 player.inCombat = false;
                 currentEnemy = null;
                 player.exp += 5;
