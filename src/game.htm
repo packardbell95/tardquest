@@ -231,37 +231,66 @@ HP: 20 DEF: 5 PRS: 5
         };
 
           const enemies = [
-
             {
+                id: "snailSentinel",
                 name: "SNAIL SENTINEL",
                 hp: 10,
                 attack: [1, 4]
             },
             {
+                id: "stupidDog",
                 name: "STUPID DOG",
                 hp: 6,
                 attack: [2, 5]
             },
             {
+                id: "wangRat",
                 name: "WANG RAT",
                 hp: 5,
                 attack: [3, 5]
             },
             {
+                id: "keeperOfTheToiletBowl",
                 name: "KEEPER OF THE TOILET BOWL",
                 hp: 15,
                 attack: [3, 7]
             },
             {
+                id: "mysteriousScooter",
                 name: "MYSTERIOUS SCOOTER",
                 hp: 12,
                 attack: [3, 6]
             },
             {
+                id: "badassFlamingSkeleton",
                 name: "BADASS FLAMING SKELETON",
                 hp: 13,
                 attack: [4, 9]
-            }
+            },
+            {
+                id: "fridgeOfForgottenLeftovers",
+                name: "FRIDGE OF FORGOTTEN LEFTOVERS",
+                hp: 20,
+                attack: [2, 3]
+            },
+            {
+                id: "lughead",
+                name: "LUGHEAD",
+                hp: 18,
+                attack: [2, 6]
+            },
+            {
+                id: "pissedOffPoultry",
+                name: "PISSED-OFF POULTRY",
+                hp: 7,
+                attack: [2, 5]
+            },
+            {
+                id: "krampusElf",
+                name: "KRAMPUS ELF",
+                hp: 7,
+                attack: [3, 4]
+            },
         ];
         const defeatMessages = [
           "was beaten to a fucking pulp!",
@@ -579,21 +608,21 @@ HP: 20 DEF: 5 PRS: 5
 
 
         function getEnemyArt() {
-            switch (currentEnemy?.name) {
-                case "SNAIL SENTINEL":
+            switch (currentEnemy?.id) {
+                case "snailSentinel":
                     return `
    ___   |_|
   /   \\_/@ @
 __\\_______^/
-      `;
-                case "STUPID DOG":
+`;
+                case "stupidDog":
                     return `
 /\\__/\\
 |@  @|
 |(00)|
  )vv(
-      `;
-                case "KEEPER OF THE TOILET BOWL":
+`;
+                case "keeperOfTheToiletBowl":
                     return `
    _______
   |       |
@@ -603,17 +632,17 @@ __\\_______^/
  \\_________/   /|    |
     |   |       |    |
     |___|      / \\   |
-      `;
-                      case "MYSTERIOUS SCOOTER":
+`;
+                case "mysteriousScooter":
                     return `
        [~~]=====[~~]
             ||
             ||
             ||
             ||
-(O)======(O)===O)  
-      `;
-                            case "BADASS FLAMING SKELETON":
+(O)======(O)===O)
+`;
+                case "badassFlamingSkeleton":
                     return `
       |\\ |\\ |\\ |\\ |\\ /| /|
           _______         /|
@@ -626,16 +655,66 @@ __\\_______^/
      O==[==||==]====O      /|
 |\\   || [==||==]       /| /|
   |\\ () [==||==]  /|  /| /|
-      `;
-                      case "WANG RAT":
-    return `
+`;
+                case "wangRat":
+                    return `
        ______
     (|/      \\|)
       \\O    o/___________________
      --\\-()-/--        __|__|__|_\\
         \\__/__________/
         _|  _|  _|  _|
-    `;
+`;
+
+                case "fridgeOfForgottenLeftovers":
+                    return `
+            ___.---+.
+       .--''       | '.
+       |           |  |
+       |     ______|  |
+       |----'      |  |
+       |       [==]|  |
+       |           |  |
+       |           |  |
+       |___        |  |
+           '---.___|.-'
+`;
+
+                case "lughead":
+                    return `
+            .--.
+            |oO|
+         ..-\\TT/-..
+        '          '
+        ( )      ( )
+        ( |------| )
+        'W . || . W'
+          (__)(__)
+`;
+
+                case "pissedOffPoultry":
+                    return `
+    .        .--.
+    |\\      .-:;
+    : \\    < O |'
+     \\ \\   ;    '.
+      \\/\\-(    (. '
+      (_)/ -_    ' ;
+             '-; ;
+            /|\\/|\\
+`;
+
+                case "krampusElf":
+                    return `
+             *
+            / \\
+        .-./___\\.-.
+         \\/ o o \\/
+         (__(_)__)
+           / : \\
+          (_|-|_)
+          (__|__)
+`;
 
                 default:
                     return '';
