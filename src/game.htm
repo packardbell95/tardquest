@@ -184,7 +184,8 @@
   <div id="viewportContainer">
     <div id="controls">↑/W:      Move Forward
 ↓/S:      Move Backward
-←/A, →/D: Turn</div>
+←/A, →/D: Turn
+T:     Talk</div>
     <div id="game">||     /#####\     ||
 ||    |#######|    ||
 ||   |#########|   ||
@@ -324,6 +325,7 @@ HP: 20 DEF: 5 PRS: 5
         let party = [];
         let gameOver = false;
         let awaitingPersuasionText = false;
+        let speakingOutsideCombat = false;
         let battleLog = [];
         let floor = 1;
         let MAP = [];
@@ -780,7 +782,7 @@ __\\_______^/
                     });
                 }
 
-                document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn";
+                document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk";
             }
 
             if (player.hp <= 0) {
@@ -943,14 +945,20 @@ __\\_______^/
             e?.preventDefault();
             playSFX('persuade');
             awaitingPersuasionText = true;
-
+        
             // Show the input box
-            document.getElementById("inputBox").style.display = "flex";
-
+            const inputBox = document.getElementById("inputBox");
             const input = document.getElementById("persuadeInput");
+            inputBox.style.display = "flex";
             input.value = "";
-            input.focus();
+        
+            // Delay the focus slightly to ensure it's applied after rendering
+            setTimeout(() => {
+                input.focus();
+            }, 10);
         }
+
+
 
         document.getElementById("persuadeInput").addEventListener("keydown", e => {
             if (e.key === "Enter") {
@@ -958,13 +966,37 @@ __\\_______^/
                 updateBattleLog(`YOU: "${message}"`);
                 e.target.value = "";
                 awaitingPersuasionText = false;
-        
-                // Hide the input box after persuasion
                 document.getElementById("inputBox").style.display = "none";
         
-                // PRS scaling
-                const baseChance = 0.1; // 10%
-                const prsBonus = player.persuasion * 0.03; // +3% per PRS point
+                // ======== Speaking Outside Combat ========
+                if (speakingOutsideCombat) {
+                    speakingOutsideCombat = false;
+        
+                    if (party.length > 0) {
+                        const responder = party[Math.floor(Math.random() * party.length)];
+                        const responses = [
+                            "--you pull out your translator-- 'Wow! Please shut the fuck up.'",
+                            "--you pull out your translator-- 'Just so you know, we're not even...'",
+                            "--you pull out your translator-- 'You can't be fucking serious...'",
+                            "--you pull out your translator-- 'I've come for your pickleeee...'",
+                            "--you pull out your translator-- 'Hey that's cool and all, but have you ever played SpongeBob SquarePants: Revenge of the Flying Dutchman on the Sony PlayStation 2?",
+                            "--they're too busy playing Burnout Revenge on the PS2--",
+                            "--they're too busy sexting your mom--",
+                            "--they pick their own nose, and then they pick YOUR nose...--",
+                            "--you notice them scratching their nuts whilst ignoring your interjection--",
+                        ];
+
+                        const reply = responses[Math.floor(Math.random() * responses.length)];
+                        updateBattleLog(`${responder.name}: ${reply}`);
+                    }
+        
+                    render();
+                    return;
+                }
+        
+                // ======== Persuasion During Combat ========
+                const baseChance = 0.1;
+                const prsBonus = player.persuasion * 0.03;
                 const totalChance = Math.min(0.9, baseChance + prsBonus);
         
                 if (Math.random() < totalChance) {
@@ -974,7 +1006,7 @@ __\\_______^/
                         healedThisBattle: false
                     };
                     party.push(newAlly);
-                    updateBattleLog(`${currentEnemy.name} joined your party!`);
+                    updateBattleLog(`${currentEnemy.name} is now following your trail of sweat.`);
                     player.inCombat = false;
                     currentEnemy = null;
                     playMusic('exploration');
@@ -986,6 +1018,7 @@ __\\_______^/
                 render();
             }
         });
+
 
 
         function handleLevelUpInput(key) {
@@ -1007,17 +1040,17 @@ __\\_______^/
             player.levelingUp = false;
             render();
         }
-
         document.addEventListener('keydown', e => {
             if (gameOver || awaitingPersuasionText) {
                 return;
             }
-
+        
             const key = e.key.toLowerCase();
+        
             if (player.levelingUp) {
                 return handleLevelUpInput(key);
             }
-
+        
             if (player.inCombat) {
                 // Combat mode
                 switch (key) {
@@ -1031,30 +1064,37 @@ __\\_______^/
                         tryPersuade(e);
                         break;
                 }
-            } else {
-                // Exploration mode
-                switch (key) {
-                    case 'w':
-                    case 'arrowup':
-                        move('forward');
-                        break;
-                    case 's':
-                    case 'arrowdown':
-                        move('backward');
-                        break;
-                    case 'a':
-                    case 'arrowleft':
-                        turnLeft();
-                        break;
-                    case 'd':
-                    case 'arrowright':
-                        turnRight();
-                        break;
-                }
+        } else {
+            // Exploration mode
+            switch (key) {
+                case 'w':
+                case 'arrowup':
+                    move('forward');
+                    break;
+                case 's':
+                case 'arrowdown':
+                    move('backward');
+                    break;
+                case 'a':
+                case 'arrowleft':
+                    turnLeft();
+                    break;
+                case 'd':
+                case 'arrowright':
+                    turnRight();
+                    break;
+                case 't':
+                    speakingOutsideCombat = true;
+                    tryPersuade(e);
+                    break;
             }
+        }
 
+        
             render();
         });
+
+
 
         function descend() {
             floor++;
