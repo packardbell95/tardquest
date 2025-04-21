@@ -958,29 +958,35 @@ __\\_______^/
                 updateBattleLog(`YOU: "${message}"`);
                 e.target.value = "";
                 awaitingPersuasionText = false;
-
+        
                 // Hide the input box after persuasion
                 document.getElementById("inputBox").style.display = "none";
-
-                if (Math.random() < 0.4) {
+        
+                // PRS scaling
+                const baseChance = 0.1; // 10%
+                const prsBonus = player.persuasion * 0.03; // +3% per PRS point
+                const totalChance = Math.min(0.9, baseChance + prsBonus);
+        
+                if (Math.random() < totalChance) {
                     const newAlly = {
                         name: currentEnemy.name,
                         hp: Math.floor(currentEnemy.hp / 2),
                         healedThisBattle: false
                     };
                     party.push(newAlly);
-                    updateBattleLog(
-                        `${currentEnemy.name} joined your party!`);
+                    updateBattleLog(`${currentEnemy.name} joined your party!`);
                     player.inCombat = false;
                     currentEnemy = null;
                     playMusic('exploration');
                 } else {
-                    updateBattleLog(`${currentEnemy.name} doesn't care...`);
+                    updateBattleLog(`${currentEnemy.name} really, quite genuinely, does not care...`);
                     enemyAttack();
                 }
+        
                 render();
             }
         });
+
 
         function handleLevelUpInput(key) {
             switch (key) {
