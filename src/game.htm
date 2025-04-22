@@ -570,10 +570,10 @@
         }
 
         function revealMapSpot(x, y, radius) {
-            for (let py=y-radius; py<y+radius; py++) {
-                for (let px=x-radius; px<x+radius; px++) {
-                    if (typeof MAP[y]?.[x] !== 'undefined') {
-                        seenTiles[y][x] = true;
+            for (let py=y-radius; py<=y+radius; py++) {
+                for (let px=x-radius; px<=x+radius; px++) {
+                    if (typeof MAP[py]?.[px] !== 'undefined') {
+                        seenTiles[py][px] = true;
                     }
                 }
             }
