@@ -33,6 +33,7 @@ Good job, idiot. You have fallen into a dungeon and have no way out except to ge
 | S/↓ | Move Backward |
 | A/← | Turn Left |
 | D/→ | Turn Right |
+| T   | Talk |
 
 ### Battle
 | Key | Action |
