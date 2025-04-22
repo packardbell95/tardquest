@@ -47,9 +47,38 @@
             font-size: var(--viewport-font-size);
             white-space: pre-wrap;
             margin-bottom: auto;
-            margin-top: calc(var(--viewport-font-size) * 2);
+            margin-top: var(--viewport-font-size);
         }
 
+        #inventory:not(.hidden),
+        #merchant:not(.hidden) {
+            width: 100%;
+            height: 100%;
+            white-space: pre-wrap;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #inventoryList,
+        #merchantItemList {
+            flex-grow: 1;
+        }
+
+        #inventoryList::before,
+        #merchantItemList::before {
+            content: "[INVENTORY]";
+            display: block;
+            text-align: center;
+        }
+
+        #merchantItemList::before {
+            content: "[The MERCHANT]";
+        }
+
+        #inventoryItemDescription,
+        #merchantItemDescription {
+            min-height: 90px;
+        }
 
         #viewportContainer {
             --viewport-font-size: 13px;
@@ -109,6 +138,10 @@
             border-top: 0;
         }
 
+        .hidden {
+            display: none;
+        }
+
         #inputBox {
             display: none;
             /* This ensures it's hidden initially */
@@ -148,7 +181,6 @@
             white-space: pre;
         }
 
-
         .player {
             color: #2aff00;
         }
@@ -168,6 +200,18 @@
         .exit {
             color: #f00;
         }
+
+        .merchant {
+            color: #f7f;
+        }
+
+        .tooExpensive {
+            color: #f00;
+        }
+
+        .alignRight {
+            text-align: right;
+        }
   </style>
 </head>
 <body>
@@ -175,31 +219,31 @@
         <a href="https://xxthemilkman69xx.neocities.org/dungeon/title.html">TITLE</a>  <a href="https://xxthemilkman69xx.neocities.org/dungeon/game.html">RESET</a>  <a href="#" id="musicToggle">Toggle Music</a>
 
         <p><strong>KEY</strong></p>
-        <p><span class="wall">#</span> Wall</p><p>  It's a fucking wall</p>
-        <p>H Healing Tile</p><p>  Heals you to max HP</p>
-        <p><span class="exit">E</span> Exit</p><p>  Touch to exit the current floor</p>
-        <p><span class="player">↑</span> Player</p><p>  It's you!</p>
-        <p><span class="unexplored">?</span> Undiscovered</p><p>  Who knows</p>
+        <p><span class="player">↑</span> Player: It's you!</p>
+        <p><span class="wall">#</span> Wall: It's a fucking wall</p>
+        <p><span class="exit">E</span> Exit: Touch to descend further</p>
+        <p><span class="merchant">M</span> Merchant: Sells you crap</p>
+        <p>H Healing Tile: Heals you to max HP</p>
+        <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
       </div>
   <div id="viewportContainer">
-    <div id="controls">↑/W:      Move Forward
-↓/S:      Move Backward
-←/A, →/D: Turn
-T:     Talk</div>
-    <div id="game">||     /#####\     ||
-||    |#######|    ||
-||   |#########|   ||
-||                 ||
-||   Welcome to... ||
-++----TARDQUEST----++
-LV: 1  EXP: 0/10  N
-HP: 20 DEF: 5 PRS: 5
-</div>
+    <div id="controls"></div>
+    <div id="game"></div>
+    <div id="inventory" class="hidden">
+        <div id="inventoryList"></div>
+        <div id="inventoryItemDescription"></div>
+        <div class="alignRight">Press Escape to exit the Inventory</div>
+    </div>
+    <div id="merchant" class="hidden">
+        <div id="merchantItemList"></div>
+        <div id="merchantItemDescription"></div>
+        <div class="alignRight">Press Escape to leave the Merchant</div>
+    </div>
   </div>
   <div id="ui">
     <div id="sidePanel">
       <div id="battleLog"></div>
-      <div id="minimap"><span class="unexplored">?</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="wall">#</span><span class="player">↑</span><span class="wall">#</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="explored">.</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><span class="unexplored">?</span><br></div>
+      <div id="minimap"></div>
       <div id="inputBox">
         <input type="text" id="persuadeInput" placeholder="Say your piece...">
       </div>
@@ -220,6 +264,7 @@ HP: 20 DEF: 5 PRS: 5
         const player = {
             x: 1,
             y: 1,
+            bitcoins: 0,
             dir: 0,
             hp: 20,
             maxHp: 20,
@@ -228,69 +273,102 @@ HP: 20 DEF: 5 PRS: 5
             exp: 0,
             level: 1,
             inCombat: false,
-            levelingUp: false
+            isVisitingMerchant: false,
+            levelingUp: false,
+            inventory: {
+                isOpen: false,
+                selectionIndex: 0,
+                contents: {
+                    canOfHamms: 2,
+                    cupOfLean: 2,
+                    torch: 2,
+                    brickOfC4: 2,
+                    dowsingRod: 2,
+                },
+            },
+            weapon: 'pointyStick',
+            armor: 'graphicTee',
         };
 
-          const enemies = [
+        const merchant = {
+            isAlive: true,
+            isActiveOnFloor: false,
+            x: WIDTH - 2,
+            y: HEIGHT - 2,
+            selectionIndex: 0,
+            items: [],
+        };
+
+        const enemies = [
             {
                 id: "snailSentinel",
                 name: "SNAIL SENTINEL",
                 hp: 10,
-                attack: [1, 4]
+                attack: [1, 4],
+                bitcoins: 4,
             },
             {
                 id: "stupidDog",
                 name: "STUPID DOG",
                 hp: 6,
-                attack: [2, 5]
+                attack: [2, 5],
+                bitcoins: 3,
             },
             {
                 id: "wangRat",
                 name: "WANG RAT",
                 hp: 5,
-                attack: [3, 5]
+                attack: [3, 5],
+                bitcoins: 2,
             },
             {
                 id: "keeperOfTheToiletBowl",
                 name: "KEEPER OF THE TOILET BOWL",
                 hp: 15,
-                attack: [3, 7]
+                attack: [3, 7],
+                bitcoins: 5,
             },
             {
                 id: "mysteriousScooter",
                 name: "MYSTERIOUS SCOOTER",
                 hp: 12,
-                attack: [3, 6]
+                attack: [3, 6],
+                bitcoins: 4,
             },
             {
                 id: "badassFlamingSkeleton",
                 name: "BADASS FLAMING SKELETON",
                 hp: 13,
-                attack: [4, 9]
+                attack: [4, 9],
+                bitcoins: 4,
             },
             {
                 id: "fridgeOfForgottenLeftovers",
                 name: "FRIDGE OF FORGOTTEN LEFTOVERS",
                 hp: 20,
-                attack: [2, 3]
+                attack: [2, 3],
+                bitcoins: 3,
             },
             {
                 id: "lughead",
                 name: "LUGHEAD",
                 hp: 18,
-                attack: [2, 6]
+                attack: [2, 6],
+                bitcoins: 4,
             },
             {
                 id: "pissedOffPoultry",
                 name: "PISSED-OFF POULTRY",
                 hp: 7,
-                attack: [2, 5]
+                attack: [2, 5],
+                bitcoins: 2,
             },
             {
                 id: "krampusElf",
                 name: "KRAMPUS ELF",
                 hp: 7,
-                attack: [3, 4]
+                attack: [3, 4],
+                bitcoins: 4,
             },
         ];
         const defeatMessages = [
@@ -305,12 +383,368 @@ HP: 20 DEF: 5 PRS: 5
           "got bored and jumped down a 'bottomless' hole. You heard a scream, and the sound was absolutely not faint."
         ];
 
+        const weapons = {
+            pointyStick: {
+                name: "POINTY STICK",
+                description: "A stick that fell off of a tree somewhere",
+                damage: {
+                    base: 2,
+                    randomMultiplier: 5,
+                },
+                price: {
+                    buy: 20,
+                    sell: 5,
+                },
+            },
+            wiffleBallBat: {
+                name: "WIFFLE BALL BAT",
+                description: "A hollow bat made of plastic",
+                damage: {
+                    base: 3,
+                    randomMultiplier: 6,
+                },
+                price: {
+                    buy: 50,
+                    sell: 20,
+                },
+            },
+            nunchucks: {
+                name: "NUNCHUCKS",
+                description: "Two pieces of wood connected by a chain",
+                damage: {
+                    base: 6,
+                    randomMultiplier: 9,
+                },
+                price: {
+                    buy: 100,
+                    sell: 50,
+                },
+            },
+            atlatlSpear: {
+                name: "ATLATL SPEAR",
+                description: "A spear with a throwing lever",
+                damage: {
+                    base: 10,
+                    randomMultiplier: 11,
+                },
+                price: {
+                    buy: 400,
+                    sell: 200,
+                },
+            },
+            bludgeoningMace: {
+                name: "BLUDGEONING MACE",
+                description: "A stick with a spikey metal ball at the end of it",
+                damage: {
+                    base: 10,
+                    randomMultiplier: 14,
+                },
+                price: {
+                    buy: 500,
+                    sell: 220,
+                },
+            },
+        };
+
+        const armor = {
+            graphicTee: {
+                name: "GRAPHIC TEE",
+                description: "A t-shirt with the text 'Normal people scare me'",
+                defense: 1,
+                price: {
+                    buy: 20,
+                    sell: 5,
+                },
+            },
+            barrelWithSuspenders: {
+                name: "BARREL (with suspenders)",
+                description: "An empty barrel that covers your torso and legs somewhat. Smells like whisky too!",
+                defense: 3,
+                price: {
+                    buy: 50,
+                    sell: 30,
+                },
+            },
+            leatherArmor: {
+                name: "LEATHER ARMOR",
+                description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
+                defense: 6,
+                price: {
+                    buy: 150,
+                    sell: 25,
+                },
+            },
+            milaneseArmor: {
+                name: "MILANESE ARMOR",
+                description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
+                defense: 12,
+                price: {
+                    buy: 1000,
+                    sell: 600,
+                },
+            },
+        };
+
+        const items = {
+            canOfHamms: {
+                name: "CAN OF HAMM'S",
+                description: "A warm can of beer. Delicious..? Heals +5 HP",
+                use: () => {
+                    healPlayer(5);
+                    updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
+                },
+                merchantStockChance: 0.9,
+                price: {
+                    buy: 10,
+                    sell: 5,
+                },
+            },
+            cupOfLean: {
+                name: "CUP OF LEAN",
+                description: "A crusty styrofoam cup filled with a strange purple syrup. Heals +20 HP",
+                use: () => {
+                    healPlayer(20);
+                    updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
+                },
+                merchantStockChance: 0.5,
+                price: {
+                    buy: 30,
+                    sell: 15,
+                },
+            },
+            dowsingRod: {
+                name: "DOWSING ROD",
+                description: "A Y-shaped stick. Reveals the exit of the current floor",
+                use: () => {
+                    useDowsingRod();
+                    updateBattleLog("The exit has been revealed!");
+                },
+                merchantStockChance: 0.8,
+                price: {
+                    buy: 20,
+                    sell: 10,
+                },
+            },
+            torch: {
+                name: "TORCH",
+                description: "An unlit torch. Using it will reveal the map of the current floor",
+                use: () => {
+                    revealMap();
+                    playSFX('torch');
+                    updateBattleLog("Lo, the way has been made clear!");
+                },
+                merchantStockChance: 0.8,
+                price: {
+                    buy: 60,
+                    sell: 30,
+                },
+            },
+            brickOfC4: {
+                name: "BRICK OF C-4",
+                description: "An incendiary plastic explosive. Great for turning anything into nothing real quick",
+                use: () => useC4(),
+                merchantStockChance: 0.5,
+                price: {
+                    buy: 300,
+                    sell: 150,
+                },
+            },
+        };
+
+        function healPlayer(hp) {
+            player.hp = Math.min(player.maxHp, player.hp + hp);
+        }
+
+        function useDowsingRod() {
+            for (let y=0; y<MAP.length; y++) {
+                for (let x=0; x<MAP[y].length; x++) {
+                    if (MAP[y][x] === 'E') {
+                        revealMapSpot(x, y, 1);
+
+                        // Since there's only one exit per floor, we can render and exit early
+                        render();
+                        return;
+                    }
+                }
+            }
+        }
+
+        function revealMapSpot(x, y, radius) {
+            for (let py=y-radius; py<y+radius; py++) {
+                for (let px=x-radius; px<x+radius; px++) {
+                    if (typeof MAP[y]?.[x] !== 'undefined') {
+                        seenTiles[y][x] = true;
+                    }
+                }
+            }
+        }
+
+        function revealMap() {
+            seenTiles = seenTiles.map((col) => col.map((cell) => true));
+            render();
+        }
+
+        function useC4() {
+            playSFX('explosion');
+
+            if (player.inCombat) {
+                const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
+                currentEnemy.hp -= dmg;
+                updateBattleLog(`You exploded the shit out of ${currentEnemy.name} for ${dmg} HP!!!`);
+                endOfPlayerTurn();
+            } else {
+                explodePath();
+                updateBattleLog("KABOOM! The dungeon walls crumble like charred toast!");
+                render();
+            }
+        }
+
+        function explodePath() {
+            let xMin = player.x, xMax = player.x,
+                yMin = player.y, yMax = player.y;
+
+            switch (DIRECTIONS[player.dir]) {
+                case 'N':
+                    xMin--;
+                    xMax++;
+                    yMin -= 3;
+                    break;
+                case 'E':
+                    yMin--;
+                    yMax++;
+                    xMax += 3;
+                    break;
+                case 'S':
+                    xMin--;
+                    xMax++;
+                    yMax += 3;
+                    break;
+                case 'W':
+                    yMin--;
+                    yMax++;
+                    xMin -= 3;
+                    break;
+            }
+
+            for (let y=yMin; y<=yMax; y++) {
+                for (let x=xMin; x<=xMax; x++) {
+                    breakMap(x, y);
+                }
+            }
+        }
+
+        function breakMap(x, y) {
+            if (coordsInBounds(x, y)) {
+                if (MAP[y][x] === '#') {
+                    MAP[y][x] = '.';
+                }
+
+                const killedMerchant =
+                    merchant.isAlive &&
+                    merchant.isActiveOnFloor &&
+                    merchant.x === x && merchant.y === y;
+                if (killedMerchant) {
+                    merchant.isAlive = false;
+                    merchant.isActiveOnFloor = false;
+                    playSFX('scream');
+                    updateBattleLog('MERCHANT: "AIEEEEEEEEEEEEEE!"');
+                    updateBattleLog('HOLY SHIT! The merchant has been vaporized into a bloody red mist!');
+                }
+
+                seenTiles[y][x] = true;
+            }
+        }
+
+        function openInventory() {
+            player.inventory.isOpen = true;
+            player.inventory.selectionIndex = 0;
+
+            document.querySelectorAll('#controls, #game').forEach((el) => {
+                el.classList.add('hidden');
+            });
+
+            document.getElementById('inventory').classList.remove('hidden');
+            document.getElementById('inventoryItemDescription').textContent = '';
+
+            if (isEmpty(player.inventory.contents)) {
+                const flavorText = [
+                    'Your pockets echo',
+                    'You own nothing. Klaus Schwab would be proud',
+                    'You got nothin\', bub',
+                    'A moth flutters out from your pockets',
+                    'What are you doing staring into an empty bag? Go get some items! This is a dungeon crawler for fuck\'s sake!!!',
+                    'Your inventory is full of your hopes, dreams, and amibitions',
+                ];
+                document.getElementById('inventoryList').textContent = flavorText[Math.floor(Math.random() * flavorText.length)];
+            }
+
+            renderInventory();
+        }
+
+        function closeInventory() {
+            document.getElementById('inventory').classList.add('hidden');
+
+            document.querySelectorAll('#controls, #game').forEach((el) => {
+                el.classList.remove('hidden');
+            });
+
+            player.inventory.isOpen = false;
+        }
+
+        function visitTheMerchant() {
+            player.isVisitingMerchant = true;
+            merchant.items.selectionIndex = 0;
+
+            document.querySelectorAll('#controls, #game').forEach((el) => {
+                el.classList.add('hidden');
+            });
+
+            document.getElementById('merchant').classList.remove('hidden');
+            document.getElementById('merchantItemDescription').textContent = '';
+
+            updateBattleLog('MERCHANT: "Welcome to SlobMart!"');
+
+            renderMerchant();
+        }
+
+        function setMerchantWares() {
+            const itemKeys = Object.keys(items);
+            if (itemKeys.length === 0) {
+                console.error("Where the fuck did the items go?");
+                return;
+            }
+
+            do {
+                merchant.items = [];
+                itemKeys.forEach((key) => {
+                    if (Math.random() < items[key].merchantStockChance) {
+                        merchant.items.push(key);
+                    }
+                });
+            } while (merchant.items.length === 0);
+        }
+
+        function leaveTheMerchant() {
+            document.getElementById('merchant').classList.add('hidden');
+
+            document.querySelectorAll('#controls, #game').forEach((el) => {
+                el.classList.remove('hidden');
+            });
+
+            player.isVisitingMerchant = false;
+            updateBattleLog('MERCHANT: "Thank you. Come again!"');
+        }
+
         const sfx = {
             footstep: new Audio('https://files.catbox.moe/o0ka4u.wav'),
             turn: new Audio('https://files.catbox.moe/heur5b.wav'),
             attack: new Audio('https://files.catbox.moe/0ggtsm.wav'),
             run: new Audio('https://files.catbox.moe/f6eyem.wav'),
             persuade: new Audio('https://files.catbox.moe/e7n7vo.wav'),
+            explosion: new Audio('https://files.catbox.moe/jhaqzp.mp3'),
+            scream: new Audio('https://files.catbox.moe/j2oegh.mp3'),
+            kaching: new Audio('https://files.catbox.moe/02ht6d.mp3'),
+            torch: new Audio('https://files.catbox.moe/b2jzsn.mp3'),
         };
 
         const music = {
@@ -369,6 +803,11 @@ HP: 20 DEF: 5 PRS: 5
 
             MAP[player.y][player.x] = '.';
             MAP[exit.y][exit.x] = 'E';
+
+            merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
+            if (merchant.isActiveOnFloor) {
+                setMerchant();
+            }
         }
 
         /**
@@ -409,6 +848,34 @@ HP: 20 DEF: 5 PRS: 5
                     }
                 }
             }
+        }
+
+        function setMerchant() {
+            setMerchantWares();
+            setMerchantPosition();
+        }
+
+        function setMerchantPosition() {
+            let attempts = 0;
+
+            do {
+                const x = Math.floor(Math.random() * WIDTH);
+                const y = Math.floor(Math.random() * HEIGHT);
+
+                const isEmptySpace =
+                    MAP[y][x] === '.' &&
+                    (y !== exit.y && x !== exit.x) &&
+                    (y !== player.y && x !== player.x);
+
+                if (isEmptySpace) {
+                    merchant.x = x;
+                    merchant.y = y;
+                    return;
+                }
+            } while (attempts++ < 1000);
+
+            // If we couldn't place the merchant, don't activate the merchant
+            merchant.isActiveOnFloor = false;
         }
 
         function carvePath(stack) {
@@ -518,18 +985,23 @@ HP: 20 DEF: 5 PRS: 5
                         tile = '?';
                         tileClass = 'unexplored';
                     } else {
-                        switch (MAP[y][x]) {
-                            case '#':
-                                tile = '#';
-                                tileClass = 'wall';
-                                break;
-                            case 'E':
-                                tile = 'E';
-                                tileClass = 'exit';
-                                break;
-                            default:
-                                tile = '.';
-                                tileClass = 'explored';
+                        if (isMerchantTile(x, y)) {
+                            tile = 'M';
+                            tileClass = 'merchant';
+                        } else {
+                            switch (MAP[y][x]) {
+                                case '#':
+                                    tile = '#';
+                                    tileClass = 'wall';
+                                    break;
+                                case 'E':
+                                    tile = 'E';
+                                    tileClass = 'exit';
+                                    break;
+                                default:
+                                    tile = '.';
+                                    tileClass = 'explored';
+                            }
                         }
                     }
                     out += `<span class="${tileClass}">${tile}</span>`;
@@ -539,21 +1011,27 @@ HP: 20 DEF: 5 PRS: 5
             document.getElementById('minimap').innerHTML = out;
         }
 
-        function updateBattleLog(entry) {
-    battleLog.push(entry);
-    if (battleLog.length > 50) battleLog.shift();
+        function isMerchantTile(x, y) {
+            return merchant.isActiveOnFloor && x === merchant.x && y === merchant.y;
+        }
 
-    const logContainer = document.getElementById("battleLog");
-    logContainer.innerHTML = [...battleLog]
-        .slice()
-        .reverse()
-        .map((msg, i) => {
-            const lightness = 100 - (i * 15); // Fade effect
-            const color = `hsl(0, 0%, ${Math.max(lightness, 50)}%)`; // Prevent it from getting too dark
-            return `<div style="color: ${color};">${msg}</div>`;
-        })
-        .join("");
-}
+        function updateBattleLog(entry) {
+            battleLog.push(entry);
+            if (battleLog.length > 50) {
+                battleLog.shift();
+            }
+
+            const logContainer = document.getElementById("battleLog");
+            logContainer.innerHTML = [...battleLog]
+                .slice()
+                .reverse()
+                .map((msg, i) => {
+                    const lightness = 100 - (i * 15); // Fade effect
+                    const color = `hsl(0, 0%, ${Math.max(lightness, 50)}%)`; // Prevent it from getting too dark
+                    return `<div style="color: ${color};">${msg}</div>`;
+                })
+                .join("");
+        }
 
 
         function playMusic(type) {
@@ -769,11 +1247,10 @@ __\\_______^/
                         corridorSlice(d);
                 }
                 output +=
-                    "||                 ||\n||   Welcome to... ||\n++----TARDQUEST----++\n";
-                output +=
-                    `LV: ${player.level}  EXP: ${player.exp}/${player.level * 10}  ${DIRECTIONS[player.dir]}\n`;
-                output +=
-                    `HP: ${player.hp} DEF: ${player.defense} PRS: ${player.persuasion}\n`;
+                    "||                 ||\n||   Welcome to... ||\n++----TARDQUEST----++\n" +
+                    `LV: ${player.level}  EXP: ${player.exp}/${player.level * 10}  ${DIRECTIONS[player.dir]}\n` +
+                    `HP: ${player.hp} DEF: ${player.defense} PRS: ${player.persuasion}\n` +
+                    `       BTC: ${player.bitcoins}`;
 
                 if (party.length > 0) {
                     output += `\nYour Party:\n`;
@@ -782,7 +1259,7 @@ __\\_______^/
                     });
                 }
 
-                document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk";
+                document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
             }
 
             if (player.hp <= 0) {
@@ -794,12 +1271,77 @@ __\\_______^/
             document.getElementById('game').textContent = output;
         }
 
+        function renderInventory() {
+            if (isEmpty(player.inventory.contents)) {
+                return;
+            }
+
+            let i = 0;
+            let inventoryText = "";
+
+            for (const property in player.inventory.contents) {
+                const isSelectedLine = i++ === player.inventory.selectionIndex;
+                const dotPattern = items[property].name.length % 2 ? ' .' : '. ';
+
+                const inventoryLine =
+                    (isSelectedLine ? "▶ " : "  ") +
+                    (items[property].name + dotPattern.repeat(10)).substr(0, 20) +
+                    `${player.inventory.contents[property]}x\n`;
+
+                inventoryText += inventoryLine;
+
+                if (isSelectedLine) {
+                    document.getElementById('inventoryItemDescription').textContent = items[property].description;
+                }
+            }
+
+            document.getElementById('inventoryList').textContent = inventoryText;
+        }
+
+        function renderMerchant() {
+            let i = 0;
+            let itemHtml = player.bitcoins > 0
+                ? `You have ${player.bitcoins} BTC in your wallet\n\n`
+                : "Your wallet is emptier than a lughead's skull. But you can still look around\n\n";
+
+            merchant.items.forEach((property) => {
+                const isSelectedLine = i++ === merchant.selectionIndex;
+                const itemTooExpensive = items[property].price.buy > player.bitcoins;
+                const dotPattern = items[property].name.length % 2 ? ' .' : '. ';
+
+                const itemLine =
+                    (isSelectedLine ? "▶ " : "  ") +
+                    (itemTooExpensive ? '<span class="tooExpensive">' : '<span>') +
+                    (items[property].name + dotPattern.repeat(10)).substr(0, 20) +
+                    `${items[property].price.buy} BTC</span>\n`;
+
+                itemHtml += itemLine;
+
+                if (isSelectedLine) {
+                    document.getElementById('merchantItemDescription').textContent = items[property].description;
+                }
+            });
+
+            document.getElementById('merchantItemList').innerHTML = itemHtml;
+        }
+
+        function isEmpty(obj) {
+            for (let i in obj) {
+                return false;
+            }
+            return true;
+        }
+
         function getTile(x, y) {
-            return x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT ? '#' : MAP[y][x];
+            return !coordsInBounds(x, y) ? '#' : MAP[y][x];
+        }
+
+        function coordsInBounds(x, y) {
+            return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
         }
 
         function move(direction) {
-            if (player.inCombat || gameOver) {
+            if (player.isVisitingMerchant || player.inCombat || gameOver) {
                 return;
             }
 
@@ -823,6 +1365,8 @@ __\\_______^/
                     player.hp = player.maxHp;
                     MAP[ny][nx] = '.';
                     updateBattleLog("You healed to full HP.");
+                } else if (isMerchantTile(nx, ny)) {
+                    visitTheMerchant();
                 } else if (tile === 'E') {
                     descend();
                 } else if (Math.random() < 0.2) {
@@ -868,10 +1412,14 @@ __\\_______^/
             }
 
             playSFX('attack');
-            const dmg = Math.floor(Math.random() * 5) + 2;
+            const playerWeapon = weapons[player.weapon];
+            const dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
             currentEnemy.hp -= dmg;
             updateBattleLog(`You deal ${dmg} HP to ${currentEnemy.name}`);
+            endOfPlayerTurn();
+        }
 
+        function endOfPlayerTurn() {
             party.forEach(member => {
                 if (!member.healedThisBattle && Math.random() < 0.2) {
                     let healed = Math.ceil(player.maxHp * 0.02);
@@ -884,11 +1432,14 @@ __\\_______^/
             });
 
             if (currentEnemy.hp <= 0) {
+                const exp = 5;
                 const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
                 updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
+                updateBattleLog(`You gained +${exp} EXP and ${currentEnemy.bitcoins} BTC`);
                 player.inCombat = false;
+                player.bitcoins += currentEnemy.bitcoins;
                 currentEnemy = null;
-                player.exp += 5;
+                player.exp += exp;
                 playMusic('exploration');
                 party = party.filter(a => a.hp > 0);
                 if (player.exp >= player.level * 10) {
@@ -898,6 +1449,7 @@ __\\_______^/
             } else {
                 enemyAttack();
             }
+
             render();
         }
 
@@ -916,7 +1468,8 @@ __\\_______^/
                     updateBattleLog(`Your ${target.name} has been eviscerated...`);
                 }
             } else {
-                const dmg = Math.floor(Math.random() * 5) + 1;
+                const playerArmor = armor[player.armor];
+                const dmg = Math.round((Math.floor(Math.random() * 5) + 1) / Math.max(Math.round(Math.random() * playerArmor.defense), 1));
                 player.hp -= dmg;
                 updateBattleLog(`${currentEnemy.name} deals ${dmg} HP to you`);
                 if (player.hp <= 0) gameOver = true;
@@ -1040,18 +1593,138 @@ __\\_______^/
             player.levelingUp = false;
             render();
         }
+
+        function handleInventoryInput(key) {
+            const idx = player.inventory.selectionIndex;
+            const items = Object.keys(player.inventory.contents);
+
+            switch (key) {
+                case 'i':
+                case 'escape':
+                    closeInventory();
+                    break;
+                case 'w':
+                case 'arrowup':
+                    player.inventory.selectionIndex = idx === 0
+                        ? items.length - 1
+                        : idx - 1;
+                    break;
+                case 's':
+                case 'arrowdown':
+                    player.inventory.selectionIndex = idx === items.length - 1
+                        ? 0
+                        : idx + 1;
+                    break;
+                case ' ':
+                case 'e':
+                case 'enter':
+                    useItem(items[player.inventory.selectionIndex]);
+                    closeInventory();
+                    if (currentEnemy && currentEnemy.hp > 0) {
+                        enemyAttack();
+                        render();
+                    }
+
+                    break;
+            }
+
+            renderInventory();
+            return;
+        }
+
+        function useItem(itemName) {
+            items[itemName].use();
+
+            player.inventory.contents[itemName]--;
+            if (player.inventory.contents[itemName] <= 0) {
+                delete player.inventory.contents[itemName];
+            }
+        }
+
+        function handleMerchantInput(key) {
+            const idx = merchant.selectionIndex;
+            const items = merchant.items;
+
+            switch (key) {
+                case 'escape':
+                    leaveTheMerchant();
+                    break;
+                case 'w':
+                case 'arrowup':
+                    merchant.selectionIndex = idx === 0
+                        ? items.length - 1
+                        : idx - 1;
+                    break;
+                case 's':
+                case 'arrowdown':
+                    merchant.selectionIndex = idx === items.length - 1
+                        ? 0
+                        : idx + 1;
+                    break;
+                case ' ':
+                case 'e':
+                case 'enter':
+                    buyItem(items[idx]);
+                    break;
+            }
+
+            renderMerchant();
+            return;
+        }
+
+        function buyItem(itemKey) {
+            const item = items?.[itemKey];
+            if (!item) {
+                console.error(`${itemKey} doesn't exist!`);
+                return;
+            }
+
+            if (player.bitcoins < item.price.buy) {
+                updateBattleLog('MERCHANT: "Too bad, kid. Come back when you get some coin!"');
+                return;
+            }
+
+            player.bitcoins -= item.price.buy;
+            player.inventory[itemKey] = (player.inventory?.[itemKey] || 0) + 1;
+
+            playSFX('kaching');
+
+            const purchaseFlavorText = [
+                "HAHA! You won't regret it!",
+                "Don't forget: NO REFUNDS!",
+                "You won't find a better deal than this!",
+            ];
+
+            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+            updateBattleLog(`MERCHANT: "${merchantText}"`);
+
+            const itemText = getArticle(item.name) + ' ' + item.name;
+            updateBattleLog(`You just bought ${itemText}`);
+        }
+
+        function getArticle(noun) {
+            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an' : 'a';
+        }
+
         document.addEventListener('keydown', e => {
             if (gameOver || awaitingPersuasionText) {
                 return;
             }
-        
+
             const key = e.key.toLowerCase();
-        
+
             if (player.levelingUp) {
-                return handleLevelUpInput(key);
-            }
-        
-            if (player.inCombat) {
+                handleLevelUpInput(key);
+                return;
+            } else if (player.isVisitingMerchant) {
+                handleMerchantInput(key);
+                return;
+            } else if (player.inventory.isOpen) {
+                handleInventoryInput(key);
+                return;
+            } else if (key === 'i') {
+                openInventory();
+            } else if (player.inCombat) {
                 // Combat mode
                 switch (key) {
                     case 'a':
@@ -1064,33 +1737,32 @@ __\\_______^/
                         tryPersuade(e);
                         break;
                 }
-        } else {
-            // Exploration mode
-            switch (key) {
-                case 'w':
-                case 'arrowup':
-                    move('forward');
-                    break;
-                case 's':
-                case 'arrowdown':
-                    move('backward');
-                    break;
-                case 'a':
-                case 'arrowleft':
-                    turnLeft();
-                    break;
-                case 'd':
-                case 'arrowright':
-                    turnRight();
-                    break;
-                case 't':
-                    speakingOutsideCombat = true;
-                    tryPersuade(e);
-                    break;
+            } else {
+                // Exploration mode
+                switch (key) {
+                    case 'w':
+                    case 'arrowup':
+                        move('forward');
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        move('backward');
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        turnLeft();
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        turnRight();
+                        break;
+                    case 't':
+                        speakingOutsideCombat = true;
+                        tryPersuade(e);
+                        break;
+                }
             }
-        }
 
-        
             render();
         });
 
