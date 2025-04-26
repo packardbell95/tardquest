@@ -260,7 +260,7 @@
         let seenTiles = Array.from({
             length: HEIGHT
         }, () => Array(WIDTH).fill(false));
-
+        let lastFloorBoostNotice = 0;
         const player = {
             x: 1,
             y: 1,
@@ -268,7 +268,7 @@
             dir: 0,
             hp: 20,
             maxHp: 20,
-            defense: 5,
+            defense: 3,
             persuasion: 5,
             exp: 0,
             level: 1,
@@ -590,11 +590,11 @@
             if (player.inCombat) {
                 const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
                 currentEnemy.hp -= dmg;
-                updateBattleLog(`You exploded the shit out of ${currentEnemy.name} for ${dmg} HP!!!`);
+                updateBattleLog(`You exploded the shit out of <span style="color: #EC4134;">${currentEnemy.name}</span> for <span style="color: #EC4134;">${dmg} HP</span>!!!`);
                 endOfPlayerTurn();
             } else {
                 explodePath();
-                updateBattleLog("KABOOM! The dungeon walls crumble like charred toast!");
+                updateBattleLog('<span style="color: #EC4134;">KABOOM!</span> The dungeon walls crumble like charred toast!');
                 render();
             }
         }
@@ -1091,12 +1091,27 @@
             switch (currentEnemy?.id) {
                 case "snailSentinel":
                     return `
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
    ___   |_|
   /   \\_/@ @
 __\\_______^/
 `;
                 case "stupidDog":
                     return `
+                    
+                    
+                    
+                    
+                    
+                    
+                    
 /\\__/\\
 |@  @|
 |(00)|
@@ -1104,6 +1119,9 @@ __\\_______^/
 `;
                 case "keeperOfTheToiletBowl":
                     return `
+                    
+                    
+                    
    _______
   |       |
   |_______|=)
@@ -1115,6 +1133,11 @@ __\\_______^/
 `;
                 case "mysteriousScooter":
                     return `
+                    
+                    
+                    
+                    
+                    
        [~~]=====[~~]
             ||
             ||
@@ -1138,6 +1161,10 @@ __\\_______^/
 `;
                 case "wangRat":
                     return `
+                    
+                    
+                    
+                    
        ______
     (|/      \\|)
       \\O    o/___________________
@@ -1148,6 +1175,7 @@ __\\_______^/
 
                 case "fridgeOfForgottenLeftovers":
                     return `
+                    
             ___.---+.
        .--''       | '.
        |           |  |
@@ -1162,6 +1190,9 @@ __\\_______^/
 
                 case "lughead":
                     return `
+                    
+                    
+                    
             .--.
             |oO|
          ..-\\TT/-..
@@ -1174,6 +1205,9 @@ __\\_______^/
 
                 case "pissedOffPoultry":
                     return `
+                    
+                    
+                    
     .        .--.
     |\\      .-:;
     : \\    < O |'
@@ -1186,6 +1220,9 @@ __\\_______^/
 
                 case "krampusElf":
                     return `
+                    
+                    
+                    
              *
             / \\
         .-./___\\.-.
@@ -1206,7 +1243,7 @@ __\\_______^/
             updateSeenTiles();
             drawMinimap();
             let output = "";
-
+        
             // If the player is leveling up
             if (player.levelingUp) {
                 output +=
@@ -1214,23 +1251,27 @@ __\\_______^/
                 document.getElementById('game').textContent = output;
                 return;
             }
-
+        
             // If the player is in combat
             if (player.inCombat) {
                 output +=
                     `+-----------------------+\n${getEnemyArt()}\n+-----------------------+\n`;
+              
+                // Colorized stats for combat mode (using inline span for same line)
                 output +=
-                    `A wild ${currentEnemy.name} appears\n\nLVL: ${player.level}  EXP: ${player.exp}/${player.level * 10}\n`;
-                output +=
-                    `HP: ${player.hp} DEF: ${player.defense} PRS: ${player.persuasion}\n`;
-
+                    `<span style="color: #8FC691;">LV: ${player.level}</span> ` +
+                    `<span style="color: #8FC691;">EXP: ${player.exp}/${player.level * 10} <span style="color: #F2E46A;">BTC: ${player.bitcoins}</span>` +
+                    `<p center><span style="color: #EC4134;">HP: ${player.hp}</span> ` +
+                    `<span style="color: #2297F3;">DEF: ${player.defense}</span> ` +
+                    `<span style="color: #AE61BD;">PRS: ${player.persuasion}</span><span style="color: #F2E46A;"> </p>`;
+        
                 if (party.length > 0) {
                     output += `\nYour Party:\n`;
                     party.forEach(member => {
-                        output += `- ${member.name} (HP: ${member.hp})\n`;
+                        output += `- <span style="color: #61C9F6;">${member.name}</span> <span style="color: #EC4134;">(HP: ${member.hp})</span>\n`;
                     });
                 }
-
+        
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
                         "A: Attack | R: Run | P: Persuade";
@@ -1248,28 +1289,34 @@ __\\_______^/
                 }
                 output +=
                     "||                 ||\n||   Welcome to... ||\n++----TARDQUEST----++\n" +
-                    `LV: ${player.level}  EXP: ${player.exp}/${player.level * 10}  ${DIRECTIONS[player.dir]}\n` +
-                    `HP: ${player.hp} DEF: ${player.defense} PRS: ${player.persuasion}\n` +
-                    `       BTC: ${player.bitcoins}`;
-
+                    `<span style="color: #8FC691;">LV: ${player.level}</span> ` +
+                    `<span style="color: #8FC691;">EXP: ${player.exp}/${player.level * 10}</span> <span style="color: #F2E46A;">BTC: ${player.bitcoins}</span>` +
+                    `<p center><span style="color: #EC4134;">HP: ${player.hp}</span> ` +
+                    `<span style="color: #2297F3;">DEF: ${player.defense}</span> ` +
+                    `<span style="color: #AE61BD;">PRS: ${player.persuasion}</span></p>`;
+        
                 if (party.length > 0) {
                     output += `\nYour Party:\n`;
                     party.forEach(member => {
-                        output += `- ${member.name} (HP: ${member.hp})\n`;
+                        output += `- <span style="color: #61C9F6;">${member.name}</span> <span style="color: #EC4134;">(HP: ${member.hp})\n</span>`;
                     });
                 }
-
+        
                 document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
             }
-
+        
+            // If the player is dead
             if (player.hp <= 0) {
                 output += `\nGood job! You died on floor ${floor}.`;
                 gameOver = true;
                 setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
             }
-
-            document.getElementById('game').textContent = output;
+        
+            // Render the final output to the game screen
+            document.getElementById('game').innerHTML = output; // Use innerHTML to ensure HTML is rendered
         }
+
+
 
         function renderInventory() {
             if (isEmpty(player.inventory.contents)) {
@@ -1364,7 +1411,7 @@ __\\_______^/
                 if (tile === 'H') {
                     player.hp = player.maxHp;
                     MAP[ny][nx] = '.';
-                    updateBattleLog("You healed to full HP.");
+                    updateBattleLog('<span style="color: #61C9F6;">You healed to full HP!</span>');
                 } else if (isMerchantTile(nx, ny)) {
                     visitTheMerchant();
                 } else if (tile === 'E') {
@@ -1396,15 +1443,28 @@ __\\_______^/
         }
 
         function startEncounter() {
+            // Pick a random enemy
             currentEnemy = structuredClone(
                 enemies[Math.floor(Math.random() * enemies.length)]
             );
-
+        
+            // Scale enemy stats based on floor
+            const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
+            if (floorBoost > 0) {
+                currentEnemy.hp += floorBoost * 5; // +5 HP per scaling
+                currentEnemy.attack = [
+                    currentEnemy.attack[0] + (floorBoost * 3), // Adjust attack range based on floor scaling
+                    currentEnemy.attack[1] + (floorBoost * 3)  // Adjust attack range based on floor scaling
+                ];
+                currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
+            }
+        
             player.inCombat = true;
             party.forEach(member => member.healedThisBattle = false);
-            updateBattleLog(`A wild ${currentEnemy.name} appears`);
+            updateBattleLog(`A wild <span style="color: #EC4134;">${currentEnemy.name}</span> appears!`);
             playMusic('battle');
         }
+
 
         function playerAttack() {
             if (!player.inCombat || awaitingPersuasionText) {
@@ -1426,26 +1486,33 @@ __\\_______^/
                     player.hp = Math.min(player.maxHp, player.hp + healed);
                     member.healedThisBattle = true;
                     updateBattleLog(
-                        `${member.name} tended your wounds (+${healed} HP)`
+                        `<span style="color: #61C9F6;">${member.name}</span> tended your wounds <span style="color: #61C9F6;">(+${healed} HP)</span>`
                     );
                 }
             });
 
             if (currentEnemy.hp <= 0) {
-                const exp = 5;
+                const baseExp = 5;
+                const floorBoost = Math.floor(floor / 2);
+                const exp = baseExp + (floorBoost * 5); // +5 EXP per boost
+                const bitcoinsEarned = currentEnemy.bitcoins;
+                
                 const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
                 updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
-                updateBattleLog(`You gained +${exp} EXP and ${currentEnemy.bitcoins} BTC`);
+                updateBattleLog(`You gained <span style="color: #9FD0F9;">+${exp}</span> EXP and <span style="color: #9FD0F9;">${bitcoinsEarned} BTC</span>`);
                 player.inCombat = false;
-                player.bitcoins += currentEnemy.bitcoins;
+                player.bitcoins += bitcoinsEarned;
                 currentEnemy = null;
                 player.exp += exp;
                 playMusic('exploration');
                 party = party.filter(a => a.hp > 0);
                 if (player.exp >= player.level * 10) {
-                    player.level++;
-                    player.levelingUp = true;
+                    player.levelingUp = true;  // Keep only the leveling-up flag
+                    // Do NOT increment player.level here
                 }
+
+
+
             } else {
                 enemyAttack();
             }
@@ -1456,25 +1523,49 @@ __\\_______^/
         function enemyAttack() {
             const targetAllies = party.filter(a => a.hp > 0);
             if (targetAllies.length && Math.random() < 0.5) {
-                const target = targetAllies[
-                    Math.floor(Math.random() * targetAllies.length)
-                ];
-                const dmg = Math.floor(Math.random() * 4) + 1;
+                const target = targetAllies[Math.floor(Math.random() * targetAllies.length)];
+                
+                // Base damage
+                let baseDamage = Math.floor(Math.random() * 5) + 1;
+                
+                // Boost damage based on the floor
+                const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
+                baseDamage += floorBoost; // Increase base damage by the floorBoost
+                
+                // Calculate damage based on player's defense
+                const playerArmor = armor[player.armor];
+                const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
+                
+                let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
+                
                 target.hp -= dmg;
-                updateBattleLog(
-                    `${currentEnemy.name} deals ${dmg} HP to your ${target.name}`
-                );
+                updateBattleLog(`<span style="color: #EC4134;">${currentEnemy.name}</span> deals <span style="color: #EC4134;">${dmg} HP</span> to your <span style="color: #61C9F6;">${target.name}</span>`);
+                
                 if (target.hp <= 0) {
-                    updateBattleLog(`Your ${target.name} has been eviscerated...`);
+                    updateBattleLog(`Your <span style="color: #EC4134;">${target.name}</span> has been <span style="color: #EC4134;">eviscerated</span>...`);
                 }
             } else {
+                // Same for the player, calculate the damage for the player
+                let baseDamage = Math.floor(Math.random() * 5) + 1;
+                
+                // Boost damage based on the floor
+                const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
+                baseDamage += floorBoost;
+                
+                // Calculate damage based on the player's defense
                 const playerArmor = armor[player.armor];
-                const dmg = Math.round((Math.floor(Math.random() * 5) + 1) / Math.max(Math.round(Math.random() * playerArmor.defense), 1));
+                const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
+                
+                const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
                 player.hp -= dmg;
-                updateBattleLog(`${currentEnemy.name} deals ${dmg} HP to you`);
+                
+                updateBattleLog(`<span style="color: #EC4134;">${currentEnemy.name}</span> deals <span style="color: #EC4134;">${dmg} HP</span> to <span style="color: #EC4134;">you</span>`);
+                
                 if (player.hp <= 0) gameOver = true;
             }
         }
+
+
 
         function tryRun() {
             if (!player.inCombat || awaitingPersuasionText) {
@@ -1559,7 +1650,7 @@ __\\_______^/
                         healedThisBattle: false
                     };
                     party.push(newAlly);
-                    updateBattleLog(`${currentEnemy.name} is now following your trail of sweat.`);
+                    updateBattleLog(`<span style="color: #61C9F6;">${currentEnemy.name}</span> is now following your trail of sweat.`);
                     player.inCombat = false;
                     currentEnemy = null;
                     playMusic('exploration');
@@ -1704,18 +1795,41 @@ __\\_______^/
 
         function getArticle(noun) {
             return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an' : 'a';
+                }
+                
+        function handleLevelUpInput(key) {
+            if (key === 'h') {
+                player.maxHp += 5;
+            } else if (key === 'd') {
+                player.defense += 1;
+            } else if (key === 'p') {
+                player.persuasion += 1;
+            } else {
+                return; // Ignore other keys
+            }
+            
+            // Now level up properly when the player manually chooses to level up
+            player.level++;
+            player.exp = 0; // Reset EXP after leveling up
+            player.hp = player.maxHp; // Fully heal the player
+            player.levelingUp = false; // Reset leveling up state
+            
+            updateBattleLog(`<span style="color: #9BD19C;">Oh... you leveled up. Whatever dude.</span>.`);
+            render();
         }
+
+
 
         document.addEventListener('keydown', e => {
             if (gameOver || awaitingPersuasionText) {
                 return;
             }
-
+        
             const key = e.key.toLowerCase();
-
+        
             if (player.levelingUp) {
                 handleLevelUpInput(key);
-                return;
+                return; // <-- this fixes it
             } else if (player.isVisitingMerchant) {
                 handleMerchantInput(key);
                 return;
@@ -1762,7 +1876,7 @@ __\\_______^/
                         break;
                 }
             }
-
+        
             render();
         });
 
@@ -1771,6 +1885,13 @@ __\\_______^/
         function descend() {
             floor++;
             updateBattleLog(`Descending into floor ${floor}...`);
+        
+            const floorBoost = Math.floor(floor / 2);
+            if (floorBoost > lastFloorBoostNotice) {
+                updateBattleLog(`<span style="color: red;">As you descend deeper into the dungeon, you sense greater danger than before</span>.`);
+                lastFloorBoostNotice = floorBoost;
+            }
+        
             if (Math.random() < 0.5) {
                 const flavorText = [
                     "The stale air fills your nostrils.",
@@ -1789,12 +1910,14 @@ __\\_______^/
                     "Somewhere ahead, something clanks. You sincerely hope it's plumbing.",
                     "You hear a plunger plunging menacingly.",
                 ];
-
+        
                 const logLine = flavorText[Math.floor(Math.random() * flavorText.length)];
                 updateBattleLog(logLine);
             }
+        
             generateMap();
         }
+
 
         generateMap();
         playMusic('exploration');
