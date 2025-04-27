@@ -212,6 +212,34 @@
         .alignRight {
             text-align: right;
         }
+        .friendly {
+            color: #61C9F6;
+        }
+        .enemy {
+            color: #EC4134;
+        }
+        .EXP {
+            color: #6EBD70;
+        }
+        .LV {
+            color: #6EBD70;
+        }
+        .BTC {
+            color: #FAEB4A;
+        }
+        .HP {
+            color: #F1483D;
+        }
+        .DEF {
+            color: #1463BA;
+        }
+        .PRS {
+            color: #A23AB4;
+        }
+        .action {
+            color: #EC4134;
+        }
+        
   </style>
 </head>
 <body>
@@ -590,11 +618,11 @@
             if (player.inCombat) {
                 const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
                 currentEnemy.hp -= dmg;
-                updateBattleLog(`You exploded the shit out of <span style="color: #EC4134;">${currentEnemy.name}</span> for <span style="color: #EC4134;">${dmg} HP</span>!!!`);
+                updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
                 endOfPlayerTurn();
             } else {
                 explodePath();
-                updateBattleLog('<span style="color: #EC4134;">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
                 render();
             }
         }
@@ -648,7 +676,7 @@
                     merchant.isActiveOnFloor = false;
                     playSFX('scream');
                     updateBattleLog('MERCHANT: "AIEEEEEEEEEEEEEE!"');
-                    updateBattleLog('HOLY SHIT! The merchant has been vaporized into a bloody red mist!');
+                    updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
                 }
 
                 seenTiles[y][x] = true;
@@ -1259,16 +1287,16 @@ __\\_______^/
               
                 // Colorized stats for combat mode (using inline span for same line)
                 output +=
-                    `<span style="color: #8FC691;">LV: ${player.level}</span> ` +
-                    `<span style="color: #8FC691;">EXP: ${player.exp}/${player.level * 10} <span style="color: #F2E46A;">BTC: ${player.bitcoins}</span>` +
-                    `<p center><span style="color: #EC4134;">HP: ${player.hp}</span> ` +
-                    `<span style="color: #2297F3;">DEF: ${player.defense}</span> ` +
-                    `<span style="color: #AE61BD;">PRS: ${player.persuasion}</span><span style="color: #F2E46A;"> </p>`;
+                    `<span class="LV">LV: ${player.level}</span> ` +
+                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>` +
+                    `<p center><span class="HP">HP: ${player.hp}</span> ` +
+                    `<span class="DEF">DEF: ${player.defense}</span> ` +
+                    `<span class="PRS">PRS: ${player.persuasion}</span></p>`;
         
                 if (party.length > 0) {
                     output += `\nYour Party:\n`;
                     party.forEach(member => {
-                        output += `- <span style="color: #61C9F6;">${member.name}</span> <span style="color: #EC4134;">(HP: ${member.hp})</span>\n`;
+                        output += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span>\n`;
                     });
                 }
         
@@ -1289,16 +1317,16 @@ __\\_______^/
                 }
                 output +=
                     "||                 ||\n||   Welcome to... ||\n++----TARDQUEST----++\n" +
-                    `<span style="color: #8FC691;">LV: ${player.level}</span> ` +
-                    `<span style="color: #8FC691;">EXP: ${player.exp}/${player.level * 10}</span> <span style="color: #F2E46A;">BTC: ${player.bitcoins}</span>` +
-                    `<p center><span style="color: #EC4134;">HP: ${player.hp}</span> ` +
-                    `<span style="color: #2297F3;">DEF: ${player.defense}</span> ` +
-                    `<span style="color: #AE61BD;">PRS: ${player.persuasion}</span></p>`;
+                    `<span class="LV">LV: ${player.level}</span> ` +
+                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>` +
+                    `<p center><span class="HP">HP: ${player.hp}</span> ` +
+                    `<span class="DEF">DEF: ${player.defense}</span> ` +
+                    `<span class="PRS">PRS: ${player.persuasion}</span></p>`;
         
                 if (party.length > 0) {
                     output += `\nYour Party:\n`;
                     party.forEach(member => {
-                        output += `- <span style="color: #61C9F6;">${member.name}</span> <span style="color: #EC4134;">(HP: ${member.hp})\n</span>`;
+                        output += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span>\n`;
                     });
                 }
         
@@ -1411,7 +1439,7 @@ __\\_______^/
                 if (tile === 'H') {
                     player.hp = player.maxHp;
                     MAP[ny][nx] = '.';
-                    updateBattleLog('<span style="color: #61C9F6;">You healed to full HP!</span>');
+                    updateBattleLog('<span class="friendly">You healed to full HP!</span>');
                 } else if (isMerchantTile(nx, ny)) {
                     visitTheMerchant();
                 } else if (tile === 'E') {
@@ -1461,7 +1489,7 @@ __\\_______^/
         
             player.inCombat = true;
             party.forEach(member => member.healedThisBattle = false);
-            updateBattleLog(`A wild <span style="color: #EC4134;">${currentEnemy.name}</span> appears!`);
+            updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
             playMusic('battle');
         }
 
@@ -1486,7 +1514,7 @@ __\\_______^/
                     player.hp = Math.min(player.maxHp, player.hp + healed);
                     member.healedThisBattle = true;
                     updateBattleLog(
-                        `<span style="color: #61C9F6;">${member.name}</span> tended your wounds <span style="color: #61C9F6;">(+${healed} HP)</span>`
+                        `<span class="friendly">${member.name}</span> tended your wounds <span class="HP">(+${healed} HP)</span>`
                     );
                 }
             });
@@ -1499,7 +1527,7 @@ __\\_______^/
                 
                 const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
                 updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
-                updateBattleLog(`You gained <span style="color: #9FD0F9;">+${exp}</span> EXP and <span style="color: #9FD0F9;">${bitcoinsEarned} BTC</span>`);
+                updateBattleLog(`You gained <span class="EXP">+${exp}</span> EXP and <span class="BTC">${bitcoinsEarned} BTC</span>`);
                 player.inCombat = false;
                 player.bitcoins += bitcoinsEarned;
                 currentEnemy = null;
@@ -1539,10 +1567,10 @@ __\\_______^/
                 let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
                 
                 target.hp -= dmg;
-                updateBattleLog(`<span style="color: #EC4134;">${currentEnemy.name}</span> deals <span style="color: #EC4134;">${dmg} HP</span> to your <span style="color: #61C9F6;">${target.name}</span>`);
+                updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="enemy">${dmg} HP</span> to your <span class="friendly">${target.name}</span>`);
                 
                 if (target.hp <= 0) {
-                    updateBattleLog(`Your <span style="color: #EC4134;">${target.name}</span> has been <span style="color: #EC4134;">eviscerated</span>...`);
+                    updateBattleLog(`Your <span class="friendly">${target.name}</span> has been <span class="action">eviscerated</span>...`);
                 }
             } else {
                 // Same for the player, calculate the damage for the player
@@ -1559,7 +1587,7 @@ __\\_______^/
                 const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
                 player.hp -= dmg;
                 
-                updateBattleLog(`<span style="color: #EC4134;">${currentEnemy.name}</span> deals <span style="color: #EC4134;">${dmg} HP</span> to <span style="color: #EC4134;">you</span>`);
+                updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="HP">${dmg} HP</span> to <span class="friendly">you</span>`);
                 
                 if (player.hp <= 0) gameOver = true;
             }
@@ -1650,7 +1678,7 @@ __\\_______^/
                         healedThisBattle: false
                     };
                     party.push(newAlly);
-                    updateBattleLog(`<span style="color: #61C9F6;">${currentEnemy.name}</span> is now following your trail of sweat.`);
+                    updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
                     player.inCombat = false;
                     currentEnemy = null;
                     playMusic('exploration');
@@ -1814,7 +1842,7 @@ __\\_______^/
             player.hp = player.maxHp; // Fully heal the player
             player.levelingUp = false; // Reset leveling up state
             
-            updateBattleLog(`<span style="color: #9BD19C;">Oh... you leveled up. Whatever dude.</span>.`);
+            updateBattleLog(`<span clas="LVL">Oh... you leveled up. Whatever dude.</span>.`);
             render();
         }
 
@@ -1888,7 +1916,7 @@ __\\_______^/
         
             const floorBoost = Math.floor(floor / 2);
             if (floorBoost > lastFloorBoostNotice) {
-                updateBattleLog(`<span style="color: red;">As you descend deeper into the dungeon, you sense greater danger than before</span>.`);
+                updateBattleLog(`<span class="action">As you descend deeper into the dungeon, you sense greater danger than before</span>.`);
                 lastFloorBoostNotice = floorBoost;
             }
         
