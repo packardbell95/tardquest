@@ -51,7 +51,8 @@
         }
 
         #inventory:not(.hidden),
-        #merchant:not(.hidden) {
+        #merchant:not(.hidden),
+        #gambler:not(.hidden) {
             width: 100%;
             height: 100%;
             white-space: pre-wrap;
@@ -65,19 +66,38 @@
         }
 
         #inventoryList::before,
-        #merchantItemList::before {
-            content: "[INVENTORY]";
+        #merchantItemList::before,
+        #gamblerMenu::before {
             display: block;
             text-align: center;
         }
+
+        #inventoryList::before {
+            content: "[INVENTORY]";
+        };
 
         #merchantItemList::before {
             content: "[The MERCHANT]";
         }
 
+        #gamblerMenu:not(.hidden)::before {
+            content: "[The GAMBLER]";
+        }
+
+        #gamblerMenu {
+            margin-bottom: auto;
+        }
+
         #inventoryItemDescription,
-        #merchantItemDescription {
+        #merchantItemDescription,
+        #gamblerItemDescription {
             min-height: 90px;
+        }
+
+        #gambleAnimation {
+            white-space: pre;
+            overflow: hidden;
+            text-align: initial;
         }
 
         #viewportContainer {
@@ -205,6 +225,10 @@
             color: #f7f;
         }
 
+        .gambler {
+            color: #ffd700;
+        }
+
         .tooExpensive {
             color: #f00;
         }
@@ -239,7 +263,6 @@
         .action {
             color: #EC4134;
         }
-        
   </style>
 </head>
 <body>
@@ -251,6 +274,7 @@
         <p><span class="wall">#</span> Wall: It's a fucking wall</p>
         <p><span class="exit">E</span> Exit: Touch to descend further</p>
         <p><span class="merchant">M</span> Merchant: Sells you crap</p>
+        <p><span class="gambler">G</span> Gambler: A shady shyster</p>
         <p>H Healing Tile: Heals you to max HP</p>
         <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
       </div>
@@ -266,6 +290,11 @@
         <div id="merchantItemList"></div>
         <div id="merchantItemDescription"></div>
         <div class="alignRight">Press Escape to leave the Merchant</div>
+    </div>
+    <div id="gambler" class="hidden">
+        <div id="gambleAnimation" class="hidden"></div>
+        <div id="gamblerMenu"></div>
+        <div id="gamblerEscapeMessage" class="alignRight">Press Escape to leave the Gambler</div>
     </div>
   </div>
   <div id="ui">
@@ -302,6 +331,7 @@
             level: 1,
             inCombat: false,
             isVisitingMerchant: false,
+            isVisitingGambler: false,
             levelingUp: false,
             inventory: {
                 isOpen: false,
@@ -316,6 +346,7 @@
             },
             weapon: 'pointyStick',
             armor: 'graphicTee',
+            inputDisabled: false,
         };
 
         const merchant = {
@@ -325,6 +356,33 @@
             y: HEIGHT - 2,
             selectionIndex: 0,
             items: [],
+            die: function() {
+                this.isAlive = false;
+                this.isActiveOnFloor = false;
+                playSFX('scream');
+                merchantSay('AIEEEEEEEEEEEEEE!');
+                updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
+            },
+        };
+
+        const gambler = {
+            isAlive: true,
+            isActiveOnFloor: false,
+            x: WIDTH - 4,
+            y: HEIGHT - 4,
+            selectionIndex: 0,
+            options: ['gamble', 'leave'],
+            playPrice: 200,
+            die: function () {
+                this.isAlive = false;
+                this.isActiveOnFloor = false;
+                // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
+                const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
+                player.bitcoins += rewardBtc;
+                playSFX('scream');
+                gamblerSay('AUGH!!');
+                updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
+            }
         };
 
         const enemies = [
@@ -621,8 +679,8 @@
                 updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
                 endOfPlayerTurn();
             } else {
-                explodePath();
                 updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                explodePath();
                 render();
             }
         }
@@ -672,11 +730,15 @@
                     merchant.isActiveOnFloor &&
                     merchant.x === x && merchant.y === y;
                 if (killedMerchant) {
-                    merchant.isAlive = false;
-                    merchant.isActiveOnFloor = false;
-                    playSFX('scream');
-                    updateBattleLog('MERCHANT: "AIEEEEEEEEEEEEEE!"');
-                    updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
+                    merchant.die();
+                }
+
+                const killedGambler =
+                    gambler.isAlive &&
+                    gambler.isActiveOnFloor &&
+                    gambler.x === x && gambler.y === y;
+                if (killedGambler) {
+                    gambler.die();
                 }
 
                 seenTiles[y][x] = true;
@@ -721,7 +783,7 @@
 
         function visitTheMerchant() {
             player.isVisitingMerchant = true;
-            merchant.items.selectionIndex = 0;
+            merchant.selectionIndex = 0;
 
             document.querySelectorAll('#controls, #game').forEach((el) => {
                 el.classList.add('hidden');
@@ -730,7 +792,7 @@
             document.getElementById('merchant').classList.remove('hidden');
             document.getElementById('merchantItemDescription').textContent = '';
 
-            updateBattleLog('MERCHANT: "Welcome to SlobMart!"');
+            merchantSay('Welcome to SlobMart!');
 
             renderMerchant();
         }
@@ -760,7 +822,36 @@
             });
 
             player.isVisitingMerchant = false;
-            updateBattleLog('MERCHANT: "Thank you. Come again!"');
+            merchantSay('Thank you. Come again!');
+        }
+
+        function visitTheGambler() {
+            player.isVisitingGambler = true;
+            gambler.selectionIndex = 0;
+
+            document.querySelectorAll('#controls, #game').forEach((el) => {
+                el.classList.add('hidden');
+            });
+
+            document.getElementById('gambler').classList.remove('hidden');
+            gamblerSay('Place yer bets!');
+
+            renderGambler();
+        }
+
+        function leaveTheGambler(saySomething) {
+            document.getElementById('gambler').classList.add('hidden');
+            document.querySelectorAll('#controls, #game').forEach((el) => {
+                el.classList.remove('hidden');
+            });
+
+            player.isVisitingGambler = false;
+            saySomething && gamblerSay('You gotta know when to hold \'em, know when to fold \'em, heh heh');
+
+            gambler.isActiveOnFloor = false;
+            updateBattleLog('The gambler escapes into the shadows');
+
+            render();
         }
 
         const sfx = {
@@ -773,6 +864,7 @@
             scream: new Audio('https://files.catbox.moe/j2oegh.mp3'),
             kaching: new Audio('https://files.catbox.moe/02ht6d.mp3'),
             torch: new Audio('https://files.catbox.moe/b2jzsn.mp3'),
+            gamble: new Audio('https://files.catbox.moe/mo9o5z.mp3'),
         };
 
         const music = {
@@ -835,6 +927,11 @@
             merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
             if (merchant.isActiveOnFloor) {
                 setMerchant();
+            }
+
+            gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.25;
+            if (merchant.isActiveOnFloor) {
+                setGambler();
             }
         }
 
@@ -903,7 +1000,38 @@
             } while (attempts++ < 1000);
 
             // If we couldn't place the merchant, don't activate the merchant
+            console.warn(`Unable to place the merchant after ${attempts} attempts. The merchant will be deactivated for this floor`);
             merchant.isActiveOnFloor = false;
+        }
+
+        function setGambler() {
+            let attempts = 0;
+
+            do {
+                const x = Math.floor(Math.random() * WIDTH);
+                const y = Math.floor(Math.random() * HEIGHT);
+
+                const isMerchantSpace =
+                    merchant.isActiveOnFloor &&
+                    y === merchant.y &&
+                    x === merchant.x;
+
+                const isEmptySpace =
+                    MAP[y][x] === '.' &&
+                    (y !== exit.y && x !== exit.x) &&
+                    (y !== player.y && x !== player.x) &&
+                    !isMerchantSpace;
+
+                if (isEmptySpace) {
+                    gambler.x = x;
+                    gambler.y = y;
+                    return;
+                }
+            } while (attempts++ < 1000);
+
+            // If we couldn't place the gambler, don't activate the gambler
+            console.warn(`Unable to place the gambler after ${attempts} attempts. The gambler will be deactivated for this floor`);
+            gambler.isActiveOnFloor = false;
         }
 
         function carvePath(stack) {
@@ -1016,6 +1144,9 @@
                         if (isMerchantTile(x, y)) {
                             tile = 'M';
                             tileClass = 'merchant';
+                        } else if (isGamblerTile(x, y)) {
+                            tile = 'G';
+                            tileClass = 'gambler';
                         } else {
                             switch (MAP[y][x]) {
                                 case '#':
@@ -1043,6 +1174,11 @@
             return merchant.isActiveOnFloor && x === merchant.x && y === merchant.y;
         }
 
+        function isGamblerTile(x, y) {
+            // The gambler won't appear if the player is broke
+            return gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice && x === gambler.x && y === gambler.y;
+        }
+
         function updateBattleLog(entry) {
             battleLog.push(entry);
             if (battleLog.length > 50) {
@@ -1061,6 +1197,13 @@
                 .join("");
         }
 
+        function merchantSay(str) {
+            updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
+        }
+
+        function gamblerSay(str) {
+            updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
+        }
 
         function playMusic(type) {
             if (currentMusic === type) {
@@ -1400,6 +1543,24 @@ __\\_______^/
             document.getElementById('merchantItemList').innerHTML = itemHtml;
         }
 
+        function renderGambler() {
+            const optionLines = {
+                gamble: `Play the game <span class="BTC">(${gambler.playPrice} BTC)</span>`,
+                leave: "Leave the Gambler",
+            };
+
+            let i = 0;
+            let itemHtml = `GAMBLER: "Welcome, dungeon dweller! Roll a 12 and <span class="BTC">boost one of yer stats.</span> Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\nYou have <span class="BTC">${player.bitcoins} BTC</span> in your wallet\n\n`;
+
+            gambler.options.forEach((option) => {
+                const isSelectedLine = i++ === gambler.selectionIndex;
+                const itemLine = (isSelectedLine ? "▶ " : "  ") + optionLines[option] + "\n";
+                itemHtml += itemLine;
+            });
+
+            document.getElementById('gamblerMenu').innerHTML = itemHtml;
+        }
+
         function isEmpty(obj) {
             for (let i in obj) {
                 return false;
@@ -1416,7 +1577,7 @@ __\\_______^/
         }
 
         function move(direction) {
-            if (player.isVisitingMerchant || player.inCombat || gameOver) {
+            if (player.isVisitingGambler || player.isVisitingMerchant || player.inCombat || gameOver) {
                 return;
             }
 
@@ -1436,14 +1597,16 @@ __\\_______^/
             if (tile !== '#') {
                 player.x = nx;
                 player.y = ny;
-                if (tile === 'H') {
+                if (isMerchantTile(nx, ny)) {
+                    visitTheMerchant();
+                } else if (isGamblerTile(nx, ny)) {
+                    visitTheGambler();
+                } else if (tile === 'E') {
+                    descend();
+                } else if (tile === 'H') {
                     player.hp = player.maxHp;
                     MAP[ny][nx] = '.';
                     updateBattleLog('<span class="friendly">You healed to full HP!</span>');
-                } else if (isMerchantTile(nx, ny)) {
-                    visitTheMerchant();
-                } else if (tile === 'E') {
-                    descend();
                 } else if (Math.random() < 0.2) {
                     MAP[ny][nx] = 'H';
                 } else if (Math.random() < randomEncounterChance) {
@@ -1524,7 +1687,7 @@ __\\_______^/
                 const floorBoost = Math.floor(floor / 2);
                 const exp = baseExp + (floorBoost * 5); // +5 EXP per boost
                 const bitcoinsEarned = currentEnemy.bitcoins;
-                
+
                 const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
                 updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
                 updateBattleLog(`You gained <span class="EXP">+${exp}</span> EXP and <span class="BTC">${bitcoinsEarned} BTC</span>`);
@@ -1799,7 +1962,7 @@ __\\_______^/
             }
 
             if (player.bitcoins < item.price.buy) {
-                updateBattleLog('MERCHANT: "Too bad, kid. Come back when you get some coin!"');
+                merchantSay('Too bad, kid. Come back when you get some coin!');
                 return;
             }
 
@@ -1815,7 +1978,7 @@ __\\_______^/
             ];
 
             const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-            updateBattleLog(`MERCHANT: "${merchantText}"`);
+            merchantSay(merchantText);
 
             const itemText = getArticle(item.name) + ' ' + item.name;
             updateBattleLog(`You just bought ${itemText}`);
@@ -1823,8 +1986,152 @@ __\\_______^/
 
         function getArticle(noun) {
             return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an' : 'a';
+        }
+
+        function handleGamblerInput(key) {
+            const idx = gambler.selectionIndex;
+            const options = gambler.options;
+
+            switch (key) {
+                case 'escape':
+                    leaveTheGambler(true);
+                    break;
+                case 'w':
+                case 'arrowup':
+                    gambler.selectionIndex = idx === 0
+                        ? options.length - 1
+                        : idx - 1;
+                    break;
+                case 's':
+                case 'arrowdown':
+                    gambler.selectionIndex = idx === options.length - 1
+                        ? 0
+                        : idx + 1;
+                    break;
+                case ' ':
+                case 'e':
+                case 'enter':
+                    const option = options[idx];
+                    if (option === 'gamble') {
+                        gamble();
+                    } else if (option === 'leave') {
+                        leaveTheGambler(true);
+                    } else {
+                        console.error('Unknown gambler option', { option });
+                    }
+                    break;
+            }
+
+            renderGambler();
+            return;
+        }
+
+        function gamble() {
+            player.bitcoins -= gambler.playPrice;
+            updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
+
+            player.inputDisabled = true;
+            document.getElementById('gamblerEscapeMessage').classList.add('hidden');
+
+            dice = [
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1,
+            ];
+            gambleAnimation(dice, () => {
+                player.inputDisabled = false;
+                gambleOutcome(dice);
+                document.getElementById('gamblerEscapeMessage').classList.remove('hidden');
+            });
+            playSFX('gamble');
+        }
+
+        function gambleOutcome(dice) {
+            const sum = dice[0] + dice[1];
+            const win = sum === 12;
+            const sumClass = win ? 'friendly' : 'enemy';
+
+            let html = 'You rolled a ' +
+                `<span class="gambler">${dice[0]}</span> and a ` +
+                `<span class="gambler">${dice[1]}</span> ` +
+                `for a sum of <span class="${sumClass}">${sum}</span>\n\n`;
+
+            if (win) {
+                const stats = ['hp', 'defense', 'persuasion'];
+                const randomStat = stats[Math.floor(Math.random() * stats.length)];
+
+                switch (randomStat) {
+                    case 'hp':
+                        // Get a bonus of either 5 or 10 HP
+                        const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5)
+                        player.hp += healthBoost;
+                        player.maxHp += healthBoost;
+                        updateBattleLog(`<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`);
+                        break;
+                    case 'defense':
+                        // Get a bonus of either 1 or 2 defense
+                        const defenseBoost = 1 + Math.floor((Math.random() * 2));
+                        player.defense += defenseBoost;
+                        updateBattleLog(`<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`);
+                        break;
+                    case 'persuasion':
+                        // Get a bonus of either 1 or 2 persuasion
+                        const persuasionBoost = 1 + Math.floor((Math.random() * 2));
+                        player.persuasion += persuasionBoost;
+                        updateBattleLog(`<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`);
+                        break;
                 }
-                
+            } else {
+                gamblerSay('Hah! Tough luck, kid!');
+            }
+
+            leaveTheGambler();
+        }
+
+        /**
+         * This animates the hand throwing dice when gambling
+         *
+         * The animation works by calling the gambleFrames in sequence. The
+         * number of defined frames is actually more than the number of the
+         * available frames in the animation. This is because the final frame is
+         * held and displays random digits to emphasize the roll
+         */
+        function gambleAnimation(dice, callback, frame) {
+            const maxFrames = 24;
+            const frameNumber = frame || 0;
+            const displayFrame = Math.min(frameNumber, gambleFrames.length - 1);
+            const isFinalFrame = frameNumber >= maxFrames - 1;
+
+            if (frameNumber === 0) {
+                document.getElementById('gambleAnimation').classList.remove('hidden');
+                document.getElementById('gamblerMenu').classList.add('hidden');
+            }
+
+            // Set random dice digits before displaying the actual outcome
+            const d = isFinalFrame ? dice : [
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1,
+            ];
+
+            if (frameNumber < maxFrames) {
+                // Add some padding to center the animation
+                let frameText = gambleFrames[displayFrame].replace(/^/gm, '       ');
+                if (frameNumber >= gambleFrames.length - 4) {
+                    // Draw digits on the bones
+                    frameText = frameText.replace(
+                        /(^[ |]+\n^ +\|   ) {5}( +\| +\|   ) {5}(.+\n^ +\|   ) {5}( +\| +\|   ) {5}(.+\n^ +\|   ) {5}( +\| +\|   ) {5}/m,
+                        `$1${dieDigit[d[0] - 1][0]}$2${dieDigit[d[1] - 1][0]}$3${dieDigit[d[0] - 1][1]}$4${dieDigit[d[1] - 1][1]}$5${dieDigit[d[0] - 1][2]}$6${dieDigit[d[1] - 1][2]}`,
+                    );
+                }
+
+                document.getElementById("gambleAnimation").textContent = frameText;
+                setTimeout(() => gambleAnimation(dice, callback, frameNumber + 1), !isFinalFrame ? 50 : 3000);
+            } else {
+                document.getElementById('gambleAnimation').classList.add('hidden');
+                document.getElementById('gamblerMenu').classList.remove('hidden');
+                typeof callback === 'function' && callback();
+            }
+        }
+
         function handleLevelUpInput(key) {
             if (key === 'h') {
                 player.maxHp += 5;
@@ -1842,14 +2149,14 @@ __\\_______^/
             player.hp = player.maxHp; // Fully heal the player
             player.levelingUp = false; // Reset leveling up state
             
-            updateBattleLog(`<span clas="LVL">Oh... you leveled up. Whatever dude.</span>.`);
+            updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>.`);
             render();
         }
 
 
 
         document.addEventListener('keydown', e => {
-            if (gameOver || awaitingPersuasionText) {
+            if (player.inputDisabled || gameOver || awaitingPersuasionText) {
                 return;
             }
         
@@ -1861,6 +2168,8 @@ __\\_______^/
             } else if (player.isVisitingMerchant) {
                 handleMerchantInput(key);
                 return;
+            } else if (player.isVisitingGambler) {
+                handleGamblerInput(key);
             } else if (player.inventory.isOpen) {
                 handleInventoryInput(key);
                 return;
@@ -1968,6 +2277,230 @@ __\\_______^/
                 }
             }
         });
+
+        const gambleFrames = [
+    `
+
+
+
+                  _____
+                 /     -.
+                 \\____.--
+
+
+    `,
+
+    `
+
+
+
+              _,--.
+             ( ;.  \`-.
+             (  '    _
+              \`-___-'
+
+    `,
+
+    `
+
+
+
+           _,-.-.
+          (_;.   \`-.
+         (__:
+          (__.'    _
+           \`-____-'
+
+    `,
+
+    `
+
+
+       _,-.-.
+      (_;.   \`-.
+      (__:
+      (__'
+      (__.'    _
+       \`-____-'
+
+    `,
+
+    `
+
+
+     _,--.---.
+    (_;-.__   \`-.
+    (______)
+    (______)
+    (_____)     _
+     \`-_______-'
+    `,
+
+    `
+
+          ____
+     ____'._  '.
+    (____)_ \`.  \`-.
+    (______)\\
+     (______)
+      (_____)     _
+       \`-_______-'
+
+    `,
+
+    `
+
+            ..__
+    ________\`.  '-
+   (__)______ \`.  '-.
+    (__)__/_\\
+      (____)
+       (___)        _
+         \`-_______-'
+
+    `,
+
+    `
+
+              ..__
+    __________\`.  '-
+   (___________ \`.  '-.
+    (______..--. 
+      (__)_||__|
+        (_)_          _
+           \`-_______-'
+
+    `,
+
+    `
+
+                ..__
+      __________\`.  '-
+     (___________ \`.  '-.
+      (___/_/\\ ___. 
+       (__\\_\\/|   ||     
+         (____|___||    _
+              \`-______-'
+
+    `,
+
+    `
+
+                  ..__
+        __________\`.  '-
+       (___________ \`.  '-.
+        (__________ 
+         (________
+         .-'--._ .----_   _
+         | |  | |\` ___'.-'
+         \`.|..' ' \`    |
+                 \`|____'
+
+    `,
+
+    `
+
+                      ..__
+            __________\`.  '-
+           (___________ \`.  '-.
+            (__________ 
+             (________
+               (____          _
+                    \`-______-'
+       .-----       .----.
+      / \`.   \`.    /      \\
+     /    '.___\`. /________\\
+     \`.   /    /  \\        /
+       \`./____/    \\      /
+                    \`----'
+    `,
+
+    `
+
+                          ..__
+                __________\`.  '-
+               (___________ \`.  '
+                (__________ 
+                 (________
+                   (____          
+                        \`-______-
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+    `
+
+
+                         _________
+                        (_________
+                          (_______
+                           (______
+                             (____
+
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+    `
+
+
+                                 _
+                                (_
+
+
+
+
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+    `
+
+
+
+
+
+
+
+
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+];
+
+    const dieDigit = [
+        ['▗▄▋  ', ' ▐▋  ', '▝▀▀▘ '], // 1
+        ['▄▀▀▄ ', ' ▄▀  ', '▀▀▀▀▘'], // 2
+        ['▄▀▀▄ ', '  ▀▄ ', '▀▄▄▀ '], // 3
+        ['█  █ ', '▀▀▀█ ', '   ▀ '], // 4
+        ['█▀▀▀ ', '▀▀▀▄ ', '▀▄▄▀ '], // 5
+        ['▄▀▀▀ ', '█▀▀▄ ', '▀▄▄▀ '], // 6
+    ];
     </script>
 
 
