@@ -48,6 +48,7 @@
             white-space: pre-wrap;
             margin-bottom: auto;
             margin-top: var(--viewport-font-size);
+            align-content: center;
         }
 
         #inventory:not(.hidden),
@@ -116,10 +117,9 @@
             flex-direction: column;
             justify-content: center;
             width: 360px;
-            height: 338px;
+            height: 339px;
             /* Match or exceed #game's min-height */
-            overflow-y: scroll;
-            overflow-x: hidden;
+            overflow: hidden;
             box-sizing: content-box;
             align-items: center;
             justify-content: space-between;
@@ -130,6 +130,20 @@
             margin-left: 0px;
             display: flex;
             flex-direction: column;
+        }
+        #partylist {
+            height: 90px;
+            width: 348px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 489px;
+            left: 250px;
+            padding: 10px;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            justify-content: space-between;
         }
 
         #battleLog,
@@ -195,10 +209,17 @@
         }
 
         #controls {
-            top: 4px;
-            left: 4px;
-            font-size: 14px;
-            white-space: pre;
+            height: 90px;
+            width: 200px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 489px;
+            padding: 10px;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow: hidden;
+            justify-content: space-between;
         }
 
         .player {
@@ -278,8 +299,9 @@
         <p>H Healing Tile: Heals you to max HP</p>
         <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
       </div>
+  <div id="partylist"></div>
+  <div id="controls"></div>
   <div id="viewportContainer">
-    <div id="controls"></div>
     <div id="game"></div>
     <div id="inventory" class="hidden">
         <div id="inventoryList"></div>
@@ -1264,11 +1286,7 @@
                     return `
                     
                     
-                    
-                    
-                    
-                    
-                    
+
                     
    ___   |_|
   /   \\_/@ @
@@ -1278,10 +1296,7 @@ __\\_______^/
                     return `
                     
                     
-                    
-                    
-                    
-                    
+                 
                     
 /\\__/\\
 |@  @|
@@ -1425,30 +1440,40 @@ __\\_______^/
         
             // If the player is in combat
             if (player.inCombat) {
-                output +=
-                    `+-----------------------+\n${getEnemyArt()}\n+-----------------------+\n`;
-              
-                // Colorized stats for combat mode (using inline span for same line)
+                              // Combat stats
                 output +=
                     `<span class="LV">LV: ${player.level}</span> ` +
-                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>` +
-                    `<p center><span class="HP">HP: ${player.hp}</span> ` +
+                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>\n` +
+                    `<span class="HP">HP: ${player.hp}</span> ` +
                     `<span class="DEF">DEF: ${player.defense}</span> ` +
-                    `<span class="PRS">PRS: ${player.persuasion}</span></p>`;
-        
+                    `<span class="PRS">PRS: ${player.persuasion}</span>`;
+                output += `${getEnemyArt()}`;
+            
                 if (party.length > 0) {
-                    output += `\nYour Party:\n`;
+                    let partyHTML = `<strong>Your Party:</strong><br>`;
                     party.forEach(member => {
-                        output += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span>\n`;
+                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
                     });
+                    document.getElementById("partylist").innerHTML = partyHTML;
+                } else {
+                    document.getElementById("partylist").innerHTML = '';
                 }
-        
+            
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
-                        "A: Attack | R: Run | P: Persuade";
+                        "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
                 }
+            
             } else {
-                // Exploration mode
+                // Exploration stats (appear BEFORE wall slices now)
+                output +=
+                    `<span class="LV">LV: ${player.level}</span> ` +
+                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>\n` +
+                    `<span class="HP">HP: ${player.hp}</span> ` +
+                    `<span class="DEF">DEF: ${player.defense}</span> ` +
+                    `<span class="PRS">PRS: ${player.persuasion}</span>\n\n\n\n\n\n\n`;
+            
+                // Exploration view (wall slices)
                 for (let d = 3; d >= 1; d--) {
                     let tx = player.x + DX[player.dir] * d;
                     let ty = player.y + DY[player.dir] * d;
@@ -1458,27 +1483,31 @@ __\\_______^/
                         tile === 'H' ? healSlice(d) :
                         corridorSlice(d);
                 }
+            
+                // Logo
                 output +=
-                    "||                 ||\n||   Welcome to... ||\n++----TARDQUEST----++\n" +
-                    `<span class="LV">LV: ${player.level}</span> ` +
-                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>` +
-                    `<p center><span class="HP">HP: ${player.hp}</span> ` +
-                    `<span class="DEF">DEF: ${player.defense}</span> ` +
-                    `<span class="PRS">PRS: ${player.persuasion}</span></p>`;
-        
+                    "||                 ||\n||    Welcome to   ||\n++----TARDQUEST----++\n";
+            
+                // Party display
                 if (party.length > 0) {
-                    output += `\nYour Party:\n`;
+                    let partyHTML = `<strong>Your Party:</strong><br>`;
                     party.forEach(member => {
-                        output += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span>\n`;
+                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
                     });
+                    document.getElementById("partylist").innerHTML = partyHTML;
+                } else {
+                    document.getElementById("partylist").innerHTML = '';
                 }
-        
-                document.getElementById("controls").textContent = "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
+            
+                // Controls
+                document.getElementById("controls").textContent =
+                    "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
             }
+
         
             // If the player is dead
             if (player.hp <= 0) {
-                output += `\nGood job! You died on floor ${floor}.`;
+                output += `\nGood job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`;
                 gameOver = true;
                 setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
             }
