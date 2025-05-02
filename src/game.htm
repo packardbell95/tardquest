@@ -1967,7 +1967,7 @@ __\\_______^/
             }
 
             player.bitcoins -= item.price.buy;
-            player.inventory[itemKey] = (player.inventory?.[itemKey] || 0) + 1;
+            player.inventory.contents[itemKey] = (player.inventory?.contents[itemKey] || 0) + 1;
 
             playSFX('kaching');
 
