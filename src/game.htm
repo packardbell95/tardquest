@@ -891,10 +891,16 @@
 
         const music = {
             exploration: new Audio('https://files.catbox.moe/hmgkva.wav'),
-            battle: new Audio('https://files.catbox.moe/3ajd4i.mp3'),
+            battleTracks: [
+                new Audio('https://files.catbox.moe/3ajd4i.mp3'), // battle1.mp3
+                new Audio('https://files.catbox.moe/ua8mbs.mp3'), // battle2.mp3
+            ],
+            current: null
         };
+        
         music.exploration.loop = true;
-        music.battle.loop = true;
+        music.battleTracks.forEach(track => track.loop = true);
+
 
         let currentMusic = null;
         let currentEnemy = null;
@@ -1228,17 +1234,25 @@
         }
 
         function playMusic(type) {
-            if (currentMusic === type) {
-                return;
+            if (currentMusic === type) return;
+            if (music.current) {
+                music.current.pause();
+                music.current.currentTime = 0;
             }
-
-            for (let key in music) {
-                music[key].pause();
-                music[key].currentTime = 0;
+        
+            if (type === 'exploration') {
+                music.exploration.play().catch(err => console.error("Music error:", err));
+                music.current = music.exploration;
+            } else if (type === 'battle') {
+                const randomTrack = music.battleTracks[Math.floor(Math.random() * music.battleTracks.length)];
+                randomTrack.currentTime = 0;
+                randomTrack.play().catch(err => console.error("Music error:", err));
+                music.current = randomTrack;
             }
+        
             currentMusic = type;
-            music[type].play().catch(err => console.error("Error playing music", err));
         }
+
 
         function playSFX(name) {
             if (sfx[name]) {
