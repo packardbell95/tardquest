@@ -51,54 +51,32 @@
             align-content: center;
         }
 
-        #inventory:not(.hidden),
-        #merchant:not(.hidden),
-        #gambler:not(.hidden) {
+        #menu:not(.hidden),
+        #menuList:not(.hidden) {
             width: 100%;
             height: 100%;
             white-space: pre-wrap;
             display: flex;
             flex-direction: column;
+            padding-bottom: 10px;
         }
 
-        #inventoryList,
-        #merchantItemList {
+        #menuList,
+        #menuSelectionDescription {
             flex-grow: 1;
         }
 
-        #inventoryList::before,
-        #merchantItemList::before,
-        #gamblerMenu::before {
+        #menuList::before,
+        #menuSelectionDescription::before {
             display: block;
             text-align: center;
         }
 
-        #inventoryList::before {
-            content: "[INVENTORY]";
-        };
-
-        #merchantItemList::before {
-            content: "[The MERCHANT]";
-        }
-
-        #gamblerMenu:not(.hidden)::before {
-            content: "[The GAMBLER]";
-        }
-
-        #gamblerMenu {
-            margin-bottom: auto;
-        }
-
-        #inventoryItemDescription,
-        #merchantItemDescription,
-        #gamblerItemDescription {
-            min-height: 90px;
-        }
-
-        #gambleAnimation {
+        #animation:not(.hidden) {
             white-space: pre;
             overflow: hidden;
             text-align: initial;
+            width: 100%;
         }
 
         #viewportContainer {
@@ -303,20 +281,12 @@
   <div id="controls"></div>
   <div id="viewportContainer">
     <div id="game"></div>
-    <div id="inventory" class="hidden">
-        <div id="inventoryList"></div>
-        <div id="inventoryItemDescription"></div>
-        <div class="alignRight">Press Escape to exit the Inventory</div>
-    </div>
-    <div id="merchant" class="hidden">
-        <div id="merchantItemList"></div>
-        <div id="merchantItemDescription"></div>
-        <div class="alignRight">Press Escape to leave the Merchant</div>
-    </div>
-    <div id="gambler" class="hidden">
-        <div id="gambleAnimation" class="hidden"></div>
-        <div id="gamblerMenu"></div>
-        <div id="gamblerEscapeMessage" class="alignRight">Press Escape to leave the Gambler</div>
+    <div id="animation" class="hidden"></div>
+    <div id="menu" class="hidden">
+        <div id="menuLanding"></div>
+        <div id="menuList"></div>
+        <div id="menuSelectionDescription"></div>
+        <div class="alignRight">Press Escape to exit</div>
     </div>
   </div>
   <div id="ui">
@@ -352,19 +322,13 @@
             exp: 0,
             level: 1,
             inCombat: false,
-            isVisitingMerchant: false,
-            isVisitingGambler: false,
             levelingUp: false,
             inventory: {
-                isOpen: false,
-                selectionIndex: 0,
-                contents: {
-                    canOfHamms: 2,
-                    cupOfLean: 2,
-                    torch: 2,
-                    brickOfC4: 2,
-                    dowsingRod: 2,
-                },
+                canOfHamms: 2,
+                cupOfLean: 2,
+                torch: 2,
+                brickOfC4: 2,
+                dowsingRod: 2,
             },
             weapon: 'pointyStick',
             armor: 'graphicTee',
@@ -376,7 +340,6 @@
             isActiveOnFloor: false,
             x: WIDTH - 2,
             y: HEIGHT - 2,
-            selectionIndex: 0,
             items: [],
             die: function() {
                 this.isAlive = false;
@@ -767,58 +730,6 @@
             }
         }
 
-        function openInventory() {
-            player.inventory.isOpen = true;
-            player.inventory.selectionIndex = 0;
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.add('hidden');
-            });
-
-            document.getElementById('inventory').classList.remove('hidden');
-            document.getElementById('inventoryItemDescription').textContent = '';
-
-            if (isEmpty(player.inventory.contents)) {
-                const flavorText = [
-                    'Your pockets echo',
-                    'You own nothing. Klaus Schwab would be proud',
-                    'You got nothin\', bub',
-                    'A moth flutters out from your pockets',
-                    'What are you doing staring into an empty bag? Go get some items! This is a dungeon crawler for fuck\'s sake!!!',
-                    'Your inventory is full of your hopes, dreams, and amibitions',
-                ];
-                document.getElementById('inventoryList').textContent = flavorText[Math.floor(Math.random() * flavorText.length)];
-            }
-
-            renderInventory();
-        }
-
-        function closeInventory() {
-            document.getElementById('inventory').classList.add('hidden');
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.remove('hidden');
-            });
-
-            player.inventory.isOpen = false;
-        }
-
-        function visitTheMerchant() {
-            player.isVisitingMerchant = true;
-            merchant.selectionIndex = 0;
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.add('hidden');
-            });
-
-            document.getElementById('merchant').classList.remove('hidden');
-            document.getElementById('merchantItemDescription').textContent = '';
-
-            merchantSay('Welcome to SlobMart!');
-
-            renderMerchant();
-        }
-
         function setMerchantWares() {
             const itemKeys = Object.keys(items);
             if (itemKeys.length === 0) {
@@ -834,46 +745,6 @@
                     }
                 });
             } while (merchant.items.length === 0);
-        }
-
-        function leaveTheMerchant() {
-            document.getElementById('merchant').classList.add('hidden');
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.remove('hidden');
-            });
-
-            player.isVisitingMerchant = false;
-            merchantSay('Thank you. Come again!');
-        }
-
-        function visitTheGambler() {
-            player.isVisitingGambler = true;
-            gambler.selectionIndex = 0;
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.add('hidden');
-            });
-
-            document.getElementById('gambler').classList.remove('hidden');
-            gamblerSay('Place yer bets!');
-
-            renderGambler();
-        }
-
-        function leaveTheGambler(saySomething) {
-            document.getElementById('gambler').classList.add('hidden');
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.remove('hidden');
-            });
-
-            player.isVisitingGambler = false;
-            saySomething && gamblerSay('You gotta know when to hold \'em, know when to fold \'em, heh heh');
-
-            gambler.isActiveOnFloor = false;
-            updateBattleLog('The gambler escapes into the shadows');
-
-            render();
         }
 
         const sfx = {
@@ -897,7 +768,7 @@
             ],
             current: null
         };
-        
+
         music.exploration.loop = true;
         music.battleTracks.forEach(track => track.loop = true);
 
@@ -1239,7 +1110,7 @@
                 music.current.pause();
                 music.current.currentTime = 0;
             }
-        
+
             if (type === 'exploration') {
                 music.exploration.play().catch(err => console.error("Music error:", err));
                 music.current = music.exploration;
@@ -1249,7 +1120,7 @@
                 randomTrack.play().catch(err => console.error("Music error:", err));
                 music.current = randomTrack;
             }
-        
+
             currentMusic = type;
         }
 
@@ -1298,20 +1169,20 @@
             switch (currentEnemy?.id) {
                 case "snailSentinel":
                     return `
-                    
-                    
 
-                    
+
+
+
    ___   |_|
   /   \\_/@ @
 __\\_______^/
 `;
                 case "stupidDog":
                     return `
-                    
-                    
-                 
-                    
+
+
+
+
 /\\__/\\
 |@  @|
 |(00)|
@@ -1319,9 +1190,9 @@ __\\_______^/
 `;
                 case "keeperOfTheToiletBowl":
                     return `
-                    
-                    
-                    
+
+
+
    _______
   |       |
   |_______|=)
@@ -1333,11 +1204,11 @@ __\\_______^/
 `;
                 case "mysteriousScooter":
                     return `
-                    
-                    
-                    
-                    
-                    
+
+
+
+
+
        [~~]=====[~~]
             ||
             ||
@@ -1361,10 +1232,10 @@ __\\_______^/
 `;
                 case "wangRat":
                     return `
-                    
-                    
-                    
-                    
+
+
+
+
        ______
     (|/      \\|)
       \\O    o/___________________
@@ -1375,7 +1246,7 @@ __\\_______^/
 
                 case "fridgeOfForgottenLeftovers":
                     return `
-                    
+
             ___.---+.
        .--''       | '.
        |           |  |
@@ -1390,9 +1261,9 @@ __\\_______^/
 
                 case "lughead":
                     return `
-                    
-                    
-                    
+
+
+
             .--.
             |oO|
          ..-\\TT/-..
@@ -1405,9 +1276,9 @@ __\\_______^/
 
                 case "pissedOffPoultry":
                     return `
-                    
-                    
-                    
+
+
+
     .        .--.
     |\\      .-:;
     : \\    < O |'
@@ -1420,9 +1291,9 @@ __\\_______^/
 
                 case "krampusElf":
                     return `
-                    
-                    
-                    
+
+
+
              *
             / \\
         .-./___\\.-.
@@ -1443,7 +1314,7 @@ __\\_______^/
             updateSeenTiles();
             drawMinimap();
             let output = "";
-        
+
             // If the player is leveling up
             if (player.levelingUp) {
                 output +=
@@ -1451,7 +1322,7 @@ __\\_______^/
                 document.getElementById('game').textContent = output;
                 return;
             }
-        
+
             // If the player is in combat
             if (player.inCombat) {
                               // Combat stats
@@ -1462,7 +1333,7 @@ __\\_______^/
                     `<span class="DEF">DEF: ${player.defense}</span> ` +
                     `<span class="PRS">PRS: ${player.persuasion}</span>`;
                 output += `${getEnemyArt()}`;
-            
+
                 if (party.length > 0) {
                     let partyHTML = `<strong>Your Party:</strong><br>`;
                     party.forEach(member => {
@@ -1472,12 +1343,12 @@ __\\_______^/
                 } else {
                     document.getElementById("partylist").innerHTML = '';
                 }
-            
+
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
                         "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
                 }
-            
+
             } else {
                 // Exploration stats (appear BEFORE wall slices now)
                 output +=
@@ -1486,7 +1357,7 @@ __\\_______^/
                     `<span class="HP">HP: ${player.hp}</span> ` +
                     `<span class="DEF">DEF: ${player.defense}</span> ` +
                     `<span class="PRS">PRS: ${player.persuasion}</span>\n\n\n\n\n\n\n`;
-            
+
                 // Exploration view (wall slices)
                 for (let d = 3; d >= 1; d--) {
                     let tx = player.x + DX[player.dir] * d;
@@ -1497,11 +1368,11 @@ __\\_______^/
                         tile === 'H' ? healSlice(d) :
                         corridorSlice(d);
                 }
-            
+
                 // Logo
                 output +=
                     "||                 ||\n||    Welcome to   ||\n++----TARDQUEST----++\n";
-            
+
                 // Party display
                 if (party.length > 0) {
                     let partyHTML = `<strong>Your Party:</strong><br>`;
@@ -1512,96 +1383,21 @@ __\\_______^/
                 } else {
                     document.getElementById("partylist").innerHTML = '';
                 }
-            
+
                 // Controls
                 document.getElementById("controls").textContent =
                     "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
             }
 
-        
             // If the player is dead
             if (player.hp <= 0) {
                 output += `\nGood job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`;
                 gameOver = true;
                 setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
             }
-        
+
             // Render the final output to the game screen
             document.getElementById('game').innerHTML = output; // Use innerHTML to ensure HTML is rendered
-        }
-
-
-
-        function renderInventory() {
-            if (isEmpty(player.inventory.contents)) {
-                return;
-            }
-
-            let i = 0;
-            let inventoryText = "";
-
-            for (const property in player.inventory.contents) {
-                const isSelectedLine = i++ === player.inventory.selectionIndex;
-                const dotPattern = items[property].name.length % 2 ? ' .' : '. ';
-
-                const inventoryLine =
-                    (isSelectedLine ? "▶ " : "  ") +
-                    (items[property].name + dotPattern.repeat(10)).substr(0, 20) +
-                    `${player.inventory.contents[property]}x\n`;
-
-                inventoryText += inventoryLine;
-
-                if (isSelectedLine) {
-                    document.getElementById('inventoryItemDescription').textContent = items[property].description;
-                }
-            }
-
-            document.getElementById('inventoryList').textContent = inventoryText;
-        }
-
-        function renderMerchant() {
-            let i = 0;
-            let itemHtml = player.bitcoins > 0
-                ? `You have ${player.bitcoins} BTC in your wallet\n\n`
-                : "Your wallet is emptier than a lughead's skull. But you can still look around\n\n";
-
-            merchant.items.forEach((property) => {
-                const isSelectedLine = i++ === merchant.selectionIndex;
-                const itemTooExpensive = items[property].price.buy > player.bitcoins;
-                const dotPattern = items[property].name.length % 2 ? ' .' : '. ';
-
-                const itemLine =
-                    (isSelectedLine ? "▶ " : "  ") +
-                    (itemTooExpensive ? '<span class="tooExpensive">' : '<span>') +
-                    (items[property].name + dotPattern.repeat(10)).substr(0, 20) +
-                    `${items[property].price.buy} BTC</span>\n`;
-
-                itemHtml += itemLine;
-
-                if (isSelectedLine) {
-                    document.getElementById('merchantItemDescription').textContent = items[property].description;
-                }
-            });
-
-            document.getElementById('merchantItemList').innerHTML = itemHtml;
-        }
-
-        function renderGambler() {
-            const optionLines = {
-                gamble: `Play the game <span class="BTC">(${gambler.playPrice} BTC)</span>`,
-                leave: "Leave the Gambler",
-            };
-
-            let i = 0;
-            let itemHtml = `GAMBLER: "Welcome, dungeon dweller! Roll a 12 and <span class="BTC">boost one of yer stats.</span> Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\nYou have <span class="BTC">${player.bitcoins} BTC</span> in your wallet\n\n`;
-
-            gambler.options.forEach((option) => {
-                const isSelectedLine = i++ === gambler.selectionIndex;
-                const itemLine = (isSelectedLine ? "▶ " : "  ") + optionLines[option] + "\n";
-                itemHtml += itemLine;
-            });
-
-            document.getElementById('gamblerMenu').innerHTML = itemHtml;
         }
 
         function isEmpty(obj) {
@@ -1620,7 +1416,7 @@ __\\_______^/
         }
 
         function move(direction) {
-            if (player.isVisitingGambler || player.isVisitingMerchant || player.inCombat || gameOver) {
+            if (player.inCombat || gameOver) {
                 return;
             }
 
@@ -1641,9 +1437,9 @@ __\\_______^/
                 player.x = nx;
                 player.y = ny;
                 if (isMerchantTile(nx, ny)) {
-                    visitTheMerchant();
+                    menu.open('merchant');
                 } else if (isGamblerTile(nx, ny)) {
-                    visitTheGambler();
+                    menu.open('gambler');
                 } else if (tile === 'E') {
                     descend();
                 } else if (tile === 'H') {
@@ -1681,7 +1477,7 @@ __\\_______^/
             currentEnemy = structuredClone(
                 enemies[Math.floor(Math.random() * enemies.length)]
             );
-        
+
             // Scale enemy stats based on floor
             const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
             if (floorBoost > 0) {
@@ -1692,7 +1488,7 @@ __\\_______^/
                 ];
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
-        
+
             player.inCombat = true;
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
@@ -1744,9 +1540,6 @@ __\\_______^/
                     player.levelingUp = true;  // Keep only the leveling-up flag
                     // Do NOT increment player.level here
                 }
-
-
-
             } else {
                 enemyAttack();
             }
@@ -1758,43 +1551,43 @@ __\\_______^/
             const targetAllies = party.filter(a => a.hp > 0);
             if (targetAllies.length && Math.random() < 0.5) {
                 const target = targetAllies[Math.floor(Math.random() * targetAllies.length)];
-                
+
                 // Base damage
                 let baseDamage = Math.floor(Math.random() * 5) + 1;
-                
+
                 // Boost damage based on the floor
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost; // Increase base damage by the floorBoost
-                
+
                 // Calculate damage based on player's defense
                 const playerArmor = armor[player.armor];
                 const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
-                
+
                 let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
-                
+
                 target.hp -= dmg;
                 updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="enemy">${dmg} HP</span> to your <span class="friendly">${target.name}</span>`);
-                
+
                 if (target.hp <= 0) {
                     updateBattleLog(`Your <span class="friendly">${target.name}</span> has been <span class="action">eviscerated</span>...`);
                 }
             } else {
                 // Same for the player, calculate the damage for the player
                 let baseDamage = Math.floor(Math.random() * 5) + 1;
-                
+
                 // Boost damage based on the floor
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost;
-                
+
                 // Calculate damage based on the player's defense
                 const playerArmor = armor[player.armor];
                 const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
-                
+
                 const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
                 player.hp -= dmg;
-                
+
                 updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="HP">${dmg} HP</span> to <span class="friendly">you</span>`);
-                
+
                 if (player.hp <= 0) gameOver = true;
             }
         }
@@ -1823,13 +1616,13 @@ __\\_______^/
             e?.preventDefault();
             playSFX('persuade');
             awaitingPersuasionText = true;
-        
+
             // Show the input box
             const inputBox = document.getElementById("inputBox");
             const input = document.getElementById("persuadeInput");
             inputBox.style.display = "flex";
             input.value = "";
-        
+
             // Delay the focus slightly to ensure it's applied after rendering
             setTimeout(() => {
                 input.focus();
@@ -1845,11 +1638,11 @@ __\\_______^/
                 e.target.value = "";
                 awaitingPersuasionText = false;
                 document.getElementById("inputBox").style.display = "none";
-        
+
                 // ======== Speaking Outside Combat ========
                 if (speakingOutsideCombat) {
                     speakingOutsideCombat = false;
-        
+
                     if (party.length > 0) {
                         const responder = party[Math.floor(Math.random() * party.length)];
                         const responses = [
@@ -1867,16 +1660,16 @@ __\\_______^/
                         const reply = responses[Math.floor(Math.random() * responses.length)];
                         updateBattleLog(`${responder.name}: ${reply}`);
                     }
-        
+
                     render();
                     return;
                 }
-        
+
                 // ======== Persuasion During Combat ========
                 const baseChance = 0.1;
                 const prsBonus = player.persuasion * 0.03;
                 const totalChance = Math.min(0.9, baseChance + prsBonus);
-        
+
                 if (Math.random() < totalChance) {
                     const newAlly = {
                         name: currentEnemy.name,
@@ -1892,7 +1685,7 @@ __\\_______^/
                     updateBattleLog(`${currentEnemy.name} really, quite genuinely, does not care...`);
                     enemyAttack();
                 }
-        
+
                 render();
             }
         });
@@ -1919,82 +1712,13 @@ __\\_______^/
             render();
         }
 
-        function handleInventoryInput(key) {
-            const idx = player.inventory.selectionIndex;
-            const items = Object.keys(player.inventory.contents);
-
-            switch (key) {
-                case 'i':
-                case 'escape':
-                    closeInventory();
-                    break;
-                case 'w':
-                case 'arrowup':
-                    player.inventory.selectionIndex = idx === 0
-                        ? items.length - 1
-                        : idx - 1;
-                    break;
-                case 's':
-                case 'arrowdown':
-                    player.inventory.selectionIndex = idx === items.length - 1
-                        ? 0
-                        : idx + 1;
-                    break;
-                case ' ':
-                case 'e':
-                case 'enter':
-                    useItem(items[player.inventory.selectionIndex]);
-                    closeInventory();
-                    if (currentEnemy && currentEnemy.hp > 0) {
-                        enemyAttack();
-                        render();
-                    }
-
-                    break;
-            }
-
-            renderInventory();
-            return;
-        }
-
         function useItem(itemName) {
             items[itemName].use();
 
-            player.inventory.contents[itemName]--;
-            if (player.inventory.contents[itemName] <= 0) {
-                delete player.inventory.contents[itemName];
+            player.inventory[itemName]--;
+            if (player.inventory[itemName] <= 0) {
+                delete player.inventory[itemName];
             }
-        }
-
-        function handleMerchantInput(key) {
-            const idx = merchant.selectionIndex;
-            const items = merchant.items;
-
-            switch (key) {
-                case 'escape':
-                    leaveTheMerchant();
-                    break;
-                case 'w':
-                case 'arrowup':
-                    merchant.selectionIndex = idx === 0
-                        ? items.length - 1
-                        : idx - 1;
-                    break;
-                case 's':
-                case 'arrowdown':
-                    merchant.selectionIndex = idx === items.length - 1
-                        ? 0
-                        : idx + 1;
-                    break;
-                case ' ':
-                case 'e':
-                case 'enter':
-                    buyItem(items[idx]);
-                    break;
-            }
-
-            renderMerchant();
-            return;
         }
 
         function buyItem(itemKey) {
@@ -2010,7 +1734,7 @@ __\\_______^/
             }
 
             player.bitcoins -= item.price.buy;
-            player.inventory.contents[itemKey] = (player.inventory?.contents[itemKey] || 0) + 1;
+            player.inventory[itemKey] = (player.inventory?.[itemKey] || 0) + 1;
 
             playSFX('kaching');
 
@@ -2031,50 +1755,12 @@ __\\_______^/
             return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an' : 'a';
         }
 
-        function handleGamblerInput(key) {
-            const idx = gambler.selectionIndex;
-            const options = gambler.options;
-
-            switch (key) {
-                case 'escape':
-                    leaveTheGambler(true);
-                    break;
-                case 'w':
-                case 'arrowup':
-                    gambler.selectionIndex = idx === 0
-                        ? options.length - 1
-                        : idx - 1;
-                    break;
-                case 's':
-                case 'arrowdown':
-                    gambler.selectionIndex = idx === options.length - 1
-                        ? 0
-                        : idx + 1;
-                    break;
-                case ' ':
-                case 'e':
-                case 'enter':
-                    const option = options[idx];
-                    if (option === 'gamble') {
-                        gamble();
-                    } else if (option === 'leave') {
-                        leaveTheGambler(true);
-                    } else {
-                        console.error('Unknown gambler option', { option });
-                    }
-                    break;
-            }
-
-            renderGambler();
-            return;
-        }
-
         function gamble() {
             player.bitcoins -= gambler.playPrice;
             updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
 
             player.inputDisabled = true;
-            document.getElementById('gamblerEscapeMessage').classList.add('hidden');
+            document.getElementById('menu').classList.add('hidden');
 
             dice = [
                 Math.floor(Math.random() * 6) + 1,
@@ -2083,7 +1769,6 @@ __\\_______^/
             gambleAnimation(dice, () => {
                 player.inputDisabled = false;
                 gambleOutcome(dice);
-                document.getElementById('gamblerEscapeMessage').classList.remove('hidden');
             });
             playSFX('gamble');
         }
@@ -2127,7 +1812,7 @@ __\\_______^/
                 gamblerSay('Hah! Tough luck, kid!');
             }
 
-            leaveTheGambler();
+            menu.close();
         }
 
         /**
@@ -2145,8 +1830,8 @@ __\\_______^/
             const isFinalFrame = frameNumber >= maxFrames - 1;
 
             if (frameNumber === 0) {
-                document.getElementById('gambleAnimation').classList.remove('hidden');
-                document.getElementById('gamblerMenu').classList.add('hidden');
+                document.getElementById('animation').classList.remove('hidden');
+                document.getElementById('menu').classList.add('hidden');
             }
 
             // Set random dice digits before displaying the actual outcome
@@ -2166,11 +1851,11 @@ __\\_______^/
                     );
                 }
 
-                document.getElementById("gambleAnimation").textContent = frameText;
+                document.getElementById("animation").textContent = frameText;
                 setTimeout(() => gambleAnimation(dice, callback, frameNumber + 1), !isFinalFrame ? 50 : 3000);
             } else {
-                document.getElementById('gambleAnimation').classList.add('hidden');
-                document.getElementById('gamblerMenu').classList.remove('hidden');
+                document.getElementById('animation').classList.add('hidden');
+                document.getElementById('menu').classList.remove('hidden');
                 typeof callback === 'function' && callback();
             }
         }
@@ -2185,14 +1870,14 @@ __\\_______^/
             } else {
                 return; // Ignore other keys
             }
-            
+
             // Now level up properly when the player manually chooses to level up
             player.level++;
             player.exp = 0; // Reset EXP after leveling up
             player.hp = player.maxHp; // Fully heal the player
             player.levelingUp = false; // Reset leveling up state
-            
-            updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>.`);
+
+            updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>`);
             render();
         }
 
@@ -2202,22 +1887,16 @@ __\\_______^/
             if (player.inputDisabled || gameOver || awaitingPersuasionText) {
                 return;
             }
-        
+
             const key = e.key.toLowerCase();
-        
-            if (player.levelingUp) {
+
+            if (menu.isOpen()) {
+                menu.handleInput(key);
+            } else if (player.levelingUp) {
                 handleLevelUpInput(key);
                 return; // <-- this fixes it
-            } else if (player.isVisitingMerchant) {
-                handleMerchantInput(key);
-                return;
-            } else if (player.isVisitingGambler) {
-                handleGamblerInput(key);
-            } else if (player.inventory.isOpen) {
-                handleInventoryInput(key);
-                return;
             } else if (key === 'i') {
-                openInventory();
+                menu.open('inventory');
             } else if (player.inCombat) {
                 // Combat mode
                 switch (key) {
@@ -2256,7 +1935,7 @@ __\\_______^/
                         break;
                 }
             }
-        
+
             render();
         });
 
@@ -2265,13 +1944,13 @@ __\\_______^/
         function descend() {
             floor++;
             updateBattleLog(`Descending into floor ${floor}...`);
-        
+
             const floorBoost = Math.floor(floor / 2);
             if (floorBoost > lastFloorBoostNotice) {
                 updateBattleLog(`<span class="action">As you descend deeper into the dungeon, you sense greater danger than before</span>.`);
                 lastFloorBoostNotice = floorBoost;
             }
-        
+
             if (Math.random() < 0.5) {
                 const flavorText = [
                     "The stale air fills your nostrils.",
@@ -2290,11 +1969,11 @@ __\\_______^/
                     "Somewhere ahead, something clanks. You sincerely hope it's plumbing.",
                     "You hear a plunger plunging menacingly.",
                 ];
-        
+
                 const logLine = flavorText[Math.floor(Math.random() * flavorText.length)];
                 updateBattleLog(logLine);
             }
-        
+
             generateMap();
         }
 
@@ -2320,6 +1999,213 @@ __\\_______^/
                 }
             }
         });
+
+        const menu = {
+            breadcrumbs: [],
+            selectionIndex: 0,
+            getActiveMenu: () => menu.menus[menu.breadcrumbs.at(-1)] || undefined,
+            isOpen: () => menu.breadcrumbs.length > 0,
+            open: (menuName) => {
+                if (typeof menu.menus[menuName] === 'undefined') {
+                    console.error('No matching entry for the designated menu name', { menuName });
+                }
+
+                menu.breadcrumbs.push(menuName);
+                menu.selectionIndex = 0;
+
+                document.querySelectorAll('#controls, #game').forEach((el) => {
+                    el.classList.add('hidden');
+                });
+
+                document.getElementById('menu').classList.remove('hidden');
+                document.getElementById('menuSelectionDescription').textContent = '';
+
+                menu.menus[menuName].onOpen?.();
+                menu.render();
+            },
+            close: () => {
+                const menuName = menu.breadcrumbs.pop();
+                menu.menus[menuName].onClose?.();
+                menu.selectionIndex = 0;
+
+                if (menu.breadcrumbs.length === 0) {
+                    document.getElementById('menu').classList.add('hidden');
+                    document.querySelectorAll('#controls, #game').forEach((el) => {
+                        el.classList.remove('hidden');
+                    });
+                }
+            },
+            render: () => {
+                let inventoryText = "";
+                const activeMenu = menu.getActiveMenu();
+                if (typeof activeMenu === 'undefined') {
+                    return;
+                }
+
+                document.getElementById('menuLanding').innerHTML = activeMenu.landingHtml() || '';
+
+                const options = activeMenu.getOptions();
+
+                options.forEach((option, index) => {
+                    const isSelectedLine = index === menu.selectionIndex;
+
+                    inventoryText += isSelectedLine ? "▶ " : "  ";
+                    if (option.hasOwnProperty('trailText')) {
+                        const dotPattern = option.displayText.length % 2 ? ' .' : '. ';
+                        inventoryText += (option.displayText + dotPattern.repeat(10)).substr(0, 20) +
+                            `${option.trailText}\n`;
+                    } else {
+                        inventoryText += `${option.displayText}\n`;
+                    }
+
+                    if (isSelectedLine) {
+                        document.getElementById('menuSelectionDescription').textContent = option.description;
+                    }
+                });
+
+                document.getElementById('menuList').textContent = inventoryText;
+            },
+            handleInput: (key) => {
+                const activeMenu = menu.getActiveMenu();
+                const options = activeMenu.getOptions();
+
+                switch (key) {
+                    case 'escape':
+                        menu.close();
+                        break;
+                    case 'w':
+                    case 'arrowup':
+                        menu.selectionIndex = menu.selectionIndex === 0
+                            ? options.length - 1
+                            : menu.selectionIndex - 1;
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        menu.selectionIndex = menu.selectionIndex === options.length - 1
+                            ? 0
+                            : menu.selectionIndex + 1;
+                        break;
+                    case ' ':
+                    case 'e':
+                    case 'enter':
+                        const selectedOptionId = options[menu.selectionIndex].id;
+                        selectedOptionId === '_exit'
+                            ? menu.close()
+                            : activeMenu.select(selectedOptionId);
+                        break;
+                }
+
+                menu.render();
+            },
+            menus: {
+                inventory: {
+                    landingHtml: () => {
+                        if (!isEmpty(player.inventory)) {
+                            return null;
+                        }
+                        const flavorText = [
+                            'Your pockets echo... ᵉᶜʰᵒ···  ˚˚˙˙˙',
+                            'You own nothing. Klaus Schwab would be proud',
+                            'You got nothin\', bub',
+                            'A moth flutters out from your pockets',
+                            'What are you doing staring into an empty bag? Go get some items! This is a dungeon crawler for fuck\'s sake!!!',
+                            'Your inventory is full of your hopes, dreams, and amibitions',
+                        ];
+                        return flavorText[Math.floor(Math.random() * flavorText.length)];
+                    },
+                    getOptions: () => {
+                        const options = Object.keys(player.inventory).map((itemId) => ({
+                            id: itemId,
+                            displayText: items[itemId].name,
+                            description: items[itemId].description,
+                            trailText: `${player.inventory[itemId]}x`,
+                        }));
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Exit the Inventory",
+                            description: "Get back to playing the game",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        useItem(selectedOptionId);
+                        menu.close();
+                        if (currentEnemy && currentEnemy.hp > 0) {
+                            enemyAttack();
+                            render();
+                        }
+                    },
+                },
+                merchant: {
+                    onOpen: () => {
+                        merchantSay('Welcome to SlobMart!');
+                    },
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have ${player.bitcoins} BTC in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        const options = merchant.items.map((itemId) => ({
+                            id: itemId,
+                            displayText: items[itemId].name,
+                            description: items[itemId].description,
+                            trailText: `${items[itemId].price.buy} BTC`,
+                        }));
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Leave",
+                            description: "Get back to spelunking",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        buyItem(selectedOptionId);
+                    },
+                },
+                gambler: {
+                    onOpen: () => {
+                        gamblerSay('Place yer bets!');
+                    },
+                    onClose: () => {
+                        gamblerSay('You gotta know when to hold \'em, know when to fold \'em, heh heh');
+                        updateBattleLog('The gambler escapes into the shadows');
+
+                        gambler.isActiveOnFloor = false;
+                    },
+                    landingHtml: () => {
+                        return (
+                            `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
+                            `Roll a 12 and <span class="BTC">boost one of yer stats.</span> ` +
+                            `Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\n` +
+                            `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                        );
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "play",
+                                displayText: "Play the game",
+                                trailText: `${gambler.playPrice} BTC`,
+                                description: "Take your chance with the gambler",
+                            },
+                            {
+                                id: "_exit",
+                                displayText: "Leave",
+                                description: "Leave this crusty fool",
+                            },
+                        ];
+                    },
+                    select: () => {
+                        gamble();
+                    },
+                },
+            },
+        };
 
         const gambleFrames = [
     `
@@ -2408,7 +2294,7 @@ __\\_______^/
               ..__
     __________\`.  '-
    (___________ \`.  '-.
-    (______..--. 
+    (______..--.
       (__)_||__|
         (_)_          _
            \`-_______-'
@@ -2420,8 +2306,8 @@ __\\_______^/
                 ..__
       __________\`.  '-
      (___________ \`.  '-.
-      (___/_/\\ ___. 
-       (__\\_\\/|   ||     
+      (___/_/\\ ___.
+       (__\\_\\/|   ||
          (____|___||    _
               \`-______-'
 
@@ -2432,7 +2318,7 @@ __\\_______^/
                   ..__
         __________\`.  '-
        (___________ \`.  '-.
-        (__________ 
+        (__________
          (________
          .-'--._ .----_   _
          | |  | |\` ___'.-'
@@ -2446,7 +2332,7 @@ __\\_______^/
                       ..__
             __________\`.  '-
            (___________ \`.  '-.
-            (__________ 
+            (__________
              (________
                (____          _
                     \`-______-'
@@ -2463,9 +2349,9 @@ __\\_______^/
                           ..__
                 __________\`.  '-
                (___________ \`.  '
-                (__________ 
+                (__________
                  (________
-                   (____          
+                   (____
                         \`-______-
 
 
