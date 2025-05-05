@@ -341,11 +341,14 @@
             x: WIDTH - 2,
             y: HEIGHT - 2,
             items: [],
+            say: function(str) {
+                updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
+            },
             die: function() {
                 this.isAlive = false;
                 this.isActiveOnFloor = false;
                 playSFX('scream');
-                merchantSay('AIEEEEEEEEEEEEEE!');
+                merchant.say('AIEEEEEEEEEEEEEE!');
                 updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
         };
@@ -358,6 +361,9 @@
             selectionIndex: 0,
             options: ['gamble', 'leave'],
             playPrice: 200,
+            say: function(str) {
+                updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
+            },
             die: function () {
                 this.isAlive = false;
                 this.isActiveOnFloor = false;
@@ -365,7 +371,7 @@
                 const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
                 player.bitcoins += rewardBtc;
                 playSFX('scream');
-                gamblerSay('AUGH!!');
+                gambler.say('AUGH!!');
                 updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
             }
         };
@@ -758,6 +764,9 @@
             kaching: new Audio('https://files.catbox.moe/02ht6d.mp3'),
             torch: new Audio('https://files.catbox.moe/b2jzsn.mp3'),
             gamble: new Audio('https://files.catbox.moe/mo9o5z.mp3'),
+            uiOption: new Audio('https://files.catbox.moe/h34402.wav'),
+            uiSelect: new Audio('https://files.catbox.moe/2cvmq8.wav'),
+            uiCancel: new Audio('https://files.catbox.moe/5doy28.wav'),
         };
 
         const music = {
@@ -1094,14 +1103,6 @@
                     return `<div style="color: ${color};">${msg}</div>`;
                 })
                 .join("");
-        }
-
-        function merchantSay(str) {
-            updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
-        }
-
-        function gamblerSay(str) {
-            updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
         }
 
         function playMusic(type) {
@@ -1729,7 +1730,7 @@ __\\_______^/
             }
 
             if (player.bitcoins < item.price.buy) {
-                merchantSay('Too bad, kid. Come back when you get some coin!');
+                merchant.say('Too bad, kid. Come back when you get some coin!');
                 return;
             }
 
@@ -1745,7 +1746,7 @@ __\\_______^/
             ];
 
             const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-            merchantSay(merchantText);
+            merchant.say(merchantText);
 
             const itemText = getArticle(item.name) + ' ' + item.name;
             updateBattleLog(`You just bought ${itemText}`);
@@ -1809,7 +1810,7 @@ __\\_______^/
                         break;
                 }
             } else {
-                gamblerSay('Hah! Tough luck, kid!');
+                gambler.say('Hah! Tough luck, kid!');
             }
 
             menu.close();
@@ -2013,10 +2014,7 @@ __\\_______^/
                 menu.breadcrumbs.push(menuName);
                 menu.selectionIndex = 0;
 
-                document.querySelectorAll('#controls, #game').forEach((el) => {
-                    el.classList.add('hidden');
-                });
-
+                document.getElementById('game').classList.add('hidden');
                 document.getElementById('menu').classList.remove('hidden');
                 document.getElementById('menuSelectionDescription').textContent = '';
 
@@ -2030,9 +2028,7 @@ __\\_______^/
 
                 if (menu.breadcrumbs.length === 0) {
                     document.getElementById('menu').classList.add('hidden');
-                    document.querySelectorAll('#controls, #game').forEach((el) => {
-                        el.classList.remove('hidden');
-                    });
+                    document.getElementById('game').classList.remove('hidden');
                 }
             },
             render: () => {
@@ -2072,26 +2068,33 @@ __\\_______^/
                 switch (key) {
                     case 'escape':
                         menu.close();
+                        playSFX('uiCancel');
                         break;
                     case 'w':
                     case 'arrowup':
                         menu.selectionIndex = menu.selectionIndex === 0
                             ? options.length - 1
                             : menu.selectionIndex - 1;
+                        playSFX('uiOption');
                         break;
                     case 's':
                     case 'arrowdown':
                         menu.selectionIndex = menu.selectionIndex === options.length - 1
                             ? 0
                             : menu.selectionIndex + 1;
+                        playSFX('uiOption');
                         break;
                     case ' ':
                     case 'e':
                     case 'enter':
                         const selectedOptionId = options[menu.selectionIndex].id;
-                        selectedOptionId === '_exit'
-                            ? menu.close()
-                            : activeMenu.select(selectedOptionId);
+                        if (selectedOptionId === '_exit') {
+                            menu.close();
+                            playSFX('uiCancel');
+                        } else {
+                            activeMenu.select(selectedOptionId);
+                            playSFX('uiSelect');
+                        };
                         break;
                 }
 
@@ -2140,7 +2143,7 @@ __\\_______^/
                 },
                 merchant: {
                     onOpen: () => {
-                        merchantSay('Welcome to SlobMart!');
+                        merchant.say('Welcome to SlobMart!');
                     },
                     landingHtml: () => {
                         return player.bitcoins > 0
@@ -2169,10 +2172,10 @@ __\\_______^/
                 },
                 gambler: {
                     onOpen: () => {
-                        gamblerSay('Place yer bets!');
+                        gambler.say('Place yer bets!');
                     },
                     onClose: () => {
-                        gamblerSay('You gotta know when to hold \'em, know when to fold \'em, heh heh');
+                        gambler.say('You gotta know when to hold \'em, know when to fold \'em, heh heh');
                         updateBattleLog('The gambler escapes into the shadows');
 
                         gambler.isActiveOnFloor = false;
