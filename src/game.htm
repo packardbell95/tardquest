@@ -51,25 +51,47 @@
             align-content: center;
         }
 
-        #menu:not(.hidden),
-        #menuList:not(.hidden) {
+        #menu:not(.hidden) {
             width: 100%;
             height: 100%;
-            white-space: pre-wrap;
             display: flex;
             flex-direction: column;
+            gap: 10px;
             padding-bottom: 10px;
+        }
+
+        #menuList {
+            margin-bottom: auto;
+            padding-left: 1em;
         }
 
         #menuList,
         #menuSelectionDescription {
             flex-grow: 1;
+            white-space: pre-wrap;
+        }
+
+        #menuLanding,
+        #menuSelectionDescription {
+            padding: 0 1em;
         }
 
         #menuList::before,
         #menuSelectionDescription::before {
             display: block;
             text-align: center;
+        }
+
+        #menuLanding {
+            display: flex;
+            flex-direction: column;
+            white-space: pre-wrap;
+            min-height: 8em;
+        }
+
+        #menuLanding > .title {
+            margin: 0 auto 1em;
+            letter-spacing: 1ch;
         }
 
         #animation:not(.hidden) {
@@ -176,10 +198,6 @@
             width: 212px;
             height: 163px;
             overflow: hidden;
-            /*
-                overflow-y: auto;
-                overflow-x: hidden;
-            */
             line-height: 0px;
             font-size: 10px;
             padding: 4px;
@@ -226,6 +244,11 @@
 
         .gambler {
             color: #ffd700;
+        }
+
+        .muted {
+            color: #666;
+            text-decoration: line-through;
         }
 
         .tooExpensive {
@@ -286,7 +309,7 @@
         <div id="menuLanding"></div>
         <div id="menuList"></div>
         <div id="menuSelectionDescription"></div>
-        <div class="alignRight">Press Escape to exit</div>
+        <div class="alignRight">Press Escape to go back</div>
     </div>
   </div>
   <div id="ui">
@@ -351,6 +374,38 @@
                 merchant.say('AIEEEEEEEEEEEEEE!');
                 updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
+            buy: function(type, key) {
+                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+                if (!merchandise) {
+                    console.error(`${itemKey} doesn't exist!`);
+                    return;
+                }
+
+                if (player.bitcoins < merchandise.price) {
+                    merchant.say('Too bad, kid. Come back when you get some coin!');
+                    return;
+                }
+
+                player.bitcoins -= merchandise.price;
+                playSFX('kaching');
+
+                if (type === 'item') {
+                    player.inventory[key] = (player.inventory?.[key] || 0) + 1;
+                } else {
+                    player[type] = key;
+                }
+
+                const purchaseFlavorText = [
+                    "HAHA! You won't regret it!",
+                    "Don't forget: NO REFUNDS!",
+                    "You won't find a better deal than this!",
+                ];
+                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+                merchant.say(merchantText);
+
+                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+                updateBattleLog(`You just bought ${merchandiseText}`);
+            }
         };
 
         const gambler = {
@@ -468,10 +523,7 @@
                     base: 2,
                     randomMultiplier: 5,
                 },
-                price: {
-                    buy: 20,
-                    sell: 5,
-                },
+                price: 20,
             },
             wiffleBallBat: {
                 name: "WIFFLE BALL BAT",
@@ -480,10 +532,7 @@
                     base: 3,
                     randomMultiplier: 6,
                 },
-                price: {
-                    buy: 50,
-                    sell: 20,
-                },
+                price: 50,
             },
             nunchucks: {
                 name: "NUNCHUCKS",
@@ -492,10 +541,7 @@
                     base: 6,
                     randomMultiplier: 9,
                 },
-                price: {
-                    buy: 100,
-                    sell: 50,
-                },
+                price: 100,
             },
             atlatlSpear: {
                 name: "ATLATL SPEAR",
@@ -504,61 +550,43 @@
                     base: 10,
                     randomMultiplier: 11,
                 },
-                price: {
-                    buy: 400,
-                    sell: 200,
-                },
+                price: 400,
             },
             bludgeoningMace: {
                 name: "BLUDGEONING MACE",
-                description: "A stick with a spikey metal ball at the end of it",
+                description: "A stick with a spikey metal ball at the end",
                 damage: {
                     base: 10,
                     randomMultiplier: 14,
                 },
-                price: {
-                    buy: 500,
-                    sell: 220,
-                },
+                price: 500,
             },
         };
 
         const armor = {
             graphicTee: {
                 name: "GRAPHIC TEE",
-                description: "A t-shirt with the text 'Normal people scare me'",
+                description: "A t-shirt that says 'Normal people scare me'",
                 defense: 1,
-                price: {
-                    buy: 20,
-                    sell: 5,
-                },
+                price: 20,
             },
             barrelWithSuspenders: {
                 name: "BARREL (with suspenders)",
-                description: "An empty barrel that covers your torso and legs somewhat. Smells like whisky too!",
+                description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
                 defense: 3,
-                price: {
-                    buy: 50,
-                    sell: 30,
-                },
+                price: 50,
             },
             leatherArmor: {
                 name: "LEATHER ARMOR",
                 description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
                 defense: 6,
-                price: {
-                    buy: 150,
-                    sell: 25,
-                },
+                price: 150,
             },
             milaneseArmor: {
                 name: "MILANESE ARMOR",
                 description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
                 defense: 12,
-                price: {
-                    buy: 1000,
-                    sell: 600,
-                },
+                price: 1000,
             },
         };
 
@@ -571,10 +599,7 @@
                     updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
                 },
                 merchantStockChance: 0.9,
-                price: {
-                    buy: 10,
-                    sell: 5,
-                },
+                price: 10,
             },
             cupOfLean: {
                 name: "CUP OF LEAN",
@@ -584,10 +609,7 @@
                     updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
                 },
                 merchantStockChance: 0.5,
-                price: {
-                    buy: 30,
-                    sell: 15,
-                },
+                price: 30,
             },
             dowsingRod: {
                 name: "DOWSING ROD",
@@ -597,10 +619,7 @@
                     updateBattleLog("The exit has been revealed!");
                 },
                 merchantStockChance: 0.8,
-                price: {
-                    buy: 20,
-                    sell: 10,
-                },
+                price: 20,
             },
             torch: {
                 name: "TORCH",
@@ -611,20 +630,14 @@
                     updateBattleLog("Lo, the way has been made clear!");
                 },
                 merchantStockChance: 0.8,
-                price: {
-                    buy: 60,
-                    sell: 30,
-                },
+                price: 60,
             },
             brickOfC4: {
                 name: "BRICK OF C-4",
                 description: "An incendiary plastic explosive. Great for turning anything into nothing real quick",
                 use: () => useC4(),
                 merchantStockChance: 0.5,
-                price: {
-                    buy: 300,
-                    sell: 150,
-                },
+                price: 300,
             },
         };
 
@@ -764,6 +777,7 @@
             kaching: new Audio('https://files.catbox.moe/02ht6d.mp3'),
             torch: new Audio('https://files.catbox.moe/b2jzsn.mp3'),
             gamble: new Audio('https://files.catbox.moe/mo9o5z.mp3'),
+            inventoryOpen: new Audio('https://files.catbox.moe/8cf12i.mp3'),
             uiOption: new Audio('https://files.catbox.moe/h34402.wav'),
             uiSelect: new Audio('https://files.catbox.moe/2cvmq8.wav'),
             uiCancel: new Audio('https://files.catbox.moe/5doy28.wav'),
@@ -1127,10 +1141,13 @@
 
 
         function playSFX(name) {
-            if (sfx[name]) {
-                sfx[name].currentTime = 0;
-                sfx[name].play();
+            if (!sfx[name]) {
+                console.error("SFX not found", { name });
+                return;
             }
+
+            sfx[name].currentTime = 0;
+            sfx[name].play();
         }
 
         function wallSlice(d) {
@@ -1722,38 +1739,12 @@ __\\_______^/
             }
         }
 
-        function buyItem(itemKey) {
-            const item = items?.[itemKey];
-            if (!item) {
-                console.error(`${itemKey} doesn't exist!`);
-                return;
-            }
-
-            if (player.bitcoins < item.price.buy) {
-                merchant.say('Too bad, kid. Come back when you get some coin!');
-                return;
-            }
-
-            player.bitcoins -= item.price.buy;
-            player.inventory[itemKey] = (player.inventory?.[itemKey] || 0) + 1;
-
-            playSFX('kaching');
-
-            const purchaseFlavorText = [
-                "HAHA! You won't regret it!",
-                "Don't forget: NO REFUNDS!",
-                "You won't find a better deal than this!",
-            ];
-
-            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-            merchant.say(merchantText);
-
-            const itemText = getArticle(item.name) + ' ' + item.name;
-            updateBattleLog(`You just bought ${itemText}`);
-        }
-
         function getArticle(noun) {
-            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an' : 'a';
+            if (noun.match(/^\w*s\b|\barmor$/i)) {
+                return '';
+            }
+
+            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an ' : 'a ';
         }
 
         function gamble() {
@@ -1897,6 +1888,7 @@ __\\_______^/
                 handleLevelUpInput(key);
                 return; // <-- this fixes it
             } else if (key === 'i') {
+                playSFX('inventoryOpen');
                 menu.open('inventory');
             } else if (player.inCombat) {
                 // Combat mode
@@ -2004,27 +1996,35 @@ __\\_______^/
         const menu = {
             breadcrumbs: [],
             selectionIndex: 0,
-            getActiveMenu: () => menu.menus[menu.breadcrumbs.at(-1)] || undefined,
+            getActiveMenu: () => menu.menus[menu.breadcrumbs.at(-1)?.menuName] || undefined,
             isOpen: () => menu.breadcrumbs.length > 0,
             open: (menuName) => {
                 if (typeof menu.menus[menuName] === 'undefined') {
                     console.error('No matching entry for the designated menu name', { menuName });
+                    return;
                 }
 
-                menu.breadcrumbs.push(menuName);
-                menu.selectionIndex = 0;
+                const activeMenu = menu.menus[menuName];
+
+                menu.breadcrumbs.push({
+                    menuName,
+                    selectionIndex: menu.selectionIndex,
+                });
+
+                // Put the cursor on the first non-disabled option, if available
+                menu.selectionIndex = Math.max(activeMenu.getOptions().findIndex((e) => !e.disabled), 0);
 
                 document.getElementById('game').classList.add('hidden');
                 document.getElementById('menu').classList.remove('hidden');
                 document.getElementById('menuSelectionDescription').textContent = '';
 
-                menu.menus[menuName].onOpen?.();
+                activeMenu.onOpen?.();
                 menu.render();
             },
             close: () => {
-                const menuName = menu.breadcrumbs.pop();
-                menu.menus[menuName].onClose?.();
-                menu.selectionIndex = 0;
+                const previousMenu = menu.breadcrumbs.pop();
+                menu.menus[previousMenu.menuName].onClose?.();
+                menu.selectionIndex = previousMenu.selectionIndex;
 
                 if (menu.breadcrumbs.length === 0) {
                     document.getElementById('menu').classList.add('hidden');
@@ -2032,34 +2032,43 @@ __\\_______^/
                 }
             },
             render: () => {
-                let inventoryText = "";
+                let menuHtml = "";
                 const activeMenu = menu.getActiveMenu();
                 if (typeof activeMenu === 'undefined') {
                     return;
                 }
 
-                document.getElementById('menuLanding').innerHTML = activeMenu.landingHtml() || '';
+                const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
+                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                document.getElementById('menuLanding').innerHTML = titleHtml + landingHtml;
 
                 const options = activeMenu.getOptions();
+                const trailTextMaxLength = Math.max(...options.map((o) => (o?.trailText || '').length));
 
                 options.forEach((option, index) => {
                     const isSelectedLine = index === menu.selectionIndex;
+                    const cursor = isSelectedLine ? "▶ " : "  ";
+                    const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
+                    let line = '';
 
-                    inventoryText += isSelectedLine ? "▶ " : "  ";
                     if (option.hasOwnProperty('trailText')) {
                         const dotPattern = option.displayText.length % 2 ? ' .' : '. ';
-                        inventoryText += (option.displayText + dotPattern.repeat(10)).substr(0, 20) +
-                            `${option.trailText}\n`;
+                        const trailDiff = trailTextMaxLength - option.trailText.length;
+
+                        line = (option.displayText + dotPattern.repeat(17 + Math.floor(trailDiff / 2))).substr(0, 34 + trailDiff) +
+                            ` ${option.trailText}`;
                     } else {
-                        inventoryText += `${option.displayText}\n`;
+                        line = `${option.displayText}`;
                     }
+
+                    menuHtml += `${cursor}${spanHtml}${line}</span>\n`;
 
                     if (isSelectedLine) {
                         document.getElementById('menuSelectionDescription').textContent = option.description;
                     }
                 });
 
-                document.getElementById('menuList').textContent = inventoryText;
+                document.getElementById('menuList').innerHTML = menuHtml;
             },
             handleInput: (key) => {
                 const activeMenu = menu.getActiveMenu();
@@ -2087,6 +2096,11 @@ __\\_______^/
                     case ' ':
                     case 'e':
                     case 'enter':
+                        if (options[menu.selectionIndex].disabled) {
+                            playSFX('uiCancel');
+                            break;
+                        }
+
                         const selectedOptionId = options[menu.selectionIndex].id;
                         if (selectedOptionId === '_exit') {
                             menu.close();
@@ -2102,19 +2116,11 @@ __\\_______^/
             },
             menus: {
                 inventory: {
+                    title: "INVENTORY",
                     landingHtml: () => {
-                        if (!isEmpty(player.inventory)) {
-                            return null;
-                        }
-                        const flavorText = [
-                            'Your pockets echo... ᵉᶜʰᵒ···  ˚˚˙˙˙',
-                            'You own nothing. Klaus Schwab would be proud',
-                            'You got nothin\', bub',
-                            'A moth flutters out from your pockets',
-                            'What are you doing staring into an empty bag? Go get some items! This is a dungeon crawler for fuck\'s sake!!!',
-                            'Your inventory is full of your hopes, dreams, and amibitions',
-                        ];
-                        return flavorText[Math.floor(Math.random() * flavorText.length)];
+                        return isEmpty(player.inventory)
+                            ? 'You own nothing. Klaus Schwab would be proud'
+                            : null;
                     },
                     getOptions: () => {
                         const options = Object.keys(player.inventory).map((itemId) => ({
@@ -2142,12 +2148,51 @@ __\\_______^/
                     },
                 },
                 merchant: {
+                    title: "MERCHANT",
                     onOpen: () => {
                         merchant.say('Welcome to SlobMart!');
                     },
+                    onClose: () => {
+                        merchant.say('Thank you. Come again!');
+                    },
                     landingHtml: () => {
                         return player.bitcoins > 0
-                            ? `You have ${player.bitcoins} BTC in your wallet`
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "merchantItems",
+                                displayText: "Items",
+                                description: "See what consumable items are for sale",
+                            },
+                            {
+                                id: "merchantWeapons",
+                                displayText: "Weapons",
+                                description: "Look at some weapon upgrades",
+                            },
+                            {
+                                id: "merchantArmor",
+                                displayText: "Armor",
+                                description: "Get some thicker skin",
+                            },
+                            {
+                                id: "_exit",
+                                displayText: "Leave",
+                                description: "Get back to spelunking",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                merchantItems: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
                             : "Your wallet is emptier than a lughead's skull. But you can still look around";
                     },
                     getOptions: () => {
@@ -2155,22 +2200,112 @@ __\\_______^/
                             id: itemId,
                             displayText: items[itemId].name,
                             description: items[itemId].description,
-                            trailText: `${items[itemId].price.buy} BTC`,
+                            trailText: `${items[itemId].price} BTC`,
+                            disabled: items[itemId].price > player.bitcoins,
+                            className: items[itemId].price > player.bitcoins ? 'tooExpensive' : undefined,
                         }));
 
                         options.push({
                             id: "_exit",
-                            displayText: "Leave",
-                            description: "Get back to spelunking",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
                         });
 
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        buyItem(selectedOptionId);
+                        merchant.buy('item', selectedOptionId);
+                    },
+                },
+                merchantWeapons: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        const message = player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+
+                        const currentWeapon = weapons[player.weapon].name;
+                        const currentWeaponDisplay = getArticle(currentWeapon) + currentWeapon;
+                        const wieldingMessage = `You are currently wielding ${currentWeaponDisplay}`;
+
+                        return `${message}\n\n${wieldingMessage}`;
+                    },
+                    getOptions: () => {
+                        const weaponKeys = Object.keys(weapons);
+                        const options = weaponKeys.map((weaponId) => {
+                            const tooExpensive = weapons[weaponId].price > player.bitcoins;
+                            const notAnUpgrade = weaponKeys.indexOf(player.weapon) >= weaponKeys.indexOf(weaponId);
+
+                            return {
+                                id: weaponId,
+                                displayText: weapons[weaponId].name,
+                                description:
+                                    `${weapons[weaponId].description}\n` +
+                                    `Base Damage: ${weapons[weaponId].damage.base}, ` +
+                                    `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
+                                trailText: `${weapons[weaponId].price} BTC`,
+                                disabled: tooExpensive || notAnUpgrade,
+                                className: notAnUpgrade ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('weapon', selectedOptionId);
+                    },
+                },
+                merchantArmor: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        const message = player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+
+                        const currentArmor = armor[player.armor].name;
+                        const currentArmorDisplay = getArticle(currentArmor) + currentArmor;
+                        const wearingMessage = `You are currently wearing ${currentArmorDisplay}`;
+
+                        return `${message}\n\n${wearingMessage}`;
+                    },
+                    getOptions: () => {
+                        const armorKeys = Object.keys(armor);
+                        const options = armorKeys.map((armorId) => {
+                            const tooExpensive = armor[armorId].price > player.bitcoins;
+                            const notAnUpgrade = armorKeys.indexOf(player.armor) >= armorKeys.indexOf(armorId);
+
+                            return {
+                                id: armorId,
+                                displayText: armor[armorId].name,
+                                description:
+                                    `${armor[armorId].description}\n` +
+                                    `Defense: ${armor[armorId].defense}`,
+                                trailText: `${armor[armorId].price} BTC`,
+                                disabled: tooExpensive || notAnUpgrade,
+                                className: notAnUpgrade ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('armor', selectedOptionId);
                     },
                 },
                 gambler: {
+                    title: "GAMBLER",
                     onOpen: () => {
                         gambler.say('Place yer bets!');
                     },
@@ -2183,7 +2318,7 @@ __\\_______^/
                     landingHtml: () => {
                         return (
                             `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
-                            `Roll a 12 and <span class="BTC">boost one of yer stats.</span> ` +
+                            `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
                             `Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\n` +
                             `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
                         );
