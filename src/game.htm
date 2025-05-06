@@ -289,7 +289,7 @@
 </head>
 <body>
   <div class="menus">
-        <a href="https://xxthemilkman69xx.neocities.org/dungeon/title.html">TITLE</a>  <a href="https://xxthemilkman69xx.neocities.org/dungeon/game.html">RESET</a>  <a href="#" id="musicToggle">Toggle Music</a>
+        <a href="https://xxthemilkman69xx.neocities.org/dungeon/title.html">TITLE</a>  <a href="#" id="resetButton">RESET</a>  <a href="#" id="musicToggle">Toggle Music</a>
 
         <p><strong>KEY</strong></p>
         <p><span class="player">↑</span> Player: It's you!</p>
@@ -341,7 +341,7 @@
             hp: 20,
             maxHp: 20,
             defense: 3,
-            persuasion: 5,
+            persuasion: 7,
             exp: 0,
             level: 1,
             inCombat: false,
@@ -752,10 +752,11 @@
         function setMerchantWares() {
             const itemKeys = Object.keys(items);
             if (itemKeys.length === 0) {
-                console.error("Where the fuck did the items go?");
+                console.error("No items available in the items object!");
                 return;
             }
 
+            let attempts = 0; // Add a safeguard to prevent infinite loops
             do {
                 merchant.items = [];
                 itemKeys.forEach((key) => {
@@ -763,7 +764,15 @@
                         merchant.items.push(key);
                     }
                 });
+
+                attempts++;
+                if (attempts > 100) {
+                    console.error("Failed to generate merchant items after 100 attempts!");
+                    break;
+                }
             } while (merchant.items.length === 0);
+
+            console.log("Merchant items set:", merchant.items);
         }
 
         const sfx = {
@@ -809,6 +818,8 @@
             x: WIDTH - 2,
             y: HEIGHT - 2
         };
+
+        let musicEnabled = true;
 
         function generateMap() {
             setExitPosition();
@@ -1120,7 +1131,8 @@
         }
 
         function playMusic(type) {
-            if (currentMusic === type) return;
+            if (!musicEnabled) return; // Do nothing if music is disabled
+
             if (music.current) {
                 music.current.pause();
                 music.current.currentTime = 0;
@@ -1138,7 +1150,6 @@
 
             currentMusic = type;
         }
-
 
         function playSFX(name) {
             if (!sfx[name]) {
@@ -1163,7 +1174,7 @@
                 3: "||     /     \\     ||\n",
                 2: "||    |       |    ||\n",
                 1: "||   |         |   ||\n"
-            } [d];
+            }[d];
         }
 
         function exitSlice(d) {
@@ -1171,7 +1182,7 @@
                 3: "||     /  E  \\     ||\n",
                 2: "||    |   E   |    ||\n",
                 1: "||   |    E    |   ||\n"
-            } [d];
+            }[d];
         }
 
         function healSlice(d) {
@@ -1179,7 +1190,7 @@
                 3: "||     /  +  \\     ||\n",
                 2: "||    |   +   |    ||\n",
                 1: "||   |    +    |   ||\n"
-            } [d];
+            }[d];
         }
 
 
@@ -1555,8 +1566,8 @@ __\\_______^/
                 playMusic('exploration');
                 party = party.filter(a => a.hp > 0);
                 if (player.exp >= player.level * 10) {
-                    player.levelingUp = true;  // Keep only the leveling-up flag
-                    // Do NOT increment player.level here
+                    player.levelingUp = true; // Set the leveling-up flag
+                    render(); // Re-render to show the level-up prompt
                 }
             } else {
                 enemyAttack();
@@ -1684,7 +1695,7 @@ __\\_______^/
                 }
 
                 // ======== Persuasion During Combat ========
-                const baseChance = 0.1;
+                const baseChance = 0.0;
                 const prsBonus = player.persuasion * 0.03;
                 const totalChance = Math.min(0.9, baseChance + prsBonus);
 
@@ -1724,9 +1735,11 @@ __\\_______^/
                 default:
                     return;
             }
-            player.hp = player.maxHp;
-            player.exp = 0;
-            player.levelingUp = false;
+            player.level++; // Increment the player's level
+            player.exp = 0; // Reset EXP
+            player.hp = player.maxHp; // Fully heal the player
+            player.levelingUp = false; // Reset the leveling-up flag
+            updateBattleLog(`<span class="LV">You leveled up! Welcome to level ${player.level}!</span>`);
             render();
         }
 
@@ -1737,6 +1750,8 @@ __\\_______^/
             if (player.inventory[itemName] <= 0) {
                 delete player.inventory[itemName];
             }
+
+            render();
         }
 
         function getArticle(noun) {
@@ -1972,23 +1987,27 @@ __\\_______^/
 
 
         generateMap();
-        playMusic('exploration');
-        render();
-        let musicEnabled = true;
+        updateSeenTiles(); // Ensure tiles are marked as seen
+        drawMinimap(); // Draw the minimap immediately
+        playMusic('exploration'); // Start exploration music
+        render(); // Render the game
 
         document.getElementById('musicToggle').addEventListener('click', () => {
             musicEnabled = !musicEnabled;
             const btn = document.getElementById('musicToggle');
-            btn.textContent = musicEnabled ? "Toggle Music" :
-                "Toggle Music";
+            btn.textContent = musicEnabled ? "Toggle Music" : "Toggle Music";
 
-            for (let key in music) {
-                music[key].muted = !musicEnabled;
-                if (!musicEnabled) {
-                    music[key].pause();
-                } else if (currentMusic) {
-                    music[currentMusic].play().catch(err => console.error(
-                        "Music play error:", err));
+            if (!musicEnabled) {
+                // Pause the current music
+                if (music.current) {
+                    music.current.pause();
+                }
+            } else {
+                // Resume the correct music based on the game state
+                if (player.inCombat) {
+                    playMusic('battle');
+                } else {
+                    playMusic('exploration');
                 }
             }
         });
@@ -2344,6 +2363,11 @@ __\\_______^/
                 },
             },
         };
+
+        document.getElementById('resetButton').addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent the default link behavior
+            window.location.reload(); // Reload the current page
+        });
 
         const gambleFrames = [
     `
