@@ -51,54 +51,54 @@
             align-content: center;
         }
 
-        #inventory:not(.hidden),
-        #merchant:not(.hidden),
-        #gambler:not(.hidden) {
+        #menu:not(.hidden) {
             width: 100%;
             height: 100%;
-            white-space: pre-wrap;
             display: flex;
             flex-direction: column;
+            gap: 10px;
+            padding-bottom: 10px;
         }
 
-        #inventoryList,
-        #merchantItemList {
+        #menuList {
+            margin-bottom: auto;
+            padding-left: 1em;
+        }
+
+        #menuList,
+        #menuSelectionDescription {
             flex-grow: 1;
+            white-space: pre-wrap;
         }
 
-        #inventoryList::before,
-        #merchantItemList::before,
-        #gamblerMenu::before {
+        #menuLanding,
+        #menuSelectionDescription {
+            padding: 0 1em;
+        }
+
+        #menuList::before,
+        #menuSelectionDescription::before {
             display: block;
             text-align: center;
         }
 
-        #inventoryList::before {
-            content: "[INVENTORY]";
-        };
-
-        #merchantItemList::before {
-            content: "[The MERCHANT]";
+        #menuLanding {
+            display: flex;
+            flex-direction: column;
+            white-space: pre-wrap;
+            min-height: 8em;
         }
 
-        #gamblerMenu:not(.hidden)::before {
-            content: "[The GAMBLER]";
+        #menuLanding > .title {
+            margin: 0 auto 1em;
+            letter-spacing: 1ch;
         }
 
-        #gamblerMenu {
-            margin-bottom: auto;
-        }
-
-        #inventoryItemDescription,
-        #merchantItemDescription,
-        #gamblerItemDescription {
-            min-height: 90px;
-        }
-
-        #gambleAnimation {
+        #animation:not(.hidden) {
             white-space: pre;
             overflow: hidden;
             text-align: initial;
+            width: 100%;
         }
 
         #viewportContainer {
@@ -198,10 +198,6 @@
             width: 212px;
             height: 163px;
             overflow: hidden;
-            /*
-                overflow-y: auto;
-                overflow-x: hidden;
-            */
             line-height: 0px;
             font-size: 10px;
             padding: 4px;
@@ -248,6 +244,11 @@
 
         .gambler {
             color: #ffd700;
+        }
+
+        .muted {
+            color: #666;
+            text-decoration: line-through;
         }
 
         .tooExpensive {
@@ -303,20 +304,12 @@
   <div id="controls"></div>
   <div id="viewportContainer">
     <div id="game"></div>
-    <div id="inventory" class="hidden">
-        <div id="inventoryList"></div>
-        <div id="inventoryItemDescription"></div>
-        <div class="alignRight">Press Escape to exit the Inventory</div>
-    </div>
-    <div id="merchant" class="hidden">
-        <div id="merchantItemList"></div>
-        <div id="merchantItemDescription"></div>
-        <div class="alignRight">Press Escape to leave the Merchant</div>
-    </div>
-    <div id="gambler" class="hidden">
-        <div id="gambleAnimation" class="hidden"></div>
-        <div id="gamblerMenu"></div>
-        <div id="gamblerEscapeMessage" class="alignRight">Press Escape to leave the Gambler</div>
+    <div id="animation" class="hidden"></div>
+    <div id="menu" class="hidden">
+        <div id="menuLanding"></div>
+        <div id="menuList"></div>
+        <div id="menuSelectionDescription"></div>
+        <div class="alignRight">Press Escape to go back</div>
     </div>
   </div>
   <div id="ui">
@@ -352,19 +345,13 @@
             exp: 0,
             level: 1,
             inCombat: false,
-            isVisitingMerchant: false,
-            isVisitingGambler: false,
             levelingUp: false,
             inventory: {
-                isOpen: false,
-                selectionIndex: 0,
-                contents: {
-                    canOfHamms: 2,
-                    cupOfLean: 2,
-                    torch: 2,
-                    brickOfC4: 2,
-                    dowsingRod: 2,
-                },
+                canOfHamms: 2,
+                cupOfLean: 2,
+                torch: 2,
+                brickOfC4: 2,
+                dowsingRod: 2,
             },
             weapon: 'pointyStick',
             armor: 'graphicTee',
@@ -376,15 +363,49 @@
             isActiveOnFloor: false,
             x: WIDTH - 2,
             y: HEIGHT - 2,
-            selectionIndex: 0,
             items: [],
+            say: function(str) {
+                updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
+            },
             die: function() {
                 this.isAlive = false;
                 this.isActiveOnFloor = false;
                 playSFX('scream');
-                merchantSay('AIEEEEEEEEEEEEEE!');
+                merchant.say('AIEEEEEEEEEEEEEE!');
                 updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
+            buy: function(type, key) {
+                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+                if (!merchandise) {
+                    console.error(`${itemKey} doesn't exist!`);
+                    return;
+                }
+
+                if (player.bitcoins < merchandise.price) {
+                    merchant.say('Too bad, kid. Come back when you get some coin!');
+                    return;
+                }
+
+                player.bitcoins -= merchandise.price;
+                playSFX('kaching');
+
+                if (type === 'item') {
+                    player.inventory[key] = (player.inventory?.[key] || 0) + 1;
+                } else {
+                    player[type] = key;
+                }
+
+                const purchaseFlavorText = [
+                    "HAHA! You won't regret it!",
+                    "Don't forget: NO REFUNDS!",
+                    "You won't find a better deal than this!",
+                ];
+                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+                merchant.say(merchantText);
+
+                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+                updateBattleLog(`You just bought ${merchandiseText}`);
+            }
         };
 
         const gambler = {
@@ -395,6 +416,9 @@
             selectionIndex: 0,
             options: ['gamble', 'leave'],
             playPrice: 200,
+            say: function(str) {
+                updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
+            },
             die: function () {
                 this.isAlive = false;
                 this.isActiveOnFloor = false;
@@ -402,7 +426,7 @@
                 const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
                 player.bitcoins += rewardBtc;
                 playSFX('scream');
-                gamblerSay('AUGH!!');
+                gambler.say('AUGH!!');
                 updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
             }
         };
@@ -499,10 +523,7 @@
                     base: 2,
                     randomMultiplier: 5,
                 },
-                price: {
-                    buy: 20,
-                    sell: 5,
-                },
+                price: 20,
             },
             wiffleBallBat: {
                 name: "WIFFLE BALL BAT",
@@ -511,10 +532,7 @@
                     base: 3,
                     randomMultiplier: 6,
                 },
-                price: {
-                    buy: 50,
-                    sell: 20,
-                },
+                price: 50,
             },
             nunchucks: {
                 name: "NUNCHUCKS",
@@ -523,10 +541,7 @@
                     base: 6,
                     randomMultiplier: 9,
                 },
-                price: {
-                    buy: 100,
-                    sell: 50,
-                },
+                price: 100,
             },
             atlatlSpear: {
                 name: "ATLATL SPEAR",
@@ -535,61 +550,43 @@
                     base: 10,
                     randomMultiplier: 11,
                 },
-                price: {
-                    buy: 400,
-                    sell: 200,
-                },
+                price: 400,
             },
             bludgeoningMace: {
                 name: "BLUDGEONING MACE",
-                description: "A stick with a spikey metal ball at the end of it",
+                description: "A stick with a spikey metal ball at the end",
                 damage: {
                     base: 10,
                     randomMultiplier: 14,
                 },
-                price: {
-                    buy: 500,
-                    sell: 220,
-                },
+                price: 500,
             },
         };
 
         const armor = {
             graphicTee: {
                 name: "GRAPHIC TEE",
-                description: "A t-shirt with the text 'Normal people scare me'",
+                description: "A t-shirt that says 'Normal people scare me'",
                 defense: 1,
-                price: {
-                    buy: 20,
-                    sell: 5,
-                },
+                price: 20,
             },
             barrelWithSuspenders: {
                 name: "BARREL (with suspenders)",
-                description: "An empty barrel that covers your torso and legs somewhat. Smells like whisky too!",
+                description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
                 defense: 3,
-                price: {
-                    buy: 50,
-                    sell: 30,
-                },
+                price: 50,
             },
             leatherArmor: {
                 name: "LEATHER ARMOR",
                 description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
                 defense: 6,
-                price: {
-                    buy: 150,
-                    sell: 25,
-                },
+                price: 150,
             },
             milaneseArmor: {
                 name: "MILANESE ARMOR",
                 description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
                 defense: 12,
-                price: {
-                    buy: 1000,
-                    sell: 600,
-                },
+                price: 1000,
             },
         };
 
@@ -602,10 +599,7 @@
                     updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
                 },
                 merchantStockChance: 0.9,
-                price: {
-                    buy: 10,
-                    sell: 5,
-                },
+                price: 10,
             },
             cupOfLean: {
                 name: "CUP OF LEAN",
@@ -615,10 +609,7 @@
                     updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
                 },
                 merchantStockChance: 0.5,
-                price: {
-                    buy: 30,
-                    sell: 15,
-                },
+                price: 30,
             },
             dowsingRod: {
                 name: "DOWSING ROD",
@@ -628,10 +619,7 @@
                     updateBattleLog("The exit has been revealed!");
                 },
                 merchantStockChance: 0.8,
-                price: {
-                    buy: 20,
-                    sell: 10,
-                },
+                price: 20,
             },
             torch: {
                 name: "TORCH",
@@ -642,20 +630,14 @@
                     updateBattleLog("Lo, the way has been made clear!");
                 },
                 merchantStockChance: 0.8,
-                price: {
-                    buy: 60,
-                    sell: 30,
-                },
+                price: 60,
             },
             brickOfC4: {
                 name: "BRICK OF C-4",
                 description: "An incendiary plastic explosive. Great for turning anything into nothing real quick",
                 use: () => useC4(),
                 merchantStockChance: 0.5,
-                price: {
-                    buy: 300,
-                    sell: 150,
-                },
+                price: 300,
             },
         };
 
@@ -767,58 +749,6 @@
             }
         }
 
-        function openInventory() {
-            player.inventory.isOpen = true;
-            player.inventory.selectionIndex = 0;
-
-            document.querySelectorAll('#game').forEach((el) => {
-                el.classList.add('hidden');
-            });
-
-            document.getElementById('inventory').classList.remove('hidden');
-            document.getElementById('inventoryItemDescription').textContent = '';
-
-            if (isEmpty(player.inventory.contents)) {
-                const flavorText = [
-                    'Your pockets echo',
-                    'You own nothing. Klaus Schwab would be proud',
-                    'You got nothin\', bub',
-                    'A moth flutters out from your pockets',
-                    'What are you doing staring into an empty bag? Go get some items! This is a dungeon crawler for fuck\'s sake!!!',
-                    'Your inventory is full of your hopes, dreams, and ambitions',
-                ];
-                document.getElementById('inventoryList').textContent = flavorText[Math.floor(Math.random() * flavorText.length)];
-            }
-
-            renderInventory();
-        }
-
-        function closeInventory() {
-            document.getElementById('inventory').classList.add('hidden');
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.remove('hidden');
-            });
-
-            player.inventory.isOpen = false;
-        }
-
-        function visitTheMerchant() {
-            player.isVisitingMerchant = true;
-            merchant.selectionIndex = 0;
-
-            document.querySelectorAll('#game').forEach((el) => {
-                el.classList.add('hidden');
-            });
-
-            document.getElementById('merchant').classList.remove('hidden');
-            document.getElementById('merchantItemDescription').textContent = '';
-
-            merchantSay('Welcome to SlobMart!');
-
-            renderMerchant();
-        }
-
         function setMerchantWares() {
             const itemKeys = Object.keys(items);
             if (itemKeys.length === 0) {
@@ -845,46 +775,6 @@
             console.log("Merchant items set:", merchant.items);
         }
 
-        function leaveTheMerchant() {
-            document.getElementById('merchant').classList.add('hidden');
-
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.remove('hidden');
-            });
-
-            player.isVisitingMerchant = false;
-            merchantSay('Thank you. Come again!');
-        }
-
-        function visitTheGambler() {
-            player.isVisitingGambler = true;
-            gambler.selectionIndex = 0;
-
-            document.querySelectorAll('#game').forEach((el) => {
-                el.classList.add('hidden');
-            });
-
-            document.getElementById('gambler').classList.remove('hidden');
-            gamblerSay('Place yer bets!');
-
-            renderGambler();
-        }
-
-        function leaveTheGambler(saySomething) {
-            document.getElementById('gambler').classList.add('hidden');
-            document.querySelectorAll('#controls, #game').forEach((el) => {
-                el.classList.remove('hidden');
-            });
-
-            player.isVisitingGambler = false;
-            saySomething && gamblerSay('You gotta know when to hold \'em, know when to fold \'em, heh heh');
-
-            gambler.isActiveOnFloor = false;
-            updateBattleLog('The gambler escapes into the shadows');
-
-            render();
-        }
-
         const sfx = {
             footstep: new Audio('https://files.catbox.moe/o0ka4u.wav'),
             turn: new Audio('https://files.catbox.moe/heur5b.wav'),
@@ -896,6 +786,10 @@
             kaching: new Audio('https://files.catbox.moe/02ht6d.mp3'),
             torch: new Audio('https://files.catbox.moe/b2jzsn.mp3'),
             gamble: new Audio('https://files.catbox.moe/mo9o5z.mp3'),
+            inventoryOpen: new Audio('https://files.catbox.moe/8cf12i.mp3'),
+            uiOption: new Audio('https://files.catbox.moe/h34402.wav'),
+            uiSelect: new Audio('https://files.catbox.moe/2cvmq8.wav'),
+            uiCancel: new Audio('https://files.catbox.moe/5doy28.wav'),
         };
 
         const music = {
@@ -906,7 +800,7 @@
             ],
             current: null
         };
-        
+
         music.exploration.loop = true;
         music.battleTracks.forEach(track => track.loop = true);
 
@@ -1236,14 +1130,6 @@
                 .join("");
         }
 
-        function merchantSay(str) {
-            updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
-        }
-
-        function gamblerSay(str) {
-            updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
-        }
-
         function playMusic(type) {
             if (!musicEnabled) return; // Do nothing if music is disabled
 
@@ -1261,13 +1147,18 @@
                 randomTrack.play().catch(err => console.error("Music error:", err));
                 music.current = randomTrack;
             }
+
+            currentMusic = type;
         }
 
         function playSFX(name) {
-            if (sfx[name]) {
-                sfx[name].currentTime = 0;
-                sfx[name].play();
+            if (!sfx[name]) {
+                console.error("SFX not found", { name });
+                return;
             }
+
+            sfx[name].currentTime = 0;
+            sfx[name].play();
         }
 
         function wallSlice(d) {
@@ -1307,20 +1198,20 @@
             switch (currentEnemy?.id) {
                 case "snailSentinel":
                     return `
-                    
-                    
 
-                    
+
+
+
    ___   |_|
   /   \\_/@ @
 __\\_______^/
 `;
                 case "stupidDog":
                     return `
-                    
-                    
-                 
-                    
+
+
+
+
 /\\__/\\
 |@  @|
 |(00)|
@@ -1328,9 +1219,9 @@ __\\_______^/
 `;
                 case "keeperOfTheToiletBowl":
                     return `
-                    
-                    
-                    
+
+
+
    _______
   |       |
   |_______|=)
@@ -1342,11 +1233,11 @@ __\\_______^/
 `;
                 case "mysteriousScooter":
                     return `
-                    
-                    
-                    
-                    
-                    
+
+
+
+
+
        [~~]=====[~~]
             ||
             ||
@@ -1370,10 +1261,10 @@ __\\_______^/
 `;
                 case "wangRat":
                     return `
-                    
-                    
-                    
-                    
+
+
+
+
        ______
     (|/      \\|)
       \\O    o/___________________
@@ -1384,7 +1275,7 @@ __\\_______^/
 
                 case "fridgeOfForgottenLeftovers":
                     return `
-                    
+
             ___.---+.
        .--''       | '.
        |           |  |
@@ -1399,9 +1290,9 @@ __\\_______^/
 
                 case "lughead":
                     return `
-                    
-                    
-                    
+
+
+
             .--.
             |oO|
          ..-\\TT/-..
@@ -1414,9 +1305,9 @@ __\\_______^/
 
                 case "pissedOffPoultry":
                     return `
-                    
-                    
-                    
+
+
+
     .        .--.
     |\\      .-:;
     : \\    < O |'
@@ -1429,9 +1320,9 @@ __\\_______^/
 
                 case "krampusElf":
                     return `
-                    
-                    
-                    
+
+
+
              *
             / \\
         .-./___\\.-.
@@ -1452,7 +1343,7 @@ __\\_______^/
             updateSeenTiles();
             drawMinimap();
             let output = "";
-        
+
             // If the player is leveling up
             if (player.levelingUp) {
                 output +=
@@ -1460,7 +1351,7 @@ __\\_______^/
                 document.getElementById('game').textContent = output;
                 return;
             }
-        
+
             // If the player is in combat
             if (player.inCombat) {
                               // Combat stats
@@ -1471,7 +1362,7 @@ __\\_______^/
                     `<span class="DEF">DEF: ${player.defense}</span> ` +
                     `<span class="PRS">PRS: ${player.persuasion}</span>`;
                 output += `${getEnemyArt()}`;
-            
+
                 if (party.length > 0) {
                     let partyHTML = `<strong>Your Party:</strong><br>`;
                     party.forEach(member => {
@@ -1481,12 +1372,12 @@ __\\_______^/
                 } else {
                     document.getElementById("partylist").innerHTML = '';
                 }
-            
+
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
                         "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
                 }
-            
+
             } else {
                 // Exploration stats (appear BEFORE wall slices now)
                 output +=
@@ -1495,7 +1386,7 @@ __\\_______^/
                     `<span class="HP">HP: ${player.hp}</span> ` +
                     `<span class="DEF">DEF: ${player.defense}</span> ` +
                     `<span class="PRS">PRS: ${player.persuasion}</span>\n\n\n\n\n\n\n`;
-            
+
                 // Exploration view (wall slices)
                 for (let d = 3; d >= 1; d--) {
                     let tx = player.x + DX[player.dir] * d;
@@ -1506,11 +1397,11 @@ __\\_______^/
                         tile === 'H' ? healSlice(d) :
                         corridorSlice(d);
                 }
-            
+
                 // Logo
                 output +=
                     "||                 ||\n||    Welcome to   ||\n++----TARDQUEST----++\n";
-            
+
                 // Party display
                 if (party.length > 0) {
                     let partyHTML = `<strong>Your Party:</strong><br>`;
@@ -1521,96 +1412,21 @@ __\\_______^/
                 } else {
                     document.getElementById("partylist").innerHTML = '';
                 }
-            
+
                 // Controls
                 document.getElementById("controls").textContent =
                     "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
             }
 
-        
             // If the player is dead
             if (player.hp <= 0) {
                 output += `\nGood job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`;
                 gameOver = true;
                 setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
             }
-        
+
             // Render the final output to the game screen
             document.getElementById('game').innerHTML = output; // Use innerHTML to ensure HTML is rendered
-        }
-
-
-
-        function renderInventory() {
-            if (isEmpty(player.inventory.contents)) {
-                return;
-            }
-
-            let i = 0;
-            let inventoryText = "";
-
-            for (const property in player.inventory.contents) {
-                const isSelectedLine = i++ === player.inventory.selectionIndex;
-                const dotPattern = items[property].name.length % 2 ? ' .' : '. ';
-
-                const inventoryLine =
-                    (isSelectedLine ? "▶ " : "  ") +
-                    (items[property].name + dotPattern.repeat(10)).substr(0, 20) +
-                    `${player.inventory.contents[property]}x\n`;
-
-                inventoryText += inventoryLine;
-
-                if (isSelectedLine) {
-                    document.getElementById('inventoryItemDescription').textContent = items[property].description;
-                }
-            }
-
-            document.getElementById('inventoryList').textContent = inventoryText;
-        }
-
-        function renderMerchant() {
-            let i = 0;
-            let itemHtml = player.bitcoins > 0
-                ? `You have ${player.bitcoins} BTC in your wallet\n\n`
-                : "Your wallet is emptier than a lughead's skull. But you can still look around\n\n";
-
-            merchant.items.forEach((property) => {
-                const isSelectedLine = i++ === merchant.selectionIndex;
-                const itemTooExpensive = items[property].price.buy > player.bitcoins;
-                const dotPattern = items[property].name.length % 2 ? ' .' : '. ';
-
-                const itemLine =
-                    (isSelectedLine ? "▶ " : "  ") +
-                    (itemTooExpensive ? '<span class="tooExpensive">' : '<span>') +
-                    (items[property].name + dotPattern.repeat(10)).substr(0, 20) +
-                    `${items[property].price.buy} BTC</span>\n`;
-
-                itemHtml += itemLine;
-
-                if (isSelectedLine) {
-                    document.getElementById('merchantItemDescription').textContent = items[property].description;
-                }
-            });
-
-            document.getElementById('merchantItemList').innerHTML = itemHtml;
-        }
-
-        function renderGambler() {
-            const optionLines = {
-                gamble: `Play the game <span class="BTC">(${gambler.playPrice} BTC)</span>`,
-                leave: "Leave the Gambler",
-            };
-
-            let i = 0;
-            let itemHtml = `GAMBLER: "Welcome, dungeon dweller! Roll a 12 and <span class="BTC">boost one of yer stats.</span> Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\nYou have <span class="BTC">${player.bitcoins}</span> in your wallet\n\n`;
-
-            gambler.options.forEach((option) => {
-                const isSelectedLine = i++ === gambler.selectionIndex;
-                const itemLine = (isSelectedLine ? "▶ " : "  ") + optionLines[option] + "\n";
-                itemHtml += itemLine;
-            });
-
-            document.getElementById('gamblerMenu').innerHTML = itemHtml;
         }
 
         function isEmpty(obj) {
@@ -1629,7 +1445,7 @@ __\\_______^/
         }
 
         function move(direction) {
-            if (player.isVisitingGambler || player.isVisitingMerchant || player.inCombat || gameOver) {
+            if (player.inCombat || gameOver) {
                 return;
             }
 
@@ -1650,9 +1466,9 @@ __\\_______^/
                 player.x = nx;
                 player.y = ny;
                 if (isMerchantTile(nx, ny)) {
-                    visitTheMerchant();
+                    menu.open('merchant');
                 } else if (isGamblerTile(nx, ny)) {
-                    visitTheGambler();
+                    menu.open('gambler');
                 } else if (tile === 'E') {
                     descend();
                 } else if (tile === 'H') {
@@ -1690,7 +1506,7 @@ __\\_______^/
             currentEnemy = structuredClone(
                 enemies[Math.floor(Math.random() * enemies.length)]
             );
-        
+
             // Scale enemy stats based on floor
             const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
             if (floorBoost > 0) {
@@ -1701,7 +1517,7 @@ __\\_______^/
                 ];
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
-        
+
             player.inCombat = true;
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
@@ -1753,9 +1569,6 @@ __\\_______^/
                     player.levelingUp = true; // Set the leveling-up flag
                     render(); // Re-render to show the level-up prompt
                 }
-
-
-
             } else {
                 enemyAttack();
             }
@@ -1767,43 +1580,43 @@ __\\_______^/
             const targetAllies = party.filter(a => a.hp > 0);
             if (targetAllies.length && Math.random() < 0.5) {
                 const target = targetAllies[Math.floor(Math.random() * targetAllies.length)];
-                
+
                 // Base damage
                 let baseDamage = Math.floor(Math.random() * 5) + 1;
-                
+
                 // Boost damage based on the floor
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost; // Increase base damage by the floorBoost
-                
+
                 // Calculate damage based on player's defense
                 const playerArmor = armor[player.armor];
                 const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
-                
+
                 let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
-                
+
                 target.hp -= dmg;
                 updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="enemy">${dmg} HP</span> to your <span class="friendly">${target.name}</span>`);
-                
+
                 if (target.hp <= 0) {
                     updateBattleLog(`Your <span class="friendly">${target.name}</span> has been <span class="action">eviscerated</span>...`);
                 }
             } else {
                 // Same for the player, calculate the damage for the player
                 let baseDamage = Math.floor(Math.random() * 5) + 1;
-                
+
                 // Boost damage based on the floor
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost;
-                
+
                 // Calculate damage based on the player's defense
                 const playerArmor = armor[player.armor];
                 const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
-                
+
                 const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
                 player.hp -= dmg;
-                
+
                 updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="HP">${dmg} HP</span> to <span class="friendly">you</span>`);
-                
+
                 if (player.hp <= 0) gameOver = true;
             }
         }
@@ -1832,13 +1645,13 @@ __\\_______^/
             e?.preventDefault();
             playSFX('persuade');
             awaitingPersuasionText = true;
-        
+
             // Show the input box
             const inputBox = document.getElementById("inputBox");
             const input = document.getElementById("persuadeInput");
             inputBox.style.display = "flex";
             input.value = "";
-        
+
             // Delay the focus slightly to ensure it's applied after rendering
             setTimeout(() => {
                 input.focus();
@@ -1854,11 +1667,11 @@ __\\_______^/
                 e.target.value = "";
                 awaitingPersuasionText = false;
                 document.getElementById("inputBox").style.display = "none";
-        
+
                 // ======== Speaking Outside Combat ========
                 if (speakingOutsideCombat) {
                     speakingOutsideCombat = false;
-        
+
                     if (party.length > 0) {
                         const responder = party[Math.floor(Math.random() * party.length)];
                         const responses = [
@@ -1876,16 +1689,16 @@ __\\_______^/
                         const reply = responses[Math.floor(Math.random() * responses.length)];
                         updateBattleLog(`${responder.name}: ${reply}`);
                     }
-        
+
                     render();
                     return;
                 }
-        
+
                 // ======== Persuasion During Combat ========
                 const baseChance = 0.0;
                 const prsBonus = player.persuasion * 0.03;
                 const totalChance = Math.min(0.9, baseChance + prsBonus);
-        
+
                 if (Math.random() < totalChance) {
                     const newAlly = {
                         name: currentEnemy.name,
@@ -1901,7 +1714,7 @@ __\\_______^/
                     updateBattleLog(`${currentEnemy.name} really, quite genuinely, does not care...`);
                     enemyAttack();
                 }
-        
+
                 render();
             }
         });
@@ -1930,156 +1743,23 @@ __\\_______^/
             render();
         }
 
-        function handleInventoryInput(key) {
-            const idx = player.inventory.selectionIndex;
-            const items = Object.keys(player.inventory.contents);
-
-            switch (key) {
-                case 'i':
-                case 'escape':
-                    closeInventory();
-                    break;
-                case 'w':
-                case 'arrowup':
-                    player.inventory.selectionIndex = idx === 0
-                        ? items.length - 1
-                        : idx - 1;
-                    break;
-                case 's':
-                case 'arrowdown':
-                    player.inventory.selectionIndex = idx === items.length - 1
-                        ? 0
-                        : idx + 1;
-                    break;
-                case ' ':
-                case 'e':
-                case 'enter':
-                    useItem(items[player.inventory.selectionIndex]);
-                    closeInventory();
-                    if (currentEnemy && currentEnemy.hp > 0) {
-                        enemyAttack();
-                        render();
-                    }
-
-                    break;
-            }
-
-            renderInventory();
-            return;
-        }
-
         function useItem(itemName) {
             items[itemName].use();
 
-            player.inventory.contents[itemName]--;
-            if (player.inventory.contents[itemName] <= 0) {
-                delete player.inventory.contents[itemName];
+            player.inventory[itemName]--;
+            if (player.inventory[itemName] <= 0) {
+                delete player.inventory[itemName];
             }
 
             render();
         }
 
-        function handleMerchantInput(key) {
-            const idx = merchant.selectionIndex;
-            const items = merchant.items;
-
-            switch (key) {
-                case 'escape':
-                    leaveTheMerchant();
-                    break;
-                case 'w':
-                case 'arrowup':
-                    merchant.selectionIndex = idx === 0
-                        ? items.length - 1
-                        : idx - 1;
-                    break;
-                case 's':
-                case 'arrowdown':
-                    merchant.selectionIndex = idx === items.length - 1
-                        ? 0
-                        : idx + 1;
-                    break;
-                case ' ':
-                case 'e':
-                case 'enter':
-                    buyItem(items[idx]);
-                    break;
-            }
-
-            renderMerchant();
-            return;
-        }
-
-        function buyItem(itemKey) {
-            const item = items?.[itemKey];
-            if (!item) {
-                console.error(`${itemKey} doesn't exist!`);
-                return;
-            }
-
-            if (player.bitcoins < item.price.buy) {
-                merchantSay('Too bad, kid. Come back when you get some coin!');
-                return;
-            }
-
-            player.bitcoins -= item.price.buy;
-            player.inventory.contents[itemKey] = (player.inventory?.contents[itemKey] || 0) + 1;
-
-            playSFX('kaching');
-
-            const purchaseFlavorText = [
-                "HAHA! You won't regret it!",
-                "Don't forget: NO REFUNDS!",
-                "You won't find a better deal than this!",
-            ];
-
-            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-            merchantSay(merchantText);
-
-            const itemText = getArticle(item.name) + ' ' + item.name;
-            updateBattleLog(`You just bought ${itemText}`);
-        }
-
         function getArticle(noun) {
-            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an' : 'a';
-        }
-
-        function handleGamblerInput(key) {
-            const idx = gambler.selectionIndex;
-            const options = gambler.options;
-
-            switch (key) {
-                case 'escape':
-                    leaveTheGambler(true);
-                    break;
-                case 'w':
-                case 'arrowup':
-                    gambler.selectionIndex = idx === 0
-                        ? options.length - 1
-                        : idx - 1;
-                    break;
-                case 's':
-                case 'arrowdown':
-                    gambler.selectionIndex = idx === options.length - 1
-                        ? 0
-                        : idx + 1;
-                    break;
-                case ' ':
-                case 'e':
-                case 'enter':
-                    const option = options[idx];
-                    if (option === 'gamble') {
-                        gamble();
-                    } else if (option === 'leave') {
-                        leaveTheGambler(true);
-                    } else {
-                        console.error('Unknown gambler option', { option });
-                    }
-                    break;
+            if (noun.match(/^\w*s\b|\barmor$/i)) {
+                return '';
             }
 
-            renderGambler();
-            return;
+            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an ' : 'a ';
         }
 
         function gamble() {
@@ -2087,7 +1767,7 @@ __\\_______^/
             updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
 
             player.inputDisabled = true;
-            document.getElementById('gamblerEscapeMessage').classList.add('hidden');
+            document.getElementById('menu').classList.add('hidden');
 
             dice = [
                 Math.floor(Math.random() * 6) + 1,
@@ -2096,7 +1776,6 @@ __\\_______^/
             gambleAnimation(dice, () => {
                 player.inputDisabled = false;
                 gambleOutcome(dice);
-                document.getElementById('gamblerEscapeMessage').classList.remove('hidden');
             });
             playSFX('gamble');
         }
@@ -2137,10 +1816,10 @@ __\\_______^/
                         break;
                 }
             } else {
-                gamblerSay('Hah! Tough luck, kid!');
+                gambler.say('Hah! Tough luck, kid!');
             }
 
-            leaveTheGambler();
+            menu.close();
         }
 
         /**
@@ -2158,8 +1837,8 @@ __\\_______^/
             const isFinalFrame = frameNumber >= maxFrames - 1;
 
             if (frameNumber === 0) {
-                document.getElementById('gambleAnimation').classList.remove('hidden');
-                document.getElementById('gamblerMenu').classList.add('hidden');
+                document.getElementById('animation').classList.remove('hidden');
+                document.getElementById('menu').classList.add('hidden');
             }
 
             // Set random dice digits before displaying the actual outcome
@@ -2179,11 +1858,11 @@ __\\_______^/
                     );
                 }
 
-                document.getElementById("gambleAnimation").textContent = frameText;
+                document.getElementById("animation").textContent = frameText;
                 setTimeout(() => gambleAnimation(dice, callback, frameNumber + 1), !isFinalFrame ? 50 : 3000);
             } else {
-                document.getElementById('gambleAnimation').classList.add('hidden');
-                document.getElementById('gamblerMenu').classList.remove('hidden');
+                document.getElementById('animation').classList.add('hidden');
+                document.getElementById('menu').classList.remove('hidden');
                 typeof callback === 'function' && callback();
             }
         }
@@ -2198,14 +1877,14 @@ __\\_______^/
             } else {
                 return; // Ignore other keys
             }
-            
+
             // Now level up properly when the player manually chooses to level up
             player.level++;
             player.exp = 0; // Reset EXP after leveling up
             player.hp = player.maxHp; // Fully heal the player
             player.levelingUp = false; // Reset leveling up state
-            
-            updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>.`);
+
+            updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>`);
             render();
         }
 
@@ -2215,22 +1894,17 @@ __\\_______^/
             if (player.inputDisabled || gameOver || awaitingPersuasionText) {
                 return;
             }
-        
+
             const key = e.key.toLowerCase();
-        
-            if (player.levelingUp) {
+
+            if (menu.isOpen()) {
+                menu.handleInput(key);
+            } else if (player.levelingUp) {
                 handleLevelUpInput(key);
                 return; // <-- this fixes it
-            } else if (player.isVisitingMerchant) {
-                handleMerchantInput(key);
-                return;
-            } else if (player.isVisitingGambler) {
-                handleGamblerInput(key);
-            } else if (player.inventory.isOpen) {
-                handleInventoryInput(key);
-                return;
             } else if (key === 'i') {
-                openInventory();
+                playSFX('inventoryOpen');
+                menu.open('inventory');
             } else if (player.inCombat) {
                 // Combat mode
                 switch (key) {
@@ -2269,7 +1943,7 @@ __\\_______^/
                         break;
                 }
             }
-        
+
             render();
         });
 
@@ -2278,13 +1952,13 @@ __\\_______^/
         function descend() {
             floor++;
             updateBattleLog(`Descending into floor ${floor}...`);
-        
+
             const floorBoost = Math.floor(floor / 2);
             if (floorBoost > lastFloorBoostNotice) {
                 updateBattleLog(`<span class="action">As you descend deeper into the dungeon, you sense greater danger than before</span>.`);
                 lastFloorBoostNotice = floorBoost;
             }
-        
+
             if (Math.random() < 0.5) {
                 const flavorText = [
                     "The stale air fills your nostrils.",
@@ -2303,11 +1977,11 @@ __\\_______^/
                     "Somewhere ahead, something clanks. You sincerely hope it's plumbing.",
                     "You hear a plunger plunging menacingly.",
                 ];
-        
+
                 const logLine = flavorText[Math.floor(Math.random() * flavorText.length)];
                 updateBattleLog(logLine);
             }
-        
+
             generateMap();
         }
 
@@ -2337,10 +2011,364 @@ __\\_______^/
                 }
             }
         });
+
+        const menu = {
+            breadcrumbs: [],
+            selectionIndex: 0,
+            getActiveMenu: () => menu.menus[menu.breadcrumbs.at(-1)?.menuName] || undefined,
+            isOpen: () => menu.breadcrumbs.length > 0,
+            open: (menuName) => {
+                if (typeof menu.menus[menuName] === 'undefined') {
+                    console.error('No matching entry for the designated menu name', { menuName });
+                    return;
+                }
+
+                const activeMenu = menu.menus[menuName];
+
+                menu.breadcrumbs.push({
+                    menuName,
+                    selectionIndex: menu.selectionIndex,
+                });
+
+                // Put the cursor on the first non-disabled option, if available
+                menu.selectionIndex = Math.max(activeMenu.getOptions().findIndex((e) => !e.disabled), 0);
+
+                document.getElementById('game').classList.add('hidden');
+                document.getElementById('menu').classList.remove('hidden');
+                document.getElementById('menuSelectionDescription').textContent = '';
+
+                activeMenu.onOpen?.();
+                menu.render();
+            },
+            close: () => {
+                const previousMenu = menu.breadcrumbs.pop();
+                menu.menus[previousMenu.menuName].onClose?.();
+                menu.selectionIndex = previousMenu.selectionIndex;
+
+                if (menu.breadcrumbs.length === 0) {
+                    document.getElementById('menu').classList.add('hidden');
+                    document.getElementById('game').classList.remove('hidden');
+                }
+            },
+            render: () => {
+                let menuHtml = "";
+                const activeMenu = menu.getActiveMenu();
+                if (typeof activeMenu === 'undefined') {
+                    return;
+                }
+
+                const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
+                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                document.getElementById('menuLanding').innerHTML = titleHtml + landingHtml;
+
+                const options = activeMenu.getOptions();
+                const trailTextMaxLength = Math.max(...options.map((o) => (o?.trailText || '').length));
+
+                options.forEach((option, index) => {
+                    const isSelectedLine = index === menu.selectionIndex;
+                    const cursor = isSelectedLine ? "▶ " : "  ";
+                    const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
+                    let line = '';
+
+                    if (option.hasOwnProperty('trailText')) {
+                        const dotPattern = option.displayText.length % 2 ? ' .' : '. ';
+                        const trailDiff = trailTextMaxLength - option.trailText.length;
+
+                        line = (option.displayText + dotPattern.repeat(17 + Math.floor(trailDiff / 2))).substr(0, 34 + trailDiff) +
+                            ` ${option.trailText}`;
+                    } else {
+                        line = `${option.displayText}`;
+                    }
+
+                    menuHtml += `${cursor}${spanHtml}${line}</span>\n`;
+
+                    if (isSelectedLine) {
+                        document.getElementById('menuSelectionDescription').textContent = option.description;
+                    }
+                });
+
+                document.getElementById('menuList').innerHTML = menuHtml;
+            },
+            handleInput: (key) => {
+                const activeMenu = menu.getActiveMenu();
+                const options = activeMenu.getOptions();
+
+                switch (key) {
+                    case 'escape':
+                        menu.close();
+                        playSFX('uiCancel');
+                        break;
+                    case 'w':
+                    case 'arrowup':
+                        menu.selectionIndex = menu.selectionIndex === 0
+                            ? options.length - 1
+                            : menu.selectionIndex - 1;
+                        playSFX('uiOption');
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        menu.selectionIndex = menu.selectionIndex === options.length - 1
+                            ? 0
+                            : menu.selectionIndex + 1;
+                        playSFX('uiOption');
+                        break;
+                    case ' ':
+                    case 'e':
+                    case 'enter':
+                        if (options[menu.selectionIndex].disabled) {
+                            playSFX('uiCancel');
+                            break;
+                        }
+
+                        const selectedOptionId = options[menu.selectionIndex].id;
+                        if (selectedOptionId === '_exit') {
+                            menu.close();
+                            playSFX('uiCancel');
+                        } else {
+                            activeMenu.select(selectedOptionId);
+                            playSFX('uiSelect');
+                        };
+                        break;
+                }
+
+                menu.render();
+            },
+            menus: {
+                inventory: {
+                    title: "INVENTORY",
+                    landingHtml: () => {
+                        return isEmpty(player.inventory)
+                            ? 'You own nothing. Klaus Schwab would be proud'
+                            : null;
+                    },
+                    getOptions: () => {
+                        const options = Object.keys(player.inventory).map((itemId) => ({
+                            id: itemId,
+                            displayText: items[itemId].name,
+                            description: items[itemId].description,
+                            trailText: `${player.inventory[itemId]}x`,
+                        }));
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Exit the Inventory",
+                            description: "Get back to playing the game",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        useItem(selectedOptionId);
+                        menu.close();
+                        if (currentEnemy && currentEnemy.hp > 0) {
+                            enemyAttack();
+                            render();
+                        }
+                    },
+                },
+                merchant: {
+                    title: "MERCHANT",
+                    onOpen: () => {
+                        merchant.say('Welcome to SlobMart!');
+                    },
+                    onClose: () => {
+                        merchant.say('Thank you. Come again!');
+                    },
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "merchantItems",
+                                displayText: "Items",
+                                description: "See what consumable items are for sale",
+                            },
+                            {
+                                id: "merchantWeapons",
+                                displayText: "Weapons",
+                                description: "Look at some weapon upgrades",
+                            },
+                            {
+                                id: "merchantArmor",
+                                displayText: "Armor",
+                                description: "Get some thicker skin",
+                            },
+                            {
+                                id: "_exit",
+                                displayText: "Leave",
+                                description: "Get back to spelunking",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                merchantItems: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        const options = merchant.items.map((itemId) => ({
+                            id: itemId,
+                            displayText: items[itemId].name,
+                            description: items[itemId].description,
+                            trailText: `${items[itemId].price} BTC`,
+                            disabled: items[itemId].price > player.bitcoins,
+                            className: items[itemId].price > player.bitcoins ? 'tooExpensive' : undefined,
+                        }));
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('item', selectedOptionId);
+                    },
+                },
+                merchantWeapons: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        const message = player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+
+                        const currentWeapon = weapons[player.weapon].name;
+                        const currentWeaponDisplay = getArticle(currentWeapon) + currentWeapon;
+                        const wieldingMessage = `You are currently wielding ${currentWeaponDisplay}`;
+
+                        return `${message}\n\n${wieldingMessage}`;
+                    },
+                    getOptions: () => {
+                        const weaponKeys = Object.keys(weapons);
+                        const options = weaponKeys.map((weaponId) => {
+                            const tooExpensive = weapons[weaponId].price > player.bitcoins;
+                            const notAnUpgrade = weaponKeys.indexOf(player.weapon) >= weaponKeys.indexOf(weaponId);
+
+                            return {
+                                id: weaponId,
+                                displayText: weapons[weaponId].name,
+                                description:
+                                    `${weapons[weaponId].description}\n` +
+                                    `Base Damage: ${weapons[weaponId].damage.base}, ` +
+                                    `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
+                                trailText: `${weapons[weaponId].price} BTC`,
+                                disabled: tooExpensive || notAnUpgrade,
+                                className: notAnUpgrade ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('weapon', selectedOptionId);
+                    },
+                },
+                merchantArmor: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        const message = player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+
+                        const currentArmor = armor[player.armor].name;
+                        const currentArmorDisplay = getArticle(currentArmor) + currentArmor;
+                        const wearingMessage = `You are currently wearing ${currentArmorDisplay}`;
+
+                        return `${message}\n\n${wearingMessage}`;
+                    },
+                    getOptions: () => {
+                        const armorKeys = Object.keys(armor);
+                        const options = armorKeys.map((armorId) => {
+                            const tooExpensive = armor[armorId].price > player.bitcoins;
+                            const notAnUpgrade = armorKeys.indexOf(player.armor) >= armorKeys.indexOf(armorId);
+
+                            return {
+                                id: armorId,
+                                displayText: armor[armorId].name,
+                                description:
+                                    `${armor[armorId].description}\n` +
+                                    `Defense: ${armor[armorId].defense}`,
+                                trailText: `${armor[armorId].price} BTC`,
+                                disabled: tooExpensive || notAnUpgrade,
+                                className: notAnUpgrade ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_exit",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('armor', selectedOptionId);
+                    },
+                },
+                gambler: {
+                    title: "GAMBLER",
+                    onOpen: () => {
+                        gambler.say('Place yer bets!');
+                    },
+                    onClose: () => {
+                        gambler.say('You gotta know when to hold \'em, know when to fold \'em, heh heh');
+                        updateBattleLog('The gambler escapes into the shadows');
+
+                        gambler.isActiveOnFloor = false;
+                    },
+                    landingHtml: () => {
+                        return (
+                            `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
+                            `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
+                            `Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\n` +
+                            `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                        );
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "play",
+                                displayText: "Play the game",
+                                trailText: `${gambler.playPrice} BTC`,
+                                description: "Take your chance with the gambler",
+                            },
+                            {
+                                id: "_exit",
+                                displayText: "Leave",
+                                description: "Leave this crusty fool",
+                            },
+                        ];
+                    },
+                    select: () => {
+                        gamble();
+                    },
+                },
+            },
+        };
+
         document.getElementById('resetButton').addEventListener('click', (e) => {
             e.preventDefault(); // Prevent the default link behavior
             window.location.reload(); // Reload the current page
         });
+
         const gambleFrames = [
     `
 
@@ -2428,7 +2456,7 @@ __\\_______^/
               ..__
     __________\`.  '-
    (___________ \`.  '-.
-    (______..--. 
+    (______..--.
       (__)_||__|
         (_)_          _
            \`-_______-'
@@ -2440,8 +2468,8 @@ __\\_______^/
                 ..__
       __________\`.  '-
      (___________ \`.  '-.
-      (___/_/\\ ___. 
-       (__\\_\\/|   ||     
+      (___/_/\\ ___.
+       (__\\_\\/|   ||
          (____|___||    _
               \`-______-'
 
@@ -2452,7 +2480,7 @@ __\\_______^/
                   ..__
         __________\`.  '-
        (___________ \`.  '-.
-        (__________ 
+        (__________
          (________
          .-'--._ .----_   _
          | |  | |\` ___'.-'
@@ -2466,7 +2494,7 @@ __\\_______^/
                       ..__
             __________\`.  '-
            (___________ \`.  '-.
-            (__________ 
+            (__________
              (________
                (____          _
                     \`-______-'
@@ -2483,9 +2511,9 @@ __\\_______^/
                           ..__
                 __________\`.  '-
                (___________ \`.  '
-                (__________ 
+                (__________
                  (________
-                   (____          
+                   (____
                         \`-______-
 
 
