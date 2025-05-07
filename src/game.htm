@@ -289,7 +289,7 @@
 </head>
 <body>
   <div class="menus">
-        <a href="https://xxthemilkman69xx.neocities.org/dungeon/title.html">TITLE</a>  <a href="#" id="resetButton">RESET</a>  <a href="#" id="musicToggle">Toggle Music</a>
+        <a href="https://xxthemilkman69xx.neocities.org/dungeon/title.html">TITLE</a>  <a href="#" id="resetButton">RESET</a>  <a href="#" id="musicToggle">DISABLE MUSIC</a>
 
         <p><strong>KEY</strong></p>
         <p><span class="player">↑</span> Player: It's you!</p>
@@ -767,12 +767,10 @@
 
                 attempts++;
                 if (attempts > 100) {
-                    console.error("Failed to generate merchant items after 100 attempts!");
+                    console.error(`Failed to generate merchant items after ${attempts} attempts!`);
                     break;
                 }
             } while (merchant.items.length === 0);
-
-            console.log("Merchant items set:", merchant.items);
         }
 
         const sfx = {
@@ -1995,7 +1993,7 @@ __\\_______^/
         document.getElementById('musicToggle').addEventListener('click', () => {
             musicEnabled = !musicEnabled;
             const btn = document.getElementById('musicToggle');
-            btn.textContent = musicEnabled ? "Toggle Music" : "Toggle Music";
+            btn.textContent = musicEnabled ? "DISABLE MUSIC" : "ENABLE MUSIC";
 
             if (!musicEnabled) {
                 // Pause the current music
@@ -2364,10 +2362,7 @@ __\\_______^/
             },
         };
 
-        document.getElementById('resetButton').addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent the default link behavior
-            window.location.reload(); // Reload the current page
-        });
+        document.getElementById('resetButton').addEventListener('click', () => window.location.reload());
 
         const gambleFrames = [
     `
