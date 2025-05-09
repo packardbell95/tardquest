@@ -344,9 +344,9 @@
             y: 1,
             bitcoins: 0,
             dir: 0,
-            hp: 20,
-            maxHp: 20,
-            defense: 3,
+            hp: 30,
+            maxHp: 30,
+            defense: 7,
             persuasion: 7,
             exp: 0,
             level: 1,
@@ -511,9 +511,9 @@
             {
                 id: "mimic",
                 name: "MIMIC",
-                hp: 50,
-                attack: [6, 13],
-                bitcoins: 150,
+                hp: 120,
+                attack: [7, 14],
+                bitcoins: 100,
             },
         ];
         const defeatMessages = [
@@ -882,7 +882,13 @@
             MAP[player.y][player.x] = '.';
             MAP[exit.y][exit.x] = 'E';
 
-            merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
+            // 100% chance to spawn merchant on floor 1
+            if (floor === 1) {
+                merchant.isActiveOnFloor = merchant.isAlive;
+            } else {
+                merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
+            }
+
             if (merchant.isActiveOnFloor) {
                 setMerchant();
             }
@@ -2013,7 +2019,7 @@ __\\_______^/
             } else if (tile === 'T') {
                 // Normal chest, provide loot
                 const chestContents = Math.random() < 0.5
-                    ? { type: 'BTC', amount: Math.floor(Math.random() * 50) + 10 } // Random BTC (10-59)
+                    ? { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 } // Random BTC (10-59)
                     : { type: 'item', item: getRandomMerchantItem() };
 
                 if (chestContents.type === 'BTC') {
@@ -2049,7 +2055,6 @@ __\\_______^/
         }
 
         document.addEventListener('keydown', e => {
-            e.preventDefault()
             if (player.inputDisabled || gameOver || awaitingPersuasionText) {
                 return;
             }
@@ -2079,18 +2084,22 @@ __\\_______^/
                 switch (key) {
                     case 'w':
                     case 'arrowup':
+                        e.preventDefault()
                         move('forward');
                         break;
                     case 's':
                     case 'arrowdown':
+                        e.preventDefault()
                         move('backward');
                         break;
                     case 'a':
                     case 'arrowleft':
+                        e.preventDefault()
                         turnLeft();
                         break;
                     case 'd':
                     case 'arrowright':
+                        e.preventDefault()
                         turnRight();
                         break;
                     case 't':
