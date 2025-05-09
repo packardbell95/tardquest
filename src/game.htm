@@ -758,9 +758,24 @@
                     gambler.die();
                 }
 
+                // Destroy treasure chests
                 if (MAP[y][x] === 'T') {
                     MAP[y][x] = '.';
                     updateBattleLog('<span class="action">Gee willikers, you just destroyed a perfectly good treasure chest! Oh well...</span><br>');
+                }
+
+                // Destroy mimic chests and reward BTC
+                if (MAP[y][x] === 'M') {
+                    MAP[y][x] = '.'; // Remove the mimic chest from the map
+
+                    // Calculate scaled BTC reward
+                    const baseMimic = enemies.find(e => e.id === "mimic");
+                    const scaledMimic = scaleMimicStats(baseMimic);
+                    const mimicBTC = scaledMimic.bitcoins;
+
+                    player.bitcoins += mimicBTC; // Reward the player
+                    updateBattleLog(`<span class="action">WHAT THE FUCK? That was a mimic?!</span> You obtained <span class="BTC">${mimicBTC} BTC</span> from the intestines spilled from its gaping maw.`);
+                    playSFX('scream');
                 }
 
                 seenTiles[y][x] = true;
@@ -1490,8 +1505,8 @@ __\\_______^/
                     let tile = getTile(tx, ty);
                     output += tile === '#' ? wallSlice(d) :
                         tile === 'E' ? exitSlice(d) :
-                        tile === 'H' ? healSlice(d) : // Add healing tile slice
-                        tile === 'T' ? treasureSlice(d) :
+                        tile === 'H' ? healSlice(d) :
+                        (tile === 'T' || tile === 'M') ? treasureSlice(d) : // Render both normal and mimic chests
                         corridorSlice(d);
                 }
 
@@ -1638,8 +1653,8 @@ __\\_______^/
         function endOfPlayerTurn() {
             if (currentEnemy.hp <= 0) {
                 if (currentEnemy.id === "mimic") {
-                    updateBattleLog("The <span class='enemy'>MIMIC</span> has been defeated! You find <span class='BTC'>100 BTC</span> in its remains!");
-                    player.bitcoins += 100; // Award 100 BTC
+                    updateBattleLog(`The <span class='enemy'>MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
+                    player.bitcoins += currentEnemy.bitcoins; // Award scaled BTC
                 } else {
                     const baseExp = 5;
                     const floorBoost = Math.floor(floor / 2);
@@ -1987,8 +2002,12 @@ __\\_______^/
                 // Mimic detected, start a battle
                 playSFX('scream');
                 MAP[y][x] = '.'; // Remove the mimic from the map
-                currentEnemy = structuredClone(enemies.find(e => e.id === "mimic")); // Spawn mimic
-                updateBattleLog("The treasure chest was a trap! A <span class='enemy'>MIMIC</span> attacks!");
+
+                // Spawn mimic and apply scaling
+                const baseMimic = enemies.find(e => e.id === "mimic");
+                currentEnemy = scaleMimicStats(baseMimic);
+
+                updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
                 player.inCombat = true;
                 playMusic('battle');
             } else if (tile === 'T') {
@@ -2011,6 +2030,22 @@ __\\_______^/
 
             player.currentChest = null; // Clear the stored chest position
             render();
+        }
+
+        function scaleMimicStats(baseMimic) {
+            const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
+            const scaledMimic = structuredClone(baseMimic);
+
+            if (floorBoost > 0) {
+                scaledMimic.hp += floorBoost * 5; // +5 HP per scaling
+                scaledMimic.attack = [
+                    scaledMimic.attack[0] + (floorBoost * 3), // Adjust attack range
+                    scaledMimic.attack[1] + (floorBoost * 3)
+                ];
+                scaledMimic.bitcoins += floorBoost * 10; // Increase BTC reward
+            }
+
+            return scaledMimic;
         }
 
         document.addEventListener('keydown', e => {
