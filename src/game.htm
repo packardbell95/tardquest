@@ -221,7 +221,12 @@
         .player {
             color: #2aff00;
         }
-
+        .healtile {
+            color: #6cff74;
+        }
+        .treasurechest {
+            color: #f19b32;
+        }
         .wall {
             color: #e9ff00;
         }
@@ -297,7 +302,8 @@
         <p><span class="exit">E</span> Exit: Touch to descend further</p>
         <p><span class="merchant">M</span> Merchant: Sells you crap</p>
         <p><span class="gambler">G</span> Gambler: A shady shyster</p>
-        <p>H Healing Tile: Heals you to max HP</p>
+        <p><span class="healtile">H</span> Healing Tile: Heals you to max HP</p>
+        <p><span class="treasurechest">T</span> Treasure Chest: Contains items</p>
         <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
       </div>
   <div id="partylist"></div>
@@ -338,9 +344,9 @@
             y: 1,
             bitcoins: 0,
             dir: 0,
-            hp: 20,
-            maxHp: 20,
-            defense: 3,
+            hp: 30,
+            maxHp: 30,
+            defense: 7,
             persuasion: 7,
             exp: 0,
             level: 1,
@@ -501,6 +507,13 @@
                 hp: 7,
                 attack: [3, 4],
                 bitcoins: 4,
+            },
+            {
+                id: "mimic",
+                name: "MIMIC",
+                hp: 120,
+                attack: [7, 14],
+                bitcoins: 100,
             },
         ];
         const defeatMessages = [
@@ -726,7 +739,7 @@
         function breakMap(x, y) {
             if (coordsInBounds(x, y)) {
                 if (MAP[y][x] === '#') {
-                    MAP[y][x] = '.';
+                    MAP[y][x] = '.'; // Destroy walls
                 }
 
                 const killedMerchant =
@@ -743,6 +756,26 @@
                     gambler.x === x && gambler.y === y;
                 if (killedGambler) {
                     gambler.die();
+                }
+
+                // Destroy treasure chests
+                if (MAP[y][x] === 'T') {
+                    MAP[y][x] = '.';
+                    updateBattleLog('<span class="action">Gee willikers, you just destroyed a perfectly good treasure chest! Oh well...</span><br>');
+                }
+
+                // Destroy mimic chests and reward BTC
+                if (MAP[y][x] === 'M') {
+                    MAP[y][x] = '.'; // Remove the mimic chest from the map
+
+                    // Calculate scaled BTC reward
+                    const baseMimic = enemies.find(e => e.id === "mimic");
+                    const scaledMimic = scaleMimicStats(baseMimic);
+                    const mimicBTC = scaledMimic.bitcoins;
+
+                    player.bitcoins += mimicBTC; // Reward the player
+                    updateBattleLog(`<span class="action">WHAT THE FUCK? That was a mimic?!</span> You obtained <span class="BTC">${mimicBTC} BTC</span> from the intestines spilled from its gaping maw.`);
+                    playSFX('scream');
                 }
 
                 seenTiles[y][x] = true;
@@ -828,17 +861,11 @@
                 for (let x = 0; x < WIDTH; x++) {
                     MAP[y][x] = '#';
                     seenTiles[y][x] = false;
-                    // Uncomment this to see the full map
-                    // seenTiles[y][x] = true;
                 }
             }
 
             // Carve out a path
-            let position = {
-                x: player.x,
-                y: player.y,
-            };
-
+            let position = { x: player.x, y: player.y };
             let stack = null;
             do {
                 stack = carvePath([position]);
@@ -848,30 +875,109 @@
                 MAP[stack[i].y][stack[i].x] = '.';
             }
 
-            for (let i=0; i<10; i++) {
+            for (let i = 0; i < 10; i++) {
                 dissolveMap();
             }
 
             MAP[player.y][player.x] = '.';
             MAP[exit.y][exit.x] = 'E';
 
-            merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
+            // 100% chance to spawn merchant on floor 1
+            if (floor === 1) {
+                merchant.isActiveOnFloor = merchant.isAlive;
+            } else {
+                merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
+            }
+
             if (merchant.isActiveOnFloor) {
                 setMerchant();
             }
 
             gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.25;
-            if (merchant.isActiveOnFloor) {
+            if (gambler.isActiveOnFloor) {
                 setGambler();
+            }
+
+            // Spawn treasure chests
+            spawnTreasureChests();
+
+            // Spawn healing tiles
+            spawnHealingTiles();
+        }
+
+        function spawnTreasureChests() {
+            const chestCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 chests
+            let attempts = 0;
+
+            for (let i = 0; i < chestCount; i++) {
+                while (attempts++ < 1000) {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isEmptySpace =
+                        MAP[y][x] === '.' &&
+                        (y !== exit.y || x !== exit.x) &&
+                        (y !== player.y || x !== player.x) &&
+                        !isMerchantTile(x, y) &&
+                        !isGamblerTile(x, y);
+
+                    if (isEmptySpace) {
+                        const isMimic = Math.random() < 0.2; // 20% chance for mimic
+                        MAP[y][x] = isMimic ? 'M' : 'T'; // 'M' for mimic, 'T' for normal chest
+                        break;
+                    }
+                }
             }
         }
 
-        /**
-         * Places the exit based on the player's current position
-         *
-         * This will set the exit in either the opposite side or opposite corner
-         * of where the player currently resides on the map
-         */
+        function spawnHealingTiles() {
+            const healingTileCount = Math.floor(Math.random() * 6) + 1; // 1 to 6 healing tiles
+            let attempts = 0;
+
+            for (let i = 0; i < healingTileCount; i++) {
+                while (attempts++ < 1000) {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isEmptySpace =
+                        MAP[y][x] === '.' &&
+                        (y !== exit.y || x !== exit.x) &&
+                        (y !== player.y || x !== player.x) &&
+                        !isMerchantTile(x, y) &&
+                        !isGamblerTile(x, y) &&
+                        MAP[y][x] !== 'T'; // Ensure no overlap with treasure chests
+
+                    if (isEmptySpace) {
+                        MAP[y][x] = 'H'; // Place a healing tile
+                        break;
+                    }
+                }
+            }
+        }
+
+        function interactWithChest(x, y) {
+            const tile = MAP[y][x];
+
+            if (tile === 'T' || tile === 'M') {
+                player.currentChest = { x, y };
+                menu.open("chest");
+            }
+        }
+
+        function interactWithHealingTile(x, y) {
+            const healAmount = Math.ceil(player.maxHp * 0.3); // Heal 30% of max HP
+            player.hp = Math.min(player.maxHp, player.hp + healAmount);
+            updateBattleLog(`An oddly colored, perfectly square floor tile <span class="friendly">heals you for <span class="healtile">${healAmount} HP</span></span>`);
+
+            MAP[y][x] = '.';
+            render();
+        }
+
+        function getRandomMerchantItem() {
+            const availableItems = Object.keys(items).filter(itemId => items[itemId].merchantStockChance > 0);
+            return availableItems[Math.floor(Math.random() * availableItems.length)];
+        }
+
         function setExitPosition() {
             const margin = 2;
             const possiblePositions = [['x', 'y'], ['x'], ['y']];
@@ -883,23 +989,15 @@
                 if (positions[p] === 'x') {
                     const exitOffsetX = Math.round(Math.random() * Math.round(WIDTH / 10));
                     if (player.x < WIDTH / margin) {
-                        // Player is on the left side of the map
-                        // Put the exit on the right
                         exit.x = WIDTH - margin - exitOffsetX;
                     } else {
-                        // Player is on the right side of the map
-                        // Put the exit on the left
                         exit.x = margin + exitOffsetX;
                     }
                 } else {
                     const exitOffsetY = Math.round(Math.random() * Math.round(HEIGHT / 10));
                     if (player.y < HEIGHT / margin) {
-                        // Player is at the top of the map
-                        // Put the exit on the bottom
                         exit.y = HEIGHT - margin - exitOffsetY;
                     } else {
-                        // Player is at the bottom of the map
-                        // Put the exit on the top
                         exit.y = margin + exitOffsetY;
                     }
                 }
@@ -1078,6 +1176,12 @@
                         } else if (isGamblerTile(x, y)) {
                             tile = 'G';
                             tileClass = 'gambler';
+                        } else if (MAP[y][x] === 'T' || MAP[y][x] === 'M') {
+                            tile = 'T'; // Mimics appear as normal chests
+                            tileClass = 'treasurechest';
+                        } else if (MAP[y][x] === 'H') {
+                            tile = 'H';
+                            tileClass = 'healtile';
                         } else {
                             switch (MAP[y][x]) {
                                 case '#':
@@ -1185,9 +1289,16 @@
 
         function healSlice(d) {
             return {
-                3: "||     /  +  \\     ||\n",
-                2: "||    |   +   |    ||\n",
-                1: "||   |    +    |   ||\n"
+                3: "||     /  H  \\     ||\n",
+                2: "||    |   H   |    ||\n",
+                1: "||   |    H    |   ||\n"
+            }[d];
+        }
+        function treasureSlice(d) {
+            return {
+                3: "||     /  T  \\     ||\n",
+                2: "||    |   T   |    ||\n",
+                1: "||   |    T    |   ||\n"
             }[d];
         }
 
@@ -1330,7 +1441,20 @@ __\\_______^/
           (_|-|_)
           (__|__)
 `;
+                case "mimic":
+                    return `
 
+
+
+     ______________
+    /    \\      /  \\
+    |  ((O)    ((O)|     __________
+    |______________|    (________(O) - - - -
+    |    /VVVVV\\   |=====[/\\/]
+    |    \\ | | /   |      [ ]
+    \\______| |_____/
+            \\|
+            `;
                 default:
                     return '';
             }
@@ -1342,7 +1466,6 @@ __\\_______^/
             drawMinimap();
             let output = "";
 
-            // If the player is leveling up
             if (player.levelingUp) {
                 output +=
                     "=== LEVEL UP! ===\nChoose a stat to increase:\nH: Max HP\nD: Defense\nP: Persuasion\n";
@@ -1350,9 +1473,7 @@ __\\_______^/
                 return;
             }
 
-            // If the player is in combat
             if (player.inCombat) {
-                              // Combat stats
                 output +=
                     `<span class="LV">LV: ${player.level}</span> ` +
                     `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>\n` +
@@ -1377,7 +1498,6 @@ __\\_______^/
                 }
 
             } else {
-                // Exploration stats (appear BEFORE wall slices now)
                 output +=
                     `<span class="LV">LV: ${player.level}</span> ` +
                     `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>\n` +
@@ -1385,7 +1505,6 @@ __\\_______^/
                     `<span class="DEF">DEF: ${player.defense}</span> ` +
                     `<span class="PRS">PRS: ${player.persuasion}</span>\n\n\n\n\n\n\n`;
 
-                // Exploration view (wall slices)
                 for (let d = 3; d >= 1; d--) {
                     let tx = player.x + DX[player.dir] * d;
                     let ty = player.y + DY[player.dir] * d;
@@ -1393,6 +1512,7 @@ __\\_______^/
                     output += tile === '#' ? wallSlice(d) :
                         tile === 'E' ? exitSlice(d) :
                         tile === 'H' ? healSlice(d) :
+                        (tile === 'T' || tile === 'M') ? treasureSlice(d) : // Render both normal and mimic chests
                         corridorSlice(d);
                 }
 
@@ -1416,16 +1536,15 @@ __\\_______^/
                     "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
             }
 
-            // If the player is dead
             if (player.hp <= 0) {
                 output += `\nGood job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`;
                 gameOver = true;
                 setTimeout(() => window.location.href = "https://xxthemilkman69xx.neocities.org/dungeon/title.html", 5000);
             }
 
-            // Render the final output to the game screen
-            document.getElementById('game').innerHTML = output; // Use innerHTML to ensure HTML is rendered
+            document.getElementById('game').innerHTML = output;
         }
+
 
         function isEmpty(obj) {
             for (let i in obj) {
@@ -1470,11 +1589,9 @@ __\\_______^/
                 } else if (tile === 'E') {
                     descend();
                 } else if (tile === 'H') {
-                    player.hp = player.maxHp;
-                    MAP[ny][nx] = '.';
-                    updateBattleLog('<span class="friendly">You healed to full HP!</span>');
-                } else if (Math.random() < 0.2) {
-                    MAP[ny][nx] = 'H';
+                    interactWithHealingTile(nx, ny);
+                } else if (tile === 'T' || tile === 'M') {
+                    interactWithChest(nx, ny);
                 } else if (Math.random() < randomEncounterChance) {
                     startEncounter();
                 }
@@ -1500,9 +1617,12 @@ __\\_______^/
         }
 
         function startEncounter() {
+            // Filter out the mimic from the random enemy pool
+            const randomEnemies = enemies.filter(enemy => enemy.id !== "mimic");
+
             // Pick a random enemy
             currentEnemy = structuredClone(
-                enemies[Math.floor(Math.random() * enemies.length)]
+                randomEnemies[Math.floor(Math.random() * randomEnemies.length)]
             );
 
             // Scale enemy stats based on floor
@@ -1537,35 +1657,31 @@ __\\_______^/
         }
 
         function endOfPlayerTurn() {
-            party.forEach(member => {
-                if (!member.healedThisBattle && Math.random() < 0.2) {
-                    let healed = Math.ceil(player.maxHp * 0.02);
-                    player.hp = Math.min(player.maxHp, player.hp + healed);
-                    member.healedThisBattle = true;
-                    updateBattleLog(
-                        `<span class="friendly">${member.name}</span> tended your wounds <span class="HP">(+${healed} HP)</span>`
-                    );
-                }
-            });
-
             if (currentEnemy.hp <= 0) {
-                const baseExp = 5;
-                const floorBoost = Math.floor(floor / 2);
-                const exp = baseExp + (floorBoost * 5); // +5 EXP per boost
-                const bitcoinsEarned = currentEnemy.bitcoins;
+                if (currentEnemy.id === "mimic") {
+                    updateBattleLog(`The <span class='enemy'>MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
+                    player.bitcoins += currentEnemy.bitcoins; // Award scaled BTC
+                } else {
+                    const baseExp = 5;
+                    const floorBoost = Math.floor(floor / 2);
+                    const exp = baseExp + (floorBoost * 5); // +5 EXP per boost
+                    const bitcoinsEarned = currentEnemy.bitcoins;
 
-                const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
-                updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
-                updateBattleLog(`You gained <span class="EXP">+${exp}</span> EXP and <span class="BTC">${bitcoinsEarned} BTC</span>`);
+                    const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
+                    updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
+                    updateBattleLog(`You gained <span class="EXP">+${exp}</span> EXP and <span class="BTC">${bitcoinsEarned} BTC</span>`);
+                    player.bitcoins += bitcoinsEarned;
+                    player.exp += exp;
+                }
+
                 player.inCombat = false;
-                player.bitcoins += bitcoinsEarned;
                 currentEnemy = null;
-                player.exp += exp;
                 playMusic('exploration');
                 party = party.filter(a => a.hp > 0);
+
                 if (player.exp >= player.level * 10) {
-                    player.levelingUp = true; // Set the leveling-up flag
-                    render(); // Re-render to show the level-up prompt
+                    player.levelingUp = true;
+                    render();
                 }
             } else {
                 enemyAttack();
@@ -1873,20 +1989,70 @@ __\\_______^/
             } else if (key === 'p') {
                 player.persuasion += 1;
             } else {
-                return; // Ignore other keys
+                return;
             }
-
-            // Now level up properly when the player manually chooses to level up
             player.level++;
-            player.exp = 0; // Reset EXP after leveling up
-            player.hp = player.maxHp; // Fully heal the player
-            player.levelingUp = false; // Reset leveling up state
+            player.exp = 0;
+            player.hp = player.maxHp;
+            player.levelingUp = false;
 
             updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>`);
             render();
         }
 
+        function openChest() {
+            const { x, y } = player.currentChest;
+            const tile = MAP[y][x];
 
+            if (tile === 'M') {
+                // Mimic detected, start a battle
+                playSFX('scream');
+                MAP[y][x] = '.'; // Remove the mimic from the map
+
+                // Spawn mimic and apply scaling
+                const baseMimic = enemies.find(e => e.id === "mimic");
+                currentEnemy = scaleMimicStats(baseMimic);
+
+                updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
+                player.inCombat = true;
+                playMusic('battle');
+            } else if (tile === 'T') {
+                // Normal chest, provide loot
+                const chestContents = Math.random() < 0.5
+                    ? { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 } // Random BTC (10-59)
+                    : { type: 'item', item: getRandomMerchantItem() };
+
+                if (chestContents.type === 'BTC') {
+                    player.bitcoins += chestContents.amount;
+                    updateBattleLog(`You found <span class="BTC">${chestContents.amount} BTC</span> in the chest!`);
+                } else if (chestContents.type === 'item') {
+                    const itemName = chestContents.item;
+                    player.inventory[itemName] = (player.inventory[itemName] || 0) + 1;
+                    updateBattleLog(`You found <span class="friendly">${items[itemName].name}</span> in the chest!`);
+                }
+
+                MAP[y][x] = '.'; // Remove the chest from the map
+            }
+
+            player.currentChest = null; // Clear the stored chest position
+            render();
+        }
+
+        function scaleMimicStats(baseMimic) {
+            const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
+            const scaledMimic = structuredClone(baseMimic);
+
+            if (floorBoost > 0) {
+                scaledMimic.hp += floorBoost * 5; // +5 HP per scaling
+                scaledMimic.attack = [
+                    scaledMimic.attack[0] + (floorBoost * 3), // Adjust attack range
+                    scaledMimic.attack[1] + (floorBoost * 3)
+                ];
+                scaledMimic.bitcoins += floorBoost * 10; // Increase BTC reward
+            }
+
+            return scaledMimic;
+        }
 
         document.addEventListener('keydown', e => {
             if (player.inputDisabled || gameOver || awaitingPersuasionText) {
@@ -1899,12 +2065,10 @@ __\\_______^/
                 menu.handleInput(key);
             } else if (player.levelingUp) {
                 handleLevelUpInput(key);
-                return; // <-- this fixes it
             } else if (key === 'i') {
                 playSFX('inventoryOpen');
                 menu.open('inventory');
             } else if (player.inCombat) {
-                // Combat mode
                 switch (key) {
                     case 'a':
                         playerAttack();
@@ -1917,22 +2081,25 @@ __\\_______^/
                         break;
                 }
             } else {
-                // Exploration mode
                 switch (key) {
                     case 'w':
                     case 'arrowup':
+                        e.preventDefault()
                         move('forward');
                         break;
                     case 's':
                     case 'arrowdown':
+                        e.preventDefault()
                         move('backward');
                         break;
                     case 'a':
                     case 'arrowleft':
+                        e.preventDefault()
                         turnLeft();
                         break;
                     case 'd':
                     case 'arrowright':
+                        e.preventDefault()
                         turnRight();
                         break;
                     case 't':
@@ -1985,10 +2152,10 @@ __\\_______^/
 
 
         generateMap();
-        updateSeenTiles(); // Ensure tiles are marked as seen
-        drawMinimap(); // Draw the minimap immediately
-        playMusic('exploration'); // Start exploration music
-        render(); // Render the game
+        updateSeenTiles(); 
+        drawMinimap(); 
+        playMusic('exploration'); 
+        render(); 
 
         document.getElementById('musicToggle').addEventListener('click', () => {
             musicEnabled = !musicEnabled;
@@ -1996,12 +2163,10 @@ __\\_______^/
             btn.textContent = musicEnabled ? "DISABLE MUSIC" : "ENABLE MUSIC";
 
             if (!musicEnabled) {
-                // Pause the current music
                 if (music.current) {
                     music.current.pause();
                 }
             } else {
-                // Resume the correct music based on the game state
                 if (player.inCombat) {
                     playMusic('battle');
                 } else {
@@ -2125,7 +2290,7 @@ __\\_______^/
                         } else {
                             activeMenu.select(selectedOptionId);
                             playSFX('uiSelect');
-                        };
+                        }
                         break;
                 }
 
@@ -2336,7 +2501,7 @@ __\\_______^/
                         return (
                             `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
                             `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
-                            `Just <span class="tooExpensive">${gambler.playPrice} BTC</span> to play!"\n\n` +
+                            `Just <span class="tooExpensive">${gambler.playPrice}</span> to play!"\n\n` +
                             `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
                         );
                     },
@@ -2357,6 +2522,37 @@ __\\_______^/
                     },
                     select: () => {
                         gamble();
+                    },
+                },
+                chest: {
+                    title: "TREASURE CHEST",
+                    landingHtml: () => {
+                        return `
+
+                        
+You found a treasure chest! Do you want to open it?
+                        `;
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "open",
+                                displayText: "Hell yeah! Fondle that booty!",
+                                description: "Claim your succulent reward!",
+                            },
+                            {
+                                id: "_exit",
+                                displayText: "Resist your burning temptation...",
+                                description: "DON'T claim your succulent reward!",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "open") {
+                            openChest();
+                        }
+                        menu.close();
+                        render();
                     },
                 },
             },
