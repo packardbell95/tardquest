@@ -571,6 +571,33 @@
                 },
                 price: 500,
             },
+            cathodeRayTubeMonitor: {
+                name: "CATHODE RAY TUBE MONITOR",
+                description: "A CRT monitor. Heavy as piss.",
+                damage: {
+                    base: 13,
+                    randomMultiplier: 17,
+                },
+                price: 1000,
+            },
+            magicPencil: {
+                name: "MAGIC PENCIL",
+                description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
+                damage: {
+                    base: 15,
+                    randomMultiplier: 18,
+                },
+                price: 1400,
+            },
+            goldenWang: {
+                name: "GOLDEN WANG",
+                description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
+                damage: {
+                    base: 69,
+                    randomMultiplier: 69,
+                },
+                price: 6900,
+            },
         };
 
         const armor = {
@@ -598,6 +625,18 @@
                 defense: 12,
                 price: 1000,
             },
+            blackPlateArmor: {
+                name: "BLACK PLATE ARMOR",
+                description: "Literally a giant black dinner plate. Deceptively protective.",
+                defense: 16,
+                price: 1500,
+            },
+            nokiaMail: {
+                name: "NOKIA MAIL",
+                description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
+                defense: 21,
+                price: 2000,
+            },
         };
 
         const items = {
@@ -620,6 +659,27 @@
                 },
                 merchantStockChance: 0.5,
                 price: 30,
+            },
+            glassOfToiletWater: {
+                name: "GLASS OF TOILET WATER",
+                description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied... Heals +50 HP",
+                use: () => {
+                    healPlayer(50);
+                    updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
+                },
+                merchantStockChance: .4,
+                price: 50,
+            },
+            alaskaRaisins: {
+                name: "ALASKA RAISINS",
+                description: "Holy shit! It's the Alaska Raisins! Heals +70 HP",
+                use: () => {          
+                    healPlayer(70);
+                    playSFX('raisins');
+                    updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
+                },
+                merchantStockChance: .35,
+                price: 80,
             },
             dowsingRod: {
                 name: "DOWSING ROD",
@@ -818,6 +878,7 @@
             uiOption: new Audio('https://files.catbox.moe/h34402.wav'),
             uiSelect: new Audio('https://files.catbox.moe/2cvmq8.wav'),
             uiCancel: new Audio('https://files.catbox.moe/5doy28.wav'),
+            raisins: new Audio('https://files.catbox.moe/46dfdj.mp3'),
         };
 
         const music = {
@@ -1298,7 +1359,20 @@
                 1: "||   |    T    |   ||\n"
             }[d];
         }
-
+        function merchantSlice(d) {
+            return {
+                3: "||     /  M  \\     ||\n",
+                2: "||    |   M   |    ||\n",
+                1: "||   |    M    |   ||\n"
+            }[d];
+        }
+        function gamblerSlice(d) {
+            return {
+                3: "||     /  G  \\     ||\n",
+                2: "||    |   G   |    ||\n",
+                1: "||   |    G    |   ||\n"
+            }[d];
+        }
 
         function getEnemyArt() {
             switch (currentEnemy?.id) {
@@ -1506,11 +1580,14 @@ __\\_______^/
                     let tx = player.x + DX[player.dir] * d;
                     let ty = player.y + DY[player.dir] * d;
                     let tile = getTile(tx, ty);
-                    output += tile === '#' ? wallSlice(d) :
-                        tile === 'E' ? exitSlice(d) :
-                        tile === 'H' ? healSlice(d) :
-                        (tile === 'T' || tile === 'M') ? treasureSlice(d) : // Render both normal and mimic chests
-                        corridorSlice(d);
+
+                    output += (tx === merchant.x && ty === merchant.y && merchant.isActiveOnFloor) ? merchantSlice(d) :
+                            (tx === gambler.x && ty === gambler.y && gambler.isActiveOnFloor) ? gamblerSlice(d) :
+                            tile === '#' ? wallSlice(d) :
+                            tile === 'E' ? exitSlice(d) :
+                            tile === 'H' ? healSlice(d) :
+                            (tile === 'T' || tile === 'M') ? treasureSlice(d) :
+                            corridorSlice(d);
                 }
 
                 // Logo
