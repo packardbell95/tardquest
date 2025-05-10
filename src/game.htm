@@ -883,14 +883,14 @@
             if (floor === 1) {
                 merchant.isActiveOnFloor = merchant.isAlive;
             } else {
-                merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.25;
+                merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.35;
             }
 
             if (merchant.isActiveOnFloor) {
                 setMerchant();
             }
 
-            gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.25;
+            gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
             if (gambler.isActiveOnFloor) {
                 setGambler();
             }
