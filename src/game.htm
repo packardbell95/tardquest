@@ -1359,7 +1359,20 @@
                 1: "||   |    T    |   ||\n"
             }[d];
         }
-
+        function merchantSlice(d) {
+            return {
+                3: "||     /  M  \\     ||\n",
+                2: "||    |   M   |    ||\n",
+                1: "||   |    M    |   ||\n"
+            }[d];
+        }
+        function gamblerSlice(d) {
+            return {
+                3: "||     /  G  \\     ||\n",
+                2: "||    |   G   |    ||\n",
+                1: "||   |    G    |   ||\n"
+            }[d];
+        }
 
         function getEnemyArt() {
             switch (currentEnemy?.id) {
@@ -1567,11 +1580,14 @@ __\\_______^/
                     let tx = player.x + DX[player.dir] * d;
                     let ty = player.y + DY[player.dir] * d;
                     let tile = getTile(tx, ty);
-                    output += tile === '#' ? wallSlice(d) :
-                        tile === 'E' ? exitSlice(d) :
-                        tile === 'H' ? healSlice(d) :
-                        (tile === 'T' || tile === 'M') ? treasureSlice(d) : // Render both normal and mimic chests
-                        corridorSlice(d);
+
+                    output += (tx === merchant.x && ty === merchant.y && merchant.isActiveOnFloor) ? merchantSlice(d) :
+                            (tx === gambler.x && ty === gambler.y && gambler.isActiveOnFloor) ? gamblerSlice(d) :
+                            tile === '#' ? wallSlice(d) :
+                            tile === 'E' ? exitSlice(d) :
+                            tile === 'H' ? healSlice(d) :
+                            (tile === 'T' || tile === 'M') ? treasureSlice(d) :
+                            corridorSlice(d);
                 }
 
                 // Logo
