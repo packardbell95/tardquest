@@ -64,6 +64,12 @@
             margin-bottom: auto;
             padding-left: 1em;
         }
+        #pageNum {
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 5px;
+            color: #ccc;
+        }
 
         #menuList,
         #menuSelectionDescription {
@@ -2252,6 +2258,7 @@ __\\_______^/
         const menu = {
             breadcrumbs: [],
             selectionIndex: 0,
+            currentPage: 0, // Track the current page for paginated menus
             getActiveMenu: () => menu.menus[menu.breadcrumbs.at(-1)?.menuName] || undefined,
             isOpen: () => menu.breadcrumbs.length > 0,
             open: (menuName) => {
@@ -2265,10 +2272,11 @@ __\\_______^/
                 menu.breadcrumbs.push({
                     menuName,
                     selectionIndex: menu.selectionIndex,
+                    currentPage: menu.currentPage,
                 });
 
-                // Put the cursor on the first non-disabled option, if available
-                menu.selectionIndex = Math.max(activeMenu.getOptions().findIndex((e) => !e.disabled), 0);
+                menu.selectionIndex = 0; // Reset selection index
+                menu.currentPage = 0; // Reset to the first page
 
                 document.getElementById('game').classList.add('hidden');
                 document.getElementById('menu').classList.remove('hidden');
@@ -2281,6 +2289,7 @@ __\\_______^/
                 const previousMenu = menu.breadcrumbs.pop();
                 menu.menus[previousMenu.menuName].onClose?.();
                 menu.selectionIndex = previousMenu.selectionIndex;
+                menu.currentPage = previousMenu.currentPage;
 
                 if (menu.breadcrumbs.length === 0) {
                     document.getElementById('menu').classList.add('hidden');
@@ -2294,41 +2303,44 @@ __\\_______^/
                     return;
                 }
 
-                const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
-                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
-                document.getElementById('menuLanding').innerHTML = titleHtml + landingHtml;
-
                 const options = activeMenu.getOptions();
-                const trailTextMaxLength = Math.max(...options.map((o) => (o?.trailText || '').length));
+                    const itemsPerPage = 8; // Number of items per page
+                    const totalPages = Math.ceil(options.length / itemsPerPage); // Calculate total pages
+                    const startIndex = menu.currentPage * itemsPerPage;
+                    const endIndex = startIndex + itemsPerPage;
+                    const paginatedOptions = options.slice(startIndex, endIndex);
 
-                options.forEach((option, index) => {
-                    const isSelectedLine = index === menu.selectionIndex;
-                    const cursor = isSelectedLine ? "▶ " : "  ";
-                    const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
-                    let line = '';
+                    // Render the title and page indicator
+                    const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
+                    const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
+                    const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                    document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
 
-                    if (option.hasOwnProperty('trailText')) {
-                        const dotPattern = option.displayText.length % 2 ? ' .' : '. ';
-                        const trailDiff = trailTextMaxLength - option.trailText.length;
-
-                        line = (option.displayText + dotPattern.repeat(17 + Math.floor(trailDiff / 2))).substr(0, 34 + trailDiff) +
-                            ` ${option.trailText}`;
-                    } else {
-                        line = `${option.displayText}`;
-                    }
-
-                    menuHtml += `${cursor}${spanHtml}${line}</span>\n`;
+                    // Render the options for the current page
+                    paginatedOptions.forEach((option, index) => {
+                        const isSelectedLine = index === menu.selectionIndex;
+                        const cursor = isSelectedLine ? "▶ " : "  ";
+                        const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
+                        const trailText = option.trailText ? ` x${option.trailText}` : '';
+                        menuHtml += `${cursor}${spanHtml}${option.displayText}${trailText}</span>\n`;
 
                     if (isSelectedLine) {
                         document.getElementById('menuSelectionDescription').textContent = option.description;
                     }
                 });
 
+                // Add page indicator if there are multiple pages
+                if (totalPages > 1) {
+                    menuHtml += `\nPage ${menu.currentPage + 1} of ${totalPages}`;
+                }
+
                 document.getElementById('menuList').innerHTML = menuHtml;
             },
             handleInput: (key) => {
                 const activeMenu = menu.getActiveMenu();
                 const options = activeMenu.getOptions();
+                const itemsPerPage = 8; // Number of items per page
+                const totalPages = Math.ceil(options.length / itemsPerPage);
 
                 switch (key) {
                     case 'escape':
@@ -2338,26 +2350,37 @@ __\\_______^/
                     case 'w':
                     case 'arrowup':
                         menu.selectionIndex = menu.selectionIndex === 0
-                            ? options.length - 1
+                            ? Math.min(options.length, itemsPerPage) - 1
                             : menu.selectionIndex - 1;
                         playSFX('uiOption');
                         break;
                     case 's':
                     case 'arrowdown':
-                        menu.selectionIndex = menu.selectionIndex === options.length - 1
+                        menu.selectionIndex = menu.selectionIndex === Math.min(options.length, itemsPerPage) - 1
                             ? 0
                             : menu.selectionIndex + 1;
                         playSFX('uiOption');
                         break;
+                    case 'a':
+                    case 'arrowleft':
+                        if (menu.currentPage > 0) {
+                            menu.currentPage--;
+                            menu.selectionIndex = 0; // Reset selection index on page change
+                            playSFX('uiOption');
+                        }
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        if (menu.currentPage < totalPages - 1) {
+                            menu.currentPage++;
+                            menu.selectionIndex = 0; // Reset selection index on page change
+                            playSFX('uiOption');
+                        }
+                        break;
                     case ' ':
                     case 'e':
                     case 'enter':
-                        if (options[menu.selectionIndex].disabled) {
-                            playSFX('uiCancel');
-                            break;
-                        }
-
-                        const selectedOptionId = options[menu.selectionIndex].id;
+                        const selectedOptionId = options[menu.currentPage * itemsPerPage + menu.selectionIndex]?.id;
                         if (selectedOptionId === '_exit') {
                             menu.close();
                             playSFX('uiCancel');
@@ -2383,7 +2406,7 @@ __\\_______^/
                             id: itemId,
                             displayText: items[itemId].name,
                             description: items[itemId].description,
-                            trailText: `${player.inventory[itemId]}x`,
+                            trailText: `${player.inventory[itemId]}`,
                         }));
 
                         options.push({
@@ -2775,7 +2798,7 @@ You found a treasure chest! Do you want to open it?
 
                           ..__
                 __________\`.  '-
-               (___________ \`.  '
+               (___________ \`.  '-.
                 (__________
                  (________
                    (____
