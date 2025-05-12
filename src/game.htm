@@ -385,7 +385,7 @@
             maxHp: 20,
             defense: 5,
             persuasion: 7,
-            speed: 9,
+            speed: 12,
             exp: 0,
             level: 1,
             inCombat: false,
@@ -2813,11 +2813,11 @@ You found a treasure chest! Do you want to open it?
                 },
             },
         };
-        player.remainingPoints = 20; //Points to allocate at start of game
+        player.remainingPoints = 10; //Points to allocate at start of game
 
         // Function to reset stats
         function resetStats() {
-            player.remainingPoints = 20;
+            player.remainingPoints = 10;
             player.maxHp = 20; // Reset to base stats
             player.hp = player.maxHp;
             player.defense = 5;
