@@ -2347,11 +2347,6 @@ __\\_______^/
                     }
                 });
 
-                // Add page indicator if there are multiple pages
-                if (totalPages > 1) {
-                    menuHtml += `\nPage ${menu.currentPage + 1} of ${totalPages}`;
-                }
-
                 document.getElementById('menuList').innerHTML = menuHtml;
             },
             handleInput: (key) => {
