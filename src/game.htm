@@ -2341,10 +2341,16 @@ __\\_______^/
 
                     menuHtml += `${cursor}${spanHtml}${option.displayText}${dots}${trailText}</span>\n`;
 
+
                     if (isSelectedLine) {
                         document.getElementById('menuSelectionDescription').textContent = option.description;
                     }
                 });
+
+                // Add page indicator if there are multiple pages
+                if (totalPages > 1) {
+                    menuHtml += `\nPage ${menu.currentPage + 1} of ${totalPages}`;
+                }
 
                 document.getElementById('menuList').innerHTML = menuHtml;
             },
