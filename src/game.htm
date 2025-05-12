@@ -135,7 +135,7 @@
             flex-direction: column;
         }
         #partylist {
-            height: 90px;
+            height: 130px;
             width: 348px;
             position: absolute;
             border: 2px solid #fff;
@@ -148,13 +148,42 @@
             overflow-y: auto;
             justify-content: space-between;
         }
+        #stats1 {
+            height: 338px;
+            width: 90px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 140px;
+            left: 620px;
+            padding: 5px;
+            overflow: hidden; 
+            font-size: 18px;
+            gap: 7px;
+            text-align: left;
+            line-height: 1.1;
+        }
+        #stats2 {
+            height: 140px;
+            width: 90px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 489px;
+            left: 620px;
+            padding: 5px;
+            overflow: hidden; 
+            font-size: 10px;
+            font-weight: bold;
+            gap: 7px;
+            text-align: left;
+            line-height: 1.02;
+        }
 
         #battleLog,
         #minimap {
             background: #000;
             border: 2px solid #fff;
             padding: 10px;
-            width: 570px;
+            width: 672px;
             height: auto;
         }
 
@@ -208,7 +237,7 @@
         }
 
         #controls {
-            height: 90px;
+            height: 130px;
             width: 200px;
             position: absolute;
             border: 2px solid #fff;
@@ -290,6 +319,9 @@
         .PRS {
             color: #A23AB4;
         }
+        .SPD {
+            color: #7ec5ee;
+        }
         .action {
             color: #EC4134;
         }
@@ -310,6 +342,8 @@
         <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
       </div>
   <div id="partylist"></div>
+  <div id="stats1"></div>
+  <div id="stats2"></div>
   <div id="controls"></div>
   <div id="viewportContainer">
     <div id="game"></div>
@@ -347,10 +381,11 @@
             y: 1,
             bitcoins: 0,
             dir: 0,
-            hp: 30,
-            maxHp: 30,
-            defense: 7,
+            hp: 20,
+            maxHp: 20,
+            defense: 5,
             persuasion: 7,
+            speed: 12,
             exp: 0,
             level: 1,
             inCombat: false,
@@ -1542,21 +1577,29 @@ __\\_______^/
             updateSeenTiles();
             drawMinimap();
             let output = "";
+            const stats1Html = `
+                <div center>==STATS==</div>
+                <div class="HP">HP:</div> <a>${player.hp}/${player.maxHp}</a>
+                <div class="DEF">DEF:</div> <a>${player.defense}</a>
+                <div class="PRS">PRS:</div> <a>${player.persuasion}</a>
+                <div class="SPD">SPD:</div> <a>${player.speed}</a>
+            `;
+            document.getElementById('stats1').innerHTML = stats1Html;
+
+            const stats2Html = `
+                <div class="action">FLOOR</div> <a>${floor}</a>
+                <div class="LV">LV</div> <a>${player.level}</a>
+                <div class="EXP">EXP</div> <a>${player.exp}/${player.level * 10}</a>
+                <div class="BTC">BTC</div> <a>${player.bitcoins}</a>
+            `;
+            document.getElementById('stats2').innerHTML = stats2Html;    
 
             if (player.levelingUp) {
-                output +=
-                    "=== LEVEL UP! ===\nChoose a stat to increase:\nH: Max HP\nD: Defense\nP: Persuasion\n";
-                document.getElementById('game').textContent = output;
+                menu.open("levelUp");
                 return;
             }
 
             if (player.inCombat) {
-                output +=
-                    `<span class="LV">LV: ${player.level}</span> ` +
-                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>\n` +
-                    `<span class="HP">HP: ${player.hp}</span> ` +
-                    `<span class="DEF">DEF: ${player.defense}</span> ` +
-                    `<span class="PRS">PRS: ${player.persuasion}</span>`;
                 output += `${getEnemyArt()}`;
 
                 if (party.length > 0) {
@@ -1575,12 +1618,7 @@ __\\_______^/
                 }
 
             } else {
-                output +=
-                    `<span class="LV">LV: ${player.level}</span> ` +
-                    `<span class="EXP">EXP: ${player.exp}/${player.level * 10}</span> <span class="BTC">BTC: ${player.bitcoins}</span>\n` +
-                    `<span class="HP">HP: ${player.hp}</span> ` +
-                    `<span class="DEF">DEF: ${player.defense}</span> ` +
-                    `<span class="PRS">PRS: ${player.persuasion}</span>\n\n\n\n\n\n\n`;
+                output += "\n\n\n\n\n\n\n";
 
                 for (let d = 3; d >= 1; d--) {
                     let tx = player.x + DX[player.dir] * d;
@@ -1642,9 +1680,11 @@ __\\_______^/
         }
 
         function move(direction) {
-            if (player.inCombat || gameOver) {
+            if (player.inCombat || gameOver || player.inputDisabled) {
                 return;
             }
+
+            player.inputDisabled = true;
 
             playSFX('footstep');
             let nx, ny, randomEncounterChance;
@@ -1676,6 +1716,21 @@ __\\_______^/
                     startEncounter();
                 }
             }
+
+            // Set the movement delay range
+            const maxDelay = 2000; // Max speed (movement delay) in milliseconds (2s)
+            const minDelay = 1;  // Min speed (movement delay) in milliseconds (1/4 of 1s)
+
+            // Calculate movement delay based on speed
+            const baseDelay = maxDelay; // Start with the maximum delay
+            const speedModifier = player.speed * 0.05; // 5% reduction per speed point
+            const movementDelay = Math.max(minDelay, baseDelay * (1 - speedModifier)); // Ensure delay is at least minDelay
+
+            setTimeout(() => {
+                player.inputDisabled = false;
+            }, movementDelay);
+
+            render();
         }
 
         function turnLeft() {
@@ -1756,12 +1811,11 @@ __\\_______^/
 
                 player.inCombat = false;
                 currentEnemy = null;
-                playMusic('exploration');
+                playMusic("exploration");
                 party = party.filter(a => a.hp > 0);
 
                 if (player.exp >= player.level * 10) {
-                    player.levelingUp = true;
-                    render();
+                    menu.open("levelUp"); // Open the level-up menu
                 }
             } else {
                 enemyAttack();
@@ -1914,29 +1968,6 @@ __\\_______^/
         });
 
 
-
-        function handleLevelUpInput(key) {
-            switch (key) {
-                case 'h':
-                    player.maxHp += 5;
-                    break;
-                case 'd':
-                    player.defense += 2;
-                    break;
-                case 'p':
-                    player.persuasion += 2;
-                    break;
-                default:
-                    return;
-            }
-            player.level++; // Increment the player's level
-            player.exp = 0; // Reset EXP
-            player.hp = player.maxHp; // Fully heal the player
-            player.levelingUp = false; // Reset the leveling-up flag
-            updateBattleLog(`<span class="LV">You leveled up! Welcome to level ${player.level}!</span>`);
-            render();
-        }
-
         function useItem(itemName) {
             items[itemName].use();
 
@@ -2061,24 +2092,6 @@ __\\_______^/
             }
         }
 
-        function handleLevelUpInput(key) {
-            if (key === 'h') {
-                player.maxHp += 5;
-            } else if (key === 'd') {
-                player.defense += 1;
-            } else if (key === 'p') {
-                player.persuasion += 1;
-            } else {
-                return;
-            }
-            player.level++;
-            player.exp = 0;
-            player.hp = player.maxHp;
-            player.levelingUp = false;
-
-            updateBattleLog(`<span class="LV">Oh... you leveled up. Whatever dude.</span>`);
-            render();
-        }
 
         function openChest() {
             const { x, y } = player.currentChest;
@@ -2144,7 +2157,7 @@ __\\_______^/
             if (menu.isOpen()) {
                 menu.handleInput(key);
             } else if (player.levelingUp) {
-                handleLevelUpInput(key);
+                handleLevelUpInput(key); // Call the level-up input handler
             } else if (key === 'i') {
                 playSFX('inventoryOpen');
                 menu.open('inventory');
@@ -2164,22 +2177,22 @@ __\\_______^/
                 switch (key) {
                     case 'w':
                     case 'arrowup':
-                        e.preventDefault()
+                        e.preventDefault();
                         move('forward');
                         break;
                     case 's':
                     case 'arrowdown':
-                        e.preventDefault()
+                        e.preventDefault();
                         move('backward');
                         break;
                     case 'a':
                     case 'arrowleft':
-                        e.preventDefault()
+                        e.preventDefault();
                         turnLeft();
                         break;
                     case 'd':
                     case 'arrowright':
-                        e.preventDefault()
+                        e.preventDefault();
                         turnRight();
                         break;
                     case 't':
@@ -2191,8 +2204,6 @@ __\\_______^/
 
             render();
         });
-
-
 
         function descend() {
             floor++;
@@ -2304,25 +2315,32 @@ __\\_______^/
                 }
 
                 const options = activeMenu.getOptions();
-                    const itemsPerPage = 8; // Number of items per page
-                    const totalPages = Math.ceil(options.length / itemsPerPage); // Calculate total pages
-                    const startIndex = menu.currentPage * itemsPerPage;
-                    const endIndex = startIndex + itemsPerPage;
-                    const paginatedOptions = options.slice(startIndex, endIndex);
+                const itemsPerPage = 8; // Number of items per page
+                const totalPages = Math.ceil(options.length / itemsPerPage); // Calculate total pages
+                const startIndex = menu.currentPage * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedOptions = options.slice(startIndex, endIndex);
 
-                    // Render the title and page indicator
-                    const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
-                    const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
-                    const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
-                    document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
+                // Render the title and page indicator
+                const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
+                const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
+                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
 
-                    // Render the options for the current page
-                    paginatedOptions.forEach((option, index) => {
-                        const isSelectedLine = index === menu.selectionIndex;
-                        const cursor = isSelectedLine ? "▶ " : "  ";
-                        const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
-                        const trailText = option.trailText ? ` x${option.trailText}` : '';
-                        menuHtml += `${cursor}${spanHtml}${option.displayText}${trailText}</span>\n`;
+                // Render the options for the current page
+                paginatedOptions.forEach((option, index) => {
+                    const isSelectedLine = index === menu.selectionIndex;
+                    const cursor = isSelectedLine ? "▶ " : "  ";
+                    const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
+                    const trailText = option.trailText ? `${option.trailText}` : '';
+
+                    const maxLineLength = 40; // Max "." trail width
+                    const dots = trailText
+                        ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
+                        : '';
+
+                    menuHtml += `${cursor}${spanHtml}${option.displayText}${dots}${trailText}</span>\n`;
+
 
                     if (isSelectedLine) {
                         document.getElementById('menuSelectionDescription').textContent = option.description;
@@ -2652,8 +2670,194 @@ You found a treasure chest! Do you want to open it?
                         render();
                     },
                 },
+                levelUp: {
+                    title: "LEVEL UP",
+                    landingHtml: () => {
+                        return "Congratulations! You've leveled up. Choose a stat to increase:";
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "maxHp",
+                                displayText: "HP",
+                                description: "Increase max HP by +5.",
+                            },
+                            {
+                                id: "defense",
+                                displayText: "DEF",
+                                description: "Increase Defense by +2.",
+                            },
+                            {
+                                id: "persuasion",
+                                displayText: "PRS",
+                                description: "Increase Persuasion by +2.",
+                            },
+                            {
+                                id: "speed",
+                                displayText: "SPD",
+                                description: "Increase Speed by 5%.",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        switch (selectedOptionId) {
+                            case "maxHp":
+                                player.maxHp += 5;
+                                player.hp = player.maxHp; // Fully heal the player
+                                updateBattleLog("You slap your greasy tummy, as you feel your health has improved. +5 HP");
+                                break;
+                            case "defense":
+                                player.defense += 2;
+                                updateBattleLog("Your arms flex as if they have a mind of their own. +2 DEF");
+                                break;
+                            case "persuasion":
+                                player.persuasion += 2;
+                                updateBattleLog("You feel as though your chances at getting laid have statistically increased. How smooth. +2 PRS");
+                                break;
+                            case "speed":
+                                player.speed += 1;
+                                updateBattleLog("You may be retarded, but your legs sure aren't! +5% SPD");
+                                break;
+                        }
+                            // Restore max HP after level up
+                        player.hp = player.maxHp;
+                            // Finalize level-up
+                        player.level++;
+                        player.exp = 0; // Reset EXP
+                        player.levelingUp = false;
+                        menu.close();
+                        render();
+                    },
+                },
+                statAllocation: {
+                    title: "STAT ALLOCATION",
+                    landingHtml: () => {
+                        return `Build your character using the <span class="action">${player.remainingPoints}</span> points you have been allotted. Use them wisely...`;
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "_confirm",
+                                displayText: "[Confirm]",
+                                description: "Begin YOUR TardQuest!",
+                            },
+                            {
+                                id: "reset",
+                                displayText: "[Reset]",
+                                description: "Reset your stat allocation.",
+                            },
+                            {
+                                id: "rollDice",
+                                displayText: "[Diceroll]",
+                                description: "Randomly allocate your points.",
+                            },
+                            {
+                                id: "hp",
+                                displayText: `HP: ${player.maxHp}`,
+                                description: "Increases Health Points. If you don't know what those are, you may actually be retarded.",
+                            },
+                            {
+                                id: "defense",
+                                displayText: `DEF: ${player.defense}`,
+                                description: "Increases defense against enemy attacks... obviously.",
+                            },
+                            {
+                                id: "persuasion",
+                                displayText: `PRS: ${player.persuasion}`,
+                                description: "Increases your chances at persuading monsters to join your party.",
+                            },
+                            {
+                                id: "speed",
+                                displayText: `SPD: ${player.speed}`,
+                                description: "Increases your movement speed. Each point allows you to move 5% faster.",
+                            },                            
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_confirm") {
+                            if (player.remainingPoints > 0) {
+                                updateBattleLog("You must allocate all points before starting!");
+                                return;
+                            }
+                            finalizeStats();
+                            menu.close();
+                            render();
+                        } else if (selectedOptionId === "reset") {
+                            resetStats();
+                            menu.render();
+                        } else if (selectedOptionId === "rollDice") {
+                            rollDiceForStats();
+                            menu.render();
+                        } else if (player.remainingPoints > 0) {
+                            switch (selectedOptionId) {
+                                case "hp":
+                                    player.maxHp += 1;
+                                    player.hp = player.maxHp; // Keep current HP in sync
+                                    break;
+                                case "defense":
+                                    player.defense += 1;
+                                    break;
+                                case "persuasion":
+                                    player.persuasion += 1;
+                                    break;
+                                case "speed":
+                                    player.speed += 1;
+                                    break;
+                            }
+                            player.remainingPoints--;
+                            menu.render();
+                        } else {
+                            updateBattleLog("No points remaining to allocate!");
+                        }
+                    },
+                },
             },
         };
+        player.remainingPoints = 10; //Points to allocate at start of game
+
+        // Function to reset stats
+        function resetStats() {
+            player.remainingPoints = 10;
+            player.maxHp = 20; // Reset to base stats
+            player.hp = player.maxHp;
+            player.defense = 5;
+            player.persuasion = 7;
+            player.speed = 9;
+            updateBattleLog("Stat allocation has been reset. Start over!");
+        }
+
+        // Function to randomly allocate points
+        function rollDiceForStats() {
+            resetStats(); // Reset stats before rolling
+            const stats = ["hp", "defense", "persuasion", "speed"];
+            while (player.remainingPoints > 0) {
+                const randomStat = stats[Math.floor(Math.random() * stats.length)];
+                switch (randomStat) {
+                    case "hp":
+                        player.maxHp += 1;
+                        player.hp = player.maxHp;
+                        break;
+                    case "defense":
+                        player.defense += 1;
+                        break;
+                    case "persuasion":
+                        player.persuasion += 1;
+                        break;
+                    case "speed":
+                        player.speed += 1;
+                        break;
+                }
+                player.remainingPoints--;
+            }
+            updateBattleLog("Points have been randomly allocated. Good luck!");
+        }
+
+        // Function to finalize stats after allocation
+        function finalizeStats() {
+            updateBattleLog("Stat allocation complete! Your adventure begins...");
+        }
+
+        menu.open("statAllocation");
 
         document.getElementById('resetButton').addEventListener('click', () => window.location.reload());
 
@@ -2781,11 +2985,11 @@ You found a treasure chest! Do you want to open it?
 
                       ..__
             __________\`.  '-
-           (___________ \`.  '-.
-            (__________
-             (________
-               (____          _
-                    \`-______-'
+           (___________ \`.  '
+                (__________
+                 (________
+                   (____          _
+                        \`-______-'
        .-----       .----.
       / \`.   \`.    /      \\
      /    '.___\`. /________\\
