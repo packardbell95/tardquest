@@ -158,6 +158,7 @@
             padding: 5px;
             overflow: hidden; 
             font-size: 18px;
+            font-weight: bold;
             gap: 7px;
             text-align: left;
             line-height: 1.1;
@@ -171,11 +172,10 @@
             left: 620px;
             padding: 5px;
             overflow: hidden; 
-            font-size: 10px;
+            font-size: 13px;
             font-weight: bold;
             gap: 7px;
-            text-align: left;
-            line-height: 1.02;
+            line-height: 1.0;
         }
 
         #battleLog,
@@ -1578,19 +1578,21 @@ __\\_______^/
             drawMinimap();
             let output = "";
             const stats1Html = `
-                <div center>==STATS==</div>
-                <div class="HP">HP:</div> <a>${player.hp}/${player.maxHp}</a>
-                <div class="DEF">DEF:</div> <a>${player.defense}</a>
-                <div class="PRS">PRS:</div> <a>${player.persuasion}</a>
-                <div class="SPD">SPD:</div> <a>${player.speed}</a>
+                <div center>.-STATS-.</div>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|===<span class="HP">HP</span>===|</span><span style="font-size:0.95em; margin-top:2px;">${player.hp}/${player.maxHp}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="DEF">DEF</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.defense}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="PRS">PRS</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.persuasion}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="SPD">SPD</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.speed}</span>
+                <p></p>
+                <div center>.______.</div>
             `;
             document.getElementById('stats1').innerHTML = stats1Html;
 
             const stats2Html = `
-                <div class="action">FLOOR</div> <a>${floor}</a>
-                <div class="LV">LV</div> <a>${player.level}</a>
-                <div class="EXP">EXP</div> <a>${player.exp}/${player.level * 10}</a>
-                <div class="BTC">BTC</div> <a>${player.bitcoins}</a>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.--<span class="action">FLOOR</span>--.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="EXP">EXP</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.exp}/${player.level * 10}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="BTC">BTC</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.bitcoins}</span>
             `;
             document.getElementById('stats2').innerHTML = stats2Html;    
 
