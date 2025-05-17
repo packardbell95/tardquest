@@ -409,7 +409,7 @@
             },
             weapon: 'pointyStick',
             armor: 'graphicTee',
-            inputDisabled: false,
+            movementDisabled: false,
         };
 
         const merchant = {
@@ -2009,7 +2009,6 @@ __\\_______^/
             player.bitcoins -= gambler.playPrice;
             updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
 
-            player.inputDisabled = true;
             document.getElementById('menu').classList.add('hidden');
 
             dice = [
@@ -2017,7 +2016,6 @@ __\\_______^/
                 Math.floor(Math.random() * 6) + 1,
             ];
             gambleAnimation(dice, () => {
-                player.inputDisabled = false;
                 gambleOutcome(dice);
             });
             playSFX('gamble');
