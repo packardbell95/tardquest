@@ -175,7 +175,21 @@
             font-weight: bold;
             line-height: 1.0;
         }
+        .stats-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            margin: 0;
+        }
 
+        .stats-label {
+            font-size: 14px;
+            margin-top: 2px;
+            margin-bottom: 0;
+            padding: 0;
+        }
         #battleLog,
         #minimap {
             background: #000;
@@ -208,16 +222,29 @@
 
         #inputBox {
             display: none;
-            /* This ensures it's hidden initially */
+        }
+        #inputBox input::placeholder {
+            color: #d8d8d8;
+            opacity: 1;
         }
 
         #inputBox input {
-            background-color: black;
             color: white;
-            border: none;
             font-size: 13px;
-            width: 210px;
+            width: 600px;
+            height: 2px;
             z-index: 9;
+            font-family: monospace;
+            background-color: #000;
+            border: 3px dotted #A23AB4;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 0px;
+            text-align: left;
+            position: absolute;
+            top: 125px;
+            left: 58px;
+            outline: none;
         }
 
         .menus {
@@ -406,9 +433,11 @@
                 torch: 2,
                 brickOfC4: 2,
                 dowsingRod: 2,
+                fingerNail: 1, //Start game with this in inventory
+                pectoralMass: 1, //Start game with this in inventory
             },
-            weapon: 'pointyStick',
-            armor: 'graphicTee',
+            weapon: 'fingerNail', //Start game with this equipped
+            armor: 'pectoralMass', //Start game with this equipped
             movementDisabled: false,
         };
 
@@ -428,37 +457,39 @@
                 merchant.say('AIEEEEEEEEEEEEEE!');
                 updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
-            buy: function(type, key) {
-                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
-                if (!merchandise) {
-                    console.error(`${itemKey} doesn't exist!`);
-                    return;
-                }
+        buy: function(type, key) {
+            const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+            if (!merchandise) {
+                console.error(`${key} doesn't exist!`);
+                return;
+            }
 
-                if (player.bitcoins < merchandise.price) {
-                    merchant.say('Too bad, kid. Come back when you get some coin!');
-                    return;
-                }
+            if (player.bitcoins < merchandise.price) {
+                merchant.say('Too bad, kid. Come back when you get some coin!');
+                return;
+            }
 
-                player.bitcoins -= merchandise.price;
-                playSFX('kaching');
+            // Prevent buying equipment you already own
+            if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
+                merchant.say("You already own that, stupid!");
+                return;
+            }
 
-                if (type === 'item') {
-                    player.inventory[key] = (player.inventory?.[key] || 0) + 1;
-                } else {
-                    player[type] = key;
-                }
+            player.bitcoins -= merchandise.price;
+            playSFX('kaching');
+            // Disable equipment auto equip upon purchase
+            player.inventory[key] = (player.inventory?.[key] || 0) + 1;
 
-                const purchaseFlavorText = [
-                    "HAHA! You won't regret it!",
-                    "Don't forget: NO REFUNDS!",
-                    "You won't find a better deal than this!",
-                ];
-                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-                merchant.say(merchantText);
+            const purchaseFlavorText = [
+                "HAHA! You won't regret it!",
+                "Don't forget: NO REFUNDS!",
+                "You won't find a better deal than this!",
+            ];
+            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+            merchant.say(merchantText);
 
-                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
-                updateBattleLog(`You just bought ${merchandiseText}`);
+            const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+            updateBattleLog(`You just bought ${merchandiseText}`);
             }
         };
 
@@ -577,6 +608,15 @@
         ];
 
         const weapons = {
+            fingerNail: {
+                name: "FINGERNAIL",
+                description: "Your very own fingernail! Careful not to break it!",
+                damage: {
+                    base: 1,
+                    randomMultiplier: 4,
+                },
+                price: 0,
+            },
             pointyStick: {
                 name: "POINTY STICK",
                 description: "A stick that fell off of a tree somewhere",
@@ -652,10 +692,16 @@
         };
 
         const armor = {
+            pectoralMass: {
+                name: "PECTORAL MASS",
+                description: "Your totally big, meaty pectorals! You're not fat at all...'",
+                defense: 1,
+                price: 0,
+            },
             graphicTee: {
                 name: "GRAPHIC TEE",
                 description: "A t-shirt that says 'Normal people scare me'",
-                defense: 1,
+                defense: 2,
                 price: 20,
             },
             barrelWithSuspenders: {
@@ -1588,14 +1634,21 @@ __\\_______^/
             drawMinimap();
             let output = "";
 
-            const stats1Html = `<div center>.-STATS-.</div>
-            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|===<span class="HP">HP</span>===|</span><span style="font-size:0.95em; margin-top:2px;">${player.hp}/${player.maxHp}</span>
-            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="DEF">DEF</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.defense}</span>
-            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="PRS">PRS</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.persuasion}</span>
-            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="SPD">SPD</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.speed}</span>
-            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>|==<span class="LUK">LUK</span>==|</span><span style="font-size:0.95em; margin-top:2px;">${player.luck}</span>
-            <span center>._ _ _ _.</span>
-            `;
+        const stats1Html = `
+        <div class="stats-container">
+            <span>.-STATS-.</span>
+            <span>|===<span class="HP">HP</span>===|</span>
+            <span class="stats-label">${player.hp}/${player.maxHp}</span>
+            <span>|==<span class="DEF">DEF</span>==|</span>
+            <span class="stats-label">${player.defense}</span>
+            <span>|==<span class="PRS">PRS</span>==|</span>
+            <span class="stats-label">${player.persuasion}</span>
+            <span>|==<span class="SPD">SPD</span>==|</span>
+            <span class="stats-label">${player.speed}</span>
+            <span>|==<span class="LUK">LUK</span>==|</span>
+            <span class="stats-label">${player.luck}</span>
+            <span>._ _ _ _.</span>
+        </div>`;
             document.getElementById('stats1').innerHTML = stats1Html;
 
             const stats2Html = `<div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.---<span class="action">FLOOR</span>---.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
@@ -1987,11 +2040,12 @@ __\\_______^/
 
 
         function useItem(itemName) {
-            items[itemName].use();
-
-            player.inventory[itemName]--;
-            if (player.inventory[itemName] <= 0) {
-                delete player.inventory[itemName];
+            if (items[itemName] && typeof items[itemName].use === "function") {
+                items[itemName].use();
+                player.inventory[itemName]--;
+                if (player.inventory[itemName] <= 0) {
+                    delete player.inventory[itemName];
+                }
             }
 
             render();
@@ -2327,6 +2381,14 @@ __\\_______^/
                     document.getElementById('game').classList.remove('hidden');
                 }
             },
+            closeAll: () => {
+                while (menu.breadcrumbs.length > 0) {
+                    const previousMenu = menu.breadcrumbs.pop();
+                    menu.menus[previousMenu.menuName].onClose?.();
+                }
+                document.getElementById('menu').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+            },
             render: () => {
                 let menuHtml = "";
                 const activeMenu = menu.getActiveMenu();
@@ -2414,8 +2476,11 @@ __\\_______^/
                     case 'e':
                     case 'enter':
                         const selectedOptionId = options[menu.currentPage * itemsPerPage + menu.selectionIndex]?.id;
-                        if (selectedOptionId === '_exit') {
+                        if (selectedOptionId === '_back') {
                             menu.close();
+                            playSFX('uiCancel');
+                        } else if (selectedOptionId === '_exitAll') {
+                            menu.closeAll();
                             playSFX('uiCancel');
                         } else {
                             activeMenu.select(selectedOptionId);
@@ -2434,28 +2499,163 @@ __\\_______^/
                             ? 'You own nothing. Klaus Schwab would be proud'
                             : null;
                     },
+                    getOptions: () => [
+                        {
+                            id: "inventoryItems",
+                            displayText: "Items",
+                            description: "View your consumable items.",
+                        },
+                        {
+                            id: "inventoryEquipment",
+                            displayText: "Equipment",
+                            description: "View and change your equipped weapon and armor.",
+                        },
+                        {
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Get back to playing the game",
+                        }
+                    ],
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                inventoryItems: {
+                    title: "ITEMS",
+                    landingHtml: () => {
+                        return isEmpty(player.inventory)
+                            ? 'You own nothing. Klaus Schwab would be proud'
+                            : null;
+                    },
                     getOptions: () => {
-                        const options = Object.keys(player.inventory).map((itemId) => ({
-                            id: itemId,
-                            displayText: items[itemId].name,
-                            description: items[itemId].description,
-                            trailText: `${player.inventory[itemId]}`,
-                        }));
+                        const options = Object.keys(player.inventory)
+                            .filter(itemId => items[itemId])
+                            .map((itemId) => ({
+                                id: itemId,
+                                displayText: items[itemId].name,
+                                description: items[itemId].description,
+                                trailText: `${player.inventory[itemId]}`,
+                            }));
 
                         options.push({
-                            id: "_exit",
-                            displayText: "Exit the Inventory",
-                            description: "Get back to playing the game",
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to the inventory menu",
                         });
 
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        useItem(selectedOptionId);
-                        menu.close();
-                        if (currentEnemy && currentEnemy.hp > 0) {
-                            enemyAttack();
-                            render();
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else if (selectedOptionId === "_exitAll") {
+                            menu.closeAll();
+                        } else {
+                            useItem(selectedOptionId);
+                            menu.closeAll(); // Close all menus after using an item
+                            if (currentEnemy && currentEnemy.hp > 0) {
+                                enemyAttack();
+                                render();
+                            }
+                        }
+                    },
+                },
+                inventoryEquipment: {
+                    title: "EQUIPMENT",
+                    landingHtml: () => {
+                        const weapon = weapons[player.weapon];
+                        const armorPiece = armor[player.armor];
+                    },
+                    getOptions: () => {
+                        const weapon = weapons[player.weapon];
+                        const armorPiece = armor[player.armor];
+                        return [
+                            {
+                                id: "equipHand",
+                                displayText: `Hand: ${weapon?.name || "None"}`,
+                                description: "View and equip your weapons.",
+                            },
+                            {
+                                id: "equipBody",
+                                displayText: `Body: ${armorPiece?.name || "None"}`,
+                                description: "View and equip your armor.",
+                            },
+                            {
+                                id: "_back",
+                                displayText: "[Back]",
+                                description: "Return to the inventory menu",
+                            }
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                equipHand: {
+                    title: "EQUIP WEAPON",
+                    landingHtml: () => {
+                    },
+                    getOptions: () => {
+                        const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
+                        const options = ownedWeapons.map((weaponId) => ({
+                            id: weaponId,
+                            displayText: weapons[weaponId].name + (player.weapon === weaponId ? " (Equipped)" : ""),
+                            description:
+                                `${weapons[weaponId].description}\n` +
+                                `Base Damage: ${weapons[weaponId].damage.base}, ` +
+                                `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
+                            className: player.weapon === weaponId ? "friendly" : undefined,
+                        }));
+
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to equipment menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            player.weapon = selectedOptionId;
+                            updateBattleLog(`You now wield a mighty <span class="friendly">${weapons[selectedOptionId].name}</span>! You feel like you're ready to take some dumbass kid's lunch money... sicko.`);
+                            menu.close();
+                        }
+                    },
+                },
+
+                equipBody: {
+                    title: "EQUIP ARMOR",
+                    landingHtml: () => {
+                    },
+                    getOptions: () => {
+                        const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
+                        const options = ownedArmor.map((armorId) => ({
+                            id: armorId,
+                            displayText: armor[armorId].name + (player.armor === armorId ? " (Equipped)" : ""),
+                            description:
+                                `${armor[armorId].description}\n` +
+                                `Defense: ${armor[armorId].defense}`,
+                            className: player.armor === armorId ? "friendly" : undefined,
+                        }));
+
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to equipment menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            player.armor = selectedOptionId;
+                            updateBattleLog(`You are now wearing <span class="friendly">${armor[selectedOptionId].name}</span>! You know what they say about wearing protection...`);
+                            menu.close();
                         }
                     },
                 },
@@ -2490,7 +2690,7 @@ __\\_______^/
                                 description: "Get some thicker skin",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "Leave",
                                 description: "Get back to spelunking",
                             },
@@ -2518,7 +2718,7 @@ __\\_______^/
                         }));
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "Back",
                             description: "Return to the merchant menu",
                         });
@@ -2546,8 +2746,7 @@ __\\_______^/
                         const weaponKeys = Object.keys(weapons);
                         const options = weaponKeys.map((weaponId) => {
                             const tooExpensive = weapons[weaponId].price > player.bitcoins;
-                            const notAnUpgrade = weaponKeys.indexOf(player.weapon) >= weaponKeys.indexOf(weaponId);
-
+                            const alreadyOwned = player.inventory[weaponId] > 0 || player.weapon === weaponId;
                             return {
                                 id: weaponId,
                                 displayText: weapons[weaponId].name,
@@ -2556,13 +2755,13 @@ __\\_______^/
                                     `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                     `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
                                 trailText: `${weapons[weaponId].price} BTC`,
-                                disabled: tooExpensive || notAnUpgrade,
-                                className: notAnUpgrade ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
                             };
                         });
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "Back",
                             description: "Return to the merchant menu",
                         });
@@ -2590,8 +2789,7 @@ __\\_______^/
                         const armorKeys = Object.keys(armor);
                         const options = armorKeys.map((armorId) => {
                             const tooExpensive = armor[armorId].price > player.bitcoins;
-                            const notAnUpgrade = armorKeys.indexOf(player.armor) >= armorKeys.indexOf(armorId);
-
+                            const alreadyOwned = player.inventory[armorId] > 0 || player.armor === armorId;
                             return {
                                 id: armorId,
                                 displayText: armor[armorId].name,
@@ -2599,13 +2797,13 @@ __\\_______^/
                                     `${armor[armorId].description}\n` +
                                     `Defense: ${armor[armorId].defense}`,
                                 trailText: `${armor[armorId].price} BTC`,
-                                disabled: tooExpensive || notAnUpgrade,
-                                className: notAnUpgrade ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
                             };
                         });
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "Back",
                             description: "Return to the merchant menu",
                         });
@@ -2644,7 +2842,7 @@ __\\_______^/
                                 description: "Take your chance with the gambler",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "Leave",
                                 description: "Leave this crusty fool",
                             },
@@ -2671,7 +2869,7 @@ You found a treasure chest! Do you want to open it?
                                 description: "Claim your succulent reward!",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "Resist your burning temptation...",
                                 description: "DON'T claim your succulent reward!",
                             },
