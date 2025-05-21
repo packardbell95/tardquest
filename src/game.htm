@@ -433,9 +433,11 @@
                 torch: 2,
                 brickOfC4: 2,
                 dowsingRod: 2,
+                fingerNail: 1, //Start game with this in inventory
+                pectoralMass: 1, //Start game with this in inventory
             },
-            weapon: 'fingerNail',
-            armor: 'pectoralMass',
+            weapon: 'fingerNail', //Start game with this equipped
+            armor: 'pectoralMass', //Start game with this equipped
             movementDisabled: false,
         };
 
@@ -455,38 +457,39 @@
                 merchant.say('AIEEEEEEEEEEEEEE!');
                 updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
-            buy: function(type, key) {
-                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
-                if (!merchandise) {
-                    console.error(`${key} doesn't exist!`);
-                    return;
-                }
+        buy: function(type, key) {
+            const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+            if (!merchandise) {
+                console.error(`${key} doesn't exist!`);
+                return;
+            }
 
-                if (player.bitcoins < merchandise.price) {
-                    merchant.say('Too bad, kid. Come back when you get some coin!');
-                    return;
-                }
+            if (player.bitcoins < merchandise.price) {
+                merchant.say('Too bad, kid. Come back when you get some coin!');
+                return;
+            }
 
-                player.bitcoins -= merchandise.price;
-                playSFX('kaching');
+            // Prevent buying equipment you already own
+            if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
+                merchant.say("You already own that, stupid!");
+                return;
+            }
 
-                if (type === 'item') {
-                    player.inventory[key] = (player.inventory?.[key] || 0) + 1;
-                } else {
-                    player.inventory[key] = (player.inventory?.[key] || 0) + 1;
-                    player[type] = key;
-                }
+            player.bitcoins -= merchandise.price;
+            playSFX('kaching');
+            // Disable equipment auto equip upon purchase
+            player.inventory[key] = (player.inventory?.[key] || 0) + 1;
 
-                const purchaseFlavorText = [
-                    "HAHA! You won't regret it!",
-                    "Don't forget: NO REFUNDS!",
-                    "You won't find a better deal than this!",
-                ];
-                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-                merchant.say(merchantText);
+            const purchaseFlavorText = [
+                "HAHA! You won't regret it!",
+                "Don't forget: NO REFUNDS!",
+                "You won't find a better deal than this!",
+            ];
+            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+            merchant.say(merchantText);
 
-                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
-                updateBattleLog(`You just bought ${merchandiseText}`);
+            const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+            updateBattleLog(`You just bought ${merchandiseText}`);
             }
         };
 
@@ -2378,6 +2381,14 @@ __\\_______^/
                     document.getElementById('game').classList.remove('hidden');
                 }
             },
+            closeAll: () => {
+                while (menu.breadcrumbs.length > 0) {
+                    const previousMenu = menu.breadcrumbs.pop();
+                    menu.menus[previousMenu.menuName].onClose?.();
+                }
+                document.getElementById('menu').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+            },
             render: () => {
                 let menuHtml = "";
                 const activeMenu = menu.getActiveMenu();
@@ -2465,8 +2476,11 @@ __\\_______^/
                     case 'e':
                     case 'enter':
                         const selectedOptionId = options[menu.currentPage * itemsPerPage + menu.selectionIndex]?.id;
-                        if (selectedOptionId === '_exit') {
+                        if (selectedOptionId === '_back') {
                             menu.close();
+                            playSFX('uiCancel');
+                        } else if (selectedOptionId === '_exitAll') {
+                            menu.closeAll();
                             playSFX('uiCancel');
                         } else {
                             activeMenu.select(selectedOptionId);
@@ -2497,17 +2511,13 @@ __\\_______^/
                             description: "View and change your equipped weapon and armor.",
                         },
                         {
-                            id: "_exit",
+                            id: "_back",
                             displayText: "[Back]",
                             description: "Get back to playing the game",
                         }
                     ],
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_exit") {
-                            menu.close();
-                        } else {
-                            menu.open(selectedOptionId);
-                        }
+                        menu.open(selectedOptionId);
                     },
                 },
                 inventoryItems: {
@@ -2528,7 +2538,7 @@ __\\_______^/
                             }));
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "[Back]",
                             description: "Return to the inventory menu",
                         });
@@ -2536,11 +2546,13 @@ __\\_______^/
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_exit") {
+                        if (selectedOptionId === "_back") {
                             menu.close();
+                        } else if (selectedOptionId === "_exitAll") {
+                            menu.closeAll();
                         } else {
                             useItem(selectedOptionId);
-                            menu.close();
+                            menu.closeAll(); // Close all menus after using an item
                             if (currentEnemy && currentEnemy.hp > 0) {
                                 enemyAttack();
                                 render();
@@ -2560,27 +2572,23 @@ __\\_______^/
                         return [
                             {
                                 id: "equipHand",
-                                displayText: `Hand: ${weapon ? weapon.name : "None"}`,
+                                displayText: `Hand: ${weapon?.name || "None"}`,
                                 description: "View and equip your weapons.",
                             },
                             {
                                 id: "equipBody",
-                                displayText: `Body: ${armorPiece ? armorPiece.name : "None"}`,
+                                displayText: `Body: ${armorPiece?.name || "None"}`,
                                 description: "View and equip your armor.",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "[Back]",
                                 description: "Return to the inventory menu",
                             }
                         ];
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_exit") {
-                            menu.close();
-                        } else {
-                            menu.open(selectedOptionId);
-                        }
+                        menu.open(selectedOptionId);
                     },
                 },
                 equipHand: {
@@ -2596,11 +2604,11 @@ __\\_______^/
                                 `${weapons[weaponId].description}\n` +
                                 `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                 `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
-                            className: player.weapon === weaponId ? "action" : undefined,
+                            className: player.weapon === weaponId ? "friendly" : undefined,
                         }));
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "[Back]",
                             description: "Return to equipment menu",
                         });
@@ -2608,7 +2616,7 @@ __\\_______^/
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_exit") {
+                        if (selectedOptionId === "_back") {
                             menu.close();
                         } else {
                             player.weapon = selectedOptionId;
@@ -2630,11 +2638,11 @@ __\\_______^/
                             description:
                                 `${armor[armorId].description}\n` +
                                 `Defense: ${armor[armorId].defense}`,
-                            className: player.armor === armorId ? "action" : undefined,
+                            className: player.armor === armorId ? "friendly" : undefined,
                         }));
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "[Back]",
                             description: "Return to equipment menu",
                         });
@@ -2642,7 +2650,7 @@ __\\_______^/
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_exit") {
+                        if (selectedOptionId === "_back") {
                             menu.close();
                         } else {
                             player.armor = selectedOptionId;
@@ -2682,7 +2690,7 @@ __\\_______^/
                                 description: "Get some thicker skin",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "Leave",
                                 description: "Get back to spelunking",
                             },
@@ -2710,7 +2718,7 @@ __\\_______^/
                         }));
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "Back",
                             description: "Return to the merchant menu",
                         });
@@ -2738,6 +2746,7 @@ __\\_______^/
                         const weaponKeys = Object.keys(weapons);
                         const options = weaponKeys.map((weaponId) => {
                             const tooExpensive = weapons[weaponId].price > player.bitcoins;
+                            const alreadyOwned = player.inventory[weaponId] > 0 || player.weapon === weaponId;
                             return {
                                 id: weaponId,
                                 displayText: weapons[weaponId].name,
@@ -2746,13 +2755,13 @@ __\\_______^/
                                     `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                     `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
                                 trailText: `${weapons[weaponId].price} BTC`,
-                                disabled: tooExpensive,
-                                className: tooExpensive ? 'tooExpensive' : undefined,
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
                             };
                         });
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "Back",
                             description: "Return to the merchant menu",
                         });
@@ -2780,6 +2789,7 @@ __\\_______^/
                         const armorKeys = Object.keys(armor);
                         const options = armorKeys.map((armorId) => {
                             const tooExpensive = armor[armorId].price > player.bitcoins;
+                            const alreadyOwned = player.inventory[armorId] > 0 || player.armor === armorId;
                             return {
                                 id: armorId,
                                 displayText: armor[armorId].name,
@@ -2787,13 +2797,13 @@ __\\_______^/
                                     `${armor[armorId].description}\n` +
                                     `Defense: ${armor[armorId].defense}`,
                                 trailText: `${armor[armorId].price} BTC`,
-                                disabled: tooExpensive,
-                                className: tooExpensive ? 'tooExpensive' : undefined,
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
                             };
                         });
 
                         options.push({
-                            id: "_exit",
+                            id: "_back",
                             displayText: "Back",
                             description: "Return to the merchant menu",
                         });
@@ -2832,7 +2842,7 @@ __\\_______^/
                                 description: "Take your chance with the gambler",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "Leave",
                                 description: "Leave this crusty fool",
                             },
@@ -2859,7 +2869,7 @@ You found a treasure chest! Do you want to open it?
                                 description: "Claim your succulent reward!",
                             },
                             {
-                                id: "_exit",
+                                id: "_back",
                                 displayText: "Resist your burning temptation...",
                                 description: "DON'T claim your succulent reward!",
                             },
