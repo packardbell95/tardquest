@@ -1850,7 +1850,7 @@ __\\_______^/
             let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
 
             // Crit attacks based off LUK stat
-            const critChance = player.luck * 0.02; // +0.2% chance per point
+            const critChance = player.luck * 0.01; // +0.1% chance per point
             let isCrit = Math.random() < critChance;
             if (isCrit) {
                 dmg = Math.floor(dmg * 1.2);
@@ -2247,10 +2247,24 @@ __\\_______^/
 
             document.getElementById('menu').classList.add('hidden');
 
-            dice = [
-                Math.floor(Math.random() * 6) + 1,
-                Math.floor(Math.random() * 6) + 1,
-            ];
+            // LUK affects chance to roll a 12
+            // Base chance to roll a 12 is 1/36 (~2.78%)
+            let luckBonus = player.luck * 0.03; // +3% chance to roll a 12
+            let roll12 = Math.random() < (1/36 + luckBonus);
+
+            let dice;
+            if (roll12) {
+                dice = [6, 6];
+            } else {
+                // Roll normally, but avoid double sixes
+                do {
+                    dice = [
+                        Math.floor(Math.random() * 6) + 1,
+                        Math.floor(Math.random() * 6) + 1,
+                    ];
+                } while (dice[0] === 6 && dice[1] === 6);
+            }
+
             gambleAnimation(dice, () => {
                 gambleOutcome(dice);
             });
@@ -2265,7 +2279,7 @@ __\\_______^/
             let html = 'You rolled a ' +
                 `<span class="gambler">${dice[0]}</span> and a ` +
                 `<span class="gambler">${dice[1]}</span> ` +
-                `for a sum of <span class="${sumClass}">${sum}</span>\n\n`;
+                `for a sum of <span class="${sumClass}">${sum}</span>\n`;
 
             if (win) {
                 const stats = ['hp', 'defense', 'persuasion'];
@@ -2273,27 +2287,30 @@ __\\_______^/
 
                 switch (randomStat) {
                     case 'hp':
-                        // Get a bonus of either 5 or 10 HP
-                        const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5)
+                        const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5);
                         player.hp += healthBoost;
                         player.maxHp += healthBoost;
-                        updateBattleLog(`<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`);
+                        html += `<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`;
                         break;
                     case 'defense':
-                        // Get a bonus of either 1 or 2 defense
                         const defenseBoost = 1 + Math.floor((Math.random() * 2));
                         player.defense += defenseBoost;
-                        updateBattleLog(`<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`);
+                        html += `<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`;
                         break;
                     case 'persuasion':
-                        // Get a bonus of either 1 or 2 persuasion
                         const persuasionBoost = 1 + Math.floor((Math.random() * 2));
                         player.persuasion += persuasionBoost;
-                        updateBattleLog(`<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`);
+                        html += `<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`;
                         break;
                 }
+                gambler.isActiveOnFloor = false;
+                updateBattleLog(html);
+                updateBattleLog('The gambler escapes into the shadows');
             } else {
-                gambler.say('Hah! Tough luck, kid!');
+                gambler.say('<span class="gambler">Hah! Tough luck, kid!</span> You gotta know when to hold \'em, know when to fold \'em, heh heh');
+                gambler.isActiveOnFloor = false;
+                updateBattleLog(html);
+                updateBattleLog('The gambler escapes into the shadows');
             }
 
             menu.close();
@@ -3002,9 +3019,6 @@ __\\_______^/
                         gambler.say('Place yer bets!');
                     },
                     onClose: () => {
-                        gambler.say('You gotta know when to hold \'em, know when to fold \'em, heh heh');
-                        updateBattleLog('The gambler escapes into the shadows');
-
                         gambler.isActiveOnFloor = false;
                     },
                     landingHtml: () => {
@@ -3377,11 +3391,11 @@ You found a treasure chest! Do you want to open it?
 
                       ..__
             __________\`.  '-
-           (___________ \`.  '
-                (__________
-                 (________
-                   (____          _
-                        \`-______-'
+           (___________ \`.  '-.
+            (__________
+             (________
+               (____          _
+                    \`-______-'
        .-----       .----.
       / \`.   \`.    /      \\
      /    '.___\`. /________\\
@@ -3395,10 +3409,22 @@ You found a treasure chest! Do you want to open it?
                           ..__
                 __________\`.  '-
                (___________ \`.  '-.
-                (__________
-                 (________
-                   (____
-                        \`-______-
+                (___/_/\\ ___.
+                 (__\\_\\/|   ||
+                   (____|___||    _
+                        \`-______-'
+
+    `,
+
+    `
+
+                  ..__
+        __________\`.  '-
+       (___________ \`.  '-.
+        (__________
+         (________
+           (____
+                \`-______-
 
 
     .----------.   .----------.
@@ -3467,7 +3493,6 @@ You found a treasure chest! Do you want to open it?
     `,
 
 ];
-
     const dieDigit = [
         ['▗▄▋  ', ' ▐▋  ', '▝▀▀▘ '], // 1
         ['▄▀▀▄ ', ' ▄▀  ', '▀▀▀▀▘'], // 2
