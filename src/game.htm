@@ -1982,6 +1982,15 @@ __\\_______^/
         document.getElementById("persuadeInput").addEventListener("keydown", e => {
             if (e.key === "Enter") {
                 const message = e.target.value;
+                // ======== CHEAT COMMANDS ========
+                if (message.startsWith("/")) {
+                    handleCheatCommand(message);
+                    e.target.value = "";
+                    awaitingPersuasionText = false;
+                    document.getElementById("inputBox").style.display = "none";
+                    render();
+                    return;
+                }
                 updateBattleLog(`YOU: "${message}"`);
                 e.target.value = "";
                 awaitingPersuasionText = false;
@@ -2049,6 +2058,179 @@ __\\_______^/
             }
 
             render();
+        }
+
+        function handleCheatCommand(cmd) {
+            if (cmd === "/spawn merchant") {
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (coordsInBounds(nx, ny) && MAP[ny][nx] === '.') {
+                        merchant.isAlive = true;
+                        merchant.isActiveOnFloor = true;
+                        merchant.x = nx;
+                        merchant.y = ny;
+                        updateBattleLog('<span class="merchant">CHEAT: Merchant spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="merchant">CHEAT: Merchant not spawned. Try a different spot.</span>');
+                }
+                return;
+            }
+            if (cmd === "/spawn gambler") {
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (coordsInBounds(nx, ny) && MAP[ny][nx] === '.') {
+                        gambler.isAlive = true;
+                        gambler.isActiveOnFloor = true;
+                        gambler.x = nx;
+                        gambler.y = ny;
+                        updateBattleLog('<span class="gambler">CHEAT: Gambler spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="gambler">CHEAT: Gambler not spawned. Try a different spot.</span>');
+                }
+                return;
+            }
+            if (cmd.startsWith("/givebtc ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                    player.bitcoins += amount;
+                    updateBattleLog(`<span class="BTC">CHEAT: Added ${amount} BTC to your worn out Kamen Rider wallet</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid BTC amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/sethp ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                    player.maxHp = amount;
+                    player.hp = amount;
+                    updateBattleLog(`<span class="HP">CHEAT: Max HP set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid HP amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/setdef ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount >= 0) {
+                    player.defense = amount;
+                    updateBattleLog(`<span class="DEF">CHEAT: Defense set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid DEF amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/setprs ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount >= 0) {
+                    player.persuasion = amount;
+                    updateBattleLog(`<span class="PRS">CHEAT: Persuasion set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid PRS amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/setspd ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount >= 0) {
+                    player.speed = amount;
+                    updateBattleLog(`<span class="SPD">CHEAT: Speed set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid SPD amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/setluk ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount >= 0) {
+                    player.luck = amount;
+                    updateBattleLog(`<span class="LUK">CHEAT: Luck set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid LUK amount.</span>`);
+                }
+                return;
+            }
+            if (cmd === "/debug") {
+                player.maxHp = 69999;
+                player.hp = 69999;
+                player.defense = 69999;
+                player.persuasion = 69999;
+                player.speed = 69999;
+                player.luck = 69999;
+                player.bitcoins = 69999;
+
+                let merchantSpawned = false;
+                let merchantPos = null;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (coordsInBounds(nx, ny) && MAP[ny][nx] === '.') {
+                        merchant.isAlive = true;
+                        merchant.isActiveOnFloor = true;
+                        merchant.x = nx;
+                        merchant.y = ny;
+                        merchantSpawned = true;
+                        merchantPos = { x: nx, y: ny };
+                        break;
+                    }
+                }
+
+                let gamblerSpawned = false;
+                if (merchantSpawned) {
+                    for (let i = 0; i < 4; i++) {
+                        const gx = merchant.x + DX[i];
+                        const gy = merchant.y + DY[i];
+                        const notPlayer = gx !== player.x || gy !== player.y;
+                        const notMerchant = gx !== merchant.x || gy !== merchant.y;
+                        if (
+                            coordsInBounds(gx, gy) &&
+                            MAP[gy][gx] === '.' &&
+                            notPlayer &&
+                            notMerchant
+                        ) {
+                            gambler.isAlive = true;
+                            gambler.isActiveOnFloor = true;
+                            gambler.x = gx;
+                            gambler.y = gy;
+                            gamblerSpawned = true;
+                            break;
+                        }
+                    }
+                }
+                updateBattleLog(
+                    `<span class="action">CHEAT: Debug mode activated! All stats and BTC set to 69999. Merchant${merchantSpawned ? "" : " (FAILED)"} and Gambler${gamblerSpawned ? "" : " (FAILED)"} spawned next to you.</span>`
+                );
+                render();
+                return;
+            }
+
+    
+            if (cmd.startsWith("/setfloor ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                    floor = amount;
+                    updateBattleLog(`<span class="action">CHEAT: Moved to Floor ${amount}</span>`);
+                    generateMap();
+                    render();
+                } else {
+                    updateBattleLog(`<span class="action">Try an actual floor number, retard.</span>`);
+                }
+                return;
+            }
+
+            updateBattleLog(`<span class="action">RETARD ALERT! INVALID CHEAT: ${cmd}</span>`);
         }
 
         function getArticle(noun) {
