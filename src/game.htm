@@ -438,6 +438,8 @@
             },
             weapon: 'fingerNail', //Start game with this equipped
             armor: 'pectoralMass', //Start game with this equipped
+            ring1: null,
+            ring2: null,
             movementDisabled: false,
         };
 
@@ -736,6 +738,65 @@
             },
         };
 
+        const rings = {
+            ringOfSexyUnderwear: {
+                name: "RING OF SEXY UNDERWEAR",
+                description: "A ring with an engraving of a pair of strangely attractive undergarments. +2 PRS",
+                effects: { persuasion: 2 },
+                price: 100,
+                merchantStockChance: 0.5,
+                chestChance: 0.2,
+            },
+            ringBloodstream: {
+                name: "BLOODSTREAM NOSERING",
+                description: "A nosering that injects blood into your veins. Sounds painful... +5 HP",
+                effects: { maxHp: 5 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.25,
+            },
+            ringHardening: {
+                name: "COCKRING OF HARDENING",
+                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +2 DEF",
+                effects: { defense: 2 },
+                price: 100,
+                merchantStockChance: 0.4,
+                chestChance: 0.15,
+            },
+            ringCrack: {
+                name: "CRACK INFUSED RING",
+                description: "A ring infused with crack cocaine. +5 SPD",
+                effects: { speed: 5 },
+                price: 140,
+                merchantStockChance: 0.2,
+                chestChance: 0.1,
+            },
+            ringGamble: {
+                name: "GAMBLER'S RING",
+                description: "A cheap looking ring with a 240p image of a slot machine on it. +4 LUK",
+                effects: { luck: 4 },
+                price: 150,
+                merchantStockChance: 0.1,
+                chestChance: 0.05,
+            },
+            ringOfSightliness: {
+                name: "RING OF SIGHTLINESS",
+                description: "A ring with an eyeball so realistic looking, it could actually be real. Allows you to see better in the Tardspire",
+                effects: {},
+                price: 180,
+                merchantStockChance: 0.2,
+                chestChance: 0.08,
+            },
+            ringOfStinky: {
+                name: "RING OF STINKY",
+                description: "A ring so stinky, SO putrid, that even monsters will reconsider confronting you. Reduces encounter rate by 30%",
+                effects: {},
+                price: 200,
+                merchantStockChance: 0.3,
+                chestChance: 0.07,
+            },
+        };
+
         const items = {
             canOfHamms: {
                 name: "CAN OF HAMM'S",
@@ -904,10 +965,12 @@
                     merchant.die();
                 }
 
+                // Only allow killing the gambler if he is visible (player has enough BTC)
                 const killedGambler =
                     gambler.isAlive &&
                     gambler.isActiveOnFloor &&
-                    gambler.x === x && gambler.y === y;
+                    gambler.x === x && gambler.y === y &&
+                    player.bitcoins >= gambler.playPrice;
                 if (killedGambler) {
                     gambler.die();
                 }
@@ -943,7 +1006,7 @@
                 return;
             }
 
-            let attempts = 0; // Add a safeguard to prevent infinite loops
+            let attempts = 0;
             do {
                 merchant.items = [];
                 itemKeys.forEach((key) => {
@@ -958,6 +1021,24 @@
                     break;
                 }
             } while (merchant.items.length === 0);
+
+            setMerchantRingWares();
+        }
+
+        function setMerchantRingWares() {
+            const ringKeys = Object.keys(rings);
+            merchant.rings = [];
+            let attempts = 0;
+            do {
+                merchant.rings = [];
+                ringKeys.forEach((key) => {
+                    if (Math.random() < (rings[key].merchantStockChance || 0)) {
+                        merchant.rings.push(key);
+                    }
+                });
+                attempts++;
+                if (attempts > 100) break;
+            } while (merchant.rings.length === 0 && ringKeys.length > 0);
         }
 
         const sfx = {
@@ -1302,11 +1383,18 @@
 
         function updateSeenTiles() {
             seenTiles[player.y][player.x] = true;
-            for (let i = 0; i < 4; i++) {
-                let nx = player.x + DX[i];
-                let ny = player.y + DY[i];
-                if (nx >= 0 && ny >= 0 && nx < WIDTH && ny < HEIGHT) {
-                    seenTiles[ny][nx] = true;
+            const hasSightliness =
+                (player.ring1 === "ringOfSightliness" || player.ring2 === "ringOfSightliness");
+
+            const radius = hasSightliness ? 2 : 1; // Default reveal radius 1, 2 if Ring of Sightliness equipped
+
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    let nx = player.x + dx;
+                    let ny = player.y + dy;
+                    if (nx >= 0 && ny >= 0 && nx < WIDTH && ny < HEIGHT) {
+                        seenTiles[ny][nx] = true;
+                    }
                 }
             }
         }
@@ -1419,55 +1507,80 @@
         }
 
         function wallSlice(d) {
+            // Make sure to provide 6 slices, from farthest (6) to nearest (1)
             return {
-                3: "||     /#####\\     ||\n",
-                2: "||    |#######|    ||\n",
-                1: "||   |#########|   ||\n"
-            } [d];
+                6: "||      /#####\\      ||\n",
+                5: "||     |#######|     ||\n",
+                4: "||    |#########|    ||\n",
+                3: "||   |###########|   ||\n",
+                2: "||  |#############|  ||\n",
+                1: "|| |###############| ||\n"
+            }[d];
         }
 
         function corridorSlice(d) {
             return {
-                3: "||     /     \\     ||\n",
-                2: "||    |       |    ||\n",
-                1: "||   |         |   ||\n"
+                6: "||      /     \\      ||\n",
+                5: "||     |       |     ||\n",
+                4: "||    |         |    ||\n",
+                3: "||   |           |   ||\n",
+                2: "||  |             |  ||\n",
+                1: "|| |               | ||\n"
             }[d];
         }
 
         function exitSlice(d) {
             return {
-                3: "||     /  E  \\     ||\n",
-                2: "||    |   E   |    ||\n",
-                1: "||   |    E    |   ||\n"
+                6: "||      /  E  \\      ||\n",
+                5: "||     |   E   |     ||\n",
+                4: "||    |    E    |    ||\n",
+                3: "||   |     E     |   ||\n",
+                2: "||  |      E      |  ||\n",
+                1: "|| |       E       | ||\n"
             }[d];
         }
 
         function healSlice(d) {
             return {
-                3: "||     /  H  \\     ||\n",
-                2: "||    |   H   |    ||\n",
-                1: "||   |    H    |   ||\n"
+                6: "||      /  H  \\      ||\n",
+                5: "||     |   H   |     ||\n",
+                4: "||    |    H    |    ||\n",
+                3: "||   |     H     |   ||\n",
+                2: "||  |      H      |  ||\n",
+                1: "|| |       H       | ||\n"
             }[d];
         }
+
         function treasureSlice(d) {
             return {
-                3: "||     /  T  \\     ||\n",
-                2: "||    |   T   |    ||\n",
-                1: "||   |    T    |   ||\n"
+                6: "||      /  T  \\      ||\n",
+                5: "||     |   T   |     ||\n",
+                4: "||    |    T    |    ||\n",
+                3: "||   |     T     |   ||\n",
+                2: "||  |      T      |  ||\n",
+                1: "|| |       T       | ||\n"
             }[d];
         }
+
         function merchantSlice(d) {
             return {
-                3: "||     /  M  \\     ||\n",
-                2: "||    |   M   |    ||\n",
-                1: "||   |    M    |   ||\n"
+                6: "||      /  M  \\      ||\n",
+                5: "||     |   M   |     ||\n",
+                4: "||    |    M    |    ||\n",
+                3: "||   |     M     |   ||\n",
+                2: "||  |      M      |  ||\n",
+                1: "|| |       M       | ||\n"
             }[d];
         }
+
         function gamblerSlice(d) {
             return {
-                3: "||     /  G  \\     ||\n",
-                2: "||    |   G   |    ||\n",
-                1: "||   |    G    |   ||\n"
+                6: "||      /  G  \\      ||\n",
+                5: "||     |   G   |     ||\n",
+                4: "||    |    G    |    ||\n",
+                3: "||   |     G     |   ||\n",
+                2: "||  |      G      |  ||\n",
+                1: "|| |       G       | ||\n"
             }[d];
         }
 
@@ -1634,22 +1747,40 @@ __\\_______^/
             drawMinimap();
             let output = "";
 
+        const equippedArmor = armor[player.armor];
+        const totalDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0);
+        const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
+        const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
+
+        function getRingEffect(stat) {
+            let sum = 0;
+            if (equippedRing1 && equippedRing1.effects && equippedRing1.effects[stat]) sum += equippedRing1.effects[stat];
+            if (equippedRing2 && equippedRing2.effects && equippedRing2.effects[stat]) sum += equippedRing2.effects[stat];
+            return sum;
+        }
+
+        const displayMaxHp = player.maxHp + getRingEffect('maxHp');
+        const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
+        const displayPersuasion = player.persuasion + getRingEffect('persuasion');
+        const displaySpeed = player.speed + getRingEffect('speed');
+        const displayLuck = player.luck + getRingEffect('luck');
+
         const stats1Html = `
-        <div class="stats-container">
-            <span>.-STATS-.</span>
-            <span>|===<span class="HP">HP</span>===|</span>
-            <span class="stats-label">${player.hp}/${player.maxHp}</span>
-            <span>|==<span class="DEF">DEF</span>==|</span>
-            <span class="stats-label">${player.defense}</span>
-            <span>|==<span class="PRS">PRS</span>==|</span>
-            <span class="stats-label">${player.persuasion}</span>
-            <span>|==<span class="SPD">SPD</span>==|</span>
-            <span class="stats-label">${player.speed}</span>
-            <span>|==<span class="LUK">LUK</span>==|</span>
-            <span class="stats-label">${player.luck}</span>
-            <span>._ _ _ _.</span>
-        </div>`;
-            document.getElementById('stats1').innerHTML = stats1Html;
+            <div class="stats-container">
+                <span>.-STATS-.</span>
+                <span>|===<span class="HP">HP</span>===|</span>
+                <span class="stats-label">${player.hp}/${displayMaxHp}</span>
+                <span>|==<span class="DEF">DEF</span>==|</span>
+                <span class="stats-label">${displayDefense}</span>
+                <span>|==<span class="PRS">PRS</span>==|</span>
+                <span class="stats-label">${displayPersuasion}</span>
+                <span>|==<span class="SPD">SPD</span>==|</span>
+                <span class="stats-label">${displaySpeed}</span>
+                <span>|==<span class="LUK">LUK</span>==|</span>
+                <span class="stats-label">${displayLuck}</span>
+                <span>._ _ _ _.</span>
+            </div>`;
+        document.getElementById('stats1').innerHTML = stats1Html;
 
             const stats2Html = `<div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.---<span class="action">FLOOR</span>---.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
@@ -1683,25 +1814,24 @@ __\\_______^/
                 }
 
             } else {
-                output += "\n\n\n\n\n\n\n";
-
-                for (let d = 3; d >= 1; d--) {
+                output += "\n\n\n\n";
+                for (let d = 6; d >= 1; d--) {
                     let tx = player.x + DX[player.dir] * d;
                     let ty = player.y + DY[player.dir] * d;
                     let tile = getTile(tx, ty);
 
                     output += (tx === merchant.x && ty === merchant.y && merchant.isActiveOnFloor) ? merchantSlice(d) :
-                            (tx === gambler.x && ty === gambler.y && gambler.isActiveOnFloor) ? gamblerSlice(d) :
-                            tile === '#' ? wallSlice(d) :
-                            tile === 'E' ? exitSlice(d) :
-                            tile === 'H' ? healSlice(d) :
-                            (tile === 'T' || tile === 'M') ? treasureSlice(d) :
-                            corridorSlice(d);
+                        (tx === gambler.x && ty === gambler.y && gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice) ? gamblerSlice(d) :
+                        tile === '#' ? wallSlice(d) :
+                        tile === 'E' ? exitSlice(d) :
+                        tile === 'H' ? healSlice(d) :
+                        (tile === 'T' || tile === 'M') ? treasureSlice(d) :
+                        corridorSlice(d);
                 }
 
                 // Logo
                 output +=
-                    "||                 ||\n||    Welcome to   ||\n++----TARDQUEST----++\n";
+                    "||                   ||\n||    Welcome to     ||\n++-----TARDQUEST-----++\n";
 
                 // Party display
                 if (party.length > 0) {
@@ -1755,11 +1885,15 @@ __\\_______^/
             if (direction === 'forward') {
                 nx = player.x + DX[player.dir];
                 ny = player.y + DY[player.dir];
-                randomEncounterChance = 0.25;
+                randomEncounterChance = 0.25; // When moving forward
             } else {
                 nx = player.x - DX[player.dir];
                 ny = player.y - DY[player.dir];
-                randomEncounterChance = 0.5;
+                randomEncounterChance = 0.5; // When moving backward
+            }
+            const hasStinky = player.ring1 === "ringOfStinky" || player.ring2 === "ringOfStinky";
+            if (hasStinky) {
+                randomEncounterChance *= 0.7; // If Ring of Stinky is equipped, reduce encounter chance by 30%
             }
 
             const tile = getTile(nx, ny);
@@ -1850,7 +1984,7 @@ __\\_______^/
             let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
 
             // Crit attacks based off LUK stat
-            const critChance = player.luck * 0.02; // +0.2% chance per point
+            const critChance = player.luck * 0.01; // +0.1% chance per point
             let isCrit = Math.random() < critChance;
             if (isCrit) {
                 dmg = Math.floor(dmg * 1.2);
@@ -2247,10 +2381,24 @@ __\\_______^/
 
             document.getElementById('menu').classList.add('hidden');
 
-            dice = [
-                Math.floor(Math.random() * 6) + 1,
-                Math.floor(Math.random() * 6) + 1,
-            ];
+            // LUK affects chance to roll a 12
+            // Base chance to roll a 12 is 1/36 (~2.78%)
+            let luckBonus = player.luck * 0.03; // +3% chance to roll a 12
+            let roll12 = Math.random() < (1/36 + luckBonus);
+
+            let dice;
+            if (roll12) {
+                dice = [6, 6];
+            } else {
+                // Roll normally, but avoid double sixes
+                do {
+                    dice = [
+                        Math.floor(Math.random() * 6) + 1,
+                        Math.floor(Math.random() * 6) + 1,
+                    ];
+                } while (dice[0] === 6 && dice[1] === 6);
+            }
+
             gambleAnimation(dice, () => {
                 gambleOutcome(dice);
             });
@@ -2265,7 +2413,7 @@ __\\_______^/
             let html = 'You rolled a ' +
                 `<span class="gambler">${dice[0]}</span> and a ` +
                 `<span class="gambler">${dice[1]}</span> ` +
-                `for a sum of <span class="${sumClass}">${sum}</span>\n\n`;
+                `for a sum of <span class="${sumClass}">${sum}</span>\n`;
 
             if (win) {
                 const stats = ['hp', 'defense', 'persuasion'];
@@ -2273,27 +2421,32 @@ __\\_______^/
 
                 switch (randomStat) {
                     case 'hp':
-                        // Get a bonus of either 5 or 10 HP
-                        const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5)
+                        const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5);
                         player.hp += healthBoost;
                         player.maxHp += healthBoost;
-                        updateBattleLog(`<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`);
+                        html += `<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`;
                         break;
                     case 'defense':
-                        // Get a bonus of either 1 or 2 defense
                         const defenseBoost = 1 + Math.floor((Math.random() * 2));
                         player.defense += defenseBoost;
-                        updateBattleLog(`<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`);
+                        html += `<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`;
                         break;
                     case 'persuasion':
-                        // Get a bonus of either 1 or 2 persuasion
                         const persuasionBoost = 1 + Math.floor((Math.random() * 2));
                         player.persuasion += persuasionBoost;
-                        updateBattleLog(`<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`);
+                        html += `<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`;
                         break;
                 }
+                gambler.isActiveOnFloor = false;
+                updateBattleLog(html);
+                updateBattleLog('The gambler escapes into the shadows');
+                render();
             } else {
-                gambler.say('Hah! Tough luck, kid!');
+                gambler.say('<span class="gambler">Hah! Tough luck, kid!</span> You gotta know when to hold \'em, know when to fold \'em, heh heh');
+                gambler.isActiveOnFloor = false;
+                updateBattleLog(html);
+                updateBattleLog('The gambler escapes into the shadows');
+                render();
             }
 
             menu.close();
@@ -2363,12 +2516,28 @@ __\\_______^/
                 playMusic('battle');
             } else if (tile === 'T') {
                 // Normal chest, provide loot
-                const chestContents = Math.random() < 0.5
-                    ? { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 } // Random BTC (10-59)
-                    : { type: 'item', item: getRandomMerchantItem() };
+                let lootTypeRoll = Math.random();
+                let chestContents;
+                if (lootTypeRoll < 0.4) {
+                    chestContents = { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 };
+                } else if (lootTypeRoll < 0.7) {
+                    chestContents = { type: 'item', item: getRandomMerchantItem() };
+                } else {
+                    // Try to spawn a ring based on chestChance
+                    const possibleRings = Object.keys(rings).filter(ringId =>
+                        Math.random() < (rings[ringId].chestChance || 0)
+                    );
+                    if (possibleRings.length > 0) {
+                        const ringId = possibleRings[Math.floor(Math.random() * possibleRings.length)];
+                        chestContents = { type: 'ring', ring: ringId };
+                    } else {
+                        // fallback to BTC if no ring
+                        chestContents = { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 };
+                    }
+                }
 
                 if (chestContents.type === 'BTC') {
-                    let bonus = Math.floor(chestContents.amount * (player.luck * 0.02)); //+2% BTC increase from chests per point
+                    let bonus = Math.floor(chestContents.amount * (player.luck * 0.02));
                     let total = chestContents.amount + bonus;
                     player.bitcoins += total;
                     updateBattleLog(
@@ -2378,6 +2547,10 @@ __\\_______^/
                     const itemName = chestContents.item;
                     player.inventory[itemName] = (player.inventory[itemName] || 0) + 1;
                     updateBattleLog(`You found <span class="friendly">${items[itemName].name}</span> in the chest!`);
+                } else if (chestContents.type === 'ring') {
+                    const ringId = chestContents.ring;
+                    player.inventory[ringId] = (player.inventory[ringId] || 0) + 1;
+                    updateBattleLog(`You found <span class="friendly">${rings[ringId].name}</span> in the chest!`);
                 }
 
                 MAP[y][x] = '.'; // Remove the chest from the map
@@ -2495,6 +2668,7 @@ __\\_______^/
             }
 
             generateMap();
+            setMerchantRingWares();
         }
 
 
@@ -2747,10 +2921,14 @@ __\\_______^/
                     landingHtml: () => {
                         const weapon = weapons[player.weapon];
                         const armorPiece = armor[player.armor];
+                        const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
+                        const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
                     },
                     getOptions: () => {
                         const weapon = weapons[player.weapon];
                         const armorPiece = armor[player.armor];
+                        const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
+                        const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
                         return [
                             {
                                 id: "equipHand",
@@ -2761,6 +2939,11 @@ __\\_______^/
                                 id: "equipBody",
                                 displayText: `Body: ${armorPiece?.name || "None"}`,
                                 description: "View and equip your armor.",
+                            },
+                            {
+                                id: "equipRings",
+                                displayText: `Rings: ${ring1}\n         ${ring2}`,
+                                description: "View and equip your rings.",
                             },
                             {
                                 id: "_back",
@@ -2841,6 +3024,128 @@ __\\_______^/
                         }
                     },
                 },
+                equipRings: {
+                    title: "EQUIP RINGS",
+                    landingHtml: () => {
+                        const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
+                        const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "ring1",
+                                displayText: `Slot 1: ${player.ring1 ? rings[player.ring1].name + " (Equipped)" : "None"}`,
+                                description: "Equip a ring to Slot 1.",
+                                className: "friendly"
+                            },
+                            {
+                                id: "ring2",
+                                displayText: `Slot 2: ${player.ring2 ? rings[player.ring2].name + " (Equipped)" : "None"}`,
+                                description: "Equip a ring to Slot 2.",
+                                className: "friendly"
+                            },
+                            {
+                                id: "_back",
+                                displayText: "[Back]",
+                                description: "Return to equipment menu",
+                            }
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else if (selectedOptionId === "ring1" || selectedOptionId === "ring2") {
+                            menu.open(selectedOptionId + "Select");
+                        }
+                    },
+                },
+
+                ring1Select: {
+                    title: "EQUIP RING 1",
+                    landingHtml: () => "",
+                    getOptions: () => {
+                        const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
+                        const options = ownedRings.map((ringId) => ({
+                            id: ringId,
+                            displayText: rings[ringId].name + (player.ring1 === ringId ? " (Equipped)" : ""),
+                            description: rings[ringId].description,
+                            className: player.ring1 === ringId
+                                ? "friendly"
+                                : player.ring2 === ringId
+                                    ? "muted"
+                                    : undefined,
+                        }));
+                        options.unshift({
+                            id: null,
+                            displayText: "None",
+                            description: "Unequip this ring slot.",
+                        });
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to rings menu",
+                        });
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            // Prevent equipping the same ring in both slots
+                            if (selectedOptionId && selectedOptionId === player.ring2) {
+                                updateBattleLog("You can't equip the same ring in both slots!");
+                                return;
+                            }
+                            player.ring1 = selectedOptionId || null;
+                            updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 1 slot.`);
+                            menu.close();
+                        }
+                    },
+                },
+
+                ring2Select: {
+                    title: "EQUIP RING 2",
+                    landingHtml: () => "",
+                    getOptions: () => {
+                        const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
+                        const options = ownedRings.map((ringId) => ({
+                            id: ringId,
+                            displayText: rings[ringId].name + (player.ring2 === ringId ? " (Equipped)" : ""),
+                            description: rings[ringId].description,
+                            className: player.ring2 === ringId
+                                ? "friendly"
+                                : player.ring1 === ringId
+                                    ? "muted"
+                                    : undefined,
+                        }));
+                        options.unshift({
+                            id: null,
+                            displayText: "None",
+                            description: "Unequip this ring slot.",
+                        });
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to rings menu",
+                        });
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            // Prevent equipping the same ring in both slots
+                            if (selectedOptionId && selectedOptionId === player.ring1) {
+                                updateBattleLog("You can't equip the same ring in both slots!");
+                                return;
+                            }
+                            player.ring2 = selectedOptionId || null;
+                            updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 2 slot.`);
+                            menu.close();
+                        }
+                    },
+                },
+
                 merchant: {
                     title: "MERCHANT",
                     onOpen: () => {
@@ -2870,6 +3175,11 @@ __\\_______^/
                                 id: "merchantArmor",
                                 displayText: "Armor",
                                 description: "Get some thicker skin",
+                            },
+                            {
+                                id: "merchantRings",
+                                displayText: "Rings",
+                                description: "Jewelry that will probably turn you gay",
                             },
                             {
                                 id: "_back",
@@ -2996,15 +3306,66 @@ __\\_______^/
                         merchant.buy('armor', selectedOptionId);
                     },
                 },
+                merchantRings: {
+                    title: "RINGS",
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        const options = (merchant.rings || []).map((ringId) => {
+                            const tooExpensive = rings[ringId].price > player.bitcoins;
+                            const alreadyOwned = player.inventory[ringId] > 0 || player.ring1 === ringId || player.ring2 === ringId;
+                            return {
+                                id: ringId,
+                                displayText: rings[ringId].name,
+                                description: rings[ringId].description,
+                                trailText: `${rings[ringId].price} BTC`,
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_back",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            // Buy logic for rings
+                            const ring = rings[selectedOptionId];
+                            if (!ring) return;
+                            if (player.bitcoins < ring.price) {
+                                merchant.say('Too bad, kid. Come back when you get some coin!');
+                                return;
+                            }
+                            if (player.inventory[selectedOptionId] > 0 || player.ring1 === selectedOptionId || player.ring2 === selectedOptionId) {
+                                merchant.say("You already own that, stupid!");
+                                return;
+                            }
+                            player.bitcoins -= ring.price;
+                            playSFX('kaching');
+                            player.inventory[selectedOptionId] = (player.inventory[selectedOptionId] || 0) + 1;
+                            merchant.say("HAHA! You won't regret it!");
+                            updateBattleLog(`You just bought a ${ring.name}`);
+                            menu.render();
+                        }
+                    },
+                },
+
                 gambler: {
                     title: "GAMBLER",
                     onOpen: () => {
                         gambler.say('Place yer bets!');
                     },
                     onClose: () => {
-                        gambler.say('You gotta know when to hold \'em, know when to fold \'em, heh heh');
-                        updateBattleLog('The gambler escapes into the shadows');
-
                         gambler.isActiveOnFloor = false;
                     },
                     landingHtml: () => {
@@ -3377,11 +3738,11 @@ You found a treasure chest! Do you want to open it?
 
                       ..__
             __________\`.  '-
-           (___________ \`.  '
-                (__________
-                 (________
-                   (____          _
-                        \`-______-'
+           (___________ \`.  '-.
+            (__________
+             (________
+               (____          _
+                    \`-______-'
        .-----       .----.
       / \`.   \`.    /      \\
      /    '.___\`. /________\\
@@ -3395,10 +3756,22 @@ You found a treasure chest! Do you want to open it?
                           ..__
                 __________\`.  '-
                (___________ \`.  '-.
-                (__________
-                 (________
-                   (____
-                        \`-______-
+                (___/_/\\ ___.
+                 (__\\_\\/|   ||
+                   (____|___||    _
+                        \`-______-'
+
+    `,
+
+    `
+
+                  ..__
+        __________\`.  '-
+       (___________ \`.  '-.
+        (__________
+         (________
+           (____
+                \`-______-
 
 
     .----------.   .----------.
@@ -3467,7 +3840,6 @@ You found a treasure chest! Do you want to open it?
     `,
 
 ];
-
     const dieDigit = [
         ['▗▄▋  ', ' ▐▋  ', '▝▀▀▘ '], // 1
         ['▄▀▀▄ ', ' ▄▀  ', '▀▀▀▀▘'], // 2
