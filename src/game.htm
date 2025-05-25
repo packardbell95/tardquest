@@ -1753,10 +1753,7 @@ __\\_______^/
         const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
 
         function getRingEffect(stat) {
-            let sum = 0;
-            if (equippedRing1 && equippedRing1.effects && equippedRing1.effects[stat]) sum += equippedRing1.effects[stat];
-            if (equippedRing2 && equippedRing2.effects && equippedRing2.effects[stat]) sum += equippedRing2.effects[stat];
-            return sum;
+            return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
         }
 
         const displayMaxHp = player.maxHp + getRingEffect('maxHp');
