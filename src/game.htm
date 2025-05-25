@@ -2630,11 +2630,15 @@ __\\_______^/
         }
 
         document.addEventListener('keydown', e => {
-            if (gameOver || awaitingPersuasionText) {
+            const key = e.key.toLowerCase();
+
+            if (gameOver) return;
+            if (!player.inCombat && key === 't' && !menu.isOpen() && !player.levelingUp) {
+                speakingOutsideCombat = true;
+                tryPersuade(e);
                 return;
             }
-
-            const key = e.key.toLowerCase();
+            if (awaitingPersuasionText) return;
 
             if (menu.isOpen()) {
                 menu.handleInput(key);
@@ -2676,10 +2680,6 @@ __\\_______^/
                     case 'arrowright':
                         e.preventDefault();
                         turnRight();
-                        break;
-                    case 't':
-                        speakingOutsideCombat = true;
-                        tryPersuade(e);
                         break;
                 }
             }
