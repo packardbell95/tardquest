@@ -739,38 +739,76 @@
         };
 
         const rings = {
+        // PRS Boosters
             ringOfSexyUnderwear: {
                 name: "RING OF SEXY UNDERWEAR",
-                description: "A ring with an engraving of a pair of strangely attractive undergarments. +2 PRS",
-                effects: { persuasion: 2 },
-                price: 100,
+                description: "A ring with an engraving of a pair of strangely attractive undergarments. +3 PRS",
+                effects: { persuasion: 3 },
+                price: 60,
                 merchantStockChance: 0.5,
-                chestChance: 0.2,
+                chestChance: 0.1,
+            },
+
+            ringOfFrenchAccent: {
+                name: "FRENCHLY ACCENTED RING",
+                description: "A ring that somehow magically forces you to speak in a French accent. VERY sexy! +5 PRS",
+                effects: { persuasion: 5 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
+            },
+        // HP Boosters
+            ringValentines: {
+                name: "VALENTINES DAY RING",
+                description: "A ring that was given to somebody by their Valentine... and dumped down a hole. You see 'Amy' engraved onto a heart. How sad. +5 HP",
+                effects: { maxHp: 5 },
+                price: 60,
+                merchantStockChance: 0.5,
+                chestChance: 0.1,
             },
             ringBloodstream: {
                 name: "BLOODSTREAM NOSERING",
-                description: "A nosering that injects blood into your veins. Sounds painful... +5 HP",
-                effects: { maxHp: 5 },
+                description: "A nosering that injects blood into your veins. Sounds painful... +8 HP",
+                effects: { maxHp: 8 },
                 price: 100,
                 merchantStockChance: 0.3,
-                chestChance: 0.25,
+                chestChance: 0.04,
             },
-            ringHardening: {
+        //DEF Boosters
+            ringOfHardening: {
                 name: "COCKRING OF HARDENING",
-                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +2 DEF",
-                effects: { defense: 2 },
-                price: 100,
+                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +5 DEF",
+                effects: { defense: 5 },
+                price: 60,
                 merchantStockChance: 0.4,
-                chestChance: 0.15,
+                chestChance: 0.1,
+            },
+            ringPectoralPiercing: {
+                name: "PECTORAL PIERCING",
+                description: "A piercing that can fit anywhere on your big, juicy pectorals. +10 DEF",
+                effects: { defense: 10 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
+            },
+        // SPD Boosters
+            ringPinkyToe: {
+                name: "PINKY TOE RING",
+                description: "A ring for your pinky toe. The only way for this to work is by putting it directly through the toenail... kinda like that SpongeBob episode! +4 SPD",
+                effects: { speed: 4 },
+                price: 60,
+                merchantStockChance: 0.4,
+                chestChance: 0.1,
             },
             ringCrack: {
                 name: "CRACK INFUSED RING",
-                description: "A ring infused with crack cocaine. +5 SPD",
-                effects: { speed: 5 },
-                price: 140,
-                merchantStockChance: 0.2,
-                chestChance: 0.1,
+                description: "A ring infused with crack cocaine. +8 SPD",
+                effects: { speed: 8 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
             },
+        // LUK Boosters
             ringGamble: {
                 name: "GAMBLER'S RING",
                 description: "A cheap looking ring with a 240p image of a slot machine on it. +4 LUK",
@@ -779,21 +817,30 @@
                 merchantStockChance: 0.1,
                 chestChance: 0.05,
             },
+            ringEscobar: {
+                name: "PABLO ESCOBAR'S GOLDEN RING",
+                description: "A golden ring that once belonged to Pablo Escobar. It smells rather illegal, but who give a shit? +9 LUK",
+                effects: { luck: 9 },
+                price: 200,
+                merchantStockChance: 0.07,
+                chestChance: 0.02,
+            },
+        // Special
             ringOfSightliness: {
                 name: "RING OF SIGHTLINESS",
                 description: "A ring with an eyeball so realistic looking, it could actually be real. Allows you to see better in the Tardspire",
                 effects: {},
                 price: 180,
-                merchantStockChance: 0.2,
-                chestChance: 0.08,
+                merchantStockChance: 0.15,
+                chestChance: 0.0,
             },
             ringOfStinky: {
                 name: "RING OF STINKY",
                 description: "A ring so stinky, SO putrid, that even monsters will reconsider confronting you. Reduces encounter rate by 30%",
                 effects: {},
                 price: 200,
-                merchantStockChance: 0.3,
-                chestChance: 0.07,
+                merchantStockChance: 0.15,
+                chestChance: 0.0,
             },
         };
 
@@ -869,8 +916,15 @@
             },
         };
 
+        function getEffectiveStat(stat) {
+            const ringsEquipped = [player.ring1, player.ring2]
+                .map(ringId => ringId ? rings[ringId] : null)
+                .filter(Boolean);
+            return player[stat] + ringsEquipped.reduce((sum, ring) => sum + (ring.effects?.[stat] || 0), 0);
+        }
+
         function healPlayer(hp) {
-            player.hp = Math.min(player.maxHp, player.hp + hp);
+            player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
         }
 
         function useDowsingRod() {
@@ -1201,7 +1255,7 @@
         }
 
         function interactWithHealingTile(x, y) {
-            const healAmount = Math.ceil(player.maxHp * 0.3); // Heal 30% of max HP
+            const healAmount = Math.ceil(getEffectiveStat('maxHp') * 0.3); // Heal 30% of effective max HP
             healPlayer(healAmount);
             updateBattleLog(`An oddly colored, perfectly square floor tile <span class="friendly">heals you for <span class="healtile">${healAmount} HP</span></span>`);
 
@@ -1918,7 +1972,7 @@ __\\_______^/
 
             // Calculate movement delay based on speed
             const baseDelay = maxDelay; // Start with the maximum delay
-            const speedModifier = player.speed * 0.05; // 5% reduction per speed point
+            const speedModifier = getEffectiveStat('speed') * 0.05; // 5% reduction per speed point
             const movementDelay = Math.max(minDelay, baseDelay * (1 - speedModifier)); // Ensure delay is at least minDelay
 
             setTimeout(() => {
@@ -1981,7 +2035,7 @@ __\\_______^/
             let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
 
             // Crit attacks based off LUK stat
-            const critChance = player.luck * 0.01; // +0.1% chance per point
+            const critChance = getEffectiveStat('luck') * 0.01; // +0.1% chance per point
             let isCrit = Math.random() < critChance;
             if (isCrit) {
                 dmg = Math.floor(dmg * 1.2);
@@ -2038,9 +2092,11 @@ __\\_______^/
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost; // Increase base damage by the floorBoost
 
+               
+
                 // Calculate damage based on player's defense
                 const playerArmor = armor[player.armor];
-                const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
+                const totalDefense = getEffectiveStat('defense') + (playerArmor ? playerArmor.defense : 0);
 
                 let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
 
@@ -2060,7 +2116,7 @@ __\\_______^/
 
                 // Calculate damage based on the player's defense
                 const playerArmor = armor[player.armor];
-                const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
+                const totalDefense = getEffectiveStat('defense') + (playerArmor ? playerArmor.defense : 0);
 
                 const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
                 player.hp -= dmg;
@@ -2155,7 +2211,7 @@ __\\_______^/
 
                 // ======== Persuasion During Combat ========
                 const baseChance = 0.0;
-                const prsBonus = player.persuasion * 0.03;
+                const prsBonus = getEffectiveStat('persuasion') * 0.03;
                 const totalChance = Math.min(0.9, baseChance + prsBonus);
 
                 if (Math.random() < totalChance) {
@@ -2380,7 +2436,7 @@ __\\_______^/
 
             // LUK affects chance to roll a 12
             // Base chance to roll a 12 is 1/36 (~2.78%)
-            let luckBonus = player.luck * 0.03; // +3% chance to roll a 12
+            let luckBonus = getEffectiveStat('luck') * 0.03; // +3% chance to roll a 12
             let roll12 = Math.random() < (1/36 + luckBonus);
 
             let dice;
@@ -2534,7 +2590,7 @@ __\\_______^/
                 }
 
                 if (chestContents.type === 'BTC') {
-                    let bonus = Math.floor(chestContents.amount * (player.luck * 0.02));
+                    let bonus = Math.floor(chestContents.amount * (getEffectiveStat('luck') * 0.02));
                     let total = chestContents.amount + bonus;
                     player.bitcoins += total;
                     updateBattleLog(
@@ -3710,24 +3766,12 @@ You found a treasure chest! Do you want to open it?
                 ..__
       __________\`.  '-
      (___________ \`.  '-.
-      (___/_/\\ ___.
-       (__\\_\\/|   ||
-         (____|___||    _
-              \`-______-'
-
-    `,
-
-    `
-
-                  ..__
-        __________\`.  '-
-       (___________ \`.  '-.
-        (__________
-         (________
-         .-'--._ .----_   _
-         | |  | |\` ___'.-'
-         \`.|..' ' \`    |
-                 \`|____'
+      (__________
+       (________
+       .-'--._ .----_   _
+       | |  | |\` ___'.-'
+       \`.|..' ' \`    |
+               \`|____'
 
     `,
 
