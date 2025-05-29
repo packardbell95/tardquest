@@ -51,6 +51,29 @@
             align-content: center;
         }
 
+        #game.render {
+            font-size: unset;
+            margin-top: unset;
+            white-space: pre;
+            /* Blue sky, dirt ground */
+            /*
+            background: linear-gradient(
+                180deg,
+                rgb(48, 89, 105) 0%,
+                rgb(48, 89, 105) 50%,
+                rgb(71, 54, 19) 50%,
+                rgb(71, 54, 19) 100%
+            );*/
+            /* Bruised sky, gradient dirt ground */
+            background: linear-gradient(
+                180deg,
+                #950913 0%,
+                #060d40 50%,
+                #000 50%,
+                #513805 100%
+            )
+        }
+
         #menu:not(.hidden) {
             width: 100%;
             height: 100%;
@@ -353,6 +376,85 @@
         .action {
             color: #EC4134;
         }
+
+        /**
+         * Rendered scene class names
+         * These are derived from the names in sceneRenderer.getEntityName()
+         * which is also used to identify specific pieces of scene_art
+         *
+         * The renderer adds <span> elements around each rendered character with
+         * a "scene_character_" prefix. So for example, a "wallFilled"
+         */
+        @keyframes scene_healingTileGlow {
+          0% {
+            color: #6CFF74;
+          }
+          25% {
+            color: #02B60E;
+          }
+          50% {
+            color: #02868C;
+          }
+          75% {
+            color: #00920A;
+          }
+          100% {
+            color: #8DD702;
+          }
+        }
+
+        .scene_character_healingTile {
+            animation-name: scene_healingTileGlow;
+            animation-duration: 5s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: linear;
+        }
+
+        @keyframes scene_exitGlow {
+            0% {
+                color: #FFF000;
+            }
+            25% {
+                color: #FF7400;
+            }
+            50% {
+                color: #FFF000;
+            }
+            75% {
+                color: #CD0074;
+            }
+            100% {
+                color: #FF0000;
+            }
+        }
+
+        .scene_character_exit {
+            animation-name: scene_exitGlow;
+            animation-duration: 5s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: linear;
+        }
+
+        @keyframes scene_treasureChestGlow {
+            0% {
+                color: #FFD700;
+            }
+            100% {
+                color: #FFF;
+            }
+        }
+
+        .scene_character_treasureChest {
+            animation-name: scene_treasureChestGlow;
+            animation-duration: 2s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: ease-out;
+            background-color: #793311;
+            color: #ffd700;
+        }
   </style>
 </head>
 <body>
@@ -374,7 +476,7 @@
   <div id="stats2"></div>
   <div id="controls"></div>
   <div id="viewportContainer">
-    <div id="game"></div>
+    <div id="game" class="render"></div>
     <div id="animation" class="hidden"></div>
     <div id="menu" class="hidden">
         <div id="menuLanding"></div>
@@ -394,6 +496,3819 @@
   </div>
 
     <script>
+        /**
+         * ASCII art that the sceneRenderer uses to draw scenes
+         *
+         * Each entry here has a name (eg: "wall", "healingTile", etc) which is
+         * used to identify the map object that is being rendered
+         * @see sceneRenderer.getEntityName() which translates map entities to
+         * names
+         *
+         * Each scene_art entry is an object that contains art for that thing.
+         * The object is broken into positions relative to the viewport of the
+         * rendered scene. Positions are denoted as "p#_#" where "p" means
+         * "position". The first # is the distance (or depth, or Z-coordinate,
+         * however you want to think of it). The second "#" is the X-coordinate
+         * of what the player is currently seeing, going from left to right.
+         *
+         * For example, the player is seeing everything in the triangle in this
+         * map, including the spaces to the immediate left and right (p0_0 and
+         * p0_2 respectively):
+         *
+         * Distance 5   \........./
+         * Distance 4   .\......./.
+         * Distance 3   ..\...../..
+         * Distance 2   ...\.../...
+         * Distance 1   ....\./....
+         * Distance 0   .....↑.....
+         *            Player ⤴
+         *
+         * Each cell is numbered this way (with "X" meaning 10):
+
+         * Distance 5   0123456789X
+         * Distance 4   .012345678.
+         * Distance 3   ..0123456..
+         * Distance 2   ...01234...
+         * Distance 1   ....012....
+         * Distance 0   ....012....
+         *            Player ⤴
+         *
+         * So if the player's vision spots a wall at distance 3, position 4,
+         * we would want to render the wall with entry "p3_4"
+         *
+         * The whitespace for each piece of art is automatically trimmed from
+         * the left side. This is to preserve formatting in the code (JavaScript
+         * does not support heredocs unfortunately). But sometimes spaces are
+         * desired as part of the art. So, a spaceBoundaryCharacter might be set
+         * which will stop the whitespace from trimming into the art. This
+         * character will be replaced with a space during rendering
+         *
+         * Each object also has an x and y value. This is the character offset
+         * of where the art will start to be drawn
+         *
+         * Art may also have a transparentCharacter defined which will simply
+         * not draw anything for that character when rendered
+         */
+        const scene_art = {
+            wall: {
+                // Distance: 0
+                p0_0: {
+                    x: 0,
+                    y: 0,
+                    spaceBoundaryCharacter: '$',
+                    art: `
+                        $  ▀▄
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $    █
+                        $  ▄▀
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    spaceBoundaryCharacter: '$',
+                    transparentCharacter: '%',
+                    art: `
+                        %▄▀  $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        █    $
+                        %▀▄  $
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    art: `
+                        ▀▀▀▀▀█▄
+                             █ ▀▄
+                             █   ▀▄
+                             █     ▀▄
+                             █       ▀▄
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █        █
+                             █       ▄▀
+                             █     ▄▀
+                             █   ▄▀
+                             █ ▄▀
+                        ▄▄▄▄▄█▀
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    art: `
+                        █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █                                      █
+                        █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%▄█▀▀▀▀▀
+                        %%%%%%▄▀ █     
+                        %%%%▄▀   █     
+                        %%▄▀     █     
+                        ▄▀       █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        █        █     
+                        ▀▄       █     
+                        %%▀▄     █     
+                        %%%%▀▄   █     
+                        %%%%%%▀▄ █     
+                        %%%%%%%%▀█▄▄▄▄▄
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 6,
+                    art: `
+                        ▄▄
+                          ▀▀▀▄▄▄
+                                █
+                                █
+                                █
+                                █
+                                █
+                                █
+                          ▄▄▄▀▀▀
+                        ▀▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 5,
+                    art: `
+                        ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                                      █▀▄
+                                      █  ▀▄
+                                      █    █
+                                      █    █
+                                      █    █
+                                      █    █
+                                      █    █
+                                      █    █
+                                      █  ▄▀
+                                      █▄▀
+                        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 5,
+                    art: `
+                        ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        █                    █
+                        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                      %%%▄▀█              
+                      %▄▀  █              
+                      █    █              
+                      █    █              
+                      █    █              
+                      █    █              
+                      █    █              
+                      █    █              
+                      %▀▄  █              
+                      %% ▀▄█              
+                      %%%%%▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%▄▄
+                        %▄▄▄▀▀▀  
+                        █        
+                        █        
+                        █        
+                        █        
+                        █        
+                        █        
+                        %▀▀▀▄▄▄  
+                        %%%%%%%▀▀
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    art: `
+                        ▀▀▄▄
+                           █
+                           █
+                        ▄▄▀▀
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    art: `
+                        ▀▀▀▀▀▀▀▀█▄
+                                █ ▀▄
+                                █  █
+                                █  █
+                                █ ▄▀
+                        ▄▄▄▄▄▄▄▄█▀
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    art: `
+                        █▀▀▀▀▀▀▀▀▀▀█▄
+                        █          █ ▀▄
+                        █          █  █
+                        █          █  █
+                        █          █ ▄▀
+                        █▄▄▄▄▄▄▄▄▄▄█▀
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    art: `
+                        █▀▀▀▀▀▀▀▀▀▀█
+                        █          █
+                        █          █
+                        █          █
+                        █          █
+                        █▄▄▄▄▄▄▄▄▄▄█
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                     %%▄█▀▀▀▀▀▀▀▀▀▀█
+                     ▄▀ █          █
+                     █  █          █
+                     █  █          █
+                     ▀▄ █          █
+                     %%▀█▄▄▄▄▄▄▄▄▄▄█
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄█▀▀▀▀▀▀▀▀▀▀█
+                      ▄▀ █          █
+                      █  █          █
+                      █  █          █
+                      ▀▄ █          █
+                      %%▀█▄▄▄▄▄▄▄▄▄▄█
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 9,
+                    art: `
+                        ▄▄▀▀
+                        █   
+                        █   
+                        ▀▀▄▄
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 2,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        █    █▀▄
+                        █    █▄▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_1: {
+                    x: 7,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        █    █▀▄
+                        █    █▄▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_2: {
+                    x: 12,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        █    ██▄
+                        █    ██▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_3: {
+                    x: 17,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        █    ██
+                        █    ██
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_4: {
+                    x: 22,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        █    █
+                        █    █
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_5: {
+                    x: 26,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                       %▄▄▄▄▄▄
+                       ██    █
+                       ██    █
+                       %▀▀▀▀▀▀
+                    `,
+                },
+                p4_6: {
+                    x: 30,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▄▄▄▄▄
+                      ▄██    █
+                      ▀██    █
+                      %%▀▀▀▀▀▀
+                    `,
+                },
+                p4_7: {
+                    x: 35,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▄▄▄▄▄
+                      ▄▀█    █
+                      ▀▄█    █
+                      %%▀▀▀▀▀▀
+                    `,
+                },
+                p4_8: {
+                    x: 40,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▄▄▄▄▄
+                      ▄▀█    █
+                      ▀▄█    █
+                      %%▀▀▀▀▀▀
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+            },
+
+            wallFilled: {
+                // Distance: 0
+                p0_0: {
+                    x: 0,
+                    y: 0,
+                    art: `
+                        ████▄
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ████▀
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    transparentCharacter: '%',
+                    art: `
+                        %▄████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        ██████
+                        %▀████
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    art: `
+                        ██████▄
+                        ██████▒█▄
+                        ██████▒███▄
+                        ██████▒█████▄
+                        ██████▒███████▄
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒████████
+                        ██████▒███████▀
+                        ██████▒█████▀
+                        ██████▒███▀
+                        ██████▒█▀
+                        ██████▀
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    art: `
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                        ████████████████████████████████████████
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%▄██████
+                        %%%%%%▄█▒██████
+                        %%%%▄███▒██████
+                        %%▄█████▒██████
+                        ▄███████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ████████▒██████
+                        ▀███████▒██████
+                        %%▀█████▒██████
+                        %%%%▀███▒██████
+                        %%%%%%▀█▒██████
+                        %%%%%%%%▀██████
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 6,
+                    art: `
+                        ▄▄
+                        █████▄▄▄
+                        █████████
+                        █████████
+                        █████████
+                        █████████
+                        █████████
+                        █████████
+                        █████▀▀▀
+                        ▀▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 5,
+                    art: `
+                        ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                        ████████████████▄
+                        ██████████████████▄
+                        ████████████████████
+                        ████████████████████
+                        ████████████████████
+                        ████████████████████
+                        ████████████████████
+                        ████████████████████
+                        ██████████████████▀
+                        ████████████████▀
+                        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 5,
+                    art: `
+                        ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ██████████████████████
+                        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                      %%%▄████████████████
+                      %▄██████████████████
+                      ████████████████████
+                      ████████████████████
+                      ████████████████████
+                      ████████████████████
+                      ████████████████████
+                      ████████████████████
+                      %▀██████████████████
+                      %% ▀████████████████
+                      %%%%%▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%▄▄
+                        %▄▄▄█████
+                        █████████
+                        █████████
+                        █████████
+                        █████████
+                        █████████
+                        █████████
+                        %▀▀▀█████
+                        %%%%%%%▀▀
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    art: `
+                        ██▄▄
+                        ████
+                        ████
+                        ██▀▀
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    art: `
+                        ████████▓▄
+                        ████████▓██▄
+                        ████████▓███
+                        ████████▓███
+                        ████████▓██▀
+                        ████████▓▀
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    art: `
+                        ███████████▓▄
+                        ███████████▓██▄
+                        ███████████▓███
+                        ███████████▓███
+                        ███████████▓██▀
+                        ███████████▓▀
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    art: `
+                        ████████████
+                        ████████████
+                        ████████████
+                        ████████████
+                        ████████████
+                        ████████████
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                     %%▄▓███████████
+                     ▄██▓███████████
+                     ███▓███████████
+                     ███▓███████████
+                     ▀██▓███████████
+                     %%▀▓███████████
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▓███████████
+                      ▄██▓███████████
+                      ███▓███████████
+                      ███▓███████████
+                      ▀██▓███████████
+                      %%▀▓███████████
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 9,
+                    art: `
+                        ▄▄██
+                        ████
+                        ████
+                        ▀▀██
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 2,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        ██████▀▄
+                        ██████▄▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_1: {
+                    x: 7,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        ██████▀▄
+                        ██████▄▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_2: {
+                    x: 12,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        ███████▄
+                        ███████▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_3: {
+                    x: 17,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        ███████
+                        ███████
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_4: {
+                    x: 22,
+                    y: 9,
+                    art: `
+                        ▄▄▄▄▄▄
+                        ██████
+                        ██████
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_5: {
+                    x: 26,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                       %▄▄▄▄▄▄
+                       ███████
+                       ███████
+                       %▀▀▀▀▀▀
+                    `,
+                },
+                p4_6: {
+                    x: 30,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▄▄▄▄▄
+                      ▄███████
+                      ▀███████
+                      %%▀▀▀▀▀▀
+                    `,
+                },
+                p4_7: {
+                    x: 35,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▄▄▄▄▄
+                      ▄▀██████
+                      ▀▄██████
+                      %%▀▀▀▀▀▀
+                    `,
+                },
+                p4_8: {
+                    x: 40,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                      %%▄▄▄▄▄▄
+                      ▄▀██████
+                      ▀▄██████
+                      %%▀▀▀▀▀▀
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 10,
+                    art: `
+                        ▄▄
+                        ▀▀
+                    `,
+                },
+            },
+
+            healingTile: {
+                // Distance: 0
+                p0_0: {
+                    transparentCharacter: '%',
+                    x: 0,
+                    y: 0,
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        ████▀
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %▀████
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%%%
+                        %%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        ███████████▀
+                        █████████▀
+                        ███████▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%▄██████████████████████▄%%%%%%%%
+                        %%%%%%▄██████████████████████████▄%%%%%%
+                        %%%%▄██████████████████████████████▄%%%%
+                        %%%▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀%%%
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%▀███████████
+                        %%%%%▀█████████
+                        %%%%%%%▀███████
+                        %%%%%%%%%▀▀▀▀▀▀
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%
+                        %%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        █████▀▀▀
+                        ▀▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%▄▄▄▄▄▄▄▄▄▄▄%
+                        %%%▄▄███████████▀
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%▄▄▄▄▄▄▄▄▄▄▄▄▄▄%%%%
+                        %%▄████████████████▄%%
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%▄▄▄▄▄▄▄▄▄▄▄%%%%%%%
+                        %%%▀███████████▄▄%%%
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%▄▄▄▄▄
+                        %▀▀▀█████
+                        %%%%%%%▀▀
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%
+                        %%%%
+                        %%%%
+                        ██▀▀
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        █████████▀
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        ████████████▀
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %▄████████▄%
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%▀████████████
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%▀████████████
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%
+                        %%%%
+                        %%%%
+                        ▀▀██
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 2,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%%
+                        %%%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_1: {
+                    x: 7,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%%
+                        %%%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_2: {
+                    x: 12,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%%
+                        %%%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_3: {
+                    x: 17,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%
+                        %%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_4: {
+                    x: 22,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_5: {
+                    x: 26,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%
+                        %%%%%%%
+                        %▀▀▀▀▀▀
+                    `,
+                },
+                p4_6: {
+                    x: 30,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                      %%%%%%%%
+                      %%%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_7: {
+                    x: 35,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                      %%%%%%%%
+                      %%%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_8: {
+                    x: 40,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                      %%%%%%%%
+                      %%%%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 11,
+                    art: `
+                        ╼╾
+                    `,
+                },
+            },
+
+            exit: {
+                // Distance: 0
+                p0_0: {
+                    transparentCharacter: '%',
+                    x: 0,
+                    y: 0,
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        ████▀
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%▀█
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %▀████
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%%%
+                        %%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        ▄█%%%%%%%%%%%%%
+                        █▀%%%%%%%%%%%%%
+                        ██%%%%%%%%%%%%%
+                        ▀▀%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        ███████████▀
+                        █████████▀
+                        ▄ █████▀
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%▄▄▄▄%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%▀██▄%%%%%%██%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%▀██▄%%%██%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%▀██▄▄▀%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%▀██▄%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%% ▀██▄%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%▄ %▀██▄%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%▀██▄%▄█%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%%▄████▀%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%▀▀█████%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%%%%%%▀▀%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%██%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%▀▀%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%▄▀▀▀▀▀▀▀▀██████████████▄%%%%%%%%
+                        %%%%%%▄█████████ ▀▀▀▀▀▀▀▀▀▀██████▄%%%%%%
+                        %%%%▄█████████▀▄ ███████▀▄ ████████▄%%%%
+                        %%%▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀%%%
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%▄▄▄▄%%%%
+                        %%%%%%%%██%%%%%
+                        %%▄▄%%%%██%%%%%
+                        %%▀██▄%%██%%%%%
+                        %%%%▀██▄▀█%%%%%
+                        %%%%%%▀██▄%%%%%
+                        %%%%%%% ▀██▄%%%
+                        %%%%%%%%▄ ▀██▄%
+                        %%%%%%%%██%%██▄
+                        %%%%%%%%██%%%▀█
+                        %%%%%%%%██%%%▄▄
+                        %%%%%%%%██%%%%%
+                        %%%%%%%%██%%%%%
+                        %%%%%%%%██%%%%%
+                        %%%%%%%%██%%%%%
+                        %%%%%%%%██%%%%%
+                        %%%%%%%%██%%%%%
+                        %%%%%%%%▀▀%%%%%
+                        %%%▀█████████▀█
+                        %%%%%▀███████ ▀
+                        %%%%%%%▀███▀▄██
+                        %%%%%%%%%▀▀▀▀▀▀
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%
+                        %%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        ▐▖%%%%%%%
+                        █▌%%%%%%%
+                        %%%%%%%%%
+                        █████▀▀▀
+                        ▀▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%▗▄▖%%%%%%
+                        %%%%%%▝▚▖█%%%%%%%%%
+                        %%%%%%%%▝█%%%%%%%%%
+                        %%%%%%%%%█▚%%%%%%%%
+                        %%%%%%%%%█%▚▐▖%%%%%
+                        %%%%%%%%%█▝▀█▌%%%%%
+                        %%%%%%%%%█%%%%%%%%%
+                        %%%%%%%%%█%%%%%%%%%
+                        %%%%%%%▄▄▄▄▄▄▄▄▄▄▄%
+                        %%%▄▄███████████▀
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%▗▄▖%%%%%%%%%%%%%
+                        %%%%▝▚▖█%%%%%%%%%%%%%%
+                        %%%%%%▝█%%%%%%%%%%%%%%
+                        %%%%%%%█▚%%%%%%%%%%%%%
+                        %%%%%%%█%▚▐▖%%%%%%%%%%
+                        %%%%%%%█▝▀█▌%%%%%%%%%%
+                        %%%%%%%█%%%%%%%%%%%%%%
+                        %%%%%%%█%%%%%%%%%%%%%%
+                        %%%%▄▄▄▄▄▄▄▄▄▄▄▄▄▄%%%%
+                        %%▄████████████████▄%%
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%▗▄▖%%%%%%%%%%%%
+                        ▝▚▖█%%%%%%%%%%%%%%%
+                        %%▝█%%%%%%%%%%%%%%%%
+                        %%%█▚%%%%%%%%%%%%%%%
+                        %%%█%▚▐▖%%%%%%%%%%%%
+                        %%%█▝▀█▌%%%%%%%%%%%%
+                        %%%█%%%%%%%%%%%%%%%%
+                        %%%█%%%%%%%%%%%%%%%%
+                        %%▄▄▄▄▄▄▄▄▄▄▄%%%%%%%
+                        %%%▀███████████▄▄%%%
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%
+                        %%%%%▗▄▖%
+                        %%%%▝▚█%%
+                        %%%%%%█▚%
+                        %%%%%%█%▚
+                        %%%%%%█▝▀
+                        %%%%%%█%%
+                        %%%%▄▄▄▄▄
+                        %▀▀▀█████
+                        %%%%%%%▀▀
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%
+                        %%%%
+                        %%%%
+                        ██▀▀
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        ▂▖%%%%%%%%
+                        ▐╲%%%%%%%%%%
+                        ▐%╲▖%%%%%%%%
+                        ▐%▀▘%%%%%%%%
+                        ▝%%%%%%%%%%%
+                        █████████▀
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%╲▂▖%%%%%%%%
+                        %%%▐╲%%%%%%%%%%
+                        %%%▐%╲▖%%%%%%%%
+                        %%%▐%▀▘%%%%%%%%
+                        %%%▝%%%%%%%%%%%
+                        ████████████▀
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%╲▂▖%%%%%%%
+                        %%%▐╲%%%%%%%
+                        %%%▐%╲▖%%%%%
+                        %%%▐%▀▘%%%%%
+                        %%%▝%%%%%%%%
+                        %▄████████▄%
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                     %%╲▂▖%%%%%%%%%%
+                     %%%▐╲%%%%%%%%%%
+                     %%%▐%╲▖%%%%%%%%
+                     %%%▐%▀▘%%%%%%%%
+                     %%%▝%%%%%%%%%%%
+                     %%▀████████████
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%╲▂▖%%%%%%%%%%
+                      %%%▐╲%%%%%%%%%%
+                      %%%▐%╲▖%%%%%%%%
+                      %%%▐%▀▘%%%%%%%%
+                      %%%▝%%%%%%%%%%%
+                      %%▀████████████
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%▐
+                        %%%▐
+                        %%%▝
+                        ▀▀██
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 2,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_1: {
+                    x: 7,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_2: {
+                    x: 12,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_3: {
+                    x: 17,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_4: {
+                    x: 22,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_5: {
+                    x: 26,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_6: {
+                    x: 30,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_7: {
+                    x: 35,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+                p4_8: {
+                    x: 40,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %┬%%%%
+                        %│╲▎%%%%
+                        %│▔%%%%%
+                        ▀▀▀▀▀▀
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 10,
+                    art: `
+                        ↘
+                        ╼╾
+                    `,
+                },
+            },
+
+            treasureChest: {
+                // Distance: 0
+                p0_0: {
+                    transparentCharacter: '%',
+                    x: 0,
+                    y: 0,
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        ██%%%%
+                        ██%%%%
+                        ██%%%
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%██
+                        %%%%██
+                        %%%%██
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%%%
+                        %%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        ███▄
+                           ▀█
+                            █
+                        ▀▀▀▀█
+                            █
+                            █
+                        ▄▄▄▄█
+                        %%%%%
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%▄██████████████████▄%%%%%%%%%%
+                        %%%%%%%%%█▀   █          █   ▀█%%%%%%%%%
+                        %%%%%%%%%█    █          █    █%%%%%%%%%
+                        %%%%%%%%%█▀▀▀▀█▀▀▀▀██▀▀▀▀█▀▀▀▀█%%%%%%%%%
+                        %%%%%%%%%█    █    ▀▀    █    █%%%%%%%%%
+                        %%%%%%%%%█    █          █    █%%%%%%%%%
+                        %%%%%%%%%█▄▄▄▄█▄▄▄▄▄▄▄▄▄▄█▄▄▄▄█%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%▄███
+                        %%%%%%%%%%█▀   
+                        %%%%%%%%%%█    
+                        %%%%%%%%%%█▀▀▀▀
+                        %%%%%%%%%%█    
+                        %%%%%%%%%%█    
+                        %%%%%%%%%%█▄▄▄▄
+                        %%%%%%%%%%%%%%%
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 7,
+                    transparentCharacter: '%',
+                    art: `
+                        %%
+                        %%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        ▄%%%%%%%%
+                        ▀█%%%%%%
+                         █%%%%%%
+                         █%%%%%%
+                        ▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%▄▀▀▀▀▀▀█▀▄%%%
+                        %%%%█▀▀██▀▀█▄█%%%
+                        %%%%█      █ █%%
+                        %%%%▀▀▀▀▀▀▀▀▀%
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%▄▀▀▀▀▀▀▀▀▄%%%%%%
+                        %%%%%%█▀▀▀██▀▀▀█%%%%%%
+                        %%%%%%█        █%%%%%%
+                        %%%%%%▀▀▀▀▀▀▀▀▀▀%%%%%%
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%▄▀█▀▀▀▀▀▀▄%%%%%%
+                        %%%%%%█▄█▀▀██▀▀█%%%%%%
+                        %%%%%%█ █      █
+                        %%%%%%%▀▀▀▀▀▀▀▀▀
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 7,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%▄▀█▀
+                        %%%%%█▄█▀
+                        %%%%%█ █ 
+                        %%%%%%▀▀▀
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%
+                        %%%%
+                        %%%%
+                        ▀▄
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%▞▜▛▚%%%%%%
+                        %%▙▄▄▟
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%
+                        %%%%%▞▜▛▚%%%%%%
+                        %%%%%▙▄▄▟
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%%%%%%%%%
+                        %%%%▞▜▛▚%%%%
+                        %%%%▙▄▄▟%%%%
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%%%%%%%%%%%%%%
+                     %%%%%%▞▜▛▚%%%
+                     %%%%%%▙▄▄▟
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%%%%%%%%%%%%%%
+                      %%%%%▞▜▛▚%%%%
+                      %%%%%▙▄▄▟
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 12,
+                    transparentCharacter: '%',
+                    art: `
+                        ▞▜▛▚
+                        ▙▄▄▟
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 3,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%%
+                        %%%%%%%
+                        %%%▆▆%
+                    `,
+                },
+                p4_1: {
+                    x: 8,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%%
+                        %%%%%%%
+                        %%%▆▆%
+                    `,
+                },
+                p4_2: {
+                    x: 13,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%%
+                        %%%%%%%
+                        %%%▆▆%
+                    `,
+                },
+                p4_3: {
+                    x: 18,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%
+                        %%%%%%
+                        %%%▆▆%
+                    `,
+                },
+                p4_4: {
+                    x: 23,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%
+                        %▆▆%
+                    `,
+                },
+                p4_5: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%%
+                        %%%%%%
+                        %▆▆%
+                    `,
+                },
+                p4_6: {
+                    x: 31,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%%%%
+                      %%%%%%%%
+                      %%%%%%%
+                      %%▆▆%
+                    `,
+                },
+                p4_7: {
+                    x: 36,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%%%%
+                      %%%%%%%%
+                      %%%%%%%
+                      %%▆▆%
+                    `,
+                },
+                p4_8: {
+                    x: 41,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                      %%%%%%%%
+                      %%%%%%%%
+                      %%%%%%%
+                      %%▆▆%
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 11,
+                    art: `
+                        ▗▖
+                    `,
+                },
+            },
+
+            merchant: {
+                // Distance: 0
+                p0_0: {
+                    transparentCharacter: '%',
+                    x: 0,
+                    y: 0,
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        ▄▀%%%%
+                        %%%%%%
+                        ▀▀%%%%
+                        %%%%%%
+                        %%%%%%
+                        █%%%▄▀
+                        ▄▄▄▀%%
+                        ▄▀%%%%
+                        %%%%%%
+                        %%%%%%
+                        ▄%%%%%
+                        ▀▀▀%%▀
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%%
+                        %%%%%▄
+                        %%%%%█
+                        %%%%%█
+                        %%%%█ 
+                        %%%%█ 
+                        %%%▀▄▄
+                        %%%%%%
+                        %%%%%%
+                        ▀%▀▀%▀
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        
+                        ▄▀
+                        
+                        ▀▀
+                        
+                        
+                        █%%%▄▀
+                        ▄▄▄▀
+                        ▀
+                        
+                        
+                        ▄
+                        ▀▀▀%%▀
+                        %
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%%%%%%%%%%%%%%%%█▀▄▄
+                        %%%%%%%%%%%%%%%%%% ▌  ▀▀▄▀
+                        %%%%%%%%%%%%%%%%%%▄▄▄▀▀▀
+                        %%%%%%%%%%%%%%%%%▀▄    ▀▀▀
+                        %%%%%%%%%%%%%%%%▄▀    █▄
+                        %%%%%%%%%%%%%%%%█      █
+                        %%%%%%%%%%%%%%%%█      ▀█%%%▄▀
+                        %%%%%%%%%%%%%%%█       ▀▄▄▄▀
+                        %%%%%%%%%%%%%%%█        ▄▀
+                        %%%%%%%%%%%%%%▀▄▄▄▀▀▀▄▄▀
+                        %%%%%%%%%%%%%%%%%█  ▄▀█
+                        %%%%%%%%%%%%%%%%%█ █▀  ▀▄
+                        %%%%%%%%%%%▀%▀▀%▀▀▀▀▀▀▀▀▀▀▀%%▀
+                        %
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%%%█▀▄▄
+                        %%%%% ▌  ▀▀▄▀
+                        %%%%%▄▄▄▀▀▀
+                        %%%%▀▄    ▀▀▀
+                        %%%▄▀    █▄
+                        %%%█      █
+                        %%%█      ▀█%%%▄▀
+                        %%█       ▀▄▄▄▀
+                        %%█        ▄▀
+                        %▀▄▄▄▀▀▀▄▄▀
+                        %%%%█  ▄▀█
+                        %%%%█ █▀  ▀▄
+                        ▀▀%▀▀▀▀▀▀▀▀▀▀▀%%▀
+                        %
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%
+                        %%%%%%%%
+                        ▀%%%%%%%%
+                        ▀%%%%%%%%
+                        %%%%%%%%%
+                        █%▄▀%%%%%
+                        ▄▀%%%%%%%
+                        %%%%
+                        █%%%
+                        ▀▀▀▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%█▄%%%%%%%%%%%
+                        %%%%%%%█▄██▀%%%%%%%%
+                        %%%%%%▀▀   ▀%%%%%%%%
+                        %%%%%%█   █%%%%%%%%%
+                        %%%%%█     █%▄▀%%%%%
+                        %%%%█      ▄▀%%%%%%%
+                        %%%%%▀▄▀▀▄█%%%%%%%%%
+                        %%%%%%█ █  █%%%%%%%%
+                        %%%%%▀▀▀▀▀▀▀▀▀▀%%%%%
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%█▄%%%%%%%%%%%
+                        %%%%%%%%%█▄██▀%%%%%%%%
+                        %%%%%%%%▀▀   ▀%%%%%%%%
+                        %%%%%%%%█   █%%%%%%%%%
+                        %%%%%%%█     █%▄▀%%%%%
+                        %%%%%%█      ▄▀%%%%%%%
+                        %%%%%%%▀▄▀▀▄█%%%%%%%%%
+                        %%%%%%%%█ █  █%%%%%%%%
+                        %%%%%%%▀▀▀▀▀▀▀▀▀▀%%%%%
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%%%%%%%%%%
+                        %%%%%%%%%%%%%%%%%%
+                        %%%%%█▄%%%%%%%%%%%
+                        %%%%%█▄██▀%%%%%%%%
+                        %%%%▀▀   ▀%%%%%%%%
+                        %%%%█   █%%%%%%%%%
+                        %%%█     █%▄▀%%%%%
+                        %%█      ▄▀%%%%%%%
+                        %%%▀▄▀▀▄█%%%%%%%%%
+                        %%%%█ █  █%%%%%%%%
+                        %%%▀▀▀▀▀▀▀▀▀▀%%%%%
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %%%%%%%%%
+                        %%%%%%%%%
+                        %%%%%█▄%%
+                        %%%%%█▄██
+                        %%%%▀▀   
+                        %%%%█   █
+                        %%%█     
+                        %%█      
+                        %%%▀▄▀▀▄█
+                        %%%%█ █  
+                        %%%▀▀▀▀▀▀
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %▂
+                        %▂
+                        %%%╱
+                        %▀╱
+                        %╱
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %▟▄▂
+                        ▝▛▀▂
+                        ▞ ▚%%╱
+                        ▚▁▁▀╱
+                        %▌▙╱
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%%%%▟▄▂
+                        %%%%▝▛▀▂
+                        %%%%▞ ▚%%╱
+                        %%%▝▚▁▁▀╱
+                        %%%%%▌▙╱
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%%%%▟▄▂
+                        %%%%▝▛▀▂
+                        %%%%▞ ▚%%╱
+                        %%%▝▚▁▁▀╱
+                        %%%%%▌▙╱
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%▟▄▂
+                        %▝▛▀▂
+                        %▞ ▚%%╱
+                        ▝▚▁▁▀╱
+                        %%▌▙╱
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%▟▄▂
+                        %▝▛▀▂
+                        %▞ ▚%%╱
+                        ▝▚▁▁▀╱
+                        %%▌▙╱
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%
+                        %▝
+                        %▞
+                        ▝▚
+                        %%
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 2,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_1: {
+                    x: 7,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_2: {
+                    x: 12,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_3: {
+                    x: 17,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_4: {
+                    x: 22,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_5: {
+                    x: 26,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_6: {
+                    x: 30,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_7: {
+                    x: 35,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+                p4_8: {
+                    x: 40,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %%☻
+                        %%╦╱
+                        %%╫
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 11,
+                    art: `
+                        ♣
+                    `,
+                },
+            },
+
+            gambler: {
+                // Distance: 0
+                p0_0: {
+                    transparentCharacter: '%',
+                    x: 0,
+                    y: 0,
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%
+                        %%
+                        ▀▄
+                        ╸ ▀▀▄
+                        ▄▄▄▄▄▀
+                        %%
+                        ▄%
+                        ██▄
+                        █%
+                        %%
+                        ▀%
+                        %
+                    `,
+                },
+
+                // p0_1 omitted since this is the square where the player is currently standing
+
+                p0_2: {
+                    x: 44,
+                    y: 0,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%%%%
+                        %▌%%%%
+                        %█%%%%
+                        %█%%%%
+                        %█%%%%
+                        %█%%%█
+                        %█%%█ 
+                        %█%%█ 
+                        %%█▄█ 
+                        %%%▀▄▄
+                        %%%%%%
+                        %
+                    `,
+                },
+
+                // Distance: 1
+                p1_0: {
+                    x: 0,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%
+                        %%
+                        ▀▀▄
+                        ╼╸ ▀▀▄
+                         ▄▄▄▄▄▀
+                        ▀%
+                        ▀▄
+                        ▀██▄
+                         █
+                        ▀%
+                        ▀▀
+                        %
+                    `,
+                },
+                p1_1: {
+                    x: 5,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%%%%%%%%%%%%%%%%%%▄%▄
+                        %%%%%%%%%%%%▌%%%%%%%█▀▄▀▄
+                        %%%%%%%%%%%%█%%%%%%▄▀  ▀▀▀▀▄
+                        %%%%%%%%%%%%█%%%%%█      ╼╸ ▀▀▄
+                        %%%%%%%%%%%%█%%%%▄▀       ▄▄▄▄▄▀
+                        %%%%%%%%%%%%█%%%█      ▀█▀
+                        %%%%%%%%%%%%█%%█     ▀▀▄▄▀▄
+                        %%%%%%%%%%%%█%%█         ▀██▄
+                        %%%%%%%%%%%%%█▄█          █
+                        %%%%%%%%%%%%%%▀▄▄▄▄▄▄▄▄▄▄▀
+                        %%%%%%%%%%%%%%%%%▀▀▀%%%▀▀▀▀
+                        %
+                    `,
+                },
+                p1_2: {
+                    x: 35,
+                    y: 1,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%%%%%%%▄%▄
+                        %▌%%%%%%%█▀▄▀▄
+                        %█%%%%%%▄▀  ▀▀▀▀▄
+                        %█%%%%%█      ╼╸ ▀▀▄
+                        %█%%%%▄▀       ▄▄▄▄▄▀
+                        %█%%%█      ▀█▀
+                        %█%%█     ▀▀▄▄▀▄
+                        %█%%█         ▀██▄
+                        % █▄█          █
+                        %%%▀▄▄▄▄▄▄▄▄▄▄▀
+                        %%%%%%▀▀▀%%%▀▀▀▀
+                        %
+                    `,
+                },
+
+                // Distance: 2
+                p2_0: {
+                    x: 0,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        ▄
+                        ╼▀▀▄
+                        ▄▀▀▀
+                        ▀█▀
+                        ▄▀
+                        ▀▀
+                    `,
+                },
+                p2_1: {
+                    x: 0,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%▌%%%█▄█▄
+                        %%%█%%%█  ╼▀▀▄
+                        %%%█%%█   ▄▀▀▀
+                        %%%▀▄█   ▀▀█▀
+                        %%%%%▀▄▄▄▄▄▀
+                        %%%%%%▀▀%%▀▀
+                    `,
+                },
+                p2_2: {
+                    x: 14,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%%%▌%%%█▄█▄
+                        %%%%%█%%%█  ╼▀▀▄
+                        %%%%%█%%█   ▄▀▀▀
+                        %%%%%▀▄█   ▀▀█▀
+                        %%%%%%%▀▄▄▄▄▄▀
+                        %%%%%%%%▀▀%%▀▀
+                    `,
+                },
+
+                p2_3: {
+                    x: 30,
+                    y: 5,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%▌%%%█▄█▄
+                        %%%█%%%█  ╼▀▀▄
+                        %%%█%%█   ▄▀▀▀
+                        %%%▀▄█   ▀▀█▀
+                        %%%%%▀▄▄▄▄▄▀
+                        %%%%%%▀▀%%▀▀
+                    `,
+                },
+                p2_4: {
+                    x: 41,
+                    y: 6,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %
+                        %
+                        %
+                        %%%▌%%%█▄
+                        %%%█%%%█ 
+                        %%%█%%█  
+                        %%%▀▄█   
+                        %%%%%▀▄▄▄
+                        %%%%%%▀▀%
+                    `,
+                },
+
+                // Distance: 3
+                p3_0: {
+                    x: 0,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        ▙▂
+                        ▞▀▀
+                        █▞
+                        ▀
+                    `,
+                },
+                p3_1: {
+                    x: 0,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌ ▙▙▂
+                        %▌▟█▞▀▀
+                        %▚▜██▞
+                        %%▀ ▀
+                    `,
+                },
+                p3_2: {
+                    x: 8,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %%%▌ ▙▙▂
+                        %%%▌▟█▞▀▀
+                        %%%▚▜██▞
+                        %%%%▀ ▀
+                    `,
+                },
+                p3_3: {
+                    x: 19,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %%%▌ ▙▙▂
+                        %%%▌▟█▞▀▀
+                        %%%▚▜██▞
+                        %%%%▀ ▀
+                    `,
+                },
+                p3_4: {
+                    x: 27,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌ ▙▙▂
+                        %▌▟█▞▀▀
+                        %▚▜██▞
+                        %%▀ ▀
+                    `,
+                },
+                p3_5: {
+                    x: 34,
+                    y: 8,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌ ▙▙▂
+                        %▌▟█▞▀▀
+                        %▚▜██▞
+                        %%▀ ▀
+                    `,
+                },
+                p3_6: {
+                    x: 46,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        
+                        
+                        ▌ 
+                        ▌▟
+                        ▚▜
+                        %▀
+                    `,
+                },
+
+
+                // Distance: 4
+                p4_0: {
+                    x: 2,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_1: {
+                    x: 7,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_2: {
+                    x: 12,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_3: {
+                    x: 17,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_4: {
+                    x: 22,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_5: {
+                    x: 26,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_6: {
+                    x: 30,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_7: {
+                    x: 35,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+                p4_8: {
+                    x: 40,
+                    y: 9,
+                    transparentCharacter: '%',
+                    art: `
+                        %
+                        %
+                        %▌▙▖
+                         ▝▀
+                    `,
+                },
+
+
+                // Distance: 5
+                p5_0: {
+                    x: 14,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_1: {
+                    x: 16,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_2: {
+                    x: 18,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_3: {
+                    x: 20,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_4: {
+                    x: 22,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_5: {
+                    x: 24,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_6: {
+                    x: 26,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_7: {
+                    x: 28,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_8: {
+                    x: 30,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_9: {
+                    x: 32,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+                p5_10: {
+                    x: 34,
+                    y: 11,
+                    art: `
+                        ♠
+                    `,
+                },
+            },
+        };
+
+        const sceneRenderer = {
+            displayWidth: 50,
+            displayHeight: 22,
+            viewDepth: 5,
+            drawFillMode: "normal",
+
+            render: (x, y, direction) => {
+                const view = sceneRenderer.getView(x, y, direction);
+                console.log({ view });
+                let scene = Array.from({ length: sceneRenderer.displayHeight }, () =>
+                    Array.from({ length: sceneRenderer.displayWidth }, () => ' ')
+                );
+
+                for (let depth = view.length - 1; depth >= 0; depth--) {
+                    for (let i = 0; i < view[depth].length; i++) {
+                        // Render the scene from the sides towards the middle
+                        const index = i % 2 === 0 ? i - (i / 2) : view[depth].length - Math.floor(i / 2) - 1;
+                        scene = sceneRenderer.draw(scene, view[depth][index], depth, index);
+                    }
+                }
+
+                return scene.map(row => row.join('')).join('\n');
+            },
+
+            getView: (x, y, direction) => {
+                const grid = [];
+
+                const directionVectors = {
+                    N: { dx: 0, dy: -1, lateral: { dx: 1, dy: 0 }, flip: 1 },
+                    S: { dx: 0, dy: 1, lateral: { dx: 1, dy: 0 }, flip: -1 },
+                    E: { dx: 1, dy: 0, lateral: { dx: 0, dy: 1 }, flip: 1 },
+                    W: { dx: -1, dy: 0, lateral: { dx: 0, dy: 1 }, flip: -1 }
+                };
+
+                const dir = directionVectors[direction];
+                if (!dir) {
+                    console.error("Invalid direction");
+                    return [];
+                }
+
+                for (let depth = 0; depth <= sceneRenderer.viewDepth; depth++) {
+                    const row = [];
+                    const offsetStart = depth === 0 ? -1 : -depth;
+                    const offsetEnd = depth === 0 ? 1 : depth;
+
+                    for (let offset = offsetStart; offset <= offsetEnd; offset++) {
+                        const lateralOffset = offset * dir.flip;
+                        const tx = x + dir.dx * depth + dir.lateral.dx * lateralOffset;
+                        const ty = y + dir.dy * depth + dir.lateral.dy * lateralOffset;
+
+                        if (gambler.isAt(tx, ty)) {
+                            row.push('gambler');
+                        } else if (merchant.isAt(tx, ty)) {
+                            row.push('merchant');
+                        } else {
+                            row.push(MAP[ty]?.[tx] ?? null);
+                        }
+                    }
+
+                    grid.push(row);
+                }
+
+                return grid;
+            },
+
+            draw: (scene, subject, depth, index) => {
+                // Depth: 0, Index: 1 is the player's current cell
+                // There is nothing to draw here
+                if (depth === 0 && index === 1) {
+                    return scene;
+                }
+
+                const entityName = sceneRenderer.getEntityName(subject);
+                const key = `p${depth}_${index}`;
+                const entry = scene_art[entityName]?.[key] || null;
+                if (!entry) {
+                    console.log({ key, entryExists: !!entry });
+                    return scene;
+                }
+
+                const art = sceneRenderer.formatArt(entry);
+                const transparentCharacter = entry.transparentCharacter || null;
+                const color = Math.floor(255 / (depth + 1));
+                const className = `class="scene_character_${entityName}"`;
+                // TODO: Change this to a parameter. Don't make this rely on the entity name
+                const style = entityName === 'wallFilled' ? `style="color: rgb(${color}, ${color}, ${color});"` : '';
+
+                let xPosition = entry.x, yPosition = entry.y;
+                for (character of art) {
+                    if (character === "\n") {
+                        xPosition = entry.x;
+                        yPosition++;
+                        continue;
+                    }
+
+                    // Out of bounds check
+                    if (typeof scene[yPosition]?.[xPosition] === 'undefined') {
+                        continue;
+                    }
+
+                    if (character !== transparentCharacter) {
+                        scene[yPosition][xPosition] = `<span ${className} ${style}>` + sceneRenderer.getDrawCharacter(
+                            sceneRenderer.drawFillMode,
+                            character,
+                            xPosition
+                        ) + '</span>';
+                    }
+
+                    xPosition++;
+                }
+
+                return scene;
+            },
+
+            getEntityName: (entity) => {
+                switch (entity) {
+                    case '#':
+                        return 'wallFilled';
+                    case 'H':
+                        return 'healingTile';
+                    case 'E':
+                        return 'exit';
+                    case 'T':
+                    case 'M':
+                        return 'treasureChest';
+                    default:
+                        return entity;
+                }
+            },
+
+            formatArt: (entry) => {
+                // Trim any whitespace from the template literal
+                const art = entry.art.replace(/^ *\n|\n *$/g, '');
+                const lines = art.split("\n");
+                const shortestLeadingWhitespace = Math.min(...lines.map((line) => line.match(/^ +/)[0].length));
+                const trimmedArt = lines.map((line) => line.substr(shortestLeadingWhitespace)).join("\n");
+
+                return (
+                    typeof entry.spaceBoundaryCharacter !== 'undefined'
+                        ? trimmedArt.replaceAll(entry.spaceBoundaryCharacter, ' ')
+                        : trimmedArt
+                );
+            },
+
+            // Debug: This is just here for testing different wall styles
+            // This will be removed eventually
+            getDrawCharacter: (drawFillMode, character, xPosition) => {
+                if (drawFillMode === 'shade') {
+                    switch (character) {
+                        case ' ': return xPosition % 2 === 0 ? '▄' : '▀';
+                        case '▄': return xPosition % 2 === 0 ? '▄' : '█';
+                        case '▀': return xPosition % 2 === 0 ? '█' : '▀';
+                    };
+                }
+
+                if (drawFillMode === 'fill' && ['▄', '▀', '█', ' '].includes(character)) {
+                    return '█';
+                }
+
+                return character;
+            }
+        };
+
+
+
+
+
+
+
+
+
+
         const
             WIDTH = 30,
             HEIGHT = 11;
@@ -457,40 +4372,48 @@
                 merchant.say('AIEEEEEEEEEEEEEE!');
                 updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
-        buy: function(type, key) {
-            const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
-            if (!merchandise) {
-                console.error(`${key} doesn't exist!`);
-                return;
-            }
+            isAt: function(x, y) {
+                return (
+                    merchant.isAlive &&
+                    merchant.isActiveOnFloor &&
+                    merchant.x === x &&
+                    merchant.y === y
+                );
+            },
+            buy: function(type, key) {
+                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+                if (!merchandise) {
+                    console.error(`${key} doesn't exist!`);
+                    return;
+                }
 
-            if (player.bitcoins < merchandise.price) {
-                merchant.say('Too bad, kid. Come back when you get some coin!');
-                return;
-            }
+                if (player.bitcoins < merchandise.price) {
+                    merchant.say('Too bad, kid. Come back when you get some coin!');
+                    return;
+                }
 
-            // Prevent buying equipment you already own
-            if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
-                merchant.say("You already own that, stupid!");
-                return;
-            }
+                // Prevent buying equipment you already own
+                if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
+                    merchant.say("You already own that, stupid!");
+                    return;
+                }
 
-            player.bitcoins -= merchandise.price;
-            playSFX('kaching');
-            // Disable equipment auto equip upon purchase
-            player.inventory[key] = (player.inventory?.[key] || 0) + 1;
+                player.bitcoins -= merchandise.price;
+                playSFX('kaching');
+                // Disable equipment auto equip upon purchase
+                player.inventory[key] = (player.inventory?.[key] || 0) + 1;
 
-            const purchaseFlavorText = [
-                "HAHA! You won't regret it!",
-                "Don't forget: NO REFUNDS!",
-                "You won't find a better deal than this!",
-            ];
-            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-            merchant.say(merchantText);
+                const purchaseFlavorText = [
+                    "HAHA! You won't regret it!",
+                    "Don't forget: NO REFUNDS!",
+                    "You won't find a better deal than this!",
+                ];
+                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+                merchant.say(merchantText);
 
-            const merchandiseText = getArticle(merchandise.name) + merchandise.name;
-            updateBattleLog(`You just bought ${merchandiseText}`);
-            }
+                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+                updateBattleLog(`You just bought ${merchandiseText}`);
+            },
         };
 
         const gambler = {
@@ -513,7 +4436,16 @@
                 playSFX('scream');
                 gambler.say('AUGH!!');
                 updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
-            }
+            },
+            isAt: function(x, y) {
+                return (
+                    gambler.isAlive &&
+                    gambler.isActiveOnFloor &&
+                    player.bitcoins >= gambler.playPrice &&
+                    gambler.x === x &&
+                    gambler.y === y
+                );
+            },
         };
 
         const enemies = [
@@ -1682,6 +5614,346 @@ __\\_______^/
                         "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
                 }
 
+            } else if (true) {
+                output = sceneRenderer.render(player.x, player.y, DIRECTIONS[player.dir]);
+            } else if (!true) {
+                const displayWidth = 50;
+                const displayHeight = 44;
+
+                const buffer = [];
+
+                function initBuffer(widthPx, heightPx) {
+                    buffer.length = 0;
+
+                    for (let y = 0; y < heightPx; y++) {
+                        buffer[y] = [];
+                        for (let x = 0; x < widthPx; x++) {
+                            buffer[y][x] = false;
+                        }
+                    }
+                }
+
+                initBuffer(displayWidth, displayHeight);
+
+                function renderBuffer() {
+                    let output = '';
+
+                    for (let y = 0; y < buffer.length; y += 2) {
+                        for (let x = 0; x < buffer[y].length; x++) {
+                            const topFilled = (buffer[y]?.[x] === true);
+                            const bottomFilled = (buffer[y + 1]?.[x] === true);
+
+                            output += topFilled ? (bottomFilled ? '█' : '▀') : (bottomFilled ? '▄' : ' ');
+                        }
+
+                        output += y < buffer.length - 1 ? "\n" : '';
+                    }
+
+                    return output;
+                }
+
+                function line(x1, y1, x2, y2) {
+                    const dx = x2 - x1; // The horizontal distance of the line
+                    const dy = y2 - y1; // The vertical distance of the line
+                    const dxabs = Math.abs(dx);
+                    const dyabs = Math.abs(dy);
+                    const sdx = Math.sign(dx);
+                    const sdy = Math.sign(dy);
+                    let x = dyabs >> 1;
+                    let y = dxabs >> 1;
+                    let px = x1;
+                    let py = y1;
+
+                    if (typeof buffer[py]?.[px] !== 'undefined') {
+                        buffer[py][px] = true;
+                    }
+
+                    const lineIsMoreHorizontalThanVertical = dxabs >= dyabs;
+
+                    if (lineIsMoreHorizontalThanVertical) {
+                        for (let i=0; i<dxabs; i++) {
+                            y += dyabs;
+                            if (y >= dxabs) {
+                                y -= dxabs;
+                                py += sdy;
+                            }
+
+                            px += sdx;
+                            if (typeof buffer[py]?.[px] !== 'undefined') {
+                                buffer[py][px] = true;
+                            }
+                        }
+                    } else {
+                        for (let i=0; i<dyabs; i++) {
+                            x += dxabs;
+                            if (x >= dyabs) {
+                                x -= dyabs;
+                                px += sdx;
+                            }
+
+                            py += sdy;
+                            if (typeof buffer[py]?.[px] !== 'undefined') {
+                                buffer[py][px] = true;
+                            }
+                        }
+                    }
+                }
+
+                function filledTriangle(x1, y1, x2, y2, x3, y3) {
+                    // Sort the points by y-coordinate (ascending)
+                    const points = [
+                        { x: x1, y: y1 },
+                        { x: x2, y: y2 },
+                        { x: x3, y: y3 }
+                    ].sort((a, b) => a.y - b.y);
+
+                    const [v1, v2, v3] = points;
+
+                    // Helper function to draw horizontal lines between two x positions at y
+                    function drawHorizontalLine(y, xStart, xEnd) {
+                        if (y < 0 || y >= buffer.length) return;
+                        const row = buffer[y];
+                        const xMin = Math.max(0, Math.min(xStart, xEnd));
+                        const xMax = Math.min(row.length - 1, Math.max(xStart, xEnd));
+                        for (let x = xMin; x <= xMax; x++) {
+                            row[x] = false;
+                        }
+                    }
+
+                    // Helper function to interpolate edges and fill between them
+                    function scanlineFill(yStart, yEnd, xStartA, xEndA, xStartB, xEndB) {
+                        for (let y = yStart; y <= yEnd; y++) {
+                            const t = (y - yStart) / (yEnd - yStart || 1);
+                            const xa = xStartA + (xEndA - xStartA) * t;
+                            const xb = xStartB + (xEndB - xStartB) * t;
+                            drawHorizontalLine(y, Math.round(xa), Math.round(xb));
+                        }
+                    }
+
+                    const interpolate = (y0, x0, y1, x1) => {
+                        const points = [];
+                        const dy = y1 - y0;
+                        if (dy === 0) return [{ y: y0, x: x0 }];
+                        for (let y = y0; y <= y1; y++) {
+                            const t = (y - y0) / dy;
+                            const x = x0 + (x1 - x0) * t;
+                            points.push({ y, x });
+                        }
+                        return points;
+                    };
+
+                    // Split the triangle into a flat-bottom and flat-top
+                    const totalHeight = v3.y - v1.y;
+                    if (totalHeight === 0) return;
+
+                    const v4x = v1.x + ((v2.y - v1.y) / (v3.y - v1.y)) * (v3.x - v1.x);
+                    const v4 = { x: v4x, y: v2.y };
+
+                    // Fill top half
+                    scanlineFill(v1.y, v2.y, v1.x, v2.x, v1.x, v4.x);
+
+                    // Fill bottom half
+                    scanlineFill(v2.y, v3.y, v2.x, v3.x, v4.x, v3.x);
+                }
+
+                function fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4) {
+                    // First triangle: (x1, y1), (x2, y2), (x3, y3)
+                    filledTriangle(x1, y1, x2, y2, x3, y3);
+
+                    // Second triangle: (x1, y1), (x3, y3), (x4, y4)
+                    filledTriangle(x1, y1, x3, y3, x4, y4);
+
+                    // Optionally outline the polygon with lines between the vertices
+                    line(x1, y1, x2, y2);
+                    line(x2, y2, x3, y3);
+                    line(x3, y3, x4, y4);
+                    line(x4, y4, x1, y1);
+                }
+
+
+//                line(4, 0, 48, 34);
+
+                // fillPolygon(2, 2, 18, 5, 17, 15, 3, 19);
+                // fillPolygon(3, 2, 18, 5, 17, 15, 3, 19);
+                //fillPolygon(13, 5, 18, 5, 17, 15, 3, 19);
+
+                // console.log({ buffer });
+
+                // Draw the X
+                line(3, 0, 46, 43);
+                line(46, 0, 3, 43);
+
+                const scene = getRelativeVisibilityGrid(player.x, player.y, DIRECTIONS[player.dir]);
+                console.log({ scene });
+                for (let depth = scene.length - 1; depth >= 0; depth--) {
+                    // displayWidth = 50;
+                    // displayHeight = 44;
+                    const vanishingPointX = (displayWidth - 1) / 2;
+                    const vanishingPointY = (displayHeight - 1) / 2;
+
+/*
+                    const cellSize = [ 40, 22, 12, 6, 2 ]?.[depth] || 2;
+                    const pad = [ 2, 6, 12, 22, 40 ]?.[depth] || 40;
+
+                    for (let c = 0; c < row.length; c++) {
+                        if (scene[depth][c] === '#') {
+                            fillPolygon();
+                        }
+                    }*/
+
+                    const xrenderCoords = [
+                        [
+                            [ -1, 3,    5, 3,    5, 42,   -1, 42 ],
+                            [  5, 3,   44, 3,   44, 42,    5, 42 ],
+                            [ 44, 3,   50, 3,   50, 42,   44, 42 ],
+                        ],
+
+                        [
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Not displayed
+                            [ -1, 12,   15, 12,   15, 33,   -1, 33 ],
+                            [ 15, 12,   36, 12,   36, 33,   15, 33 ],
+                            [ 36, 12,   50, 12,   50, 33,   36, 33 ],
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Not displayed
+                        ],
+
+                        [
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Not displayed maybe?
+                            [ -1, 18,    8, 18,    8, 28,   -1, 28 ],
+                            [  8, 18,   19, 18,   19, 28,    8, 28 ],
+                            [ 19, 18,   30, 18,   30, 28,   19, 28 ],
+                            [ 30, 18,   41, 18,   41, 28,   30, 28 ],
+                            [ 41, 18,   50, 18,   50, 28,   41, 28 ],
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Not displayed maybe?
+                        ],
+
+                        [
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Just testing what I have so far
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Just testing what I have so far
+                            [ -1, 18,    8, 18,    8, 28,   -1, 28 ],
+                            [  8, 18,   19, 18,   19, 28,    8, 28 ],
+                            [ 19, 18,   30, 18,   30, 28,   19, 28 ],
+                            [ 30, 18,   41, 18,   41, 28,   30, 28 ],
+                            [ 41, 18,   50, 18,   50, 28,   41, 28 ],
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Just testing what I have so far
+                            [ 0, 0, 0, 0, 0, 0, 0, 0 ], // Just testing what I have so far
+                        ],
+                    ];
+
+                    const renderCoords = [
+                        [],
+                        [],
+                        [],
+                        [],
+                        [
+                            fillPolygon( -3, 19,    2, 19,    2, 24,   -3, 24),
+                            fillPolygon(  2, 19,    7, 19,    7, 24,    2, 24),
+                            fillPolygon(  7, 19,   12, 19,   12, 24,    7, 24),
+                            fillPolygon( 12, 19,   17, 19,   17, 24,   12, 24),
+                            fillPolygon( 17, 19,   22, 19,   22, 24,   17, 24),
+                            // Center
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                            // Center
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                        ],
+                        [
+                            fillPolygon( 12, 21,   13, 21,   13, 22,   12, 22),
+                            fillPolygon( 14, 21,   15, 21,   15, 22,   14, 22),
+                            fillPolygon( 16, 21,   17, 21,   17, 22,   16, 22),
+                            fillPolygon( 18, 21,   19, 21,   19, 22,   18, 22),
+                            fillPolygon( 20, 21,   21, 21,   21, 22,   20, 22),
+                            fillPolygon( 22, 21,   23, 21,   23, 22,   22, 22),
+                            fillPolygon( 24, 21,   25, 21,   25, 22,   24, 22),
+                            fillPolygon( 26, 21,   27, 21,   27, 22,   26, 22),
+                            fillPolygon( 28, 21,   29, 21,   29, 22,   28, 22),
+                            fillPolygon( 30, 21,   31, 21,   31, 22,   30, 22),
+                            fillPolygon( 32, 21,   33, 21,   33, 22,   32, 22),
+                            fillPolygon( 34, 21,   35, 21,   35, 22,   34, 22),
+                            fillPolygon( 36, 21,   37, 21,   37, 22,   36, 22),
+                        ],
+                    ];
+
+
+
+/*
+                    for (let c = 0; c < scene[depth].length; c++) {
+                        if (scene[depth]?.[c] === '#') {
+                            fillPolygon(...renderCoords[depth][c]);
+                        }
+                    }*/
+                }
+
+                // Slices, closest to nearest
+                // fillPolygon(  5,  2,   44,  2,   44, 41,    5, 41);
+                // fillPolygon( 14, 11,   35, 11,   35, 32,   14, 32);
+                // fillPolygon( 19, 16,   30, 16,   30, 27,   19, 27);
+                // fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24);
+                // fillPolygon( 24, 21,   25, 21,   25, 22,   24, 22);
+
+                            fillPolygon( -3, 19,    2, 19,    2, 24,   -3, 24),
+                            fillPolygon(  2, 19,    7, 19,    7, 24,    2, 24),
+                            fillPolygon(  7, 19,   12, 19,   12, 24,    7, 24),
+                            fillPolygon( 12, 19,   17, 19,   17, 24,   12, 24),
+                            fillPolygon( 17, 19,   22, 19,   22, 24,   17, 24),
+                            // Center
+                            fillPolygon( 22, 19,   27, 19,   27, 24,   22, 24),
+                // X again
+                line(3, 0, 46, 43);
+                line(46, 0, 3, 43);
+
+
+
+
+                output = renderBuffer();
+
+                // output = JSON.stringify(getRelativeVisibilityGrid(player.x, player.y, DIRECTIONS[player.dir]), null, 4);
+                /*
+                const visibilityDepth = 4; // 90 degree FOV, so X and Y will work the same
+                const vyDireciton = DIRECTIONS[player.dir] === 'N' ? -1 : (DIRECTIONS[player.dir] === 'S' ? 1 : 0);
+                const vxDireciton = DIRECTIONS[player.dir] === 'W' ? -1 : (DIRECTIONS[player.dir] === 'E' ? 1 : 0);
+                let vx = player.x;
+                let vy = player.y;
+
+                output = `(${player.x}, ${player.y}) player\n`;
+                output += JSON.stringify({ vxDireciton, vyDireciton }) + "\n";
+
+                const visibleTiles = [];
+
+                const directionVectors = {
+                    N: { dx: 0, dy: -1, lateral: { dx: 1, dy: 0 } },
+                    S: { dx: 0, dy: 1, lateral: { dx: 1, dy: 0 } },
+                    E: { dx: 1, dy: 0, lateral: { dx: 0, dy: 1 } },
+                    W: { dx: -1, dy: 0, lateral: { dx: 0, dy: 1 } }
+                };
+
+                const dir = directionVectors[DIRECTIONS[player.dir]];
+                if (!dir) {
+                    console.error("Invalid direction");
+                    return;
+                }
+
+                const outtaGrid = [];
+
+                for (let depth = 1; depth <= visibilityDepth; depth++) {
+                    for (let offset = -depth; offset <= depth; offset++) {
+                        const tx = player.x + dir.dx * depth + dir.lateral.dx * offset;
+                        const ty = player.y + dir.dy * depth + dir.lateral.dy * offset;
+
+                        if (typeof outtaGrid[ty] === 'undefined') {
+                            outtaGrid[ty] = [];
+                        }
+                        outtaGrid[ty][tx] = (MAP[ty]?.[tx]) || ' ';
+                        if (typeof MAP[ty]?.[tx] !== 'undefined') {
+                            output += `(${tx}, ${ty}) ` + describeMapCell(tx, ty) + "\n";
+                        }
+                    }
+                }
+
+                output = JSON.stringify(outtaGrid);
+                */
             } else {
                 output += "\n\n\n\n\n\n\n";
 
@@ -1728,6 +6000,57 @@ __\\_______^/
             document.getElementById('game').innerHTML = output;
         }
 
+        function getRelativeVisibilityGrid(x, y, direction) {
+            const maxDepth = 5;
+            const grid = [];
+
+            const directionVectors = {
+                N: { dx: 0, dy: -1, lateral: { dx: 1, dy: 0 } },
+                S: { dx: 0, dy: 1, lateral: { dx: 1, dy: 0 } },
+                E: { dx: 1, dy: 0, lateral: { dx: 0, dy: 1 } },
+                W: { dx: -1, dy: 0, lateral: { dx: 0, dy: 1 } }
+            };
+
+            const dir = directionVectors[direction];
+            if (!dir) {
+                console.error("Invalid direction");
+                return [];
+            }
+
+            for (let depth = 0; depth <= maxDepth; depth++) {
+                const row = [];
+                // Make sure that we capture the current player's position
+                // including the immediate left and right cells
+                const offsetStart = Math.min(-1, -depth);
+                const offsetEnd = Math.max(1, depth);
+
+                for (let offset = offsetStart; offset <= offsetEnd; offset++) {
+                    const tx = x + dir.dx * depth + dir.lateral.dx * offset;
+                    const ty = y + dir.dy * depth + dir.lateral.dy * offset;
+                    row.push(MAP[ty]?.[tx] || null);
+                }
+                grid.push(row);
+            }
+
+            return grid;
+        }
+
+
+        function describeMapCell(x, y) {
+            if (typeof MAP[y]?.[x] === 'undefined') {
+                return 'Void';
+            }
+
+            switch (MAP[y][x]) {
+                case '.': return 'Space';
+                case '#': return 'Wall';
+                case 'H': return 'Healing Tile';
+                case 'E': return 'Exit';
+                case 'T': return 'Treasure Chest';
+                case 'M': return 'Mimic';
+                default:  return `No description: ${MAP[y][x]}`;
+            }
+        }
 
         function isEmpty(obj) {
             for (let i in obj) {
@@ -1748,7 +6071,7 @@ __\\_______^/
             if (player.inCombat || gameOver || player.movementDisabled) {
                 return;
             }
-            player.movementDisabled = true;
+            // player.movementDisabled = true;
 
             playSFX('footstep');
             let nx, ny, randomEncounterChance;
@@ -1777,7 +6100,8 @@ __\\_______^/
                 } else if (tile === 'T' || tile === 'M') {
                     interactWithChest(nx, ny);
                 } else if (Math.random() < randomEncounterChance) {
-                    startEncounter();
+                    // Debugging
+                    // startEncounter();
                 }
             }
 
@@ -1789,11 +6113,11 @@ __\\_______^/
             const baseDelay = maxDelay; // Start with the maximum delay
             const speedModifier = player.speed * 0.05; // 5% reduction per speed point
             const movementDelay = Math.max(minDelay, baseDelay * (1 - speedModifier)); // Ensure delay is at least minDelay
-
+            /** Disabling for enhanced fun
             setTimeout(() => {
                 player.movementDisabled = false;
             }, movementDelay);
-
+            */
             render();
         }
 
