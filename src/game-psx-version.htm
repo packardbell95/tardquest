@@ -1,0 +1,3720 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>TARDQUEST</title>
+    <style>
+        /* ===== Scrollbar CSS ===== */
+        /* Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #fff #000;
+        }
+
+        /* Chrome, Edge, and Safari */
+        *::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #000;
+            border-radius: 0px;
+            border: 0px solid #fff;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: monospace;
+            white-space: pre;
+            padding: 20px;
+            display: flex;
+            box-sizing: content-box;
+        }
+
+        a:visited,
+        a:link {
+            color: #fff;
+        }
+
+        #ui {
+            display: flex;
+        }
+
+        #menu:not(.hidden) {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+
+        #menuList {
+            margin-bottom: auto;
+            padding-left: 1em;
+        }
+        #pageNum {
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 5px;
+            color: #ccc;
+        }
+
+        #menuList,
+        #menuSelectionDescription {
+            flex-grow: 1;
+            white-space: pre-wrap;
+        }
+
+        #menuLanding,
+        #menuSelectionDescription {
+            padding: 0 1em;
+        }
+
+        #menuList::before,
+        #menuSelectionDescription::before {
+            display: block;
+            text-align: center;
+        }
+
+        #menuLanding {
+            display: flex;
+            flex-direction: column;
+            white-space: pre-wrap;
+            min-height: 8em;
+        }
+
+        #menuLanding > .title {
+            margin: 0 auto 1em;
+            letter-spacing: 1ch;
+        }
+
+        #animation:not(.hidden) {
+            white-space: pre;
+            overflow: hidden;
+            text-align: initial;
+            width: 100%;
+        }
+
+        #viewportContainer {
+            --viewport-font-size: 13px;
+
+            position: absolute;
+            left: 250px;
+            top: 140px;
+            border: 2px solid #fff;
+            padding-top: 10px;
+            padding-left: 4px;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 360px;
+            height: 338px;
+            overflow: hidden;
+            box-sizing: content-box;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+
+        #sidePanel {
+            margin-left: 0px;
+            display: flex;
+            flex-direction: column;
+        }
+        #partylist {
+            height: 130px;
+            width: 348px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 489px;
+            left: 250px;
+            padding: 10px;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            justify-content: space-between;
+        }
+        #stats1 {
+            height: 338px;
+            width: 90px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 140px;
+            left: 620px;
+            padding: 5px;
+            overflow: hidden; 
+            font-size: 18px;
+            font-weight: bold;
+            text-align: left;
+            line-height: 1.1;
+        }
+        #stats2 {
+            height: 140px;
+            width: 90px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 489px;
+            left: 620px;
+            padding: 5px;
+            overflow: hidden; 
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1.0;
+        }
+        .stats-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1;
+            margin: 0;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            margin-top: 2px;
+            margin-bottom: 0;
+            padding: 0;
+        }
+        #battleLog,
+        #minimap {
+            background: #000;
+            border: 2px solid #fff;
+            padding: 10px;
+            width: 672px;
+            height: auto;
+        }
+
+        #battleLog {
+            height: 90px;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-y: scroll;
+        }
+
+        #minimap {
+            height: 166px;
+            width: 216px;
+            padding: 2px;
+            white-space: pre;
+            font-size: 12px;
+            border-top: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #inputBox {
+            display: none;
+        }
+        #inputBox input::placeholder {
+            color: #d8d8d8;
+            opacity: 1;
+        }
+
+        #inputBox input {
+            color: white;
+            font-size: 13px;
+            width: 600px;
+            height: 2px;
+            z-index: 9;
+            font-family: monospace;
+            background-color: #000;
+            border: 3px dotted #A23AB4;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 0px;
+            text-align: left;
+            position: absolute;
+            top: 125px;
+            left: 58px;
+            outline: none;
+        }
+
+        .menus {
+            position: absolute;
+            border: solid white 2px;
+            border-top: 0;
+            top: 314px;
+            width: 212px;
+            height: 163px;
+            overflow: hidden;
+            line-height: 0px;
+            font-size: 9px;
+            padding: 4px;
+            padding-top: 9px;
+        }
+
+        #controls {
+            height: 130px;
+            width: 200px;
+            position: absolute;
+            border: 2px solid #fff;
+            top: 489px;
+            padding: 10px;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow: hidden;
+            justify-content: space-between;
+        }
+
+        .player {
+            color: #2aff00;
+        }
+        .healtile {
+            color: #6cff74;
+        }
+        .treasurechest {
+            color: #f19b32;
+        }
+        .wall {
+            color: #e9ff00;
+        }
+
+        .explored {
+            color: #fff;
+        }
+
+        .unexplored {
+            color: #545454;
+        }
+
+        .exit {
+            color: #f00;
+        }
+
+        .merchant {
+            color: #f7f;
+        }
+
+        .gambler {
+            color: #ffd700;
+        }
+
+        .muted {
+            color: #666;
+            text-decoration: line-through;
+        }
+
+        .tooExpensive {
+            color: #f00;
+        }
+
+        .alignRight {
+            text-align: right;
+        }
+        .friendly {
+            color: #61C9F6;
+        }
+        .enemy {
+            color: #EC4134;
+        }
+        .EXP {
+            color: #6EBD70;
+        }
+        .LV {
+            color: #6EBD70;
+        }
+        .BTC {
+            color: #FAEB4A;
+        }
+        .HP {
+            color: #F1483D;
+        }
+        .DEF {
+            color: #1463BA;
+        }
+        .PRS {
+            color: #A23AB4;
+        }
+        .SPD {
+            color: #7ec5ee;
+        }
+        .LUK {
+            color: #f5b609;
+        }
+        .action {
+            color: #EC4134;
+        }
+
+        #sceneContainer:not(.hidden) {
+            width: 360px;
+            height: 338px;
+            margin: 0;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 360px;
+            box-sizing: content-box;
+            color: white;
+            overflow: hidden;
+        }
+
+        #scene {
+            transform-style: preserve-3d;
+            transform: translateZ(calc(360px / 1.125));
+        }
+
+        .cube {
+            width: 360px;
+            height: 360px;
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+
+        .cube .face {
+            position: absolute;
+            width: 360px;
+            height: 360px;
+        }
+
+        .face.front {
+            transform: rotateY(0) translateZ(calc(360px / 2));
+        }
+        .face.back {
+            transform: rotateY(180deg) translateZ(calc(360px / 2));
+        }
+        .face.right {
+            transform: rotateY(90deg) translateZ(calc(360px / 2));
+        }
+        .face.left {
+            transform: rotateY(-90deg) translateZ(calc(360px / 2));
+        }
+        .face.top {
+            transform: rotateX(90deg) translateZ(calc(360px / 2));
+        }
+        .face.bottom {
+            transform: rotateX(-90deg) translateZ(calc(360px / 2));
+        }
+
+        .face {
+            background-size: cover;
+            background-repeat: no-repeat;
+            image-rendering: pixelated;
+        }
+
+        .face.bottom.moss {
+            background-image: url(./assets/moss-textures/moss-01.png);
+        }
+
+        .face.bottom.moss.v02 {
+            background-image: url(./assets/moss-textures/moss-02.png);
+        }
+
+        .face.bottom.moss.v03 {
+            background-image: url(./assets/moss-textures/moss-03.png);
+        }
+
+        .face.bottom.moss.v04 {
+            background-image: url(./assets/moss-textures/moss-04.png);
+        }
+
+        .face.bottom.healingTile {
+            background-image: url(./assets/healing-tile.png);
+        }
+
+        .face.bottom.exit {
+            background-image: url(./assets/mossy-rock-exit.png);
+        }
+
+        .face.top {
+            background-image: url(./assets/ceiling-textures/ceiling-01.png);
+        }
+
+        .face.top.v02 {
+            background-image: url(./assets/ceiling-textures/ceiling-02.png);
+        }
+
+        .face.top.v03 {
+            background-image: url(./assets/ceiling-textures/ceiling-03.png);
+        }
+
+        .face.top.v04 {
+            background-image: url(./assets/ceiling-textures/ceiling-04.png);
+        }
+
+        .face.stone {
+            background-image: url(./assets/stone-textures/stone-01.png);
+        }
+
+        .face.stone.v02 {
+            background-image: url(./assets/stone-textures/stone-02.png);
+        }
+
+        .face.stone.v03 {
+            background-image: url(./assets/stone-textures/stone-03.png);
+        }
+
+        .face.stone.v04 {
+            background-image: url(./assets/stone-textures/stone-04.png);
+        }
+
+        .face.front.sprite {
+            transform: rotateY(0) translateZ(calc(360px / 2)) translateY(15%) scale(70%);
+        }
+
+        .sprite.merchant {
+            background-image: url(./assets/merchants/10.png);
+        }
+
+        .sprite.gambler {
+            background-image: url(./assets/gamblers/01.png);
+        }
+
+        .sprite.treasureChest {
+            background-image: url(./assets/treasure-chests/03.png);
+        }
+
+  </style>
+</head>
+<body>
+  <div class="menus">
+        <a href="title.html">TITLE</a>  <a href="#" id="resetButton">RESET</a>  <a href="#" id="musicToggle">DISABLE MUSIC</a>
+
+        <p><strong>KEY</strong></p>
+        <p><span class="player">↑</span> Player: It's you!</p>
+        <p><span class="wall">#</span> Wall: It's a fucking wall</p>
+        <p><span class="exit">E</span> Exit: Touch to descend further</p>
+        <p><span class="merchant">M</span> Merchant: Sells you crap</p>
+        <p><span class="gambler">G</span> Gambler: A shady shyster</p>
+        <p><span class="healtile">H</span> Healing Tile: Heals you by 30% of max HP</p>
+        <p><span class="treasurechest">T</span> Treasure Chest: Contains items</p>
+        <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
+      </div>
+  <div id="partylist"></div>
+  <div id="stats1"></div>
+  <div id="stats2"></div>
+  <div id="controls"></div>
+  <div id="viewportContainer">
+    <div id="sceneContainer" class="hidden">
+        <div id="scene"></div>
+    </div>
+    <div id="animation" class="hidden"></div>
+    <div id="menu" class="hidden">
+        <div id="menuLanding"></div>
+        <div id="menuList"></div>
+        <div id="menuSelectionDescription"></div>
+        <div class="alignRight">Press Escape to go back</div>
+    </div>
+  </div>
+  <div id="ui">
+    <div id="sidePanel">
+      <div id="battleLog"></div>
+      <div id="minimap"></div>
+      <div id="inputBox">
+        <input type="text" id="persuadeInput" placeholder="Say your piece...">
+      </div>
+    </div>
+  </div>
+
+    <script>
+        const menu = {
+            breadcrumbs: [],
+            selectionIndex: 0,
+            currentPage: 0, // Track the current page for paginated menus
+            getActiveMenu: () => menu.menus[menu.breadcrumbs.at(-1)?.menuName] || undefined,
+            isOpen: () => menu.breadcrumbs.length > 0,
+            open: (menuName) => {
+                if (typeof menu.menus[menuName] === 'undefined') {
+                    console.error('No matching entry for the designated menu name', { menuName });
+                    return;
+                }
+
+                const activeMenu = menu.menus[menuName];
+
+                menu.breadcrumbs.push({
+                    menuName,
+                    selectionIndex: menu.selectionIndex,
+                    currentPage: menu.currentPage,
+                });
+
+                menu.selectionIndex = 0; // Reset selection index
+                menu.currentPage = 0; // Reset to the first page
+
+                document.getElementById('sceneContainer').classList.add('hidden');
+                document.getElementById('menu').classList.remove('hidden');
+                document.getElementById('menuSelectionDescription').textContent = '';
+
+                activeMenu.onOpen?.();
+                menu.render();
+            },
+            close: () => {
+                const previousMenu = menu.breadcrumbs.pop();
+                menu.menus[previousMenu.menuName].onClose?.();
+                menu.selectionIndex = previousMenu.selectionIndex;
+                menu.currentPage = previousMenu.currentPage;
+
+                if (menu.breadcrumbs.length === 0) {
+                    document.getElementById('menu').classList.add('hidden');
+                    document.getElementById('sceneContainer').classList.remove('hidden');
+                }
+            },
+            closeAll: () => {
+                while (menu.breadcrumbs.length > 0) {
+                    const previousMenu = menu.breadcrumbs.pop();
+                    menu.menus[previousMenu.menuName].onClose?.();
+                }
+                document.getElementById('menu').classList.add('hidden');
+                document.getElementById('sceneContainer').classList.remove('hidden');
+            },
+            render: () => {
+                let menuHtml = "";
+                const activeMenu = menu.getActiveMenu();
+                if (typeof activeMenu === 'undefined') {
+                    return;
+                }
+
+                const options = activeMenu.getOptions();
+                const itemsPerPage = 8; // Number of items per page
+                const totalPages = Math.ceil(options.length / itemsPerPage); // Calculate total pages
+                const startIndex = menu.currentPage * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedOptions = options.slice(startIndex, endIndex);
+
+                // Render the title and page indicator
+                const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
+                const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
+                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
+
+                // Render the options for the current page
+                paginatedOptions.forEach((option, index) => {
+                    const isSelectedLine = index === menu.selectionIndex;
+                    const cursor = isSelectedLine ? "▶ " : "  ";
+                    const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
+                    const trailText = option.trailText ? `${option.trailText}` : '';
+
+                    const maxLineLength = 40; // Max "." trail width
+                    const dots = trailText
+                        ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
+                        : '';
+
+                    menuHtml += `${cursor}${spanHtml}${option.displayText}${dots}${trailText}</span>\n`;
+
+
+                    if (isSelectedLine) {
+                        document.getElementById('menuSelectionDescription').textContent = option.description;
+                    }
+                });
+
+                document.getElementById('menuList').innerHTML = menuHtml;
+            },
+            handleInput: (key) => {
+                const activeMenu = menu.getActiveMenu();
+                const options = activeMenu.getOptions();
+                const itemsPerPage = 8; // Number of items per page
+                const totalPages = Math.ceil(options.length / itemsPerPage);
+
+                switch (key) {
+                    case 'escape':
+                        menu.close();
+                        playSFX('uiCancel');
+                        break;
+                    case 'w':
+                    case 'arrowup':
+                        menu.selectionIndex = menu.selectionIndex === 0
+                            ? Math.min(options.length, itemsPerPage) - 1
+                            : menu.selectionIndex - 1;
+                        playSFX('uiOption');
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        menu.selectionIndex = menu.selectionIndex === Math.min(options.length, itemsPerPage) - 1
+                            ? 0
+                            : menu.selectionIndex + 1;
+                        playSFX('uiOption');
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        if (menu.currentPage > 0) {
+                            menu.currentPage--;
+                            menu.selectionIndex = 0; // Reset selection index on page change
+                            playSFX('uiOption');
+                        }
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        if (menu.currentPage < totalPages - 1) {
+                            menu.currentPage++;
+                            menu.selectionIndex = 0; // Reset selection index on page change
+                            playSFX('uiOption');
+                        }
+                        break;
+                    case ' ':
+                    case 'e':
+                    case 'enter':
+                        const selectedOptionId = options[menu.currentPage * itemsPerPage + menu.selectionIndex]?.id;
+                        if (selectedOptionId === '_back') {
+                            menu.close();
+                            playSFX('uiCancel');
+                        } else if (selectedOptionId === '_exitAll') {
+                            menu.closeAll();
+                            playSFX('uiCancel');
+                        } else {
+                            activeMenu.select(selectedOptionId);
+                            playSFX('uiSelect');
+                        }
+                        break;
+                }
+
+                menu.render();
+            },
+            menus: {
+                inventory: {
+                    title: "INVENTORY",
+                    landingHtml: () => {
+                        return isEmpty(player.inventory)
+                            ? 'You own nothing. Klaus Schwab would be proud'
+                            : null;
+                    },
+                    getOptions: () => [
+                        {
+                            id: "inventoryItems",
+                            displayText: "Items",
+                            description: "View your consumable items.",
+                        },
+                        {
+                            id: "inventoryEquipment",
+                            displayText: "Equipment",
+                            description: "View and change your equipped weapon and armor.",
+                        },
+                        {
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Get back to playing the game",
+                        }
+                    ],
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                inventoryItems: {
+                    title: "ITEMS",
+                    landingHtml: () => {
+                        return isEmpty(player.inventory)
+                            ? 'You own nothing. Klaus Schwab would be proud'
+                            : null;
+                    },
+                    getOptions: () => {
+                        const options = Object.keys(player.inventory)
+                            .filter(itemId => items[itemId])
+                            .map((itemId) => ({
+                                id: itemId,
+                                displayText: items[itemId].name,
+                                description: items[itemId].description,
+                                trailText: `${player.inventory[itemId]}`,
+                            }));
+
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to the inventory menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else if (selectedOptionId === "_exitAll") {
+                            menu.closeAll();
+                        } else {
+                            useItem(selectedOptionId);
+                            menu.closeAll(); // Close all menus after using an item
+                            if (currentEnemy && currentEnemy.hp > 0) {
+                                enemyAttack();
+                                render();
+                            }
+                        }
+                    },
+                },
+                inventoryEquipment: {
+                    title: "EQUIPMENT",
+                    landingHtml: () => {
+                        const weapon = weapons[player.weapon];
+                        const armorPiece = armor[player.armor];
+                    },
+                    getOptions: () => {
+                        const weapon = weapons[player.weapon];
+                        const armorPiece = armor[player.armor];
+                        return [
+                            {
+                                id: "equipHand",
+                                displayText: `Hand: ${weapon?.name || "None"}`,
+                                description: "View and equip your weapons.",
+                            },
+                            {
+                                id: "equipBody",
+                                displayText: `Body: ${armorPiece?.name || "None"}`,
+                                description: "View and equip your armor.",
+                            },
+                            {
+                                id: "_back",
+                                displayText: "[Back]",
+                                description: "Return to the inventory menu",
+                            }
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                equipHand: {
+                    title: "EQUIP WEAPON",
+                    landingHtml: () => {
+                    },
+                    getOptions: () => {
+                        const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
+                        const options = ownedWeapons.map((weaponId) => ({
+                            id: weaponId,
+                            displayText: weapons[weaponId].name + (player.weapon === weaponId ? " (Equipped)" : ""),
+                            description:
+                                `${weapons[weaponId].description}\n` +
+                                `Base Damage: ${weapons[weaponId].damage.base}, ` +
+                                `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
+                            className: player.weapon === weaponId ? "friendly" : undefined,
+                        }));
+
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to equipment menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            player.weapon = selectedOptionId;
+                            updateBattleLog(`You now wield a mighty <span class="friendly">${weapons[selectedOptionId].name}</span>! You feel like you're ready to take some dumbass kid's lunch money... sicko.`);
+                            menu.close();
+                        }
+                    },
+                },
+
+                equipBody: {
+                    title: "EQUIP ARMOR",
+                    landingHtml: () => {
+                    },
+                    getOptions: () => {
+                        const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
+                        const options = ownedArmor.map((armorId) => ({
+                            id: armorId,
+                            displayText: armor[armorId].name + (player.armor === armorId ? " (Equipped)" : ""),
+                            description:
+                                `${armor[armorId].description}\n` +
+                                `Defense: ${armor[armorId].defense}`,
+                            className: player.armor === armorId ? "friendly" : undefined,
+                        }));
+
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to equipment menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                        } else {
+                            player.armor = selectedOptionId;
+                            updateBattleLog(`You are now wearing <span class="friendly">${armor[selectedOptionId].name}</span>! You know what they say about wearing protection...`);
+                            menu.close();
+                        }
+                    },
+                },
+                merchant: {
+                    title: "MERCHANT",
+                    onOpen: () => {
+                        merchant.say('Welcome to SlobMart!');
+                    },
+                    onClose: () => {
+                        merchant.say('Thank you. Come again!');
+                    },
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "merchantItems",
+                                displayText: "Items",
+                                description: "See what consumable items are for sale",
+                            },
+                            {
+                                id: "merchantWeapons",
+                                displayText: "Weapons",
+                                description: "Look at some weapon upgrades",
+                            },
+                            {
+                                id: "merchantArmor",
+                                displayText: "Armor",
+                                description: "Get some thicker skin",
+                            },
+                            {
+                                id: "_back",
+                                displayText: "Leave",
+                                description: "Get back to spelunking",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        menu.open(selectedOptionId);
+                    },
+                },
+                merchantItems: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        return player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                    },
+                    getOptions: () => {
+                        const options = merchant.items.map((itemId) => ({
+                            id: itemId,
+                            displayText: items[itemId].name,
+                            description: items[itemId].description,
+                            trailText: `${items[itemId].price} BTC`,
+                            disabled: items[itemId].price > player.bitcoins,
+                            className: items[itemId].price > player.bitcoins ? 'tooExpensive' : undefined,
+                        }));
+
+                        options.push({
+                            id: "_back",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('item', selectedOptionId);
+                    },
+                },
+                merchantWeapons: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        const message = player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+
+                        const currentWeapon = weapons[player.weapon].name;
+                        const currentWeaponDisplay = getArticle(currentWeapon) + currentWeapon;
+                        const wieldingMessage = `You are currently wielding ${currentWeaponDisplay}`;
+
+                        return `${message}\n\n${wieldingMessage}`;
+                    },
+                    getOptions: () => {
+                        const weaponKeys = Object.keys(weapons);
+                        const options = weaponKeys.map((weaponId) => {
+                            const tooExpensive = weapons[weaponId].price > player.bitcoins;
+                            const alreadyOwned = player.inventory[weaponId] > 0 || player.weapon === weaponId;
+                            return {
+                                id: weaponId,
+                                displayText: weapons[weaponId].name,
+                                description:
+                                    `${weapons[weaponId].description}\n` +
+                                    `Base Damage: ${weapons[weaponId].damage.base}, ` +
+                                    `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
+                                trailText: `${weapons[weaponId].price} BTC`,
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_back",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('weapon', selectedOptionId);
+                    },
+                },
+                merchantArmor: {
+                    title: "MERCHANT",
+                    landingHtml: () => {
+                        const message = player.bitcoins > 0
+                            ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                            : "Your wallet is emptier than a lughead's skull. But you can still look around";
+
+                        const currentArmor = armor[player.armor].name;
+                        const currentArmorDisplay = getArticle(currentArmor) + currentArmor;
+                        const wearingMessage = `You are currently wearing ${currentArmorDisplay}`;
+
+                        return `${message}\n\n${wearingMessage}`;
+                    },
+                    getOptions: () => {
+                        const armorKeys = Object.keys(armor);
+                        const options = armorKeys.map((armorId) => {
+                            const tooExpensive = armor[armorId].price > player.bitcoins;
+                            const alreadyOwned = player.inventory[armorId] > 0 || player.armor === armorId;
+                            return {
+                                id: armorId,
+                                displayText: armor[armorId].name,
+                                description:
+                                    `${armor[armorId].description}\n` +
+                                    `Defense: ${armor[armorId].defense}`,
+                                trailText: `${armor[armorId].price} BTC`,
+                                disabled: tooExpensive || alreadyOwned,
+                                className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            };
+                        });
+
+                        options.push({
+                            id: "_back",
+                            displayText: "Back",
+                            description: "Return to the merchant menu",
+                        });
+
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        merchant.buy('armor', selectedOptionId);
+                    },
+                },
+                gambler: {
+                    title: "GAMBLER",
+                    onOpen: () => {
+                        gambler.say('Place yer bets!');
+                    },
+                    onClose: () => {
+                        gambler.say('You gotta know when to hold \'em, know when to fold \'em, heh heh');
+                        updateBattleLog('The gambler escapes into the shadows');
+
+                        gambler.isActiveOnFloor = false;
+                    },
+                    landingHtml: () => {
+                        return (
+                            `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
+                            `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
+                            `Just <span class="tooExpensive">${gambler.playPrice}</span> to play!"\n\n` +
+                            `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                        );
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "play",
+                                displayText: "Play the game",
+                                trailText: `${gambler.playPrice} BTC`,
+                                description: "Take your chance with the gambler",
+                            },
+                            {
+                                id: "_back",
+                                displayText: "Leave",
+                                description: "Leave this crusty fool",
+                            },
+                        ];
+                    },
+                    select: () => {
+                        gamble();
+                    },
+                },
+                chest: {
+                    title: "TREASURE CHEST",
+                    landingHtml: () => {
+                        return `
+
+                        
+You found a treasure chest! Do you want to open it?
+                        `;
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "open",
+                                displayText: "Hell yeah! Fondle that booty!",
+                                description: "Claim your succulent reward!",
+                            },
+                            {
+                                id: "_back",
+                                displayText: "Resist your burning temptation...",
+                                description: "DON'T claim your succulent reward!",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "open") {
+                            openChest();
+                        }
+                        menu.close();
+                        render();
+                    },
+                },
+                statAllocation: {
+                    title: "STAT ALLOCATION",
+                    get title() {
+                        return isLevelUpAllocation ? "LEVEL UP" : "STAT ALLOCATION";
+                    },
+                    landingHtml: () => {
+                        return isLevelUpAllocation
+                            ? `You leveled up! Allocate <span class="action">${player.remainingPoints}</span> points to your stats.`
+                            : `Build your character using the <span class="action">${player.remainingPoints}</span> points you have been allotted. Use them wisely...`;
+                    },
+                    getOptions: () => {
+                        return [
+                            {
+                                id: "_confirm",
+                                displayText: "[Confirm]",
+                                description: isLevelUpAllocation
+                                    ? "Finish your level up and continue your adventure!"
+                                    : "Begin YOUR TardQuest!",
+                            },
+                            {
+                                id: "reset",
+                                displayText: "[Reset]",
+                                description: isLevelUpAllocation
+                                    ? "Reset your level up stat allocation."
+                                    : "Reset your stat allocation.",
+                            },
+                            ...(!isLevelUpAllocation ? [{
+                                id: "rollDice",
+                                displayText: "[Diceroll]",
+                                description: "Randomly allocate your points.",
+                            }] : []),
+                            {
+                                id: "hp",
+                                displayText: `HP: ${player.maxHp}`,
+                                description: "Increases Health Points.",
+                            },
+                            {
+                                id: "defense",
+                                displayText: `DEF: ${player.defense}`,
+                                description: "Increases defense against enemy attacks.",
+                            },
+                            {
+                                id: "persuasion",
+                                displayText: `PRS: ${player.persuasion}`,
+                                description: "Increases your chances at persuading monsters to join your party.",
+                            },
+                            {
+                                id: "speed",
+                                displayText: `SPD: ${player.speed}`,
+                                description: "Increases your movement speed. Each point allows you to move 5% faster.",
+                            },
+                            {
+                                id: "luck",
+                                displayText: `LUK: ${player.luck}`,
+                                description: "Increases crit rates and BTC rewards from chests.",
+                            },
+                        ];
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_confirm") {
+                            if (player.remainingPoints > 0) {
+                                updateBattleLog("You must allocate all points before continuing!");
+                                return;
+                            }
+                            if (isLevelUpAllocation) {
+                                isLevelUpAllocation = false;
+                                updateBattleLog("Stats increased! Time to pancake some yummy diapers!");
+                                player.level++;
+                                player.exp = 0;
+                                player.levelingUp = false;
+                                player.hp = player.maxHp;
+                            } else {
+                                finalizeStats();
+                            }
+                            menu.close();
+                            render();
+                        } else if (selectedOptionId === "reset") {
+                            if (isLevelUpAllocation) {
+                                player.maxHp = levelUpAllocatedStats.base.maxHp;
+                                player.defense = levelUpAllocatedStats.base.defense;
+                                player.persuasion = levelUpAllocatedStats.base.persuasion;
+                                player.speed = levelUpAllocatedStats.base.speed;
+                                player.luck = levelUpAllocatedStats.base.luck;
+                                player.remainingPoints = 3;
+                                updateBattleLog("Level up stat allocation has been reset.");
+                            } else {
+                                resetStats();
+                            }
+                            menu.render();
+                        } else if (!isLevelUpAllocation && selectedOptionId === "rollDice") {
+                            rollDiceForStats();
+                            menu.render();
+                        } else if (player.remainingPoints > 0) {
+                            switch (selectedOptionId) {
+                                case "hp":
+                                    player.maxHp += 1;
+                                    player.hp = player.maxHp;
+                                    break;
+                                case "defense":
+                                    player.defense += 1;
+                                    break;
+                                case "persuasion":
+                                    player.persuasion += 1;
+                                    break;
+                                case "speed":
+                                    player.speed += 1;
+                                    break;
+                                case "luck":
+                                    player.luck += 1;
+                                    break;
+                            }
+                            player.remainingPoints--;
+                            menu.render();
+                        } else {
+                            updateBattleLog("No points remaining to allocate!");
+                        }
+                    },
+                },
+            },
+        };
+
+        const sceneRenderer = {
+            viewDepth: 5,
+            render: (x, y, direction) => {
+                const view = sceneRenderer.getView(x, y, direction);
+                console.log({ view });
+                let scene = Array.from({ length: sceneRenderer.displayHeight }, () =>
+                    Array.from({ length: sceneRenderer.displayWidth }, () => ' ')
+                );
+
+                const sceneElement = document.getElementById('scene');
+                sceneElement.replaceChildren(); // Clear the scene first
+
+                for (let depth = view.length - 1; depth >= 0; depth--) {
+                    for (let xCounter = 0; xCounter < view[depth].length; xCounter++) {
+                        const shadowAmount = xCounter / sceneRenderer.viewDepth / 1.5;
+                        const halfway = (view[depth].length - 1) / 2;
+                        const position = (xCounter < halfway ? 'left' : (xCounter > halfway ? 'right' : 'middle'));
+                        const entityName = view[depth][xCounter].entityName;
+                        const xPosition = xCounter - halfway;
+
+                        console.log('Drawing', {entityName, depth, xCounter});
+
+                        switch (entityName) {
+                            case 'wall':
+                            case 'floor':
+                            case 'healingTile':
+                            case 'exit':
+                                const myCube = sceneRenderer.makeCube(
+                                    entityName,
+                                    xPosition,
+                                    0,
+                                    depth,
+                                    shadowAmount,
+                                    position,
+                                    view[depth][xCounter].mapPosition.x,
+                                    view[depth][xCounter].mapPosition.y
+                                );
+                                sceneElement.appendChild(myCube);
+                                break;
+                            case 'merchant':
+                            case 'gambler':
+                            case 'treasureChest':
+                                sceneElement.appendChild(sceneRenderer.makeCube(
+                                    'floor',
+                                    xPosition,
+                                    0,
+                                    depth,
+                                    shadowAmount,
+                                    position,
+                                    view[depth][xCounter].mapPosition.x,
+                                    view[depth][xCounter].mapPosition.y
+                                ));
+                                sceneElement.appendChild(sceneRenderer.makeSprite(entityName, xPosition, 0, depth));
+                                break;
+                        }
+                    }
+                }
+            },
+
+            getView: (x, y, direction) => {
+                const grid = [];
+
+                const directionVectors = {
+                    N: { dx: 0, dy: -1, lateral: { dx: 1, dy: 0 }, flip: 1 },
+                    S: { dx: 0, dy: 1, lateral: { dx: 1, dy: 0 }, flip: -1 },
+                    E: { dx: 1, dy: 0, lateral: { dx: 0, dy: 1 }, flip: 1 },
+                    W: { dx: -1, dy: 0, lateral: { dx: 0, dy: 1 }, flip: -1 }
+                };
+
+                const dir = directionVectors[direction];
+                if (!dir) {
+                    console.error("Invalid direction");
+                    return [];
+                }
+
+                for (let depth = 0; depth <= sceneRenderer.viewDepth; depth++) {
+                    const row = [];
+                    const offsetStart = depth === 0 ? -1 : -depth;
+                    const offsetEnd = depth === 0 ? 1 : depth;
+
+                    for (let offset = offsetStart; offset <= offsetEnd; offset++) {
+                        const lateralOffset = offset * dir.flip;
+                        const tx = x + dir.dx * depth + dir.lateral.dx * lateralOffset;
+                        const ty = y + dir.dy * depth + dir.lateral.dy * lateralOffset;
+
+                        if (gambler.isAt(tx, ty)) {
+                            row.push({
+                                mapPosition: {
+                                    x: tx,
+                                    y: ty,
+                                },
+                                entityName: 'gambler',
+                            });
+                        } else if (merchant.isAt(tx, ty)) {
+                            row.push({
+                                mapPosition: {
+                                    x: tx,
+                                    y: ty,
+                                },
+                                entityName: 'merchant',
+                            });
+                        } else {
+                            row.push({
+                                mapPosition: {
+                                    x: tx,
+                                    y: ty,
+                                },
+                                entityName: sceneRenderer.getEntityName(MAP[ty]?.[tx] ?? null),
+                            });
+                        }
+                    }
+
+                    grid.push(row);
+                }
+
+                return grid;
+            },
+
+            // mapX and mapY are the map positions for the given cube and are
+            // only used to select texture variants
+            makeCube: (entityName, x, y, z, shadowAmount, position, mapX, mapY) => {
+                const cube = document.createElement('div');
+                cube.classList.add('cube');
+                cube.style.transform = `
+                    translateX(calc(360px * ${x - 0.5}))
+                    translateY(calc(360px * ${y - 0.5}))
+                    translateZ(calc(360px * ${-z}))
+                `;
+
+                if (shadowAmount > 0.0) {
+                    cube.style.background = `rgba(0, 0, 0, ${shadowAmount})`;
+                }
+
+                const textureVariant = 'v0' + (((mapX + mapY) % 4) + 1);
+                const isWall = entityName === 'wall';
+
+                for (side of ['front', 'back', 'right', 'left', 'top', 'bottom']) {
+                    if (side === 'back') {
+                        continue;
+                    }
+
+                    if (isWall) {
+                        if (['top', 'bottom'].includes(side)) {
+                            continue;
+                        }
+
+                        if (
+                            (position === 'left' && side === 'left' ) ||
+                            (position === 'right' && side === 'right') ||
+                            (position === 'middle' && ['left', 'right'].includes(side))
+                        ) {
+                            continue;
+                        }
+                    }
+
+                    if (!isWall && ['front', 'back', 'right', 'left'].includes(side)) {
+                        continue;
+                    }
+
+                    const sideElement = document.createElement('div');
+                    sideElement.classList.add('face', textureVariant, side);
+                    if (isWall) {
+                        sideElement.classList.add('stone');
+                    }
+
+                    if (side === 'bottom') {
+                        if (entityName === 'healingTile') {
+                            sideElement.classList.add('healingTile');
+                        } else if (entityName === 'exit') {
+                            sideElement.classList.add('exit');
+                        } else {
+                            sideElement.classList.add('moss');
+                        }
+                    }
+                    cube.appendChild(sideElement);
+                }
+
+                return cube;
+            },
+
+            makeSprite: (spriteName, x, y, z) => {
+                const cube = document.createElement('div');
+                cube.classList.add('cube');
+                cube.style.transform = `
+                    translateX(calc(360px * ${x - 0.5}))
+                    translateY(calc(360px * ${y - 0.5}))
+                    translateZ(calc(360px * ${-z}))
+                `;
+
+                const sideElement = document.createElement('div');
+                sideElement.classList.add('face', 'sprite', spriteName, 'front');
+                cube.appendChild(sideElement);
+
+                return cube;
+            },
+
+            getEntityName: (entity) => {
+                switch (entity) {
+                    case '.':
+                        return 'floor';
+                    case '#':
+                        return 'wall';
+                    case 'H':
+                        return 'healingTile';
+                    case 'E':
+                        return 'exit';
+                    case 'T':
+                    case 'M':
+                        return 'treasureChest';
+                    default:
+                        return entity;
+                }
+            },
+        };
+
+
+
+
+
+
+
+
+
+
+        const
+            WIDTH = 30,
+            HEIGHT = 11;
+        const DIRECTIONS = ['N', 'E', 'S', 'W'];
+        const DX = [0, 1, 0, -1];
+        const DY = [-1, 0, 1, 0];
+        let seenTiles = Array.from({
+            length: HEIGHT
+        }, () => Array(WIDTH).fill(false));
+        let lastFloorBoostNotice = 0;
+        
+        const baseStats = {
+            maxHp: 20,
+            defense: 5,
+            persuasion: 7,
+            speed: 12,
+            luck: 2,
+        };       
+        const player = {
+            x: 1,
+            y: 1,
+            bitcoins: 0,
+            dir: 0,
+            hp: baseStats.maxHp,
+            maxHp: baseStats.maxHp,
+            defense: baseStats.defense,
+            persuasion: baseStats.persuasion,
+            speed: baseStats.speed,
+            luck: baseStats.luck,
+            exp: 0,
+            level: 1,
+            inCombat: false,
+            levelingUp: false,
+            inventory: {
+                canOfHamms: 2,
+                cupOfLean: 2,
+                torch: 2,
+                brickOfC4: 2,
+                dowsingRod: 2,
+                fingerNail: 1, //Start game with this in inventory
+                pectoralMass: 1, //Start game with this in inventory
+            },
+            weapon: 'fingerNail', //Start game with this equipped
+            armor: 'pectoralMass', //Start game with this equipped
+            movementDisabled: false,
+        };
+
+        const merchant = {
+            isAlive: true,
+            isActiveOnFloor: false,
+            x: WIDTH - 2,
+            y: HEIGHT - 2,
+            items: [],
+            say: function(str) {
+                updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
+            },
+            die: function() {
+                this.isAlive = false;
+                this.isActiveOnFloor = false;
+                playSFX('scream');
+                merchant.say('AIEEEEEEEEEEEEEE!');
+                updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
+            },
+            isAt: function(x, y) {
+                return (
+                    merchant.isAlive &&
+                    merchant.isActiveOnFloor &&
+                    merchant.x === x &&
+                    merchant.y === y
+                );
+            },
+            buy: function(type, key) {
+                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+                if (!merchandise) {
+                    console.error(`${key} doesn't exist!`);
+                    return;
+                }
+
+                if (player.bitcoins < merchandise.price) {
+                    merchant.say('Too bad, kid. Come back when you get some coin!');
+                    return;
+                }
+
+                // Prevent buying equipment you already own
+                if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
+                    merchant.say("You already own that, stupid!");
+                    return;
+                }
+
+                player.bitcoins -= merchandise.price;
+                playSFX('kaching');
+                // Disable equipment auto equip upon purchase
+                player.inventory[key] = (player.inventory?.[key] || 0) + 1;
+
+                const purchaseFlavorText = [
+                    "HAHA! You won't regret it!",
+                    "Don't forget: NO REFUNDS!",
+                    "You won't find a better deal than this!",
+                ];
+                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+                merchant.say(merchantText);
+
+                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+                updateBattleLog(`You just bought ${merchandiseText}`);
+            },
+        };
+
+        const gambler = {
+            isAlive: true,
+            isActiveOnFloor: false,
+            x: WIDTH - 4,
+            y: HEIGHT - 4,
+            selectionIndex: 0,
+            options: ['gamble', 'leave'],
+            playPrice: 200,
+            say: function(str) {
+                updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
+            },
+            die: function () {
+                this.isAlive = false;
+                this.isActiveOnFloor = false;
+                // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
+                const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
+                player.bitcoins += rewardBtc;
+                playSFX('scream');
+                gambler.say('AUGH!!');
+                updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
+            },
+            isAt: function(x, y) {
+                return (
+                    gambler.isAlive &&
+                    gambler.isActiveOnFloor &&
+                    player.bitcoins >= gambler.playPrice &&
+                    gambler.x === x &&
+                    gambler.y === y
+                );
+            },
+        };
+
+        const enemies = [
+            {
+                id: "snailSentinel",
+                name: "SNAIL SENTINEL",
+                hp: 10,
+                attack: [1, 4],
+                bitcoins: 4,
+            },
+            {
+                id: "stupidDog",
+                name: "STUPID DOG",
+                hp: 6,
+                attack: [2, 5],
+                bitcoins: 3,
+            },
+            {
+                id: "wangRat",
+                name: "WANG RAT",
+                hp: 5,
+                attack: [3, 5],
+                bitcoins: 2,
+            },
+            {
+                id: "keeperOfTheToiletBowl",
+                name: "KEEPER OF THE TOILET BOWL",
+                hp: 15,
+                attack: [3, 7],
+                bitcoins: 5,
+            },
+            {
+                id: "mysteriousScooter",
+                name: "MYSTERIOUS SCOOTER",
+                hp: 12,
+                attack: [3, 6],
+                bitcoins: 4,
+            },
+            {
+                id: "badassFlamingSkeleton",
+                name: "BADASS FLAMING SKELETON",
+                hp: 13,
+                attack: [4, 9],
+                bitcoins: 4,
+            },
+            {
+                id: "fridgeOfForgottenLeftovers",
+                name: "FRIDGE OF FORGOTTEN LEFTOVERS",
+                hp: 20,
+                attack: [2, 3],
+                bitcoins: 3,
+            },
+            {
+                id: "lughead",
+                name: "LUGHEAD",
+                hp: 18,
+                attack: [2, 6],
+                bitcoins: 4,
+            },
+            {
+                id: "pissedOffPoultry",
+                name: "PISSED-OFF POULTRY",
+                hp: 7,
+                attack: [2, 5],
+                bitcoins: 2,
+            },
+            {
+                id: "krampusElf",
+                name: "KRAMPUS ELF",
+                hp: 7,
+                attack: [3, 4],
+                bitcoins: 4,
+            },
+            {
+                id: "mimic",
+                name: "MIMIC",
+                hp: 120,
+                attack: [7, 14],
+                bitcoins: 100,
+            },
+        ];
+        const defeatMessages = [
+          "was beaten to a fucking pulp!",
+          "had their bollocks slammed against the hard concrete wall!",
+          "got their face scraped along the floor!",
+          "died from a nosebleed. Alright then?",
+          "was pulverized before they could activate ther anti-retard orbital laser.",
+          "pancaked their diaper and died from embarassment. Gross.",
+          "left the server.",
+          "picked their nose, and died picking their nose.",
+          "got bored and jumped down a 'bottomless' hole. You heard a scream, and the sound was absolutely not faint."
+        ];
+
+        const weapons = {
+            fingerNail: {
+                name: "FINGERNAIL",
+                description: "Your very own fingernail! Careful not to break it!",
+                damage: {
+                    base: 1,
+                    randomMultiplier: 4,
+                },
+                price: 0,
+            },
+            pointyStick: {
+                name: "POINTY STICK",
+                description: "A stick that fell off of a tree somewhere",
+                damage: {
+                    base: 2,
+                    randomMultiplier: 5,
+                },
+                price: 20,
+            },
+            wiffleBallBat: {
+                name: "WIFFLE BALL BAT",
+                description: "A hollow bat made of plastic",
+                damage: {
+                    base: 3,
+                    randomMultiplier: 6,
+                },
+                price: 50,
+            },
+            nunchucks: {
+                name: "NUNCHUCKS",
+                description: "Two pieces of wood connected by a chain",
+                damage: {
+                    base: 6,
+                    randomMultiplier: 9,
+                },
+                price: 100,
+            },
+            atlatlSpear: {
+                name: "ATLATL SPEAR",
+                description: "A spear with a throwing lever",
+                damage: {
+                    base: 10,
+                    randomMultiplier: 11,
+                },
+                price: 400,
+            },
+            bludgeoningMace: {
+                name: "BLUDGEONING MACE",
+                description: "A stick with a spikey metal ball at the end",
+                damage: {
+                    base: 10,
+                    randomMultiplier: 14,
+                },
+                price: 500,
+            },
+            cathodeRayTubeMonitor: {
+                name: "CATHODE RAY TUBE MONITOR",
+                description: "A CRT monitor. Heavy as piss.",
+                damage: {
+                    base: 13,
+                    randomMultiplier: 17,
+                },
+                price: 1000,
+            },
+            magicPencil: {
+                name: "MAGIC PENCIL",
+                description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
+                damage: {
+                    base: 15,
+                    randomMultiplier: 18,
+                },
+                price: 1400,
+            },
+            goldenWang: {
+                name: "GOLDEN WANG",
+                description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
+                damage: {
+                    base: 69,
+                    randomMultiplier: 69,
+                },
+                price: 6900,
+            },
+        };
+
+        const armor = {
+            pectoralMass: {
+                name: "PECTORAL MASS",
+                description: "Your totally big, meaty pectorals! You're not fat at all...'",
+                defense: 1,
+                price: 0,
+            },
+            graphicTee: {
+                name: "GRAPHIC TEE",
+                description: "A t-shirt that says 'Normal people scare me'",
+                defense: 2,
+                price: 20,
+            },
+            barrelWithSuspenders: {
+                name: "BARREL (with suspenders)",
+                description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
+                defense: 3,
+                price: 50,
+            },
+            leatherArmor: {
+                name: "LEATHER ARMOR",
+                description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
+                defense: 6,
+                price: 150,
+            },
+            milaneseArmor: {
+                name: "MILANESE ARMOR",
+                description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
+                defense: 12,
+                price: 1000,
+            },
+            blackPlateArmor: {
+                name: "BLACK PLATE ARMOR",
+                description: "Literally a giant black dinner plate. Deceptively protective.",
+                defense: 16,
+                price: 1500,
+            },
+            nokiaMail: {
+                name: "NOKIA MAIL",
+                description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
+                defense: 21,
+                price: 2000,
+            },
+        };
+
+        const items = {
+            canOfHamms: {
+                name: "CAN OF HAMM'S",
+                description: "A warm can of beer. Delicious..? Heals +5 HP",
+                use: () => {
+                    healPlayer(5);
+                    updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
+                },
+                merchantStockChance: 0.9,
+                price: 10,
+            },
+            cupOfLean: {
+                name: "CUP OF LEAN",
+                description: "A crusty styrofoam cup filled with a strange purple syrup. Heals +20 HP",
+                use: () => {
+                    healPlayer(20);
+                    updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
+                },
+                merchantStockChance: 0.5,
+                price: 30,
+            },
+            glassOfToiletWater: {
+                name: "GLASS OF TOILET WATER",
+                description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied... Heals +50 HP",
+                use: () => {
+                    healPlayer(50);
+                    updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
+                },
+                merchantStockChance: .4,
+                price: 50,
+            },
+            alaskaRaisins: {
+                name: "ALASKA RAISINS",
+                description: "Holy shit! It's the Alaska Raisins! Heals +70 HP",
+                use: () => {          
+                    healPlayer(70);
+                    playSFX('raisins');
+                    updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
+                },
+                merchantStockChance: .35,
+                price: 80,
+            },
+            dowsingRod: {
+                name: "DOWSING ROD",
+                description: "A Y-shaped stick. Reveals the exit of the current floor",
+                use: () => {
+                    useDowsingRod();
+                    updateBattleLog("The exit has been revealed!");
+                },
+                merchantStockChance: 0.8,
+                price: 20,
+            },
+            torch: {
+                name: "TORCH",
+                description: "An unlit torch. Using it will reveal the map of the current floor",
+                use: () => {
+                    revealMap();
+                    playSFX('torch');
+                    updateBattleLog("Lo, the way has been made clear!");
+                },
+                merchantStockChance: 0.8,
+                price: 60,
+            },
+            brickOfC4: {
+                name: "BRICK OF C-4",
+                description: "An incendiary plastic explosive. Great for turning anything into nothing real quick",
+                use: () => useC4(),
+                merchantStockChance: 0.5,
+                price: 300,
+            },
+        };
+
+        function healPlayer(hp) {
+            player.hp = Math.min(player.maxHp, player.hp + hp);
+        }
+
+        function useDowsingRod() {
+            for (let y=0; y<MAP.length; y++) {
+                for (let x=0; x<MAP[y].length; x++) {
+                    if (MAP[y][x] === 'E') {
+                        revealMapSpot(x, y, 1);
+
+                        // Since there's only one exit per floor, we can render and exit early
+                        render();
+                        return;
+                    }
+                }
+            }
+        }
+
+        function revealMapSpot(x, y, radius) {
+            for (let py=y-radius; py<=y+radius; py++) {
+                for (let px=x-radius; px<=x+radius; px++) {
+                    if (typeof MAP[py]?.[px] !== 'undefined') {
+                        seenTiles[py][px] = true;
+                    }
+                }
+            }
+        }
+
+        function revealMap() {
+            seenTiles = seenTiles.map((col) => col.map((cell) => true));
+            render();
+        }
+
+        function useC4() {
+            playSFX('explosion');
+
+            if (player.inCombat) {
+                const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
+                currentEnemy.hp -= dmg;
+                updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+                endOfPlayerTurn();
+            } else {
+                updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                explodePath();
+                render();
+            }
+        }
+
+        function explodePath() {
+            let xMin = player.x, xMax = player.x,
+                yMin = player.y, yMax = player.y;
+
+            switch (DIRECTIONS[player.dir]) {
+                case 'N':
+                    xMin--;
+                    xMax++;
+                    yMin -= 3;
+                    break;
+                case 'E':
+                    yMin--;
+                    yMax++;
+                    xMax += 3;
+                    break;
+                case 'S':
+                    xMin--;
+                    xMax++;
+                    yMax += 3;
+                    break;
+                case 'W':
+                    yMin--;
+                    yMax++;
+                    xMin -= 3;
+                    break;
+            }
+
+            for (let y=yMin; y<=yMax; y++) {
+                for (let x=xMin; x<=xMax; x++) {
+                    breakMap(x, y);
+                }
+            }
+        }
+
+        function breakMap(x, y) {
+            if (coordsInBounds(x, y)) {
+                if (MAP[y][x] === '#') {
+                    MAP[y][x] = '.'; // Destroy walls
+                }
+
+                const killedMerchant =
+                    merchant.isAlive &&
+                    merchant.isActiveOnFloor &&
+                    merchant.x === x && merchant.y === y;
+                if (killedMerchant) {
+                    merchant.die();
+                }
+
+                const killedGambler =
+                    gambler.isAlive &&
+                    gambler.isActiveOnFloor &&
+                    gambler.x === x && gambler.y === y;
+                if (killedGambler) {
+                    gambler.die();
+                }
+
+                // Destroy treasure chests
+                if (MAP[y][x] === 'T') {
+                    MAP[y][x] = '.';
+                    updateBattleLog('<span class="action">Gee willikers, you just destroyed a perfectly good treasure chest! Oh well...</span><br>');
+                }
+
+                // Destroy mimic chests and reward BTC
+                if (MAP[y][x] === 'M') {
+                    MAP[y][x] = '.'; // Remove the mimic chest from the map
+
+                    // Calculate scaled BTC reward
+                    const baseMimic = enemies.find(e => e.id === "mimic");
+                    const scaledMimic = scaleMimicStats(baseMimic);
+                    const mimicBTC = scaledMimic.bitcoins;
+
+                    player.bitcoins += mimicBTC; // Reward the player
+                    updateBattleLog(`<span class="action">WHAT THE FUCK? That was a mimic?!</span> You obtained <span class="BTC">${mimicBTC} BTC</span> from the intestines spilled from its gaping maw.`);
+                    playSFX('scream');
+                }
+
+                seenTiles[y][x] = true;
+            }
+        }
+
+        function setMerchantWares() {
+            const itemKeys = Object.keys(items);
+            if (itemKeys.length === 0) {
+                console.error("No items available in the items object!");
+                return;
+            }
+
+            let attempts = 0; // Add a safeguard to prevent infinite loops
+            do {
+                merchant.items = [];
+                itemKeys.forEach((key) => {
+                    if (Math.random() < items[key].merchantStockChance) {
+                        merchant.items.push(key);
+                    }
+                });
+
+                attempts++;
+                if (attempts > 100) {
+                    console.error(`Failed to generate merchant items after ${attempts} attempts!`);
+                    break;
+                }
+            } while (merchant.items.length === 0);
+        }
+
+        const sfx = {
+            footstep: new Audio('https://files.catbox.moe/o0ka4u.wav'),
+            turn: new Audio('https://files.catbox.moe/heur5b.wav'),
+            attack: new Audio('https://files.catbox.moe/0ggtsm.wav'),
+            run: new Audio('https://files.catbox.moe/f6eyem.wav'),
+            persuade: new Audio('https://files.catbox.moe/e7n7vo.wav'),
+            explosion: new Audio('https://files.catbox.moe/jhaqzp.mp3'),
+            scream: new Audio('https://files.catbox.moe/j2oegh.mp3'),
+            kaching: new Audio('https://files.catbox.moe/02ht6d.mp3'),
+            torch: new Audio('https://files.catbox.moe/b2jzsn.mp3'),
+            gamble: new Audio('https://files.catbox.moe/mo9o5z.mp3'),
+            inventoryOpen: new Audio('https://files.catbox.moe/8cf12i.mp3'),
+            uiOption: new Audio('https://files.catbox.moe/h34402.wav'),
+            uiSelect: new Audio('https://files.catbox.moe/2cvmq8.wav'),
+            uiCancel: new Audio('https://files.catbox.moe/5doy28.wav'),
+            raisins: new Audio('https://files.catbox.moe/46dfdj.mp3'),
+        };
+
+        const music = {
+            exploration: new Audio('https://files.catbox.moe/hmgkva.wav'),
+            battleTracks: [
+                new Audio('https://files.catbox.moe/3ajd4i.mp3'), // battle1.mp3
+                new Audio('https://files.catbox.moe/ua8mbs.mp3'), // battle2.mp3
+            ],
+            current: null
+        };
+
+        music.exploration.loop = true;
+        music.battleTracks.forEach(track => track.loop = true);
+
+
+        let currentMusic = null;
+        let currentEnemy = null;
+        let party = [];
+        let gameOver = false;
+        let awaitingPersuasionText = false;
+        let speakingOutsideCombat = false;
+        let battleLog = [];
+        let floor = 1;
+        let MAP = [];
+        let exit = {
+            x: WIDTH - 2,
+            y: HEIGHT - 2
+        };
+
+        let musicEnabled = true;
+
+        function generateMap() {
+            setExitPosition();
+
+            // Fill in walls
+            for (let y = 0; y < HEIGHT; y++) {
+                MAP[y] = [];
+                for (let x = 0; x < WIDTH; x++) {
+                    MAP[y][x] = '#';
+                    seenTiles[y][x] = false;
+                }
+            }
+
+            // Carve out a path
+            let position = { x: player.x, y: player.y };
+            let stack = null;
+            do {
+                stack = carvePath([position]);
+            } while (stack === null);
+
+            for (let i in stack) {
+                MAP[stack[i].y][stack[i].x] = '.';
+            }
+
+            for (let i = 0; i < 10; i++) {
+                dissolveMap();
+            }
+
+            MAP[player.y][player.x] = '.';
+            MAP[exit.y][exit.x] = 'E';
+
+            // 100% chance to spawn merchant on floor 1
+            if (floor === 1) {
+                merchant.isActiveOnFloor = merchant.isAlive;
+            } else {
+                merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.35;
+            }
+
+            if (merchant.isActiveOnFloor) {
+                setMerchant();
+            }
+
+            gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
+            if (gambler.isActiveOnFloor) {
+                setGambler();
+            }
+
+            // Spawn treasure chests
+            spawnTreasureChests();
+
+            // Spawn healing tiles
+            spawnHealingTiles();
+        }
+
+        function spawnTreasureChests() {
+            const chestCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 chests
+            let attempts = 0;
+
+            for (let i = 0; i < chestCount; i++) {
+                while (attempts++ < 1000) {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isEmptySpace =
+                        MAP[y][x] === '.' &&
+                        (y !== exit.y || x !== exit.x) &&
+                        (y !== player.y || x !== player.x) &&
+                        !isMerchantTile(x, y) &&
+                        !isGamblerTile(x, y);
+
+                    if (isEmptySpace) {
+                        const isMimic = Math.random() < 0.2; // 20% chance for mimic
+                        MAP[y][x] = isMimic ? 'M' : 'T'; // 'M' for mimic, 'T' for normal chest
+                        break;
+                    }
+                }
+            }
+        }
+
+        function spawnHealingTiles() {
+            const healingTileCount = Math.floor(Math.random() * 6) + 1; // 1 to 6 healing tiles
+            let attempts = 0;
+
+            for (let i = 0; i < healingTileCount; i++) {
+                while (attempts++ < 1000) {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isEmptySpace =
+                        MAP[y][x] === '.' &&
+                        (y !== exit.y || x !== exit.x) &&
+                        (y !== player.y || x !== player.x) &&
+                        !isMerchantTile(x, y) &&
+                        !isGamblerTile(x, y) &&
+                        MAP[y][x] !== 'T'; // Ensure no overlap with treasure chests
+
+                    if (isEmptySpace) {
+                        MAP[y][x] = 'H'; // Place a healing tile
+                        break;
+                    }
+                }
+            }
+        }
+
+        function interactWithChest(x, y) {
+            const tile = MAP[y][x];
+
+            if (tile === 'T' || tile === 'M') {
+                player.currentChest = { x, y };
+                menu.open("chest");
+            }
+        }
+
+        function interactWithHealingTile(x, y) {
+            const healAmount = Math.ceil(player.maxHp * 0.3); // Heal 30% of max HP
+            healPlayer(healAmount);
+            updateBattleLog(`An oddly colored, perfectly square floor tile <span class="friendly">heals you for <span class="healtile">${healAmount} HP</span></span>`);
+
+            MAP[y][x] = '.';
+            render();
+        }
+
+        function getRandomMerchantItem() {
+            const availableItems = Object.keys(items).filter(itemId => items[itemId].merchantStockChance > 0);
+            return availableItems[Math.floor(Math.random() * availableItems.length)];
+        }
+
+        function setExitPosition() {
+            const margin = 2;
+            const possiblePositions = [['x', 'y'], ['x'], ['y']];
+            const positions = possiblePositions[
+                Math.floor(Math.random() * possiblePositions.length)
+            ];
+
+            for (let p in positions) {
+                if (positions[p] === 'x') {
+                    const exitOffsetX = Math.round(Math.random() * Math.round(WIDTH / 10));
+                    if (player.x < WIDTH / margin) {
+                        exit.x = WIDTH - margin - exitOffsetX;
+                    } else {
+                        exit.x = margin + exitOffsetX;
+                    }
+                } else {
+                    const exitOffsetY = Math.round(Math.random() * Math.round(HEIGHT / 10));
+                    if (player.y < HEIGHT / margin) {
+                        exit.y = HEIGHT - margin - exitOffsetY;
+                    } else {
+                        exit.y = margin + exitOffsetY;
+                    }
+                }
+            }
+        }
+
+        function setMerchant() {
+            setMerchantWares();
+            setMerchantPosition();
+        }
+
+        function setMerchantPosition() {
+            let attempts = 0;
+
+            do {
+                const x = Math.floor(Math.random() * WIDTH);
+                const y = Math.floor(Math.random() * HEIGHT);
+
+                const isEmptySpace =
+                    MAP[y][x] === '.' &&
+                    (y !== exit.y && x !== exit.x) &&
+                    (y !== player.y && x !== player.x);
+
+                if (isEmptySpace) {
+                    merchant.x = x;
+                    merchant.y = y;
+                    return;
+                }
+            } while (attempts++ < 1000);
+
+            // If we couldn't place the merchant, don't activate the merchant
+            console.warn(`Unable to place the merchant after ${attempts} attempts. The merchant will be deactivated for this floor`);
+            merchant.isActiveOnFloor = false;
+        }
+
+        function setGambler() {
+            let attempts = 0;
+
+            do {
+                const x = Math.floor(Math.random() * WIDTH);
+                const y = Math.floor(Math.random() * HEIGHT);
+
+                const isMerchantSpace =
+                    merchant.isActiveOnFloor &&
+                    y === merchant.y &&
+                    x === merchant.x;
+
+                const isEmptySpace =
+                    MAP[y][x] === '.' &&
+                    (y !== exit.y && x !== exit.x) &&
+                    (y !== player.y && x !== player.x) &&
+                    !isMerchantSpace;
+
+                if (isEmptySpace) {
+                    gambler.x = x;
+                    gambler.y = y;
+                    return;
+                }
+            } while (attempts++ < 1000);
+
+            // If we couldn't place the gambler, don't activate the gambler
+            console.warn(`Unable to place the gambler after ${attempts} attempts. The gambler will be deactivated for this floor`);
+            gambler.isActiveOnFloor = false;
+        }
+
+        function carvePath(stack) {
+            const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+            const step = Math.random() < 0.5 ? -1 : 1;
+            let lastPosition = stack[stack.length - 1];
+
+            for (let i=0; i<2; i++) {
+                const nextPosition = {
+                    x: lastPosition.x + (direction === 'horizontal' ? step : 0),
+                    y: lastPosition.y + (direction === 'vertical' ? step : 0),
+                };
+
+                const atMapEdge =
+                    nextPosition.x === 0 ||
+                    nextPosition.y === 0 ||
+                    nextPosition.x === WIDTH - 1 ||
+                    nextPosition.y === HEIGHT - 1;
+
+                if (atMapEdge) {
+                    return null;
+                }
+
+                const alreadyVisited = stack.find((cell) =>
+                    cell.x === nextPosition.x && cell.y === nextPosition.y
+                );
+                if (alreadyVisited) {
+                    return null;
+                }
+
+                stack.push(nextPosition);
+
+                const reachedEnd =
+                    nextPosition.x === exit.x &&
+                    nextPosition.y === exit.y;
+
+                if (reachedEnd) {
+                    return stack;
+                }
+
+                lastPosition = nextPosition;
+            }
+
+            let result;
+            for (let i=0; i<100; i++) {
+                result = carvePath(stack);
+                if (result) {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        function dissolveMap() {
+            let dissolvePoints = [];
+            for (let y = 2; y < HEIGHT - 2; y++) {
+                for (let x = 2; x < WIDTH - 2; x++) {
+                    const isDissolvePoint = MAP[y][x] === '#' && (
+                        (MAP[y - 1][x] === '#' ? 1 : 0) +
+                        (MAP[y + 1][x] === '#' ? 1 : 0) +
+                        (MAP[y][x - 1] === '#' ? 1 : 0) +
+                        (MAP[y][x + 1] === '#' ? 1 : 0)
+                    ) === 3;
+
+                    if (isDissolvePoint) {
+                        dissolvePoints.push({x, y});
+                    }
+                }
+            }
+
+            const totalPointsToDissolve = Math.floor(dissolvePoints.length / 2);
+            if (totalPointsToDissolve < 1) {
+                return;
+            }
+
+            for (let i = 0; i < totalPointsToDissolve; i++) {
+                const index = Math.floor(Math.random() * dissolvePoints.length);
+                const dissolvePoint = dissolvePoints[index];
+                MAP[dissolvePoint.y][dissolvePoint.x] = '.';
+                dissolvePoints = dissolvePoints.splice(index, 1);
+            }
+        }
+
+        function updateSeenTiles() {
+            seenTiles[player.y][player.x] = true;
+            for (let i = 0; i < 4; i++) {
+                let nx = player.x + DX[i];
+                let ny = player.y + DY[i];
+                if (nx >= 0 && ny >= 0 && nx < WIDTH && ny < HEIGHT) {
+                    seenTiles[ny][nx] = true;
+                }
+            }
+        }
+
+        function drawMinimap() {
+            let out = '';
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    let tile = '';
+                    let tileClass = '';
+                    if (x === player.x && y === player.y) {
+                        const arrow = ['↑', '→', '↓', '←'][player.dir];
+                        tile = arrow;
+                        tileClass = 'player';
+                    } else if (!seenTiles[y][x]) {
+                        tile = '?';
+                        tileClass = 'unexplored';
+                    } else {
+                        if (isMerchantTile(x, y)) {
+                            tile = 'M';
+                            tileClass = 'merchant';
+                        } else if (isGamblerTile(x, y)) {
+                            tile = 'G';
+                            tileClass = 'gambler';
+                        } else if (MAP[y][x] === 'T' || MAP[y][x] === 'M') {
+                            tile = 'T'; // Mimics appear as normal chests
+                            tileClass = 'treasurechest';
+                        } else if (MAP[y][x] === 'H') {
+                            tile = 'H';
+                            tileClass = 'healtile';
+                        } else {
+                            switch (MAP[y][x]) {
+                                case '#':
+                                    tile = '#';
+                                    tileClass = 'wall';
+                                    break;
+                                case 'E':
+                                    tile = 'E';
+                                    tileClass = 'exit';
+                                    break;
+                                default:
+                                    tile = '.';
+                                    tileClass = 'explored';
+                            }
+                        }
+                    }
+                    out += `<span class="${tileClass}">${tile}</span>`;
+                }
+                out += '<br>';
+            }
+            document.getElementById('minimap').innerHTML = out;
+        }
+
+        function isMerchantTile(x, y) {
+            return merchant.isActiveOnFloor && x === merchant.x && y === merchant.y;
+        }
+
+        function isGamblerTile(x, y) {
+            // The gambler won't appear if the player is broke
+            return gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice && x === gambler.x && y === gambler.y;
+        }
+
+        function updateBattleLog(entry) {
+            battleLog.push(entry);
+            if (battleLog.length > 50) {
+                battleLog.shift();
+            }
+
+            const logContainer = document.getElementById("battleLog");
+            logContainer.innerHTML = [...battleLog]
+                .slice()
+                .reverse()
+                .map((msg, i) => {
+                    const lightness = 100 - (i * 15); // Fade effect
+                    const color = `hsl(0, 0%, ${Math.max(lightness, 50)}%)`; // Prevent it from getting too dark
+                    return `<div style="color: ${color};">${msg}</div>`;
+                })
+                .join("");
+        }
+
+        function playMusic(type) {
+            if (!musicEnabled) return; // Do nothing if music is disabled
+
+            if (music.current) {
+                music.current.pause();
+                music.current.currentTime = 0;
+            }
+
+            if (type === 'exploration') {
+                music.exploration.play().catch(err => console.error("Music error:", err));
+                music.current = music.exploration;
+            } else if (type === 'battle') {
+                const randomTrack = music.battleTracks[Math.floor(Math.random() * music.battleTracks.length)];
+                randomTrack.currentTime = 0;
+                randomTrack.play().catch(err => console.error("Music error:", err));
+                music.current = randomTrack;
+            }
+
+            currentMusic = type;
+        }
+
+        function playSFX(name) {
+            if (!sfx[name]) {
+                console.error("SFX not found", { name });
+                return;
+            }
+
+            sfx[name].currentTime = 0;
+            sfx[name].play();
+        }
+
+        function wallSlice(d) {
+            return {
+                3: "||     /#####\\     ||\n",
+                2: "||    |#######|    ||\n",
+                1: "||   |#########|   ||\n"
+            } [d];
+        }
+
+        function corridorSlice(d) {
+            return {
+                3: "||     /     \\     ||\n",
+                2: "||    |       |    ||\n",
+                1: "||   |         |   ||\n"
+            }[d];
+        }
+
+        function exitSlice(d) {
+            return {
+                3: "||     /  E  \\     ||\n",
+                2: "||    |   E   |    ||\n",
+                1: "||   |    E    |   ||\n"
+            }[d];
+        }
+
+        function healSlice(d) {
+            return {
+                3: "||     /  H  \\     ||\n",
+                2: "||    |   H   |    ||\n",
+                1: "||   |    H    |   ||\n"
+            }[d];
+        }
+        function treasureSlice(d) {
+            return {
+                3: "||     /  T  \\     ||\n",
+                2: "||    |   T   |    ||\n",
+                1: "||   |    T    |   ||\n"
+            }[d];
+        }
+        function merchantSlice(d) {
+            return {
+                3: "||     /  M  \\     ||\n",
+                2: "||    |   M   |    ||\n",
+                1: "||   |    M    |   ||\n"
+            }[d];
+        }
+        function gamblerSlice(d) {
+            return {
+                3: "||     /  G  \\     ||\n",
+                2: "||    |   G   |    ||\n",
+                1: "||   |    G    |   ||\n"
+            }[d];
+        }
+
+        function getEnemyArt() {
+            switch (currentEnemy?.id) {
+                case "snailSentinel":
+                    return `
+
+
+
+
+   ___   |_|
+  /   \\_/@ @
+__\\_______^/
+`;
+                case "stupidDog":
+                    return `
+
+
+
+
+/\\__/\\
+|@  @|
+|(00)|
+ )vv(
+`;
+                case "keeperOfTheToiletBowl":
+                    return `
+
+
+
+   _______
+  |       |
+  |_______|=)
+ -----------         ^
+ |         |    O____|
+ \\_________/   /|    |
+    |   |       |    |
+    |___|      / \\   |
+`;
+                case "mysteriousScooter":
+                    return `
+
+
+
+
+
+       [~~]=====[~~]
+            ||
+            ||
+            ||
+            ||
+(O)======(O)===O)
+`;
+                case "badassFlamingSkeleton":
+                    return `
+      |\\ |\\ |\\ |\\ |\\ /| /|
+          _______         /|
+    |\\   /   \\   \\      /|
+  |\\     | [ ]  [ ]        /|
+    |\\   |        |          /|
+         \\ \\=====/     //   /|
+ |\\       \\______\\    ()/    /|
+  |\\       ||        //   /|
+     O==[==||==]====O      /|
+|\\   || [==||==]       /| /|
+  |\\ () [==||==]  /|  /| /|
+`;
+                case "wangRat":
+                    return `
+
+
+
+
+       ______
+    (|/      \\|)
+      \\O    o/___________________
+     --\\-()-/--        __|__|__|_\\
+        \\__/__________/
+        _|  _|  _|  _|
+`;
+
+                case "fridgeOfForgottenLeftovers":
+                    return `
+
+            ___.---+.
+       .--''       | '.
+       |           |  |
+       |     ______|  |
+       |----'      |  |
+       |       [==]|  |
+       |           |  |
+       |           |  |
+       |___        |  |
+           '---.___|.-'
+`;
+
+                case "lughead":
+                    return `
+
+
+
+            .--.
+            |oO|
+         ..-\\TT/-..
+        '          '
+        ( )      ( )
+        ( |------| )
+        'W . || . W'
+          (__)(__)
+`;
+
+                case "pissedOffPoultry":
+                    return `
+
+
+
+    .        .--.
+    |\\      .-:;
+    : \\    < O |'
+     \\ \\   ;    '.
+      \\/\\-(    (. '
+      (_)/ -_    ' ;
+             '-; ;
+            /|\\/|\\
+`;
+
+                case "krampusElf":
+                    return `
+
+
+
+             *
+            / \\
+        .-./___\\.-.
+         \\/ o o \\/
+         (__(_)__)
+           / : \\
+          (_|-|_)
+          (__|__)
+`;
+                case "mimic":
+                    return `
+
+
+
+     ______________
+    /    \\      /  \\
+    |  ((O)    ((O)|     __________
+    |______________|    (________(O) - - - -
+    |    /VVVVV\\   |=====[/\\/]
+    |    \\ | | /   |      [ ]
+    \\______| |_____/
+            \\|
+            `;
+                default:
+                    return '';
+            }
+        }
+
+
+        function render() {
+            updateSeenTiles();
+            drawMinimap();
+            let output = "";
+
+        const stats1Html = `
+        <div class="stats-container">
+            <span>.-STATS-.</span>
+            <span>|===<span class="HP">HP</span>===|</span>
+            <span class="stats-label">${player.hp}/${player.maxHp}</span>
+            <span>|==<span class="DEF">DEF</span>==|</span>
+            <span class="stats-label">${player.defense}</span>
+            <span>|==<span class="PRS">PRS</span>==|</span>
+            <span class="stats-label">${player.persuasion}</span>
+            <span>|==<span class="SPD">SPD</span>==|</span>
+            <span class="stats-label">${player.speed}</span>
+            <span>|==<span class="LUK">LUK</span>==|</span>
+            <span class="stats-label">${player.luck}</span>
+            <span>._ _ _ _.</span>
+        </div>`;
+            document.getElementById('stats1').innerHTML = stats1Html;
+
+            const stats2Html = `<div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.---<span class="action">FLOOR</span>---.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="EXP">EXP</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.exp}/${player.level * 10}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="BTC">BTC</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.bitcoins}</span>
+                <span center>._ _ _ _ _ _.</span>
+            `;
+            document.getElementById('stats2').innerHTML = stats2Html;    
+
+            if (player.levelingUp) {
+                startLevelUpAllocation();
+                return;
+            }
+
+            if (player.inCombat) {
+                output += `${getEnemyArt()}`;
+
+                if (party.length > 0) {
+                    let partyHTML = `<strong>Your Party:</strong><br>`;
+                    party.forEach(member => {
+                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
+                    });
+                    document.getElementById("partylist").innerHTML = partyHTML;
+                } else {
+                    document.getElementById("partylist").innerHTML = '';
+                }
+
+                if (!awaitingPersuasionText) {
+                    document.getElementById("controls").textContent =
+                        "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
+                }
+
+            } else if (true) {
+                output = sceneRenderer.render(player.x, player.y, DIRECTIONS[player.dir]);
+                return;
+            } else {
+                output += "\n\n\n\n\n\n\n";
+
+                for (let d = 3; d >= 1; d--) {
+                    let tx = player.x + DX[player.dir] * d;
+                    let ty = player.y + DY[player.dir] * d;
+                    let tile = getTile(tx, ty);
+
+                    output += (tx === merchant.x && ty === merchant.y && merchant.isActiveOnFloor) ? merchantSlice(d) :
+                            (tx === gambler.x && ty === gambler.y && gambler.isActiveOnFloor) ? gamblerSlice(d) :
+                            tile === '#' ? wallSlice(d) :
+                            tile === 'E' ? exitSlice(d) :
+                            tile === 'H' ? healSlice(d) :
+                            (tile === 'T' || tile === 'M') ? treasureSlice(d) :
+                            corridorSlice(d);
+                }
+
+                // Logo
+                output +=
+                    "||                 ||\n||    Welcome to   ||\n++----TARDQUEST----++\n";
+
+                // Party display
+                if (party.length > 0) {
+                    let partyHTML = `<strong>Your Party:</strong><br>`;
+                    party.forEach(member => {
+                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
+                    });
+                    document.getElementById("partylist").innerHTML = partyHTML;
+                } else {
+                    document.getElementById("partylist").innerHTML = '';
+                }
+
+                // Controls
+                document.getElementById("controls").textContent =
+                    "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
+            }
+
+            if (player.hp <= 0) {
+                output += `\nGood job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`;
+                gameOver = true;
+                setTimeout(() => window.location.href = "title.html", 5000);
+            }
+
+            document.getElementById('scene').innerHTML = output;
+        }
+
+        function getRelativeVisibilityGrid(x, y, direction) {
+            const maxDepth = 5;
+            const grid = [];
+
+            const directionVectors = {
+                N: { dx: 0, dy: -1, lateral: { dx: 1, dy: 0 } },
+                S: { dx: 0, dy: 1, lateral: { dx: 1, dy: 0 } },
+                E: { dx: 1, dy: 0, lateral: { dx: 0, dy: 1 } },
+                W: { dx: -1, dy: 0, lateral: { dx: 0, dy: 1 } }
+            };
+
+            const dir = directionVectors[direction];
+            if (!dir) {
+                console.error("Invalid direction");
+                return [];
+            }
+
+            for (let depth = 0; depth <= maxDepth; depth++) {
+                const row = [];
+                // Make sure that we capture the current player's position
+                // including the immediate left and right cells
+                const offsetStart = Math.min(-1, -depth);
+                const offsetEnd = Math.max(1, depth);
+
+                for (let offset = offsetStart; offset <= offsetEnd; offset++) {
+                    const tx = x + dir.dx * depth + dir.lateral.dx * offset;
+                    const ty = y + dir.dy * depth + dir.lateral.dy * offset;
+                    row.push(MAP[ty]?.[tx] || null);
+                }
+                grid.push(row);
+            }
+
+            return grid;
+        }
+
+
+        function describeMapCell(x, y) {
+            if (typeof MAP[y]?.[x] === 'undefined') {
+                return 'Void';
+            }
+
+            switch (MAP[y][x]) {
+                case '.': return 'Space';
+                case '#': return 'Wall';
+                case 'H': return 'Healing Tile';
+                case 'E': return 'Exit';
+                case 'T': return 'Treasure Chest';
+                case 'M': return 'Mimic';
+                default:  return `No description: ${MAP[y][x]}`;
+            }
+        }
+
+        function isEmpty(obj) {
+            for (let i in obj) {
+                return false;
+            }
+            return true;
+        }
+
+        function getTile(x, y) {
+            return !coordsInBounds(x, y) ? '#' : MAP[y][x];
+        }
+
+        function coordsInBounds(x, y) {
+            return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
+        }
+
+        function move(direction) {
+            if (player.inCombat || gameOver || player.movementDisabled) {
+                return;
+            }
+            // player.movementDisabled = true;
+
+            playSFX('footstep');
+            let nx, ny, randomEncounterChance;
+            if (direction === 'forward') {
+                nx = player.x + DX[player.dir];
+                ny = player.y + DY[player.dir];
+                randomEncounterChance = 0.25;
+            } else {
+                nx = player.x - DX[player.dir];
+                ny = player.y - DY[player.dir];
+                randomEncounterChance = 0.5;
+            }
+
+            const tile = getTile(nx, ny);
+            if (tile !== '#') {
+                player.x = nx;
+                player.y = ny;
+                if (isMerchantTile(nx, ny)) {
+                    menu.open('merchant');
+                } else if (isGamblerTile(nx, ny)) {
+                    menu.open('gambler');
+                } else if (tile === 'E') {
+                    descend();
+                } else if (tile === 'H') {
+                    interactWithHealingTile(nx, ny);
+                } else if (tile === 'T' || tile === 'M') {
+                    interactWithChest(nx, ny);
+                } else if (Math.random() < randomEncounterChance) {
+                    // Debugging
+                    // startEncounter();
+                }
+            }
+
+            // Set the movement delay range
+            const maxDelay = 2000; // Max speed (movement delay) in milliseconds (2s)
+            const minDelay = 1;  // Min speed (movement delay) in milliseconds (1/4 of 1s)
+
+            // Calculate movement delay based on speed
+            const baseDelay = maxDelay; // Start with the maximum delay
+            const speedModifier = player.speed * 0.05; // 5% reduction per speed point
+            const movementDelay = Math.max(minDelay, baseDelay * (1 - speedModifier)); // Ensure delay is at least minDelay
+            /** Disabling for enhanced fun
+            setTimeout(() => {
+                player.movementDisabled = false;
+            }, movementDelay);
+            */
+            render();
+        }
+
+        function turnLeft() {
+            if (player.inCombat || gameOver) {
+                return;
+            }
+            playSFX('turn');
+            player.dir = (player.dir + 3) % 4;
+        }
+
+        function turnRight() {
+            if (player.inCombat || gameOver) {
+                return;
+            }
+            playSFX('turn');
+            player.dir = (player.dir + 1) % 4;
+        }
+
+        function startEncounter() {
+            // Filter out the mimic from the random enemy pool
+            const randomEnemies = enemies.filter(enemy => enemy.id !== "mimic");
+
+            // Pick a random enemy
+            currentEnemy = structuredClone(
+                randomEnemies[Math.floor(Math.random() * randomEnemies.length)]
+            );
+
+            // Scale enemy stats based on floor
+            const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
+            if (floorBoost > 0) {
+                currentEnemy.hp += floorBoost * 5; // +5 HP per scaling
+                currentEnemy.attack = [
+                    currentEnemy.attack[0] + (floorBoost * 3), // Adjust attack range based on floor scaling
+                    currentEnemy.attack[1] + (floorBoost * 3)  // Adjust attack range based on floor scaling
+                ];
+                currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
+            }
+
+            player.inCombat = true;
+            party.forEach(member => member.healedThisBattle = false);
+            updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
+            playMusic('battle');
+        }
+
+
+        function playerAttack() {
+            if (!player.inCombat || awaitingPersuasionText) {
+                return;
+            }
+
+            playSFX('attack');
+            const playerWeapon = weapons[player.weapon];
+            let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
+
+            // Crit attacks based off LUK stat
+            const critChance = player.luck * 0.02; // +0.2% chance per point
+            let isCrit = Math.random() < critChance;
+            if (isCrit) {
+                dmg = Math.floor(dmg * 1.2);
+                updateBattleLog(`<span class="LUK">CRITICAL HIT!</span> You dealt <span class="action">${dmg} HP</span> to ${currentEnemy.name}`);
+            } else {
+                updateBattleLog(`You deal ${dmg} HP to ${currentEnemy.name}`);
+            }
+            currentEnemy.hp -= dmg;
+            endOfPlayerTurn();
+        }
+
+        function endOfPlayerTurn() {
+            if (currentEnemy.hp <= 0) {
+                if (currentEnemy.id === "mimic") {
+                    updateBattleLog(`The <span class='enemy'>MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
+                    player.bitcoins += currentEnemy.bitcoins; // Award scaled BTC
+                } else {
+                    const baseExp = 5;
+                    const floorBoost = Math.floor(floor / 2);
+                    const exp = baseExp + (floorBoost * 5); // +5 EXP per boost
+                    const bitcoinsEarned = currentEnemy.bitcoins;
+
+                    const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
+                    updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
+                    updateBattleLog(`You gained <span class="EXP">+${exp}</span> EXP and <span class="BTC">${bitcoinsEarned} BTC</span>`);
+                    player.bitcoins += bitcoinsEarned;
+                    player.exp += exp;
+                }
+
+                player.inCombat = false;
+                currentEnemy = null;
+                playMusic("exploration");
+                party = party.filter(a => a.hp > 0);
+
+                if (player.exp >= player.level * 10) {
+                    startLevelUpAllocation();
+                }
+            } else {
+                enemyAttack();
+            }
+
+            render();
+        }
+
+        function enemyAttack() {
+            const targetAllies = party.filter(a => a.hp > 0);
+            if (targetAllies.length && Math.random() < 0.5) {
+                const target = targetAllies[Math.floor(Math.random() * targetAllies.length)];
+
+                // Base damage
+                let baseDamage = Math.floor(Math.random() * 5) + 1;
+
+                // Boost damage based on the floor
+                const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
+                baseDamage += floorBoost; // Increase base damage by the floorBoost
+
+                // Calculate damage based on player's defense
+                const playerArmor = armor[player.armor];
+                const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
+
+                let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
+
+                target.hp -= dmg;
+                updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="enemy">${dmg} HP</span> to your <span class="friendly">${target.name}</span>`);
+
+                if (target.hp <= 0) {
+                    updateBattleLog(`Your <span class="friendly">${target.name}</span> has been <span class="action">eviscerated</span>...`);
+                }
+            } else {
+                // Same for the player, calculate the damage for the player
+                let baseDamage = Math.floor(Math.random() * 5) + 1;
+
+                // Boost damage based on the floor
+                const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
+                baseDamage += floorBoost;
+
+                // Calculate damage based on the player's defense
+                const playerArmor = armor[player.armor];
+                const totalDefense = player.defense + (playerArmor ? playerArmor.defense : 0);
+
+                const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
+                player.hp -= dmg;
+
+                updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="HP">${dmg} HP</span> to <span class="friendly">you</span>`);
+
+                if (player.hp <= 0) gameOver = true;
+            }
+        }
+
+
+
+        function tryRun() {
+            if (!player.inCombat || awaitingPersuasionText) {
+                return;
+            }
+
+            playSFX('run');
+            if (Math.random() < 0.5) {
+                updateBattleLog("YOU: Gee willikers, I'm outta here!");
+                player.inCombat = false;
+                currentEnemy = null;
+                playMusic('exploration');
+            } else {
+                updateBattleLog("Couldn't escape!");
+                enemyAttack();
+            }
+            render();
+        }
+
+        function tryPersuade(e) {
+            e?.preventDefault();
+            playSFX('persuade');
+            awaitingPersuasionText = true;
+
+            // Show the input box
+            const inputBox = document.getElementById("inputBox");
+            const input = document.getElementById("persuadeInput");
+            inputBox.style.display = "flex";
+            input.value = "";
+
+            // Delay the focus slightly to ensure it's applied after rendering
+            setTimeout(() => {
+                input.focus();
+            }, 10);
+        }
+
+
+
+        document.getElementById("persuadeInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                const message = e.target.value;
+                updateBattleLog(`YOU: "${message}"`);
+                e.target.value = "";
+                awaitingPersuasionText = false;
+                document.getElementById("inputBox").style.display = "none";
+
+                // ======== Speaking Outside Combat ========
+                if (speakingOutsideCombat) {
+                    speakingOutsideCombat = false;
+
+                    if (party.length > 0) {
+                        const responder = party[Math.floor(Math.random() * party.length)];
+                        const responses = [
+                            "--you pull out your translator-- 'Wow! Please shut the fuck up.'",
+                            "--you pull out your translator-- 'Just so you know, we're not even...'",
+                            "--you pull out your translator-- 'You can't be fucking serious...'",
+                            "--you pull out your translator-- 'I've come for your pickleeee...'",
+                            "--you pull out your translator-- 'Hey that's cool and all, but have you ever played SpongeBob SquarePants: Revenge of the Flying Dutchman on the Sony PlayStation 2?",
+                            "--they're too busy playing Burnout Revenge on the PS2--",
+                            "--they're too busy sexting your mom--",
+                            "--they pick their own nose, and then they pick YOUR nose...--",
+                            "--you notice them scratching their nuts whilst ignoring your interjection--",
+                        ];
+
+                        const reply = responses[Math.floor(Math.random() * responses.length)];
+                        updateBattleLog(`${responder.name}: ${reply}`);
+                    }
+
+                    render();
+                    return;
+                }
+
+                // ======== Persuasion During Combat ========
+                const baseChance = 0.0;
+                const prsBonus = player.persuasion * 0.03;
+                const totalChance = Math.min(0.9, baseChance + prsBonus);
+
+                if (Math.random() < totalChance) {
+                    const newAlly = {
+                        name: currentEnemy.name,
+                        hp: Math.floor(currentEnemy.hp / 2),
+                        healedThisBattle: false
+                    };
+                    party.push(newAlly);
+                    updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
+                    player.inCombat = false;
+                    currentEnemy = null;
+                    playMusic('exploration');
+                } else {
+                    updateBattleLog(`${currentEnemy.name} really, quite genuinely, does not care...`);
+                    enemyAttack();
+                }
+
+                render();
+            }
+        });
+
+
+        function useItem(itemName) {
+            if (items[itemName] && typeof items[itemName].use === "function") {
+                items[itemName].use();
+                player.inventory[itemName]--;
+                if (player.inventory[itemName] <= 0) {
+                    delete player.inventory[itemName];
+                }
+            }
+
+            render();
+        }
+
+        function getArticle(noun) {
+            if (noun.match(/^\w*s\b|\barmor$/i)) {
+                return '';
+            }
+
+            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an ' : 'a ';
+        }
+
+        function gamble() {
+            player.bitcoins -= gambler.playPrice;
+            updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
+
+            document.getElementById('menu').classList.add('hidden');
+
+            dice = [
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1,
+            ];
+            gambleAnimation(dice, () => {
+                gambleOutcome(dice);
+            });
+            playSFX('gamble');
+        }
+
+        function gambleOutcome(dice) {
+            const sum = dice[0] + dice[1];
+            const win = sum === 12;
+            const sumClass = win ? 'friendly' : 'enemy';
+
+            let html = 'You rolled a ' +
+                `<span class="gambler">${dice[0]}</span> and a ` +
+                `<span class="gambler">${dice[1]}</span> ` +
+                `for a sum of <span class="${sumClass}">${sum}</span>\n\n`;
+
+            if (win) {
+                const stats = ['hp', 'defense', 'persuasion'];
+                const randomStat = stats[Math.floor(Math.random() * stats.length)];
+
+                switch (randomStat) {
+                    case 'hp':
+                        // Get a bonus of either 5 or 10 HP
+                        const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5)
+                        player.hp += healthBoost;
+                        player.maxHp += healthBoost;
+                        updateBattleLog(`<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`);
+                        break;
+                    case 'defense':
+                        // Get a bonus of either 1 or 2 defense
+                        const defenseBoost = 1 + Math.floor((Math.random() * 2));
+                        player.defense += defenseBoost;
+                        updateBattleLog(`<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`);
+                        break;
+                    case 'persuasion':
+                        // Get a bonus of either 1 or 2 persuasion
+                        const persuasionBoost = 1 + Math.floor((Math.random() * 2));
+                        player.persuasion += persuasionBoost;
+                        updateBattleLog(`<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`);
+                        break;
+                }
+            } else {
+                gambler.say('Hah! Tough luck, kid!');
+            }
+
+            menu.close();
+        }
+
+        /**
+         * This animates the hand throwing dice when gambling
+         *
+         * The animation works by calling the gambleFrames in sequence. The
+         * number of defined frames is actually more than the number of the
+         * available frames in the animation. This is because the final frame is
+         * held and displays random digits to emphasize the roll
+         */
+        function gambleAnimation(dice, callback, frame) {
+            const maxFrames = 24;
+            const frameNumber = frame || 0;
+            const displayFrame = Math.min(frameNumber, gambleFrames.length - 1);
+            const isFinalFrame = frameNumber >= maxFrames - 1;
+
+            if (frameNumber === 0) {
+                document.getElementById('animation').classList.remove('hidden');
+                document.getElementById('menu').classList.add('hidden');
+            }
+
+            // Set random dice digits before displaying the actual outcome
+            const d = isFinalFrame ? dice : [
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1,
+            ];
+
+            if (frameNumber < maxFrames) {
+                // Add some padding to center the animation
+                let frameText = gambleFrames[displayFrame].replace(/^/gm, '       ');
+                if (frameNumber >= gambleFrames.length - 4) {
+                    // Draw digits on the bones
+                    frameText = frameText.replace(
+                        /(^[ |]+\n^ +\|   ) {5}( +\| +\|   ) {5}(.+\n^ +\|   ) {5}( +\| +\|   ) {5}(.+\n^ +\|   ) {5}( +\| +\|   ) {5}/m,
+                        `$1${dieDigit[d[0] - 1][0]}$2${dieDigit[d[1] - 1][0]}$3${dieDigit[d[0] - 1][1]}$4${dieDigit[d[1] - 1][1]}$5${dieDigit[d[0] - 1][2]}$6${dieDigit[d[1] - 1][2]}`,
+                    );
+                }
+
+                document.getElementById("animation").textContent = frameText;
+                setTimeout(() => gambleAnimation(dice, callback, frameNumber + 1), !isFinalFrame ? 50 : 3000);
+            } else {
+                document.getElementById('animation').classList.add('hidden');
+                document.getElementById('menu').classList.remove('hidden');
+                typeof callback === 'function' && callback();
+            }
+        }
+
+
+        function openChest() {
+            const { x, y } = player.currentChest;
+            const tile = MAP[y][x];
+
+            if (tile === 'M') {
+                // Mimic detected, start a battle
+                playSFX('scream');
+                MAP[y][x] = '.'; // Remove the mimic from the map
+
+                // Spawn mimic and apply scaling
+                const baseMimic = enemies.find(e => e.id === "mimic");
+                currentEnemy = scaleMimicStats(baseMimic);
+
+                updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
+                player.inCombat = true;
+                playMusic('battle');
+            } else if (tile === 'T') {
+                // Normal chest, provide loot
+                const chestContents = Math.random() < 0.5
+                    ? { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 } // Random BTC (10-59)
+                    : { type: 'item', item: getRandomMerchantItem() };
+
+                if (chestContents.type === 'BTC') {
+                    let bonus = Math.floor(chestContents.amount * (player.luck * 0.02)); //+2% BTC increase from chests per point
+                    let total = chestContents.amount + bonus;
+                    player.bitcoins += total;
+                    updateBattleLog(
+                        `You found <span class="BTC">${total} BTC</span> in the chest!`
+                    );
+                } else if (chestContents.type === 'item') {
+                    const itemName = chestContents.item;
+                    player.inventory[itemName] = (player.inventory[itemName] || 0) + 1;
+                    updateBattleLog(`You found <span class="friendly">${items[itemName].name}</span> in the chest!`);
+                }
+
+                MAP[y][x] = '.'; // Remove the chest from the map
+            }
+
+            player.currentChest = null; // Clear the stored chest position
+            render();
+        }
+
+        function scaleMimicStats(baseMimic) {
+            const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
+            const scaledMimic = structuredClone(baseMimic);
+
+            if (floorBoost > 0) {
+                scaledMimic.hp += floorBoost * 5; // +5 HP per scaling
+                scaledMimic.attack = [
+                    scaledMimic.attack[0] + (floorBoost * 3), // Adjust attack range
+                    scaledMimic.attack[1] + (floorBoost * 3)
+                ];
+                scaledMimic.bitcoins += floorBoost * 10; // Increase BTC reward
+            }
+
+            return scaledMimic;
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver || awaitingPersuasionText) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+
+            if (menu.isOpen()) {
+                menu.handleInput(key);
+            } else if (player.levelingUp) {
+                handleLevelUpInput(key); // Call the level-up input handler
+            } else if (key === 'i') {
+                playSFX('inventoryOpen');
+                menu.open('inventory');
+            } else if (player.inCombat) {
+                switch (key) {
+                    case 'a':
+                        playerAttack();
+                        break;
+                    case 'r':
+                        tryRun();
+                        break;
+                    case 'p':
+                        tryPersuade(e);
+                        break;
+                }
+            } else {
+                switch (key) {
+                    case 'w':
+                    case 'arrowup':
+                        e.preventDefault();
+                        move('forward');
+                        break;
+                    case 's':
+                    case 'arrowdown':
+                        e.preventDefault();
+                        move('backward');
+                        break;
+                    case 'a':
+                    case 'arrowleft':
+                        e.preventDefault();
+                        turnLeft();
+                        break;
+                    case 'd':
+                    case 'arrowright':
+                        e.preventDefault();
+                        turnRight();
+                        break;
+                    case 't':
+                        speakingOutsideCombat = true;
+                        tryPersuade(e);
+                        break;
+                }
+            }
+
+            render();
+        });
+
+        function descend() {
+            floor++;
+            updateBattleLog(`Descending into floor ${floor}...`);
+
+            const floorBoost = Math.floor(floor / 2);
+            if (floorBoost > lastFloorBoostNotice) {
+                updateBattleLog(`<span class="action">As you descend deeper into the dungeon, you sense greater danger than before</span>.`);
+                lastFloorBoostNotice = floorBoost;
+            }
+
+            if (Math.random() < 0.5) {
+                const flavorText = [
+                    "The stale air fills your nostrils.",
+                    "You feel like you're being watched.",
+                    "A chill creeps down your spine.",
+                    "Your torch flickers strangely in the windless corridor.",
+                    "A draft carries the scent of mildew, ash, and Lemon Pledge.",
+                    "You hear a dog yipping in the distance.",
+                    "An empty snail shell lies cracked on the stairs.",
+                    "A growl echoes through the hallway.",
+                    "A faint smell of urinal cake wafts up from below.",
+                    "You hear a toilet flush in the distance.",
+                    "There's graffiti on the wall: \"Beware the snail!\"",
+                    "You smell something pungent. Possibly ancient evil. Possibly cheese.",
+                    "You hear a groan, as if the dungeon itself is aware of your presence.",
+                    "Somewhere ahead, something clanks. You sincerely hope it's plumbing.",
+                    "You hear a plunger plunging menacingly.",
+                ];
+
+                const logLine = flavorText[Math.floor(Math.random() * flavorText.length)];
+                updateBattleLog(logLine);
+            }
+
+            generateMap();
+        }
+
+
+        generateMap();
+        updateSeenTiles(); 
+        drawMinimap(); 
+        playMusic('exploration'); 
+        render(); 
+
+        document.getElementById('musicToggle').addEventListener('click', () => {
+            musicEnabled = !musicEnabled;
+            const btn = document.getElementById('musicToggle');
+            btn.textContent = musicEnabled ? "DISABLE MUSIC" : "ENABLE MUSIC";
+
+            if (!musicEnabled) {
+                if (music.current) {
+                    music.current.pause();
+                }
+            } else {
+                if (player.inCombat) {
+                    playMusic('battle');
+                } else {
+                    playMusic('exploration');
+                }
+            }
+        });
+
+        let isLevelUpAllocation = false;
+        let levelUpAllocatedStats = {};
+
+        function startLevelUpAllocation() {
+            isLevelUpAllocation = true;
+            levelUpAllocatedStats = {};
+            player.remainingPoints = 3;
+            levelUpAllocatedStats.base = {
+                maxHp: player.maxHp,
+                defense: player.defense,
+                persuasion: player.persuasion,
+                speed: player.speed,
+                luck: player.luck
+            };
+            menu.open("statAllocation");
+        }
+
+        player.remainingPoints = 10; //Points to allocate at start of game
+
+        function resetStats() {
+            player.remainingPoints = 10;
+            player.maxHp = baseStats.maxHp;
+            player.hp = player.maxHp;
+            player.defense = baseStats.defense;
+            player.persuasion = baseStats.persuasion;
+            player.speed = baseStats.speed;
+            player.luck = baseStats.luck;
+            updateBattleLog("Stat allocation has been reset. Start over!");
+        }
+
+        function rollDiceForStats() {
+            resetStats(); 
+            const stats = ["hp", "defense", "persuasion", "speed", "luck"];
+            while (player.remainingPoints > 0) {
+                const randomStat = stats[Math.floor(Math.random() * stats.length)];
+                switch (randomStat) {
+                    case "hp":
+                        player.maxHp += 1;
+                        player.hp = player.maxHp;
+                        break;
+                    case "defense":
+                        player.defense += 1;
+                        break;
+                    case "persuasion":
+                        player.persuasion += 1;
+                        break;
+                    case "speed":
+                        player.speed += 1;
+                        break;
+                    case "luck":
+                        player.luck += 1;
+                        break;
+                }
+                player.remainingPoints--;
+            }
+            updateBattleLog("Points have been randomly allocated. Good luck!");
+        }
+
+        // Function to finalize stats after allocation
+        function finalizeStats() {
+            updateBattleLog("Stat allocation complete! Your adventure begins...");
+        }
+
+        menu.open("statAllocation");
+
+        document.getElementById('resetButton').addEventListener('click', () => window.location.reload());
+
+        const gambleFrames = [
+    `
+
+
+
+                  _____
+                 /     -.
+                 \\____.--
+
+
+    `,
+
+    `
+
+
+
+              _,--.
+             ( ;.  \`-.
+             (  '    _
+              \`-___-'
+
+    `,
+
+    `
+
+
+
+           _,-.-.
+          (_;.   \`-.
+         (__:
+          (__.'    _
+           \`-____-'
+
+    `,
+
+    `
+
+
+       _,-.-.
+      (_;.   \`-.
+      (__:
+      (__'
+      (__.'    _
+       \`-____-'
+
+    `,
+
+    `
+
+
+     _,--.---.
+    (_;-.__   \`-.
+    (______)
+    (______)
+    (_____)     _
+     \`-_______-'
+    `,
+
+    `
+
+          ____
+     ____'._  '.
+    (____)_ \`.  \`-.
+    (______)\\
+     (______)
+      (_____)     _
+       \`-_______-'
+
+    `,
+
+    `
+
+            ..__
+    ________\`.  '-
+   (__)______ \`.  '-.
+    (__)__/_\\
+      (____)
+       (___)        _
+         \`-_______-'
+
+    `,
+
+    `
+
+              ..__
+    __________\`.  '-
+   (___________ \`.  '-.
+    (______..--.
+      (__)_||__|
+        (_)_          _
+           \`-_______-'
+
+    `,
+
+    `
+
+                ..__
+      __________\`.  '-
+     (___________ \`.  '-.
+      (___/_/\\ ___.
+       (__\\_\\/|   ||
+         (____|___||    _
+              \`-______-'
+
+    `,
+
+    `
+
+                  ..__
+        __________\`.  '-
+       (___________ \`.  '-.
+        (__________
+         (________
+         .-'--._ .----_   _
+         | |  | |\` ___'.-'
+         \`.|..' ' \`    |
+                 \`|____'
+
+    `,
+
+    `
+
+                      ..__
+            __________\`.  '-
+           (___________ \`.  '
+                (__________
+                 (________
+                   (____          _
+                        \`-______-'
+       .-----       .----.
+      / \`.   \`.    /      \\
+     /    '.___\`. /________\\
+     \`.   /    /  \\        /
+       \`./____/    \\      /
+                    \`----'
+    `,
+
+    `
+
+                          ..__
+                __________\`.  '-
+               (___________ \`.  '-.
+                (__________
+                 (________
+                   (____
+                        \`-______-
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+    `
+
+
+                         _________
+                        (_________
+                          (_______
+                           (______
+                             (____
+
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+    `
+
+
+                                 _
+                                (_
+
+
+
+
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+    `
+
+
+
+
+
+
+
+
+
+
+    .----------.   .----------.
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |          |   |          |
+    |__________|   |__________|
+    `,
+
+];
+
+    const dieDigit = [
+        ['▗▄▋  ', ' ▐▋  ', '▝▀▀▘ '], // 1
+        ['▄▀▀▄ ', ' ▄▀  ', '▀▀▀▀▘'], // 2
+        ['▄▀▀▄ ', '  ▀▄ ', '▀▄▄▀ '], // 3
+        ['█  █ ', '▀▀▀█ ', '   ▀ '], // 4
+        ['█▀▀▀ ', '▀▀▀▄ ', '▀▄▄▀ '], // 5
+        ['▄▀▀▀ ', '█▀▀▄ ', '▀▄▄▀ '], // 6
+    ];
+    </script>
+
+
+</body></html>
