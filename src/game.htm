@@ -301,7 +301,8 @@
         .treasureChest {
             color: #f19b32;
         }
-        .wall {
+        .wall,
+        .gloryWall {
             color: #e9ff00;
         }
         .floor {
@@ -372,6 +373,10 @@
          * The renderer adds <span> elements around each rendered character with
          * a "scene_character_" prefix. So for example, a "wall"
          */
+        .scene_character_void {
+            color: #000;
+        }
+
         @keyframes scene_healingTileGlow {
           0% {
             color: #6CFF74;
@@ -921,6 +926,645 @@
                 ],
             },
 
+            void: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 45, y: 11 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 11 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 11 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 31, y: 11 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 42, y: 11 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 11 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 11 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 47, y: 11 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 11 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 11 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 11 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 11 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 11 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 31, y: 11 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 11 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 11 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        data: `
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            ████▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ████████████▀
+                            ██████████▀
+                            ████████▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                        `,
+                    },
+                    {
+                        data: `
+                            ████████
+                            ████████
+                            ████████
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ███████████████████
+                            ███████████████████
+                            ███████████████████
+                            ██████████████████▀
+                            ████████████████▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ███
+                            ██▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██████████████
+                            ██████████████
+                            ████████████▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ████████████
+                            ████████████
+                            ████████████
+                        `,
+                    },
+                    {
+                        data: `
+                            ███████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ███████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██████
+                            ▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
+            gloryWall: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 0 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 44, y: 0 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 1 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 1 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 1 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 6 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 5 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 5 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 5 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 6 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 8 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 8 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 8 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 8 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 34, y: 8 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 9 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 9 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 9 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 9 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 9 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 9 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 26, y: 9 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 9 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 9 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 40, y: 9 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 10 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 10 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 10 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 10 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 10 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 10 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 10 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 10 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 10 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 10 },
+                    },
+                },
+                art: [
+                    {
+                        data: `
+                            ████▄
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ████▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██████▄
+                            ██████▒█▄
+                            ██████▒███▄
+                            ██████▒█████▄
+                            ██████▒███████▄
+                            ██████▒█▒▒█████
+                            ██████▒█▒█▒▒███
+                            ██████▒███▒█▒██
+                            ██████▒████▒███
+                            ██████▒██▒█████
+                            ██████▒█████▒██
+                            ██████▒███░▒███
+                            ██████▒██▒▒████
+                            ██████▒████████
+                            ██████▒███▒████
+                            ██████▒███████▀
+                            ██████▒█████▀
+                            ██████▒███▀
+                            ██████▒█▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ██████████▀█████████▀███████████████████
+                            █████▀▄▄█▀▄▀▄▄▀█▀▄▄█▄▀ █████████████████
+                            ████ █▄ █ █▄▀▀▄█ ██▀▀▀▄█████████████████
+                            █████▄▄█████████████████████████████████
+                            ██████████▀██▀██████ ███████████████████
+                            █████████ ▀▀ █▀▄▄▀█ ██▀▄▄▀██████████████
+                            ████████ ███ █▄▀▀▄█ █ █▄▄███████████████
+                            ██████████████████████▄▄███▀▀▀██████████
+                            ██████████████████████████████▄▄▀███████
+                            ████████████████████████████████ ███████
+                            ████████████████▀▀██▓██▀ ████▀▀▄████████
+                            ███████████████    ███▄  ▄▄▄▄███████████
+                            █████████████▓██▄▄████▓█▄███████████████
+                            ████████████████▒░█▓████████████████████
+                            ██████████████▒██▒██████████████████████
+                            ████████████████▓███████████████████████
+                            █████████████████▓██████████████████████
+                            ████████████████████████████████████████
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄
+                            █████▄▄▄
+                            █████████
+                            ██▓▓▓▓███
+                            █▓█▓█▓███
+                            ████▓████
+                            ██▒▒█████
+                            █████████
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ███████████████▒▄
+                            ██▓█▓██████████▒██▄
+                            █▓█▓█▓█▓█▓█████▒████
+                            ██▓█▓█████▓████▒████
+                            █████████▓█████▒████
+                            ████████▓██████▒████
+                            ████▒▒█████████▒████
+                            ███████████████▒████
+                            ████▓██████████▒██▀
+                            ███████████████▒▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ██████████████████████
+                            ██████████████████████
+                            ████▓▓██▓██▓██████████
+                            ███▓██▓▓█▓██▓█▓███████
+                            ██████████▓████▓▓█████
+                            ██████████████▓███████
+                            ████████▒▒▓█▓█████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ██▄▄
+                            █▓██
+                            ██▓█
+                            ██▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ███████████▓▄
+                            ██▓█▓█▓████▓██▄
+                            ███▓███▓███▓███
+                            ███▓▒▓█████▓███
+                            ███████████▓██▀
+                            ███████████▓▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ████████████
+                            ██▓█▓█▓█████
+                            ████████▓███
+                            ███▓▒▓▓█████
+                            ████████████
+                            ████████████
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓█▓▄
+                            ██▓▓███▓▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓██▄
+                            ██▓▓███▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓██
+                            ██▓▓███
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓█
+                            ██▓▓██
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▄
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
             healingTile: {
                 positions: {
                     p0_0: {
@@ -1303,7 +1947,6 @@
                     },
                 },
                 art: [
-                    // 0
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1329,7 +1972,6 @@
                             %▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
                         `,
                     },
-                    // 1
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1345,7 +1987,6 @@
                             ▄▄███████████▀
                         `,
                     },
-                    // 2
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1361,7 +2002,6 @@
                             ▄████████████████▄
                         `,
                     },
-                    // 3
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1377,7 +2017,6 @@
                             %%%▀███████████▄▄
                         `,
                     },
-                    // 4
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1389,7 +2028,6 @@
                             ████████████▀
                         `,
                     },
-                    // 5
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1401,7 +2039,6 @@
                             ▄████████▄
                         `,
                     },
-                    // 6
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1413,7 +2050,6 @@
                           ▀████████████
                         `,
                     },
-                    // 7
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1423,7 +2059,6 @@
                             ▀▀▀▀▀▀
                         `,
                     },
-                    // 8
                     {
                         data: `
                             ↘
@@ -1587,7 +2222,6 @@
                     },
                 },
                 art: [
-                    // 0
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1600,7 +2234,6 @@
                             █▄▄▄▄█▄▄▄▄▄▄▄▄▄▄█▄▄▄▄█
                         `,
                     },
-                    // 1
                     {
                         data: `
                             ▄▀▀▀▀▀▀█▀▄
@@ -1609,7 +2242,6 @@
                             ▀▀▀▀▀▀▀▀▀
                         `,
                     },
-                    // 2
                     {
                         data: `
                             ▄▀▀▀▀▀▀▀▀▄
@@ -1618,20 +2250,17 @@
                             ▀▀▀▀▀▀▀▀▀▀
                         `,
                     },
-                    // 3
                     {
                         data: `
                             ▞▜▛▚
                             ▙▄▄▟
                         `,
                     },
-                    // 4
                     {
                         data: `
                             ▆▆
                         `,
                     },
-                    // 5
                     {
                         data: `
                             ▗▖
@@ -1792,7 +2421,6 @@
                     },
                 },
                 art: [
-                    // 0
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1811,7 +2439,6 @@
                             ▀%▀▀%▀▀▀▀▀▀▀▀▀▀▀%%▀
                         `,
                     },
-                    // 1
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1826,7 +2453,6 @@
                             %▀▀▀▀▀▀▀▀▀▀
                         `,
                     },
-                    // 2
                     {
                         transparentCharacter: '%',
                         data: `
@@ -1837,7 +2463,6 @@
                             %%▌▙╱
                         `,
                     },
-                    // 3
                     {
                         data: `
                             ☻
@@ -1845,7 +2470,6 @@
                             ╫
                         `,
                     },
-                    // 4
                     {
                         data: `
                             ♣
@@ -2497,7 +3121,7 @@
             draw: (scene, subject, depth, index) => {
                 // Depth: 0, Index: 1 is the player's current cell
                 // There is nothing to draw here
-                if (subject === null || (depth === 0 && index === 1)) {
+                if (depth === 0 && index === 1) {
                     return scene;
                 }
 
@@ -2557,7 +3181,7 @@
                     return 'treasureChest';
                 }
 
-                return entity?.type || null;
+                return entity?.type || 'void';
             },
 
             formatArt: (art) => {
@@ -2576,100 +3200,173 @@
         };
 
         class MapCell {
-            constructor(
-                type = "floor",
-                mapCharacter = null,
-                isSolid = null,
-                onEnter = null,
-                isVisible = null,
-            ) {
+            constructor(type = "floor", options = {}) {
                 const defaults = MapCell.defaultsByType(type);
                 this.type = type;
-                this.mapCharacter = mapCharacter || defaults.mapCharacter;
-                this.isSolid = isSolid || defaults.isSolid;
-                this.onEnter = onEnter || defaults.onEnter;
-                this.isVisible = isVisible || defaults.isVisible;
+                this.mapCharacter = options?.mapCharacter || defaults.mapCharacter;
+                this.isSolid = options?.isSolid || defaults.isSolid;
+                this.onEnter = options?.onEnter || defaults.onEnter;
+                this.onTouch = options?.onTouch || defaults.onTouch;
+                this.onExplode = options?.onExplode || defaults.onExplode;
+                this.isVisible = options?.isVisible || defaults.isVisible;
             }
 
             static defaultsByType(type) {
-                return {
+                /**
+                 * A MapCell can have the following properties:
+                 *
+                 * mapCharacter
+                 *   The character that represents the tile on the minimap
+                 *
+                 * isSolid
+                 *   If true, acts like a wall and does not allow the player to
+                 *   step onto it
+                 *
+                 * onEnter
+                 *   A function that runs when the player steps onto the tile.
+                 *   Always called with its own x, y coordinates. Won't work
+                 *   when isSolid = true
+                 *
+                 * onTouch
+                 *   A function that runs when the player touches the tile.
+                 *   Won't work when isSolid = false
+                 *
+                 * onExplode
+                 *   A function that runs when the player has blasted the tile
+                 *   with a brick of C4. Always called with its own x, y
+                 *   coordinates
+                 *
+                 * isVisible
+                 *   A function that determines if the tile is visible. If it
+                 *   returns false, the tile appears as a generic floor instead
+                 */
+                const defaults = {
+                    mapCharacter: "?",
+                    isSolid: false,
+                    onEnter: null,
+                    onTouch: null,
+                    onExplode: null,
+                    isVisible: null,
+                };
+
+                const types = {
                     floor: {
                         mapCharacter: ".",
-                        isSolid: false,
-                        onEnter: null,
-                        isVisible: null,
                     },
                     healingTile: {
                         mapCharacter: "H",
-                        isSolid: false,
                         onEnter: (x, y) => interactWithHealingTile(x, y),
-                        isVisible: null,
                     },
                     wall: {
                         mapCharacter: "#",
                         isSolid: true,
-                        onEnter: null,
-                        isVisible: null,
+                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
+                    },
+                    gloryWall: {
+                        mapCharacter: "#",
+                        isSolid: true,
+                        onTouch: () => player.say("Uh, no thanks. I'm not THAT brave"),
+                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
                     },
                     crater: {
                         mapCharacter: ".",
-                        isSolid: false,
-                        onEnter: null,
-                        isVisible: null,
                     },
                     bloodyCrater: {
                         mapCharacter: ".",
-                        isSolid: false,
-                        onEnter: null,
-                        isVisible: null,
                     },
                     exit: {
                         mapCharacter: "E",
-                        isSolid: false,
                         onEnter: (x, y) => descend(),
-                        isVisible: null,
                     },
                     merchant: {
                         mapCharacter: "M",
-                        isSolid: false,
                         onEnter: (x, y) => menu.open('merchant'),
                         isVisible: () =>
                             merchant.isAlive &&
                             merchant.isActiveOnFloor,
+                        onExplode: (x, y) => {
+                            console.log({ merchantTesting: this });
+                            merchant.isAlive = false;
+                            merchant.isActiveOnFloor = false;
+                            MAP[y][x] = new MapCell('bloodyCrater');
+                            playSFX('scream');
+                            merchant.say('AIEEEEEEEEEEEEEE!');
+                            updateBattleLog(
+                                'HOLY SHIT! The <span class="friendly">' +
+                                'merchant</span> has been ' +
+                                '<span class="action">vaporized</span> into ' +
+                                'a bloody red mist!'
+                            );
+                        },
                     },
                     gambler: {
                         mapCharacter: "G",
-                        isSolid: false,
                         onEnter: (x, y) => menu.open('gambler'),
                         isVisible: () =>
                             gambler.isAlive &&
                             gambler.isActiveOnFloor &&
                             player.bitcoins >= gambler.playPrice,
+                        onExplode: (x, y) => {
+                            gambler.isAlive = false;
+                            gambler.isActiveOnFloor = false;
+                            MAP[y][x] = new MapCell('bloodyCrater');
+
+                            // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
+                            const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
+                            player.bitcoins += rewardBtc;
+                            playSFX('scream');
+                            gambler.say('AUGH!!');
+                            updateBattleLog(
+                                `The <span class="gambler">gambler</span> ` +
+                                `has been reduced to a confetti of shrapnel ` +
+                                `and bone! You find <span class="BTC">` +
+                                `${rewardBtc} BTC</span> among the remains. ` +
+                                `Awesome!`
+                            );
+                        },
                     },
                     tardspireBanner: {
                         mapCharacter: ".",
-                        isSolid: false,
                         onEnter: (x, y) => MAP[y][x] = new MapCell(),
-                        isVisible: null,
+                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
                     },
                     treasureChest: {
                         mapCharacter: "T",
-                        isSolid: false,
                         onEnter: (x, y) => interactWithChest(x, y),
-                        isVisible: null,
+                        onExplode: (x, y) => {
+                            MAP[y][x] = new MapCell('crater');
+                            updateBattleLog(
+                                '<span class="action">Gee willikers, you ' +
+                                'just destroyed a perfectly good treasure ' +
+                                'chest! Oh well...</span><br>'
+                            );
+                        },
                     },
                     mimic: {
                         mapCharacter: "T",
-                        isSolid: false,
                         onEnter: (x, y) => interactWithChest(x, y),
-                        isVisible: null,
+                        onExplode: (x, y) => {
+                            MAP[y][x] = new MapCell('bloodyCrater');
+
+                            // Calculate scaled BTC reward
+                            const baseMimic = enemies.find(e => e.id === "mimic");
+                            const scaledMimic = scaleMimicStats(baseMimic);
+                            const mimicBTC = scaledMimic.bitcoins;
+
+                            player.bitcoins += mimicBTC; // Reward the player
+                            updateBattleLog(
+                                `<span class="action">WHAT THE FUCK? That ` +
+                                `was a mimic?!</span> You obtained ` +
+                                `<span class="BTC">${mimicBTC} BTC</span> ` +
+                                `from the intestines spilled from its gaping ` +
+                                `maw.`
+                            );
+                            playSFX('scream');
+                        },
                     },
-                }[type] || {
-                    mapCharacter: "?",
-                    isSolid: false,
-                    onEnter: null,
-                    isVisible: null,
                 };
+
+                return { ...defaults, ...(types[type] || {}) };
             }
         }
 
@@ -2721,6 +3418,9 @@
             ring1: null,
             ring2: null,
             movementDisabled: false,
+            say: function(str) {
+                updateBattleLog(`<span class="player">&lt;YOU&gt;</span> "${str}"`);
+            },
         };
 
         const merchant = {
@@ -2729,21 +3429,6 @@
             items: [],
             say: function(str) {
                 updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
-            },
-            die: function() {
-                const location = merchant.location();
-                if (location === null) {
-                    console.log("The merchant is already fucking dead, dude");
-                    return;
-                }
-
-                this.isAlive = false;
-                this.isActiveOnFloor = false;
-                MAP[location.y][location.x] = new MapCell('bloodyCrater');
-
-                playSFX('scream');
-                merchant.say('AIEEEEEEEEEEEEEE!');
-                updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
             },
             isAt: function(x, y) {
                 return (
@@ -2810,24 +3495,6 @@
             playPrice: 200,
             say: function(str) {
                 updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
-            },
-            die: function () {
-                const location = gambler.location();
-                if (location === null) {
-                    console.log("The gambler doesn't even exist on the map, moron");
-                    return;
-                }
-
-                this.isAlive = false;
-                this.isActiveOnFloor = false;
-                MAP[location.y][location.x] = new MapCell('bloodyCrater');
-
-                // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
-                const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
-                player.bitcoins += rewardBtc;
-                playSFX('scream');
-                gambler.say('AUGH!!');
-                updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
             },
             isAt: function(x, y) {
                 return (
@@ -3335,56 +4002,11 @@
 
             for (let y=yMin; y<=yMax; y++) {
                 for (let x=xMin; x<=xMax; x++) {
-                    breakMap(x, y);
+                    if (MAP[y]?.[x]) {
+                        MAP[y][x]?.onExplode?.(x, y);
+                        seenTiles[y][x] = true;
+                    }
                 }
-            }
-        }
-
-        function breakMap(x, y) {
-            if (coordsInBounds(x, y)) {
-                if (MAP[y][x]?.type === 'wall') {
-                    MAP[y][x] = new MapCell(); // Destroy walls
-                }
-
-                const killedMerchant =
-                    merchant.isAlive &&
-                    merchant.isActiveOnFloor &&
-                    MAP[y][x]?.type === 'merchant';
-                if (killedMerchant) {
-                    merchant.die();
-                }
-
-                // Only allow killing the gambler if he is visible (player has enough BTC)
-                const killedGambler =
-                    gambler.isAlive &&
-                    gambler.isActiveOnFloor &&
-                    player.bitcoins >= gambler.playPrice &&
-                    MAP[y][x]?.type === 'gambler';
-                if (killedGambler) {
-                    gambler.die();
-                }
-
-                // Destroy treasure chests
-                if (MAP[y][x]?.type === 'treasureChest') {
-                    MAP[y][x] = new MapCell('crater');
-                    updateBattleLog('<span class="action">Gee willikers, you just destroyed a perfectly good treasure chest! Oh well...</span><br>');
-                }
-
-                // Destroy mimic chests and reward BTC
-                if (MAP[y][x]?.type === 'mimic') {
-                    MAP[y][x] = new MapCell('bloodyCrater'); // Remove the mimic chest from the map
-
-                    // Calculate scaled BTC reward
-                    const baseMimic = enemies.find(e => e.id === "mimic");
-                    const scaledMimic = scaleMimicStats(baseMimic);
-                    const mimicBTC = scaledMimic.bitcoins;
-
-                    player.bitcoins += mimicBTC; // Reward the player
-                    updateBattleLog(`<span class="action">WHAT THE FUCK? That was a mimic?!</span> You obtained <span class="BTC">${mimicBTC} BTC</span> from the intestines spilled from its gaping maw.`);
-                    playSFX('scream');
-                }
-
-                seenTiles[y][x] = true;
             }
         }
 
@@ -3580,6 +4202,14 @@
                 // East of player
                 MAP[player.y][player.x + 1] = new MapCell('tardspireBanner');
                 player.dir = DIRECTIONS.indexOf('E');
+            }
+
+            // If there's a wall behind the player, turn it into a glory wall
+            const gx = player.x - DX[player.dir];
+            const gy = player.y - DY[player.dir];
+
+            if (MAP[gy][gx]?.type === 'wall') {
+                MAP[gy][gx] = new MapCell('gloryWall');
             }
         }
 
@@ -4216,10 +4846,12 @@ __\\_______^/
                     (typeof tile.isVisible !== "function" || tile.isVisible());
 
                 if (fireOnEnter) {
-                    tile.onEnter(player.x, player.y);
+                    tile.onEnter(nx, ny);
                 } else if (Math.random() < randomEncounterChance) {
-                    startEncounter();
+                    // startEncounter();
                 }
+            } else if (typeof tile.onTouch === "function") {
+                tile.onTouch();
             }
 
             // Set the movement delay range
@@ -4392,7 +5024,7 @@ __\\_______^/
 
             playSFX('run');
             if (Math.random() < 0.5) {
-                updateBattleLog("YOU: Gee willikers, I'm outta here!");
+                player.say("Gee willikers, I'm outta here!");
                 player.inCombat = false;
                 currentEnemy = null;
                 resumeExplorationMusic(); // <-- use this
@@ -4434,7 +5066,7 @@ __\\_______^/
                     render();
                     return;
                 }
-                updateBattleLog(`YOU: "${message}"`);
+                player.say(message);
                 e.target.value = "";
                 awaitingPersuasionText = false;
                 document.getElementById("inputBox").style.display = "none";
@@ -5088,7 +5720,7 @@ __\\_______^/
                 // Render the title and page indicator
                 const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
                 const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
-                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                const landingHtml = `<div>${activeMenu?.landingHtml?.() || ''}</div>`;
                 document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
 
                 // Render the options for the current page
@@ -5244,17 +5876,6 @@ __\\_______^/
                 },
                 inventoryEquipment: {
                     title: "EQUIPMENT",
-                    landingHtml: () => {
-                        const weapon = weapons[player.weapon];
-                        const armorPiece = armor[player.armor];
-                        const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
-                        const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
-                        return `
-${weapon ? `Weapon: ${weapon.name}` : "No weapon equipped"}
-${armorPiece ? `Armor: ${armorPiece.name}` : "No armor equipped"}
-Rings: ${ring1}, ${ring2}
-                        `;
-                    },
                     getOptions: () => {
                         const weapon = weapons[player.weapon];
                         const armorPiece = armor[player.armor];
@@ -5289,8 +5910,6 @@ Rings: ${ring1}, ${ring2}
                 },
                 equipHand: {
                     title: "EQUIP WEAPON",
-                    landingHtml: () => {
-                    },
                     getOptions: () => {
                         const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
                         const options = ownedWeapons.map((weaponId) => ({
@@ -5324,8 +5943,6 @@ Rings: ${ring1}, ${ring2}
 
                 equipBody: {
                     title: "EQUIP ARMOR",
-                    landingHtml: () => {
-                    },
                     getOptions: () => {
                         const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
                         const options = ownedArmor.map((armorId) => ({
@@ -5389,7 +6006,6 @@ Rings: ${ring1}, ${ring2}
 
                 ring1Select: {
                     title: "EQUIP RING 1",
-                    landingHtml: () => "",
                     getOptions: () => {
                         const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
                         const options = ownedRings.map((ringId) => ({
@@ -5432,7 +6048,6 @@ Rings: ${ring1}, ${ring2}
 
                 ring2Select: {
                     title: "EQUIP RING 2",
-                    landingHtml: () => "",
                     getOptions: () => {
                         const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
                         const options = ownedRings.map((ringId) => ({
@@ -5729,11 +6344,7 @@ Rings: ${ring1}, ${ring2}
                 chest: {
                     title: "TREASURE CHEST",
                     landingHtml: () => {
-                        return `
-
-
-You found a treasure chest! Do you want to open it?
-                        `;
+                        return `\n\n\nYou found a treasure chest! Do you want to open it?`;
                     },
                     getOptions: () => {
                         return [
