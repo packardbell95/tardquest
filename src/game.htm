@@ -1114,20 +1114,54 @@
         };
 
         const music = {
-            exploration: new Audio('audio/explore.wav'),
-            battleTracks: [
-                new Audio('audio/battle1.mp3'), // battle1.mp3
-                new Audio('audio/battle2.mp3'), // battle2.mp3
-                new Audio('audio/battle3.mp3'), // battle3.mp3
+            explorationTracks: [
+                new Audio("audio/explore.mp3"),
+                new Audio("audio/metalspoons.mp3"), // Metal Spoons - endless_self
+                new Audio("audio/tardedwarrior.mp3"), // Tarded Warrior - endless_self
             ],
-            current: null
+            battleTracks: [
+                new Audio("audio/battle1.mp3"), // battle1
+                new Audio("audio/battle2.mp3"), // battle2
+                new Audio("audio/battle3.mp3"), // battle3
+            ],
         };
 
-        music.exploration.loop = true;
+        music.explorationTracks.forEach(track => track.loop = true);
         music.battleTracks.forEach(track => track.loop = true);
 
+        function stopAllMusic() {
+            [...music.explorationTracks, ...music.battleTracks].forEach(track => {
+                track.pause();
+                track.currentTime = 0;
+            });
+        }
+
+        function playRandomExplorationMusic() {
+            stopAllMusic();
+            if (!musicEnabled) return;
+            const idx = Math.floor(Math.random() * music.explorationTracks.length);
+            currentExplorationTrack = music.explorationTracks[idx];
+            currentMusic = currentExplorationTrack;
+            currentExplorationTrack.play();
+        }
+
+        function playRandomBattleMusic() {
+            stopAllMusic();
+            if (!musicEnabled) return;
+            const idx = Math.floor(Math.random() * music.battleTracks.length);
+            currentMusic = music.battleTracks[idx];
+            currentMusic.play();
+        }
+
+        function resumeExplorationMusic() {
+            stopAllMusic();
+            if (!musicEnabled || !currentExplorationTrack) return;
+            currentMusic = currentExplorationTrack;
+            currentExplorationTrack.play();
+        }
 
         let currentMusic = null;
+        let currentExplorationTrack = null;
         let currentEnemy = null;
         let party = [];
         let gameOver = false;
@@ -1528,27 +1562,6 @@
                     return `<div style="color: ${color};">${msg}</div>`;
                 })
                 .join("");
-        }
-
-        function playMusic(type) {
-            if (!musicEnabled) return; // Do nothing if music is disabled
-
-            if (music.current) {
-                music.current.pause();
-                music.current.currentTime = 0;
-            }
-
-            if (type === 'exploration') {
-                music.exploration.play().catch(err => console.error("Music error:", err));
-                music.current = music.exploration;
-            } else if (type === 'battle') {
-                const randomTrack = music.battleTracks[Math.floor(Math.random() * music.battleTracks.length)];
-                randomTrack.currentTime = 0;
-                randomTrack.play().catch(err => console.error("Music error:", err));
-                music.current = randomTrack;
-            }
-
-            currentMusic = type;
         }
 
         function playSFX(name) {
@@ -2022,7 +2035,7 @@ __\\_______^/
             player.inCombat = true;
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
-            playMusic('battle');
+            playRandomBattleMusic(); // <-- use this
         }
 
 
@@ -2068,7 +2081,7 @@ __\\_______^/
 
                 player.inCombat = false;
                 currentEnemy = null;
-                playMusic("exploration");
+                resumeExplorationMusic(); // <-- use this
                 party = party.filter(a => a.hp > 0);
 
                 if (player.exp >= player.level * 10) {
@@ -2140,7 +2153,7 @@ __\\_______^/
                 updateBattleLog("YOU: Gee willikers, I'm outta here!");
                 player.inCombat = false;
                 currentEnemy = null;
-                playMusic('exploration');
+                resumeExplorationMusic(); // <-- use this
             } else {
                 updateBattleLog("Couldn't escape!");
                 enemyAttack();
@@ -2688,6 +2701,7 @@ __\\_______^/
             render();
         });
 
+
         function descend() {
             floor++;
             updateBattleLog(`Descending into floor ${floor}...`);
@@ -2723,13 +2737,14 @@ __\\_______^/
 
             generateMap();
             setMerchantRingWares();
+            playRandomExplorationMusic();
         }
 
 
         generateMap();
         updateSeenTiles(); 
         drawMinimap(); 
-        playMusic('exploration'); 
+        playRandomExplorationMusic();
         render(); 
 
         document.getElementById('musicToggle').addEventListener('click', () => {
@@ -2737,15 +2752,16 @@ __\\_______^/
             const btn = document.getElementById('musicToggle');
             btn.textContent = musicEnabled ? "DISABLE MUSIC" : "ENABLE MUSIC";
 
-            if (!musicEnabled) {
-                if (music.current) {
-                    music.current.pause();
-                }
-            } else {
+            stopAllMusic();
+            if (musicEnabled) {
                 if (player.inCombat) {
-                    playMusic('battle');
+                    playRandomBattleMusic();
                 } else {
-                    playMusic('exploration');
+                    if (currentExplorationTrack) {
+                        resumeExplorationMusic();
+                    } else {
+                        playRandomExplorationMusic();
+                    }
                 }
             }
         });
@@ -2977,6 +2993,11 @@ __\\_______^/
                         const armorPiece = armor[player.armor];
                         const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
                         const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
+                        return `
+${weapon ? `Weapon: ${weapon.name}` : "No weapon equipped"}
+${armorPiece ? `Armor: ${armorPiece.name}` : "No armor equipped"}
+Rings: ${ring1}, ${ring2}
+                        `;
                     },
                     getOptions: () => {
                         const weapon = weapons[player.weapon];
@@ -3106,11 +3127,7 @@ __\\_______^/
                         ];
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else if (selectedOptionId === "ring1" || selectedOptionId === "ring2") {
-                            menu.open(selectedOptionId + "Select");
-                        }
+                        menu.open(selectedOptionId);
                     },
                 },
 
@@ -3724,6 +3741,7 @@ You found a treasure chest! Do you want to open it?
     (______)
     (_____)     _
      \`-_______-'
+
     `,
 
     `
