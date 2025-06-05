@@ -19,6 +19,17 @@
 
 A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/) and [MySpace Tom](https://forum.agoraroad.com/index.php?members/3460/)
 
+# CREDITS
+### PROGRAMMING + GRAPHICS
+[Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/)
+
+[MySpace Tom](https://forum.agoraroad.com/index.php?members/3460/)
+
+### MUSIC + SOUND DESIGN
+[Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/)
+
+[endless_self](https://forum.agoraroad.com/index.php?members/endless_self.6570/)
+
 # Objective
 Fight your way to the end of the dungeon!
 
