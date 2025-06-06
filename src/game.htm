@@ -85,6 +85,10 @@
         #game > .layer:nth-child(5) > span { color: rgb(127, 127, 127); }
         #game > .layer:nth-child(6) > span { color: rgb(255, 255, 255); }
 
+        #game > .layer.enemy > span {
+            color: #fff;
+        }
+
         #menu:not(.hidden) {
             width: 100%;
             height: 100%;
@@ -379,7 +383,7 @@
         /**
          * Rendered scene class names
          * These are derived from the names in sceneRenderer.getEntityName()
-         * which is also used to identify specific pieces of scene_art
+         * which is also used to identify specific pieces of sceneArt
          *
          * The renderer adds <span> elements around each rendered character with
          * a "scene_character_" prefix. So for example, a "wall"
@@ -466,12 +470,12 @@
         }
 
         .scene_character_crater {
-            color: #0009;
+            color: #0009 !important;
         }
 
         .scene_character_bloodyCrater {
-            color: #9009;
-            background-color: #3003;
+            color: #9009 !important;
+            background-color: #3003 !important;
         }
   </style>
 </head>
@@ -520,7 +524,7 @@
          * Each entry here has a name (eg: "wall", "healingTile", etc) which is
          * used to identify the map object that is being rendered
          *
-         * Each scene_art entry is an object that points to art for that thing.
+         * Each sceneArt entry is an object that points to art for that thing.
          * The object is broken into positions relative to the viewport of the
          * rendered scene. Positions are denoted as "p#_#" where "p" means
          * "position". The first # is the distance (or depth, or Z-coordinate,
@@ -566,7 +570,7 @@
          * Art may also have a transparentCharacter defined which will simply
          * not draw anything for that character when rendered
          */
-        const scene_art = {
+        const sceneArt = {
             tardspireBanner: {
                 positions: {
                     p1_1: {
@@ -1527,6 +1531,7 @@
                         `,
                     },
                     {
+                        automaskBlockCharacters: true,
                         data: `
                             ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
                             ██████████████████████
@@ -3145,6 +3150,144 @@
             },
         };
 
+        const enemyArt = {
+            snailSentinel: {
+                drawAt: { x: 19, y: 18 },
+                data: `
+                       ___   |_|
+                      /   \\_/@ @
+                    __\\_______^/
+                `,
+            },
+            stupidDog: {
+                drawAt: { x: 22, y: 10 },
+                data: `
+                    /\\__/\\
+                    |@  @|
+                    |(00)|
+                     )vv(
+                `,
+            },
+            keeperOfTheToiletBowl: {
+                drawAt: { x: 13, y: 12 },
+                data: `
+                      _______
+                     |       |
+                     |_______|=)
+                    -----------         ^
+                    |         |    O____|
+                    \\_________/   /|    |
+                       |   |       |    |
+                       |___|      / \\   |
+                `,
+            },
+            mysteriousScooter: {
+                drawAt: { x: 15, y: 14 },
+                data: `
+                           [~~]=====[~~]
+                                ||
+                                ||
+                                ||
+                                ||
+                    (O)======(O)===O)
+                `,
+            },
+            badassFlamingSkeleton: {
+                drawAt: { x: 10, y: 8 },
+                data: `
+                          |\\ |\\ |\\ |\\ |\\ /| /|
+                              _______         /|
+                        |\\   /   \\   \\      /|
+                      |\\     | [ ]  [ ]        /|
+                        |\\   |        |          /|
+                             \\ \\=====/     //   /|
+                     |\\       \\______\\    ()/    /|
+                      |\\       ||        //   /|
+                         O==[==||==]====O      /|
+                    |\\   || [==||==]       /| /|
+                      |\\ () [==||==]  /|  /| /|
+                `,
+            },
+            wangRat: {
+                drawAt: { x: 11, y: 15 },
+                data: `
+                       ______
+                    (|/      \\|)
+                      \\O    o/___________________
+                     --\\-()-/--        __|__|__|_\\
+                        \\__/__________/
+                        _|  _|  _|  _|
+                `,
+            },
+            fridgeOfForgottenLeftovers: {
+                drawAt: { x: 17, y: 10 },
+                data: `
+                         ___.---+.
+                    .--''       | '.
+                    |           |  |
+                    |     ______|  |
+                    |----'      |  |
+                    |       [==]|  |
+                    |           |  |
+                    |           |  |
+                    |___        |  |
+                        '---.___|.-'
+                `,
+            },
+            lughead: {
+                drawAt: { x: 19, y: 12 },
+                data: `
+                        .--.
+                        |oO|
+                     ..-\\TT/-..
+                    '          '
+                    ( )      ( )
+                    ( |------| )
+                    'W . || . W'
+                      (__)(__)
+                `,
+            },
+            pissedOffPoultry: {
+                drawAt: { x: 17, y: 13 },
+                data: `
+                    .        .--.
+                    |\\      .-:;
+                    : \\    < O |'
+                     \\ \\   ;    '.
+                      \\/\\-(    (. '
+                      (_)/ -_    ' ;
+                             '-; ;
+                            /|\\/|\\
+                `,
+            },
+            krampusElf: {
+                drawAt: { x: 20, y: 13 },
+                data: `
+                         *
+                        / \\
+                    .-./___\\.-.
+                     \\/ o o \\/
+                     (__(_)__)
+                       / : \\
+                      (_|-|_)
+                      (__|__)
+                `,
+            },
+            mimic: {
+                drawAt: { x: 5, y: 11 },
+                data: `
+                     ______________
+                    /    \\      /  \\
+                    |  ((O)    ((O)|     __________
+                    |______________|    (________(O) - - - -
+                    |    /VVVVV\\   |=====[/\\/]
+                    |    \\ | | /   |      [ ]
+                    \\______| |_____/
+                            \\|
+                `,
+            },
+        };
+
         const sceneRenderer = {
             displayWidth: 50,
             displayHeight: 22,
@@ -3218,12 +3361,12 @@
 
                 const entityName = sceneRenderer.getEntityName(subject);
                 const key = `p${depth}_${index}`;
-                const entry = scene_art[entityName]?.positions?.[key] || null;
+                const entry = sceneArt[entityName]?.positions?.[key] || null;
                 if (!entry) {
                     return scene;
                 }
 
-                const indexedArt = scene_art[entityName].art[entry.artIndex] || null;
+                const indexedArt = sceneArt[entityName].art[entry.artIndex] || null;
                 if (!indexedArt) {
                     return scene;
                 }
@@ -3291,6 +3434,42 @@
                         ? trimmedArt.replaceAll(art.spaceBoundaryCharacter, ' ')
                         : trimmedArt
                 );
+            },
+
+            drawEnemyLayer: (enemyId) => {
+                const indexedArt = enemyArt[enemyId] || null;
+                if (!indexedArt) {
+                    console.error("Could not find enemy art entry", { enemyId });
+                    return null;
+                }
+
+                const art = sceneRenderer.formatArt(indexedArt);
+                const longestLine = Math.max(...art.split("\n").map((l) => l.length)) - 1;
+
+                let xPosition = indexedArt.drawAt.x;
+                let yPosition = indexedArt.drawAt.y;
+
+                let enemyLayer = Array.from({ length: sceneRenderer.displayHeight }, () =>
+                    Array.from({ length: sceneRenderer.displayWidth }, () => ' ')
+                );
+
+                for (character of art) {
+                    if (character === "\n") {
+                        xPosition = indexedArt.drawAt.x;
+                        yPosition++;
+                        continue;
+                    }
+
+                    // Draw only if in bounds
+                    if (typeof enemyLayer[yPosition]?.[xPosition] !== 'undefined') {
+                        enemyLayer[yPosition][xPosition] = `<span>${character}</span>`;
+                    }
+
+                    xPosition++;
+                }
+
+                const joinedArt = enemyLayer.map(row => row.join('')).join('\n');
+                return `<div class="layer enemy">${joinedArt}</div>`;
             },
         };
 
@@ -4060,6 +4239,14 @@
                 const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
                 currentEnemy.hp -= dmg;
                 updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+                if (currentEnemy.hp <= 0) {
+                    playSFX('scream');
+                    const nx = player.x + DX[player.dir];
+                    const ny = player.y + DY[player.dir];
+                    if (MAP[ny][nx]?.type === 'floor') {
+                        MAP[ny][nx] = new MapCell('bloodyCrater');
+                    }
+                }
                 endOfPlayerTurn();
             } else {
                 updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
@@ -4631,200 +4818,41 @@
             sfx[name].play();
         }
 
-        function getEnemyArt() {
-            switch (currentEnemy?.id) {
-                case "snailSentinel":
-                    return `
-
-
-
-
-   ___   |_|
-  /   \\_/@ @
-__\\_______^/
-`;
-                case "stupidDog":
-                    return `
-
-
-
-
-/\\__/\\
-|@  @|
-|(00)|
- )vv(
-`;
-                case "keeperOfTheToiletBowl":
-                    return `
-
-
-
-   _______
-  |       |
-  |_______|=)
- -----------         ^
- |         |    O____|
- \\_________/   /|    |
-    |   |       |    |
-    |___|      / \\   |
-`;
-                case "mysteriousScooter":
-                    return `
-
-
-
-
-
-       [~~]=====[~~]
-            ||
-            ||
-            ||
-            ||
-(O)======(O)===O)
-`;
-                case "badassFlamingSkeleton":
-                    return `
-      |\\ |\\ |\\ |\\ |\\ /| /|
-          _______         /|
-    |\\   /   \\   \\      /|
-  |\\     | [ ]  [ ]        /|
-    |\\   |        |          /|
-         \\ \\=====/     //   /|
- |\\       \\______\\    ()/    /|
-  |\\       ||        //   /|
-     O==[==||==]====O      /|
-|\\   || [==||==]       /| /|
-  |\\ () [==||==]  /|  /| /|
-`;
-                case "wangRat":
-                    return `
-
-
-
-
-       ______
-    (|/      \\|)
-      \\O    o/___________________
-     --\\-()-/--        __|__|__|_\\
-        \\__/__________/
-        _|  _|  _|  _|
-`;
-
-                case "fridgeOfForgottenLeftovers":
-                    return `
-
-            ___.---+.
-       .--''       | '.
-       |           |  |
-       |     ______|  |
-       |----'      |  |
-       |       [==]|  |
-       |           |  |
-       |           |  |
-       |___        |  |
-           '---.___|.-'
-`;
-
-                case "lughead":
-                    return `
-
-
-
-            .--.
-            |oO|
-         ..-\\TT/-..
-        '          '
-        ( )      ( )
-        ( |------| )
-        'W . || . W'
-          (__)(__)
-`;
-
-                case "pissedOffPoultry":
-                    return `
-
-
-
-    .        .--.
-    |\\      .-:;
-    : \\    < O |'
-     \\ \\   ;    '.
-      \\/\\-(    (. '
-      (_)/ -_    ' ;
-             '-; ;
-            /|\\/|\\
-`;
-
-                case "krampusElf":
-                    return `
-
-
-
-             *
-            / \\
-        .-./___\\.-.
-         \\/ o o \\/
-         (__(_)__)
-           / : \\
-          (_|-|_)
-          (__|__)
-`;
-                case "mimic":
-                    return `
-
-
-
-     ______________
-    /    \\      /  \\
-    |  ((O)    ((O)|     __________
-    |______________|    (________(O) - - - -
-    |    /VVVVV\\   |=====[/\\/]
-    |    \\ | | /   |      [ ]
-    \\______| |_____/
-            \\|
-            `;
-                default:
-                    return '';
-            }
-        }
-
-
         function render() {
             updateSeenTiles();
             drawMinimap();
-            let output = "";
 
-        const equippedArmor = armor[player.armor];
-        const totalDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0);
-        const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
-        const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
+            const equippedArmor = armor[player.armor];
+            const totalDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0);
+            const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
+            const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
 
-        function getRingEffect(stat) {
-            return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
-        }
+            function getRingEffect(stat) {
+                return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
+            }
 
-        const displayMaxHp = player.maxHp + getRingEffect('maxHp');
-        const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
-        const displayPersuasion = player.persuasion + getRingEffect('persuasion');
-        const displaySpeed = player.speed + getRingEffect('speed');
-        const displayLuck = player.luck + getRingEffect('luck');
+            const displayMaxHp = player.maxHp + getRingEffect('maxHp');
+            const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
+            const displayPersuasion = player.persuasion + getRingEffect('persuasion');
+            const displaySpeed = player.speed + getRingEffect('speed');
+            const displayLuck = player.luck + getRingEffect('luck');
 
-        const stats1Html = `
-            <div class="stats-container">
-                <span>.-STATS-.</span>
-                <span>|===<span class="HP">HP</span>===|</span>
-                <span class="stats-label">${player.hp}/${displayMaxHp}</span>
-                <span>|==<span class="DEF">DEF</span>==|</span>
-                <span class="stats-label">${displayDefense}</span>
-                <span>|==<span class="PRS">PRS</span>==|</span>
-                <span class="stats-label">${displayPersuasion}</span>
-                <span>|==<span class="SPD">SPD</span>==|</span>
-                <span class="stats-label">${displaySpeed}</span>
-                <span>|==<span class="LUK">LUK</span>==|</span>
-                <span class="stats-label">${displayLuck}</span>
-                <span>._ _ _ _.</span>
-            </div>`;
-        document.getElementById('stats1').innerHTML = stats1Html;
+            const stats1Html = `
+                <div class="stats-container">
+                    <span>.-STATS-.</span>
+                    <span>|===<span class="HP">HP</span>===|</span>
+                    <span class="stats-label">${player.hp}/${displayMaxHp}</span>
+                    <span>|==<span class="DEF">DEF</span>==|</span>
+                    <span class="stats-label">${displayDefense}</span>
+                    <span>|==<span class="PRS">PRS</span>==|</span>
+                    <span class="stats-label">${displayPersuasion}</span>
+                    <span>|==<span class="SPD">SPD</span>==|</span>
+                    <span class="stats-label">${displaySpeed}</span>
+                    <span>|==<span class="LUK">LUK</span>==|</span>
+                    <span class="stats-label">${displayLuck}</span>
+                    <span>._ _ _ _.</span>
+                </div>`;
+            document.getElementById('stats1').innerHTML = stats1Html;
 
             const stats2Html = `<div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.---<span class="action">FLOOR</span>---.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
@@ -4839,36 +4867,24 @@ __\\_______^/
                 return;
             }
 
+            let partyHTML = '';
+            if (party.length > 0) {
+                partyHTML = `<strong>Your Party:</strong><br>`;
+                party.forEach(member => {
+                    partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
+                });
+            }
+            document.getElementById("partylist").innerHTML = partyHTML;
+
+            let output = sceneRenderer.render(player.x, player.y, DIRECTIONS[player.dir]);
+
             if (player.inCombat) {
-                output += `${getEnemyArt()}`;
-
-                if (party.length > 0) {
-                    let partyHTML = `<strong>Your Party:</strong><br>`;
-                    party.forEach(member => {
-                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
-                    });
-                    document.getElementById("partylist").innerHTML = partyHTML;
-                } else {
-                    document.getElementById("partylist").innerHTML = '';
-                }
-
+                output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
                         "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
                 }
             } else {
-                output = sceneRenderer.render(player.x, player.y, DIRECTIONS[player.dir]);
-
-                // Party display
-                let partyHTML = '';
-                if (party.length > 0) {
-                    partyHTML = `<strong>Your Party:</strong><br>`;
-                    party.forEach(member => {
-                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
-                    });
-                }
-                document.getElementById("partylist").innerHTML = partyHTML;
-
                 // Controls
                 document.getElementById("controls").textContent =
                     "↑/W:      Move Forward\n" +
@@ -4943,7 +4959,7 @@ __\\_______^/
                 if (fireOnEnter) {
                     tile.onEnter(nx, ny);
                 } else if (Math.random() < randomEncounterChance) {
-                    // startEncounter();
+                    startEncounter();
                 }
             } else if (typeof tile.onTouch === "function") {
                 tile.onTouch();
