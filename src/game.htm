@@ -49,6 +49,26 @@
             display: flex;
         }
 
+        @keyframes darken {
+            from {
+                filter: brightness(1);
+            }
+
+            to {
+                filter: brightness(0);
+            }
+        }
+
+        @keyframes lighten {
+            from {
+                filter: brightness(0);
+            }
+
+            to {
+                filter: brightness(1);
+            }
+        }
+
         #game {
             width: 100%;
             height: 100%;
@@ -91,6 +111,22 @@
         #game > .layer:nth-child(4) > span { color: rgb(85, 85, 85); }
         #game > .layer:nth-child(5) > span { color: rgb(127, 127, 127); }
         #game > .layer:nth-child(6) > span { color: rgb(255, 255, 255); }
+
+        #game > .layer.dark {
+            filter: brightness(0);
+        }
+
+        #game > .layer.darkening,
+        #game > .layer.lightening {
+            animation-name: darken;
+            animation-duration: .5s;
+            animation-fill-mode: forwards;
+            animation-timing-function: ease;
+        }
+
+        #game > .layer.lightening {
+            animation-name: lighten;
+        }
 
         #game > .layer.enemy > span {
             color: #fff;
@@ -3309,6 +3345,7 @@
 
             render: (x, y, direction) => {
                 const view = sceneRenderer.getView(x, y, direction);
+                const layerClasses = sceneRenderer.getLayerClasses();
                 let scene = '';
 
                 for (let depth = view.length - 1; depth >= 0; depth--) {
@@ -3322,10 +3359,26 @@
                         sceneLayer = sceneRenderer.draw(sceneLayer, view[depth][index], depth, index);
                     }
 
-                    scene += '<div class="layer">' + sceneLayer.map(row => row.join('')).join('\n') + '</div>';
+                    scene +=
+                        `<div class="${layerClasses}">` +
+                            sceneLayer.map(row => row.join('')).join('\n') +
+                        '</div>';
                 }
 
                 return scene;
+            },
+
+            getLayerClasses: () => {
+                const layerClasses = ['layer'];
+                if (player.enteringCombat) {
+                    layerClasses.push('darkening');
+                } else if (player.leavingCombat) {
+                    layerClasses.push('lightening');
+                } else if (player.inCombat) {
+                    layerClasses.push('dark');
+                }
+
+                return layerClasses.join(' ');
             },
 
             getView: (x, y, direction) => {
@@ -3691,6 +3744,8 @@
             exp: 0,
             level: 1,
             inCombat: false,
+            enteringCombat: false,
+            leavingCombat: false,
             levelingUp: false,
             inventory: {
                 canOfHamms: 2,
@@ -3709,6 +3764,19 @@
             say: function(str) {
                 updateBattleLog(`<span class="player">&lt;YOU&gt;</span> "${str}"`);
             },
+            // Resets event flags that are used during rendering. Called after every render
+            resetEventFlags: () => {
+                player.enteringCombat = false;
+                player.leavingCombat = false;
+            },
+            enterCombat: () => {
+                player.enteringCombat = true;
+                player.inCombat = true;
+            },
+            leaveCombat: () => {
+                player.leavingCombat = true;
+                player.inCombat = false;
+            }
         };
 
         const merchant = {
@@ -4916,6 +4984,7 @@
             }
 
             document.getElementById('game').innerHTML = output;
+            player.resetEventFlags();
         }
 
 
@@ -5001,6 +5070,7 @@
             }
             playSFX('turn');
             player.dir = (player.dir + 3) % 4;
+            render();
         }
 
         function turnRight() {
@@ -5009,6 +5079,7 @@
             }
             playSFX('turn');
             player.dir = (player.dir + 1) % 4;
+            render();
         }
 
         function startEncounter() {
@@ -5031,7 +5102,7 @@
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
 
-            player.inCombat = true;
+            player.enterCombat();
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
             playRandomBattleMusic(); // <-- use this
@@ -5078,7 +5149,7 @@
                     player.exp += exp;
                 }
 
-                player.inCombat = false;
+                player.leaveCombat();
                 currentEnemy = null;
                 resumeExplorationMusic(); // <-- use this
                 party = party.filter(a => a.hp > 0);
@@ -5150,7 +5221,7 @@
             playSFX('run');
             if (Math.random() < 0.5) {
                 player.say("Gee willikers, I'm outta here!");
-                player.inCombat = false;
+                player.leaveCombat();
                 currentEnemy = null;
                 resumeExplorationMusic(); // <-- use this
             } else {
@@ -5235,7 +5306,7 @@
                     };
                     party.push(newAlly);
                     updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
-                    player.inCombat = false;
+                    player.leaveCombat();
                     currentEnemy = null;
                     playRandomExplorationMusic();
                 } else {
@@ -5505,17 +5576,14 @@
                         html += `<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`;
                         break;
                 }
-                gambler.isActiveOnFloor = false;
-                updateBattleLog(html);
-                updateBattleLog('The gambler escapes into the shadows');
-                render();
             } else {
                 gambler.say('<span class="gambler">Hah! Tough luck, kid!</span> You gotta know when to hold \'em, know when to fold \'em, heh heh');
-                gambler.isActiveOnFloor = false;
-                updateBattleLog(html);
-                updateBattleLog('The gambler escapes into the shadows');
-                render();
             }
+
+            gambler.isActiveOnFloor = false;
+            updateBattleLog(html);
+            updateBattleLog('The gambler escapes into the shadows');
+            render();
 
             menu.close();
         }
@@ -5580,7 +5648,7 @@
                 currentEnemy = scaleMimicStats(baseMimic);
 
                 updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
-                player.inCombat = true;
+                player.enterCombat();
                 playRandomBattleMusic();
             } else if (MAP[y][x]?.type === 'treasureChest') {
                 // Normal chest, provide loot
@@ -5710,8 +5778,6 @@
                         break;
                 }
             }
-
-            render();
         });
 
 
@@ -6812,22 +6878,10 @@
                           ..__
                 __________\`.  '-
                (___________ \`.  '-.
-                (___/_/\\ ___.
-                 (__\\_\\/|   ||
-                   (____|___||    _
-                        \`-______-'
-
-    `,
-
-    `
-
-                  ..__
-        __________\`.  '-
-       (___________ \`.  '-.
-        (__________
-         (________
-           (____
-                \`-______-
+                (__________
+                 (________
+                   (____
+                        \`-______-
 
 
     .----------.   .----------.
