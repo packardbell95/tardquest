@@ -24,10 +24,16 @@
             border: 0px solid #fff;
         }
 
+        @font-face {
+            font-family: 'DejaVuSansMono';
+            src: url('fonts/DejaVuSansMono.woff') format('woff');
+        }
+
         body {
             background: #000;
             color: #fff;
-            font-family: monospace;
+            font-family: "DejaVuSansMono", monospace;
+            font-size: 10px;
             white-space: pre;
             padding: 20px;
             display: flex;
@@ -69,13 +75,14 @@
                 #060d40 50%,
                 #000 50%,
                 #513805 100%
-            )
+            );
         }
 
         #game > .layer {
             position: absolute;
             top: 0;
             left: 0;
+            margin-top: 3em;
         }
 
         #game > .layer:nth-child(1) > span { color: rgb(42, 42, 42); }
@@ -87,6 +94,13 @@
 
         #game > .layer.enemy > span {
             color: #fff;
+        }
+
+        #game .layer,
+        #game span {
+            display: inline-block !important;
+            font-size: 12px !important;
+            line-height: 12px !important;
         }
 
         #menu:not(.hidden) {
