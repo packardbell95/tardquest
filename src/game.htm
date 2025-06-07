@@ -24,10 +24,19 @@
             border: 0px solid #fff;
         }
 
+        @font-face {
+            font-family: 'DejaVuSansMono';
+            src: url('fonts/DejaVuSansMono.woff') format('woff');
+        }
+
+        * {
+            font-family: "DejaVuSansMono", monospace;
+        }
+
         body {
             background: #000;
             color: #fff;
-            font-family: monospace;
+            font-size: 10px;
             white-space: pre;
             padding: 20px;
             display: flex;
@@ -43,12 +52,94 @@
             display: flex;
         }
 
+        @keyframes darken {
+            from {
+                filter: brightness(1);
+            }
+
+            to {
+                filter: brightness(0);
+            }
+        }
+
+        @keyframes lighten {
+            from {
+                filter: brightness(0);
+            }
+
+            to {
+                filter: brightness(1);
+            }
+        }
+
         #game {
-            font-size: var(--viewport-font-size);
-            white-space: pre-wrap;
+            width: 100%;
+            height: 100%;
+            white-space: pre;
             margin-bottom: auto;
-            margin-top: var(--viewport-font-size);
             align-content: center;
+
+            font-size: unset;
+            margin-top: unset;
+            white-space: pre;
+            /* Blue sky, dirt ground */
+            /*
+            background: linear-gradient(
+                180deg,
+                rgb(48, 89, 105) 0%,
+                rgb(48, 89, 105) 50%,
+                rgb(71, 54, 19) 50%,
+                rgb(71, 54, 19) 100%
+            );*/
+            /* Bruised sky, gradient dirt ground */
+            background: linear-gradient(
+                180deg,
+                #950913 0%,
+                #060d40 50%,
+                #000 50%,
+                #513805 100%
+            );
+        }
+
+        #game > .layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin-top: 3em;
+        }
+
+        #game > .layer:nth-child(1) > span { color: rgb(42, 42, 42); }
+        #game > .layer:nth-child(2) > span { color: rgb(51, 51, 51); }
+        #game > .layer:nth-child(3) > span { color: rgb(63, 63, 63); }
+        #game > .layer:nth-child(4) > span { color: rgb(85, 85, 85); }
+        #game > .layer:nth-child(5) > span { color: rgb(127, 127, 127); }
+        #game > .layer:nth-child(6) > span { color: rgb(255, 255, 255); }
+
+        #game > .layer.dark {
+            filter: brightness(0);
+        }
+
+        #game > .layer.darkening,
+        #game > .layer.lightening {
+            animation-name: darken;
+            animation-duration: .5s;
+            animation-fill-mode: forwards;
+            animation-timing-function: ease;
+        }
+
+        #game > .layer.lightening {
+            animation-name: lighten;
+        }
+
+        #game > .layer.enemy > span {
+            color: #fff;
+        }
+
+        #game .layer,
+        #game span {
+            display: inline-block !important;
+            font-size: 12px !important;
+            line-height: 12px !important;
         }
 
         #menu:not(.hidden) {
@@ -108,15 +199,9 @@
         }
 
         #viewportContainer {
-            --viewport-font-size: 13px;
-
             position: absolute;
-            left: 250px;
-            top: 140px;
-            border: 2px solid #fff;
-            padding-top: 10px;
-            padding-left: 4px;
-            padding-right: 4px;
+            left: 256px;
+            top: 147px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -156,7 +241,7 @@
             top: 140px;
             left: 620px;
             padding: 5px;
-            overflow: hidden; 
+            overflow: hidden;
             font-size: 18px;
             font-weight: bold;
             text-align: left;
@@ -170,7 +255,7 @@
             top: 489px;
             left: 620px;
             padding: 5px;
-            overflow: hidden; 
+            overflow: hidden;
             font-size: 13px;
             font-weight: bold;
             line-height: 1.0;
@@ -234,7 +319,6 @@
             width: 600px;
             height: 2px;
             z-index: 9;
-            font-family: monospace;
             background-color: #000;
             border: 3px dotted #A23AB4;
             padding: 10px;
@@ -262,6 +346,7 @@
         }
 
         #controls {
+            font-size: 14px;
             height: 130px;
             width: 200px;
             position: absolute;
@@ -278,41 +363,35 @@
         .player {
             color: #2aff00;
         }
-        .healtile {
+        .healingTile {
             color: #6cff74;
         }
-        .treasurechest {
+        .treasureChest {
             color: #f19b32;
         }
-        .wall {
+        .wall,
+        .gloryWall {
             color: #e9ff00;
         }
-
-        .explored {
+        .floor {
             color: #fff;
         }
-
         .unexplored {
             color: #545454;
         }
-
         .exit {
             color: #f00;
         }
-
         .merchant {
             color: #f7f;
         }
-
         .gambler {
             color: #ffd700;
         }
-
         .muted {
             color: #666;
             text-decoration: line-through;
         }
-
         .tooExpensive {
             color: #f00;
         }
@@ -353,6 +432,104 @@
         .action {
             color: #EC4134;
         }
+
+        /**
+         * Rendered scene class names
+         * These are derived from the names in sceneRenderer.getEntityName()
+         * which is also used to identify specific pieces of sceneArt
+         *
+         * The renderer adds <span> elements around each rendered character with
+         * a "scene_character_" prefix. So for example, a "wall"
+         */
+        .scene_character_void {
+            color: #000 !important;
+        }
+
+        @keyframes scene_healingTileGlow {
+          0% {
+            color: #6CFF74;
+          }
+          25% {
+            color: #02B60E;
+          }
+          50% {
+            color: #02868C;
+          }
+          75% {
+            color: #00920A;
+          }
+          100% {
+            color: #8DD702;
+          }
+        }
+
+        .scene_character_healingTile {
+            animation-name: scene_healingTileGlow;
+            animation-duration: 5s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: linear;
+        }
+
+        @keyframes scene_exitGlow {
+            0% {
+                color: #FFF000;
+            }
+            25% {
+                color: #FF7400;
+            }
+            50% {
+                color: #FFF000;
+            }
+            75% {
+                color: #CD0074;
+            }
+            100% {
+                color: #FF0000;
+            }
+        }
+
+        .scene_character_exit {
+            animation-name: scene_exitGlow;
+            animation-duration: 5s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: linear;
+        }
+
+        @keyframes scene_treasureChestGlow {
+            0% {
+                color: #FFD700;
+            }
+            100% {
+                color: #FFF;
+            }
+        }
+
+        .scene_character_treasureChest {
+            animation-name: scene_treasureChestGlow;
+            animation-duration: 2s;
+            animation-iteration-count: infinite;
+            animation-direction: alternate;
+            animation-timing-function: ease-out;
+            background-color: #793311;
+            color: #ffd700;
+        }
+
+        .scene_character_tardspireBanner {
+            color: #edc949 !important;
+            background: #000;
+            mix-blend-mode: luminosity;
+        }
+
+        .scene_character_crater {
+            color: #0009 !important;
+        }
+
+        .scene_character_bloodyCrater {
+            color: #9009 !important;
+            background-color: #3003 !important;
+        }
   </style>
 </head>
 <body>
@@ -365,8 +542,8 @@
         <p><span class="exit">E</span> Exit: Touch to descend further</p>
         <p><span class="merchant">M</span> Merchant: Sells you crap</p>
         <p><span class="gambler">G</span> Gambler: A shady shyster</p>
-        <p><span class="healtile">H</span> Healing Tile: Heals you by 30% of max HP</p>
-        <p><span class="treasurechest">T</span> Treasure Chest: Contains items</p>
+        <p><span class="healingTile">H</span> Healing Tile: Heals you by 30% of max HP</p>
+        <p><span class="treasureChest">T</span> Treasure Chest: Contains items</p>
         <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
       </div>
   <div id="partylist"></div>
@@ -374,7 +551,7 @@
   <div id="stats2"></div>
   <div id="controls"></div>
   <div id="viewportContainer">
-    <div id="game"></div>
+    <div id="game" class="render"></div>
     <div id="animation" class="hidden"></div>
     <div id="menu" class="hidden">
         <div id="menuLanding"></div>
@@ -394,6 +571,3150 @@
   </div>
 
     <script>
+        /**
+         * ASCII art that the sceneRenderer uses to draw scenes
+         *
+         * Each entry here has a name (eg: "wall", "healingTile", etc) which is
+         * used to identify the map object that is being rendered
+         *
+         * Each sceneArt entry is an object that points to art for that thing.
+         * The object is broken into positions relative to the viewport of the
+         * rendered scene. Positions are denoted as "p#_#" where "p" means
+         * "position". The first # is the distance (or depth, or Z-coordinate,
+         * however you want to think of it). The second "#" is the X-coordinate
+         * of what the player is currently seeing, going from left to right.
+         *
+         * For example, the player is seeing everything in the triangle in this
+         * map, including the spaces to the immediate left and right (p0_0 and
+         * p0_2 respectively):
+         *
+         * Distance 5   \........./
+         * Distance 4   .\......./.
+         * Distance 3   ..\...../..
+         * Distance 2   ...\.../...
+         * Distance 1   ....\./....
+         * Distance 0   .....↑.....
+         *            Player ⤴
+         *
+         * Each cell is numbered this way (with "X" meaning 10):
+
+         * Distance 5   0123456789X
+         * Distance 4   .012345678.
+         * Distance 3   ..0123456..
+         * Distance 2   ...01234...
+         * Distance 1   ....012....
+         * Distance 0   ....012....
+         *            Player ⤴
+         *
+         * So if the player's vision spots a wall at distance 3, position 4,
+         * we would want to render the wall with the art referenced by entry
+         * "p3_4"
+         *
+         * The whitespace for each piece of art is automatically trimmed from
+         * the left side. This is to preserve formatting in the code (JavaScript
+         * does not support heredocs unfortunately). But sometimes spaces are
+         * desired as part of the art. So, a spaceBoundaryCharacter might be set
+         * which will stop the whitespace from trimming into the art. This
+         * character will be replaced with a space during rendering
+         *
+         * Each object also has an x and y value. This is the character offset
+         * of where the art will start to be drawn
+         *
+         * Art may also have a transparentCharacter defined which will simply
+         * not draw anything for that character when rendered
+         */
+        const sceneArt = {
+            tardspireBanner: {
+                positions: {
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 6, y: 1 },
+                    },
+                },
+                art: [
+                    {
+                        data: `
+                            ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜
+                            ▌       W E L C O M E    T O . . .   ▐
+                            ▌T ▀█▀▄▀▄ █▀▙ █▀▄ ▄▀▀ █▀▄▀█▀ █▀▙ █▀▀ ▐
+                            ▌H  █ █▄█ █▄▛ █ █  ▀▄ █▄▀ █  █▄▛ █▄▄ ▐
+                            ▌E  █ █ █ █ █ █▄▀ ▄▄▀ █  ▄█▄ █ █ █▄▄ ▐
+                            ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟
+                        `,
+                    },
+                ],
+            },
+            wall: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 0 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 44, y: 0 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 1 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 1 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 1 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 6 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 5 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 5 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 5 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 6 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 8 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 8 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 8 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 8 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 34, y: 8 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 9 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 9 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 9 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 9 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 9 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 9 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 26, y: 9 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 9 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 9 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 40, y: 9 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 10 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 10 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 10 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 10 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 10 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 10 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 10 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 10 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 10 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 10 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████▄
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████▄
+                            ██████▒█▄
+                            ██████▒███▄
+                            ██████▒█████▄
+                            ██████▒███████▄
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒████████
+                            ██████▒███████▀
+                            ██████▒█████▀
+                            ██████▒███▀
+                            ██████▒█▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            █████▄▄▄
+                            █████████
+                            █████████
+                            █████████
+                            █████████
+                            █████████
+                            █████████
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ███████████████▒▄
+                            ███████████████▒██▄
+                            ███████████████▒████
+                            ███████████████▒████
+                            ███████████████▒████
+                            ███████████████▒████
+                            ███████████████▒████
+                            ███████████████▒████
+                            ███████████████▒██▀
+                            ███████████████▒▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██▄▄
+                            ████
+                            ████
+                            ██▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███████████▓▄
+                            ███████████▓██▄
+                            ███████████▓███
+                            ███████████▓███
+                            ███████████▓██▀
+                            ███████████▓▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████
+                            ████████████
+                            ████████████
+                            ████████████
+                            ████████████
+                            ████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ██████▓▄
+                            ██████▓▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ███████▄
+                            ███████▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ███████
+                            ███████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ██████
+                            ██████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
+            void: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 45, y: 11 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 11 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 11 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 31, y: 11 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 42, y: 11 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 11 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 11 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 11 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 47, y: 11 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 11 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 11 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 11 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 11 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 11 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 31, y: 11 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 11 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 11 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            █████
+                            ████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ██████████████
+                            ████████████▀
+                            ██████████▀
+                            ████████▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████
+                            ████████
+                            ████████
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███████████████████
+                            ███████████████████
+                            ███████████████████
+                            ██████████████████▀
+                            ████████████████▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███
+                            ██▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████████████
+                            ██████████████
+                            ████████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████
+                            ████████████
+                            ████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████
+                            ▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
+            gloryWall: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 0 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 44, y: 0 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 1 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 1 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 1 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 6 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 5 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 5 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 5 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 6 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 8 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 8 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 8 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 8 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 34, y: 8 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 9 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 9 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 9 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 9 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 9 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 9 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 26, y: 9 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 9 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 9 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 40, y: 9 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 10 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 10 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 10 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 10 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 10 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 10 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 10 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 10 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 10 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 10 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████▄
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████▄
+                            ██████▒█▄
+                            ██████▒███▄
+                            ██████▒█████▄
+                            ██████▒███████▄
+                            ██████▒█▒▒█████
+                            ██████▒█▒█▒▒███
+                            ██████▒███▒█▒██
+                            ██████▒████▒███
+                            ██████▒██▒█████
+                            ██████▒█████▒██
+                            ██████▒███░▒███
+                            ██████▒██▒▒████
+                            ██████▒████████
+                            ██████▒███▒████
+                            ██████▒███████▀
+                            ██████▒█████▀
+                            ██████▒███▀
+                            ██████▒█▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: false,
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ██████████▀█████████▀███████████████████
+                            █████▀▄▄█▀▄▀▄▄▀█▀▄▄█▄▀ █████████████████
+                            ████ █▄ █ █▄▀▀▄█ ██▀▀▀▄█████████████████
+                            █████▄▄█████████████████████████████████
+                            ██████████▀██▀██████ ███████████████████
+                            █████████ ▀▀ █▀▄▄▀█ ██▀▄▄▀██████████████
+                            ████████ ███ █▄▀▀▄█ █ █▄▄███████████████
+                            ██████████████████████▄▄███▀▀▀██████████
+                            ██████████████████████████████▄▄▀███████
+                            ████████████████████████████████ ███████
+                            ████████████████▀▀██▓██▀ ████▀▀▄████████
+                            ███████████████    ███▄  ▄▄▄▄███████████
+                            █████████████▓██▄▄████▓█▄███████████████
+                            ████████████████▒░█▓████████████████████
+                            ██████████████▒██▒██████████████████████
+                            ████████████████▓███████████████████████
+                            █████████████████▓██████████████████████
+                            ████████████████████████████████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            █████▄▄▄
+                            █████████
+                            ██▓▓▓▓███
+                            █▓█▓█▓███
+                            ████▓████
+                            ██▒▒█████
+                            █████████
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ███████████████▒▄
+                            ██▓█▓██████████▒██▄
+                            █▓█▓█▓█▓█▓█████▒████
+                            ██▓█▓█████▓████▒████
+                            █████████▓█████▒████
+                            ████████▓██████▒████
+                            ████▒▒█████████▒████
+                            ███████████████▒████
+                            ████▓██████████▒██▀
+                            ███████████████▒▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ██████████████████████
+                            ██████████████████████
+                            ████▓▓██▓██▓██████████
+                            ███▓██▓▓█▓██▓█▓███████
+                            ██████████▓████▓▓█████
+                            ██████████████▓███████
+                            ████████▒▒▓█▓█████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██▄▄
+                            █▓██
+                            ██▓█
+                            ██▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███████████▓▄
+                            ██▓█▓█▓████▓██▄
+                            ███▓███▓███▓███
+                            ███▓▒▓█████▓███
+                            ███████████▓██▀
+                            ███████████▓▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████
+                            ██▓█▓█▓█████
+                            ████████▓███
+                            ███▓▒▓▓█████
+                            ████████████
+                            ████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓█▓▄
+                            ██▓▓███▓▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓██▄
+                            ██▓▓███▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓██
+                            ██▓▓███
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓█▓█
+                            ██▓▓██
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
+            healingTile: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -19, y: 21 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 21 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -12, y: 17 },
+                    },
+                    p1_1: {
+                        artIndex: 1,
+                        drawAt: { x: 8, y: 17 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 38, y: 17 },
+                    },
+                    p2_0: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 15 },
+                    },
+                    p2_1: {
+                        artIndex: 3,
+                        drawAt: { x: 3, y: 14 },
+                    },
+                    p2_2: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p2_3: {
+                        artIndex: 5,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p2_4: {
+                        artIndex: 2,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 42, y: 15 },
+                    },
+                    p3_0: {
+                        artIndex: 10,
+                        drawAt: { x: -9, y: 12 },
+                    },
+                    p3_1: {
+                        artIndex: 10,
+                        drawAt: { x: -3, y: 13 },
+                    },
+                    p3_2: {
+                        artIndex: 10,
+                        drawAt: { x: 8, y: 13 },
+                    },
+                    p3_3: {
+                        artIndex: 7,
+                        drawAt: { x: 20, y: 13 },
+                    },
+                    p3_4: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 29, y: 13 },
+                    },
+                    p3_5: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 13 },
+                    },
+                    p3_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 12 },
+                    },
+                    p4_0: {
+                        artIndex: 8,
+                        drawAt: { x: 2, y: 12 },
+                    },
+                    p4_1: {
+                        artIndex: 8,
+                        drawAt: { x: 7, y: 12 },
+                    },
+                    p4_2: {
+                        artIndex: 8,
+                        drawAt: { x: 12, y: 12 },
+                    },
+                    p4_3: {
+                        artIndex: 8,
+                        drawAt: { x: 17, y: 12 },
+                    },
+                    p4_4: {
+                        artIndex: 8,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p4_5: {
+                        artIndex: 8,
+                        drawAt: { x: 27, y: 12 },
+                    },
+                    p4_6: {
+                        artIndex: 8,
+                        drawAt: { x: 32, y: 12 },
+                    },
+                    p4_7: {
+                        artIndex: 8,
+                        drawAt: { x: 37, y: 12 },
+                    },
+                    p4_8: {
+                        artIndex: 8,
+                        drawAt: { x: 42, y: 12 },
+                    },
+                    p5_0: {
+                        artIndex: 9,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 9,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 9,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 9,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 9,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 9,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 9,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 9,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 9,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 9,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 9,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▀██████████████████████▀
+                            %%▀██████████████████▀
+                            %%%%▀██████████████▀
+                            %%%%%%▀▀▀▀▀▀▀▀▀▀▀▀
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%▄██████████████████████▄
+                            %%%▄██████████████████████████▄
+                            %▄██████████████████████████████▄
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▄▄▄▄▄▄▄▄▄▄▄
+                            ▄▄███████████▀
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ▄████████████████▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄
+                            %▀███████████▄▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▀████████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄████████▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ╼╾
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄██████▀▀
+                        `,
+                    },
+                ],
+            },
+
+            exit: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -28, y: 4 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 4 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -25, y: 1 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 7, y: 1 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 1 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 11 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 3, y: 6 },
+                    },
+                    p2_2: {
+                        artIndex: 2,
+                        drawAt: { x: 16, y: 6 },
+                    },
+                    p2_3: {
+                        artIndex: 3,
+                        drawAt: { x: 30, y: 6 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawAt: { x: 42, y: 7 },
+                    },
+                    p3_0: {
+                        artIndex: 4,
+                        drawAt: { x: -9, y: 12 },
+                    },
+                    p3_1: {
+                        artIndex: 4,
+                        drawAt: { x: -3, y: 8 },
+                    },
+                    p3_2: {
+                        artIndex: 4,
+                        drawAt: { x: 8, y: 8 },
+                    },
+                    p3_3: {
+                        artIndex: 5,
+                        drawAt: { x: 20, y: 8 },
+                    },
+                    p3_4: {
+                        artIndex: 6,
+                        drawAt: { x: 29, y: 8 },
+                    },
+                    p3_5: {
+                        artIndex: 6,
+                        drawAt: { x: 36, y: 8 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawAt: { x: 46, y: 9 },
+                    },
+                    p4_0: {
+                        artIndex: 7,
+                        drawAt: { x: 2, y: 9 },
+                    },
+                    p4_1: {
+                        artIndex: 7,
+                        drawAt: { x: 7, y: 9 },
+                    },
+                    p4_2: {
+                        artIndex: 7,
+                        drawAt: { x: 12, y: 9 },
+                    },
+                    p4_3: {
+                        artIndex: 7,
+                        drawAt: { x: 17, y: 9 },
+                    },
+                    p4_4: {
+                        artIndex: 7,
+                        drawAt: { x: 22, y: 9 },
+                    },
+                    p4_5: {
+                        artIndex: 7,
+                        drawAt: { x: 26, y: 9 },
+                    },
+                    p4_6: {
+                        artIndex: 7,
+                        drawAt: { x: 30, y: 9 },
+                    },
+                    p4_7: {
+                        artIndex: 7,
+                        drawAt: { x: 35, y: 9 },
+                    },
+                    p4_8: {
+                        artIndex: 7,
+                        drawAt: { x: 40, y: 9 },
+                    },
+                    p5_0: {
+                        artIndex: 8,
+                        drawAt: { x: 14, y: 10 },
+                    },
+                    p5_1: {
+                        artIndex: 8,
+                        drawAt: { x: 16, y: 10 },
+                    },
+                    p5_2: {
+                        artIndex: 8,
+                        drawAt: { x: 18, y: 10 },
+                    },
+                    p5_3: {
+                        artIndex: 8,
+                        drawAt: { x: 20, y: 10 },
+                    },
+                    p5_4: {
+                        artIndex: 8,
+                        drawAt: { x: 22, y: 10 },
+                    },
+                    p5_5: {
+                        artIndex: 8,
+                        drawAt: { x: 24, y: 10 },
+                    },
+                    p5_6: {
+                        artIndex: 8,
+                        drawAt: { x: 26, y: 10 },
+                    },
+                    p5_7: {
+                        artIndex: 8,
+                        drawAt: { x: 28, y: 10 },
+                    },
+                    p5_8: {
+                        artIndex: 8,
+                        drawAt: { x: 30, y: 10 },
+                    },
+                    p5_9: {
+                        artIndex: 8,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p5_10: {
+                        artIndex: 8,
+                        drawAt: { x: 34, y: 10 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%▄▄▄▄
+                            %%%%%%%%%%██
+                            ▀██▄%%%%%%██
+                            %%%▀██▄%%%██
+                            %%%%%%▀██▄▄▀
+                            %%%%%%%%%▀██▄
+                            %%%%%%%%%% ▀██▄
+                            %%%%%%%%%%▄ %▀██▄
+                            %%%%%%%%%%██%%%▀██▄%▄█
+                            %%%%%%%%%%██%%%%▄████▀
+                            %%%%%%%%%%██%%%▀▀█████
+                            %%%%%%%%%%██%%%%%%%%▀▀
+                            %%%%%%%%%%██
+                            %%%%%%%%%%██
+                            %%%%%%%%%%██
+                            %%%%%%%%%%▀▀
+                            %%%%%%▄▀▀▀▀▀▀▀▀██████████████▄
+                            %%%%▄█████████ ▀▀▀▀▀▀▀▀▀▀██████▄
+                            %%▄█████████▀▄ ███████▀▄ ████████▄
+                            %▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%▗▄▖
+                            %%%▝▚▖█
+                            %%%%%▝█
+                            %%%%%%█▚
+                            %%%%%%█%▚▐▖
+                            %%%%%%█▝▀█▌
+                            %%%%%%█
+                            %%%%%%█
+                            %%%%▄▄▄▄▄▄▄▄▄▄▄
+                            ▄▄███████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▗▄▖
+                            %%▝▚▖█
+                            %%%%▝█
+                            %%%%%█▚
+                            %%%%%█%▚▐▖
+                            %%%%%█▝▀█▌
+                            %%%%%█
+                            %%%%%█
+                            %%▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ▄████████████████▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▗▄▖
+                            ▝▚▖█
+                            %%▝█
+                            %%%█▚
+                            %%%█%▚▐▖
+                            %%%█▝▀█▌
+                            %%%█
+                            %%%█
+                            %%▄▄▄▄▄▄▄▄▄▄▄
+                            %%%▀███████████▄▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%╲▂▖
+                            %%%▐╲
+                            %%%▐%╲▖
+                            %%%▐%▀▘
+                            %%%▝
+                            ████████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %╲▂▖
+                            %%▐╲
+                            %%▐%╲▖
+                            %%▐%▀▘
+                            %%▝
+                            ▄████████▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                          ╲▂▖
+                          %▐╲
+                          %▐%╲▖
+                          %▐%▀▘
+                          %▝
+                          ▀████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %┬
+                            %│╲▎
+                            %│▔
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ↘
+                            ╼╾
+                        `,
+                    },
+                ],
+            },
+
+            treasureChest: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -19, y: 19 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 48, y: 19 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: -17 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 13 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -8, y: 12 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 4, y: 13 },
+                    },
+                    p2_2: {
+                        artIndex: 2,
+                        drawAt: { x: 20, y: 13 },
+                    },
+                    p2_3: {
+                        artIndex: 2,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 13 },
+                    },
+                    p2_4: {
+                        artIndex: 2,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 13 },
+                    },
+                    p3_0: {
+                        artIndex: 3,
+                        drawAt: { x: -3, y: 12 },
+                    },
+                    p3_1: {
+                        artIndex: 3,
+                        drawAt: { x: 2, y: 12 },
+                    },
+                    p3_2: {
+                        artIndex: 3,
+                        drawAt: { x: 13, y: 12 },
+                    },
+                    p3_3: {
+                        artIndex: 3,
+                        drawAt: { x: 23, y: 12 },
+                    },
+                    p3_4: {
+                        artIndex: 3,
+                        drawAt: { x: 33, y: 12 },
+                    },
+                    p3_5: {
+                        artIndex: 3,
+                        drawAt: { x: 39, y: 12 },
+                    },
+                    p3_6: {
+                        artIndex: 3,
+                        drawAt: { x: 46, y: 12 },
+                    },
+                    p4_0: {
+                        artIndex: 4,
+                        drawAt: { x: 6, y: 11 },
+                    },
+                    p4_1: {
+                        artIndex: 4,
+                        drawAt: { x: 11, y: 11 },
+                    },
+                    p4_2: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p4_3: {
+                        artIndex: 4,
+                        drawAt: { x: 21, y: 11 },
+                    },
+                    p4_4: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p4_5: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p4_6: {
+                        artIndex: 4,
+                        drawAt: { x: 33, y: 11 },
+                    },
+                    p4_7: {
+                        artIndex: 4,
+                        drawAt: { x: 38, y: 11 },
+                    },
+                    p4_8: {
+                        artIndex: 4,
+                        drawAt: { x: 43, y: 11 },
+                    },
+                    p5_0: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 5,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 5,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 5,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 5,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 5,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 5,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 5,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 5,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 5,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 5,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %▄██████████████████▄
+                            █▀   █          █   ▀█
+                            █    █          █    █
+                            █▀▀▀▀█▀▀▀▀██▀▀▀▀█▀▀▀▀█
+                            █    █    ▀▀    █    █
+                            █    █          █    █
+                            █▄▄▄▄█▄▄▄▄▄▄▄▄▄▄█▄▄▄▄█
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▀▀▀▀▀▀█▀▄
+                            █▀▀██▀▀█▄█
+                            █      █ █
+                            ▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▄▀▀▀▀▀▀▀▀▄
+                            █▀▀▀██▀▀▀█
+                            █        █
+                            ▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▞▜▛▚
+                            ▙▄▄▟
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▆▆
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▗▖
+                        `,
+                    },
+                ],
+            },
+
+            merchant: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 11 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 22 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 9 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 16, y: 7 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 33, y: 7 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 8 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 4, y: 7 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 20, y: 7 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 32, y: 7 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 43, y: 8 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -5, y: 10 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 11, y: 9 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 22, y: 9 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 27, y: 9 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 34, y: 9 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 11 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 4, y: 10 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 9, y: 10 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 14, y: 10 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 19, y: 10 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 24, y: 10 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 28, y: 10 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 37, y: 10 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 42, y: 10 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%█▀▄▄
+                            %%%%%%%%▌  ▀▀▄▀
+                            %%%%%%%▄▄▄▀▀▀
+                            %%%%%%▀▄    ▀▀▀
+                            %%%%%▄▀    █▄
+                            %%%%%█      █
+                            %%%%%█      ▀█%%%▄▀
+                            %%%%█       ▀▄▄▄▀
+                            %%%%█        ▄▀
+                            %%%▀▄▄▄▀▀▀▄▄▀
+                            %%%%%%█  ▄▀█
+                            %%%%%%█ █▀  ▀▄
+                            ▀%▀▀%▀▀▀▀▀▀▀▀▀▀▀%%▀
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%█▄
+                            %%%█▄██▀
+                            %%▀▀   ▀
+                            %%█   █
+                            %█     █%▄▀
+                            █      ▄▀
+                            %▀▄▀▀▄█
+                            %%█ █  █
+                            %▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%▟▄▂
+                            %▝▛▀▂
+                            %▞ ▚%%╱
+                            ▝▚▁▁▀╱
+                            %%▌▙╱
+                        `,
+                    },
+                    {
+                        data: `
+                            ☻
+                            ╦╱
+                            ╫
+                        `,
+                    },
+                    {
+                        data: `
+                            ♣
+                        `,
+                    },
+                ],
+            },
+
+            gambler: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -14, y: 12 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 10 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 9 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 17, y: 9 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 36, y: 9 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 11 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 3, y: 10 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 19, y: 10 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 33, y: 10 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 44, y: 11 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: 1, y: 10 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 11, y: 10 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 22, y: 10 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 28, y: 10 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 35, y: 10 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 11 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 3, y: 11 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 13, y: 11 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 23, y: 11 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 27, y: 11 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 31, y: 11 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 36, y: 11 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 41, y: 11 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄%▄
+                            ▌%%%%%%%█▀▄▀▄
+                            █%%%%%%▄▀  ▀▀▀▀▄
+                            █%%%%%█      ╼╸ ▀▀▄
+                            █%%%%▄▀       ▄▄▄▄▄▀
+                            █%%%█      ▀█▀
+                            █%%█     ▀▀▄▄▀▄
+                            █%%█         ▀██▄
+                            %█▄█          █
+                            %%▀▄▄▄▄▄▄▄▄▄▄▀
+                            %%%%%▀▀▀%%%▀▀▀▀
+                            %
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            ▌%%%█▄█▄
+                            █%%%█  ╼▀▀▄
+                            █%%█   ▄▀▀▀
+                            ▀▄█   ▀▀█▀
+                            %%▀▄▄▄▄▄▀
+                            %%%▀▀%%▀▀
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            ▌%▙▙▂
+                            ▌▟█▞▀▀
+                            ▚▜██▞
+                            %▀%▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ▌▙▖
+                            ▝▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ♠
+                        `,
+                    },
+                ],
+            },
+
+            crater: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -28, y: 20 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 20 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -25, y: 17 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 7, y: 17 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 17 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 19 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 3, y: 14 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 42, y: 19 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -9, y: 16 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: -3, y: 12 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 8, y: 12 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 20, y: 12 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 29, y: 12 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 36, y: 12 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 16 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 2, y: 11 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 7, y: 11 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 12, y: 11 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 17, y: 11 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 35, y: 11 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 40, y: 11 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄▄▄▄████████████▄▄▄▄
+                            %%%%%▄████▛██▞█▞██▟▛▟██▚█▜████▄
+                            %%%%▀██▟███▛███▀▀▀▀▀▀██▜███▟███▀
+                            %%%%%%▀▀▀▀████████████████▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▃▄▄▄▄▄▄▄▄▃
+                            %▀▀████▄▄▄▄████▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▁▂▂▂▂▂▂▁
+                            ▀████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▂▂▂▂
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ╼╾
+                        `,
+                    },
+                ],
+            },
+
+            bloodyCrater: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -28, y: 20 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 20 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -25, y: 17 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 7, y: 17 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 17 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 19 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 3, y: 14 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 42, y: 19 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -9, y: 16 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: -3, y: 12 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 8, y: 12 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 20, y: 12 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 29, y: 12 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 36, y: 12 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 16 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 2, y: 11 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 7, y: 11 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 12, y: 11 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 17, y: 11 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 35, y: 11 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 40, y: 11 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 11 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 11 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 11 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 11 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 11 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 11 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 11 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 11 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 11 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 11 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄▄▄▄████████████▄▄▄▄%%%▖
+                            %%▘%%▄██▘ ▀▝▞██▟▛██▛██▀████▀██▄%%▗
+                            %%%%▀███▖ ▄▗▚██▀▀▀▀▀▀█▀▄▄▄▄▀███▀
+                            %%%▝%%▀▀▀▀████▟████▟██████▀▀▀▀%%▗
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▃▄▄▄▄▄▄▄▄▃
+                            %▀▀████▄▄▄▄████▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▁▂▂▂▂▂▂▁
+                            ▀████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▂▂▂▂
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ╼╾
+                        `,
+                    },
+                ],
+            },
+        };
+
+        const enemyArt = {
+            snailSentinel: {
+                drawAt: { x: 19, y: 18 },
+                data: `
+                       ___   |_|
+                      /   \\_/@ @
+                    __\\_______^/
+                `,
+            },
+            stupidDog: {
+                drawAt: { x: 22, y: 10 },
+                data: `
+                    /\\__/\\
+                    |@  @|
+                    |(00)|
+                     )vv(
+                `,
+            },
+            keeperOfTheToiletBowl: {
+                drawAt: { x: 13, y: 12 },
+                data: `
+                      _______
+                     |       |
+                     |_______|=)
+                    -----------         ^
+                    |         |    O____|
+                    \\_________/   /|    |
+                       |   |       |    |
+                       |___|      / \\   |
+                `,
+            },
+            mysteriousScooter: {
+                drawAt: { x: 15, y: 14 },
+                data: `
+                           [~~]=====[~~]
+                                ||
+                                ||
+                                ||
+                                ||
+                    (O)======(O)===O)
+                `,
+            },
+            badassFlamingSkeleton: {
+                drawAt: { x: 10, y: 8 },
+                data: `
+                          |\\ |\\ |\\ |\\ |\\ /| /|
+                              _______         /|
+                        |\\   /   \\   \\      /|
+                      |\\     | [ ]  [ ]        /|
+                        |\\   |        |          /|
+                             \\ \\=====/     //   /|
+                     |\\       \\______\\    ()/    /|
+                      |\\       ||        //   /|
+                         O==[==||==]====O      /|
+                    |\\   || [==||==]       /| /|
+                      |\\ () [==||==]  /|  /| /|
+                `,
+            },
+            wangRat: {
+                drawAt: { x: 11, y: 15 },
+                data: `
+                       ______
+                    (|/      \\|)
+                      \\O    o/___________________
+                     --\\-()-/--        __|__|__|_\\
+                        \\__/__________/
+                        _|  _|  _|  _|
+                `,
+            },
+            fridgeOfForgottenLeftovers: {
+                drawAt: { x: 17, y: 10 },
+                data: `
+                         ___.---+.
+                    .--''       | '.
+                    |           |  |
+                    |     ______|  |
+                    |----'      |  |
+                    |       [==]|  |
+                    |           |  |
+                    |           |  |
+                    |___        |  |
+                        '---.___|.-'
+                `,
+            },
+            lughead: {
+                drawAt: { x: 19, y: 12 },
+                data: `
+                        .--.
+                        |oO|
+                     ..-\\TT/-..
+                    '          '
+                    ( )      ( )
+                    ( |------| )
+                    'W . || . W'
+                      (__)(__)
+                `,
+            },
+            pissedOffPoultry: {
+                drawAt: { x: 17, y: 13 },
+                data: `
+                    .        .--.
+                    |\\      .-:;
+                    : \\    < O |'
+                     \\ \\   ;    '.
+                      \\/\\-(    (. '
+                      (_)/ -_    ' ;
+                             '-; ;
+                            /|\\/|\\
+                `,
+            },
+            krampusElf: {
+                drawAt: { x: 20, y: 13 },
+                data: `
+                         *
+                        / \\
+                    .-./___\\.-.
+                     \\/ o o \\/
+                     (__(_)__)
+                       / : \\
+                      (_|-|_)
+                      (__|__)
+                `,
+            },
+            mimic: {
+                drawAt: { x: 5, y: 11 },
+                data: `
+                     ______________
+                    /    \\      /  \\
+                    |  ((O)    ((O)|     __________
+                    |______________|    (________(O) - - - -
+                    |    /VVVVV\\   |=====[/\\/]
+                    |    \\ | | /   |      [ ]
+                    \\______| |_____/
+                            \\|
+                `,
+            },
+        };
+
+        const sceneRenderer = {
+            displayWidth: 50,
+            displayHeight: 22,
+            viewDepth: 5,
+
+            render: (x, y, direction) => {
+                const view = sceneRenderer.getView(x, y, direction);
+                const layerClasses = sceneRenderer.getLayerClasses();
+                let scene = '';
+
+                for (let depth = view.length - 1; depth >= 0; depth--) {
+                    let sceneLayer = Array.from({ length: sceneRenderer.displayHeight }, () =>
+                        Array.from({ length: sceneRenderer.displayWidth }, () => ' ')
+                    );
+
+                    for (let i = 0; i < view[depth].length; i++) {
+                        // Render the scene from the sides towards the middle
+                        const index = i % 2 === 0 ? i - (i / 2) : view[depth].length - Math.floor(i / 2) - 1;
+                        sceneLayer = sceneRenderer.draw(sceneLayer, view[depth][index], depth, index);
+                    }
+
+                    scene +=
+                        `<div class="${layerClasses}">` +
+                            sceneLayer.map(row => row.join('')).join('\n') +
+                        '</div>';
+                }
+
+                return scene;
+            },
+
+            getLayerClasses: () => {
+                const layerClasses = ['layer'];
+                if (player.enteringCombat) {
+                    layerClasses.push('darkening');
+                } else if (player.leavingCombat) {
+                    layerClasses.push('lightening');
+                } else if (player.inCombat) {
+                    layerClasses.push('dark');
+                }
+
+                return layerClasses.join(' ');
+            },
+
+            getView: (x, y, direction) => {
+                const grid = [];
+
+                const directionVectors = {
+                    N: { dx: 0, dy: -1, lateral: { dx: 1, dy: 0 }, flip: 1 },
+                    S: { dx: 0, dy: 1, lateral: { dx: 1, dy: 0 }, flip: -1 },
+                    E: { dx: 1, dy: 0, lateral: { dx: 0, dy: 1 }, flip: 1 },
+                    W: { dx: -1, dy: 0, lateral: { dx: 0, dy: 1 }, flip: -1 }
+                };
+
+                const dir = directionVectors[direction];
+                if (!dir) {
+                    console.error("Invalid direction");
+                    return [];
+                }
+
+                for (let depth = 0; depth <= sceneRenderer.viewDepth; depth++) {
+                    const row = [];
+                    const offsetStart = depth === 0 ? -1 : -depth;
+                    const offsetEnd = depth === 0 ? 1 : depth;
+
+                    for (let offset = offsetStart; offset <= offsetEnd; offset++) {
+                        const lateralOffset = offset * dir.flip;
+                        const tx = x + dir.dx * depth + dir.lateral.dx * lateralOffset;
+                        const ty = y + dir.dy * depth + dir.lateral.dy * lateralOffset;
+                        row.push(MAP[ty]?.[tx] ?? null);
+                    }
+
+                    grid.push(row);
+                }
+
+                return grid;
+            },
+
+            draw: (scene, subject, depth, index) => {
+                // Depth: 0, Index: 1 is the player's current cell
+                // There is nothing to draw here
+                if (depth === 0 && index === 1) {
+                    return scene;
+                }
+
+                if (typeof subject?.isVisible === 'function' && !subject.isVisible()) {
+                    return scene;
+                }
+
+                const entityName = sceneRenderer.getEntityName(subject);
+                const key = `p${depth}_${index}`;
+                const entry = sceneArt[entityName]?.positions?.[key] || null;
+                if (!entry) {
+                    return scene;
+                }
+
+                const indexedArt = sceneArt[entityName].art[entry.artIndex] || null;
+                if (!indexedArt) {
+                    return scene;
+                }
+
+                const art = sceneRenderer.formatArt(indexedArt);
+                const transparentCharacter = indexedArt.transparentCharacter || null;
+                const className = `class="scene_character_${entityName}"`;
+                const longestLine = Math.max(...art.split("\n").map((l) => l.length)) - 1;
+
+                const drawOptions = {
+                    flippedX: entry?.drawOptions?.flippedX || false,
+                };
+
+                let xPosition = entry.drawAt.x + (drawOptions.flippedX ? longestLine : 0);
+                let yPosition = entry.drawAt.y;
+
+                for (character of art) {
+                    if (character === "\n") {
+                        xPosition = entry.drawAt.x + (drawOptions.flippedX ? longestLine : 0);
+                        yPosition++;
+                        continue;
+                    }
+
+                    // Draw only if in bounds
+                    if (typeof scene[yPosition]?.[xPosition] !== 'undefined') {
+                        if (character !== transparentCharacter) {
+                            const automask =
+                                (indexedArt?.automaskBlockCharacters || false) &&
+                                [
+                                    '▀', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█',
+                                    '▉', '▊', '▋', '▌', '▍', '▎', '▏', '▐', '▔',
+                                    '▕', '▖', '▗', '▘', '▙', '▚', '▛', '▜', '▝',
+                                    '▞', '▟'
+                                ].includes(character);
+
+                            const style = automask ? '' : 'style="background-color:#000"';
+                            scene[yPosition][xPosition] =
+                                `<span ${className}${style}>${character}</span>`;
+                        }
+                    }
+
+                    xPosition += drawOptions.flippedX ? -1 : 1;
+                }
+
+                return scene;
+            },
+
+            getEntityName: (entity) => {
+                if (entity?.type === 'mimic') {
+                    return 'treasureChest';
+                }
+
+                return entity?.type || 'void';
+            },
+
+            formatArt: (art) => {
+                // Trim any whitespace from the template literal
+                const formattedArt = art.data.replace(/^ *\n|\n *$/g, '');
+                const lines = formattedArt.split("\n");
+                const shortestLeadingWhitespace = Math.min(...lines.map((line) => line.match(/^ +/)[0].length));
+                const trimmedArt = lines.map((line) => line.substr(shortestLeadingWhitespace)).join("\n");
+
+                return (
+                    typeof art.spaceBoundaryCharacter !== 'undefined'
+                        ? trimmedArt.replaceAll(art.spaceBoundaryCharacter, ' ')
+                        : trimmedArt
+                );
+            },
+
+            drawEnemyLayer: (enemyId) => {
+                const indexedArt = enemyArt[enemyId] || null;
+                if (!indexedArt) {
+                    console.error("Could not find enemy art entry", { enemyId });
+                    return null;
+                }
+
+                const art = sceneRenderer.formatArt(indexedArt);
+                const longestLine = Math.max(...art.split("\n").map((l) => l.length)) - 1;
+
+                let xPosition = indexedArt.drawAt.x;
+                let yPosition = indexedArt.drawAt.y;
+
+                let enemyLayer = Array.from({ length: sceneRenderer.displayHeight }, () =>
+                    Array.from({ length: sceneRenderer.displayWidth }, () => ' ')
+                );
+
+                for (character of art) {
+                    if (character === "\n") {
+                        xPosition = indexedArt.drawAt.x;
+                        yPosition++;
+                        continue;
+                    }
+
+                    // Draw only if in bounds
+                    if (typeof enemyLayer[yPosition]?.[xPosition] !== 'undefined') {
+                        enemyLayer[yPosition][xPosition] = `<span>${character}</span>`;
+                    }
+
+                    xPosition++;
+                }
+
+                const joinedArt = enemyLayer.map(row => row.join('')).join('\n');
+                return `<div class="layer enemy">${joinedArt}</div>`;
+            },
+        };
+
+        class MapCell {
+            constructor(type = "floor", options = {}) {
+                const defaults = MapCell.defaultsByType(type);
+                this.type = type;
+                this.mapCharacter = options?.mapCharacter || defaults.mapCharacter;
+                this.isSolid = options?.isSolid || defaults.isSolid;
+                this.onEnter = options?.onEnter || defaults.onEnter;
+                this.onTouch = options?.onTouch || defaults.onTouch;
+                this.onExplode = options?.onExplode || defaults.onExplode;
+                this.isVisible = options?.isVisible || defaults.isVisible;
+            }
+
+            static defaultsByType(type) {
+                /**
+                 * A MapCell can have the following properties:
+                 *
+                 * mapCharacter
+                 *   The character that represents the tile on the minimap
+                 *
+                 * isSolid
+                 *   If true, acts like a wall and does not allow the player to
+                 *   step onto it
+                 *
+                 * onEnter
+                 *   A function that runs when the player steps onto the tile.
+                 *   Always called with its own x, y coordinates. Won't work
+                 *   when isSolid = true
+                 *
+                 * onTouch
+                 *   A function that runs when the player touches the tile.
+                 *   Won't work when isSolid = false
+                 *
+                 * onExplode
+                 *   A function that runs when the player has blasted the tile
+                 *   with a brick of C4. Always called with its own x, y
+                 *   coordinates
+                 *
+                 * isVisible
+                 *   A function that determines if the tile is visible. If it
+                 *   returns false, the tile appears as a generic floor instead
+                 */
+                const defaults = {
+                    mapCharacter: "?",
+                    isSolid: false,
+                    onEnter: null,
+                    onTouch: null,
+                    onExplode: null,
+                    isVisible: null,
+                };
+
+                const types = {
+                    floor: {
+                        mapCharacter: ".",
+                    },
+                    healingTile: {
+                        mapCharacter: "H",
+                        onEnter: (x, y) => interactWithHealingTile(x, y),
+                    },
+                    wall: {
+                        mapCharacter: "#",
+                        isSolid: true,
+                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
+                    },
+                    gloryWall: {
+                        mapCharacter: "#",
+                        isSolid: true,
+                        onTouch: () => player.say("Uh, no thanks. I'm not THAT brave"),
+                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
+                    },
+                    crater: {
+                        mapCharacter: ".",
+                    },
+                    bloodyCrater: {
+                        mapCharacter: ".",
+                    },
+                    exit: {
+                        mapCharacter: "E",
+                        onEnter: (x, y) => descend(),
+                    },
+                    merchant: {
+                        mapCharacter: "M",
+                        onEnter: (x, y) => menu.open('merchant'),
+                        isVisible: () =>
+                            merchant.isAlive &&
+                            merchant.isActiveOnFloor,
+                        onExplode: (x, y) => {
+                            console.log({ merchantTesting: this });
+                            merchant.isAlive = false;
+                            merchant.isActiveOnFloor = false;
+                            MAP[y][x] = new MapCell('bloodyCrater');
+                            playSFX('scream');
+                            merchant.say('AIEEEEEEEEEEEEEE!');
+                            updateBattleLog(
+                                'HOLY SHIT! The <span class="friendly">' +
+                                'merchant</span> has been ' +
+                                '<span class="action">vaporized</span> into ' +
+                                'a bloody red mist!'
+                            );
+                        },
+                    },
+                    gambler: {
+                        mapCharacter: "G",
+                        onEnter: (x, y) => menu.open('gambler'),
+                        isVisible: () =>
+                            gambler.isAlive &&
+                            gambler.isActiveOnFloor &&
+                            player.bitcoins >= gambler.playPrice,
+                        onExplode: (x, y) => {
+                            gambler.isAlive = false;
+                            gambler.isActiveOnFloor = false;
+                            MAP[y][x] = new MapCell('bloodyCrater');
+
+                            // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
+                            const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
+                            player.bitcoins += rewardBtc;
+                            playSFX('scream');
+                            gambler.say('AUGH!!');
+                            updateBattleLog(
+                                `The <span class="gambler">gambler</span> ` +
+                                `has been reduced to a confetti of shrapnel ` +
+                                `and bone! You find <span class="BTC">` +
+                                `${rewardBtc} BTC</span> among the remains. ` +
+                                `Awesome!`
+                            );
+                        },
+                    },
+                    tardspireBanner: {
+                        mapCharacter: ".",
+                        onEnter: (x, y) => MAP[y][x] = new MapCell(),
+                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
+                    },
+                    treasureChest: {
+                        mapCharacter: "T",
+                        onEnter: (x, y) => interactWithChest(x, y),
+                        onExplode: (x, y) => {
+                            MAP[y][x] = new MapCell('crater');
+                            updateBattleLog(
+                                '<span class="action">Gee willikers, you ' +
+                                'just destroyed a perfectly good treasure ' +
+                                'chest! Oh well...</span><br>'
+                            );
+                        },
+                    },
+                    mimic: {
+                        mapCharacter: "T",
+                        onEnter: (x, y) => interactWithChest(x, y),
+                        onExplode: (x, y) => {
+                            MAP[y][x] = new MapCell('bloodyCrater');
+
+                            // Calculate scaled BTC reward
+                            const baseMimic = enemies.find(e => e.id === "mimic");
+                            const scaledMimic = scaleMimicStats(baseMimic);
+                            const mimicBTC = scaledMimic.bitcoins;
+
+                            player.bitcoins += mimicBTC; // Reward the player
+                            updateBattleLog(
+                                `<span class="action">WHAT THE FUCK? That ` +
+                                `was a mimic?!</span> You obtained ` +
+                                `<span class="BTC">${mimicBTC} BTC</span> ` +
+                                `from the intestines spilled from its gaping ` +
+                                `maw.`
+                            );
+                            playSFX('scream');
+                        },
+                    },
+                };
+
+                return { ...defaults, ...(types[type] || {}) };
+            }
+        }
+
+
         const
             WIDTH = 30,
             HEIGHT = 11;
@@ -404,14 +3725,14 @@
             length: HEIGHT
         }, () => Array(WIDTH).fill(false));
         let lastFloorBoostNotice = 0;
-        
+
         const baseStats = {
             maxHp: 20,
             defense: 5,
             persuasion: 7,
             speed: 12,
             luck: 2,
-        };       
+        };
         const player = {
             x: 1,
             y: 1,
@@ -426,6 +3747,8 @@
             exp: 0,
             level: 1,
             inCombat: false,
+            enteringCombat: false,
+            leavingCombat: false,
             levelingUp: false,
             inventory: {
                 canOfHamms: 2,
@@ -441,81 +3764,120 @@
             ring1: null,
             ring2: null,
             movementDisabled: false,
+            say: function(str) {
+                updateBattleLog(`<span class="player">&lt;YOU&gt;</span> "${str}"`);
+            },
+            // Resets event flags that are used during rendering. Called after every render
+            resetEventFlags: () => {
+                player.enteringCombat = false;
+                player.leavingCombat = false;
+            },
+            enterCombat: () => {
+                player.enteringCombat = true;
+                player.inCombat = true;
+            },
+            leaveCombat: () => {
+                player.leavingCombat = true;
+                player.inCombat = false;
+            }
         };
 
         const merchant = {
             isAlive: true,
             isActiveOnFloor: false,
-            x: WIDTH - 2,
-            y: HEIGHT - 2,
             items: [],
             say: function(str) {
                 updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
             },
-            die: function() {
-                this.isAlive = false;
-                this.isActiveOnFloor = false;
-                playSFX('scream');
-                merchant.say('AIEEEEEEEEEEEEEE!');
-                updateBattleLog('HOLY SHIT! The <span class="friendly">merchant</span> has been <span class="action">vaporized</span> into a bloody red mist!');
+            isAt: function(x, y) {
+                return (
+                    merchant.isAlive &&
+                    merchant.isActiveOnFloor &&
+                    MAP[y][x]?.type === 'merchant'
+                );
             },
-        buy: function(type, key) {
-            const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
-            if (!merchandise) {
-                console.error(`${key} doesn't exist!`);
-                return;
-            }
+            location: function() {
+                if (!merchant.isAlive || !merchant.isActiveOnFloor) {
+                    return null;
+                }
 
-            if (player.bitcoins < merchandise.price) {
-                merchant.say('Too bad, kid. Come back when you get some coin!');
-                return;
-            }
+                for (let y = 0; y < MAP.length; y++) {
+                    for (let x = 0; x < MAP[y].length; x++) {
+                        if (MAP[y][x]?.type === "merchant") {
+                            return { x, y };
+                        }
+                    }
+                }
+                return null;
+            },
+            buy: function(type, key) {
+                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+                if (!merchandise) {
+                    console.error(`${key} doesn't exist!`);
+                    return;
+                }
 
-            // Prevent buying equipment you already own
-            if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
-                merchant.say("You already own that, stupid!");
-                return;
-            }
+                if (player.bitcoins < merchandise.price) {
+                    merchant.say('Too bad, kid. Come back when you get some coin!');
+                    return;
+                }
 
-            player.bitcoins -= merchandise.price;
-            playSFX('kaching');
-            // Disable equipment auto equip upon purchase
-            player.inventory[key] = (player.inventory?.[key] || 0) + 1;
+                // Prevent buying equipment you already own
+                if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
+                    merchant.say("You already own that, stupid!");
+                    return;
+                }
 
-            const purchaseFlavorText = [
-                "HAHA! You won't regret it!",
-                "Don't forget: NO REFUNDS!",
-                "You won't find a better deal than this!",
-            ];
-            const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
-            merchant.say(merchantText);
+                player.bitcoins -= merchandise.price;
+                playSFX('kaching');
+                // Disable equipment auto equip upon purchase
+                player.inventory[key] = (player.inventory?.[key] || 0) + 1;
 
-            const merchandiseText = getArticle(merchandise.name) + merchandise.name;
-            updateBattleLog(`You just bought ${merchandiseText}`);
+                const purchaseFlavorText = [
+                    "HAHA! You won't regret it!",
+                    "Don't forget: NO REFUNDS!",
+                    "You won't find a better deal than this!",
+                ];
+                const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
+                merchant.say(merchantText);
+
+                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
+                updateBattleLog(`You just bought ${merchandiseText}`);
+                render();
             }
         };
 
         const gambler = {
             isAlive: true,
             isActiveOnFloor: false,
-            x: WIDTH - 4,
-            y: HEIGHT - 4,
             selectionIndex: 0,
             options: ['gamble', 'leave'],
             playPrice: 200,
             say: function(str) {
                 updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
             },
-            die: function () {
-                this.isAlive = false;
-                this.isActiveOnFloor = false;
-                // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
-                const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
-                player.bitcoins += rewardBtc;
-                playSFX('scream');
-                gambler.say('AUGH!!');
-                updateBattleLog(`The <span class="gambler">gambler</span> has been reduced to a confetti of shrapnel and bone! You find <span class="BTC">${rewardBtc} BTC</span> among the remains. Awesome!`);
-            }
+            isAt: function(x, y) {
+                return (
+                    gambler.isAlive &&
+                    gambler.isActiveOnFloor &&
+                    player.bitcoins >= gambler.playPrice &&
+                    MAP[y][x]?.type === 'gambler'
+                );
+            },
+            location: function() {
+                if (!gambler.isAlive || !gambler.isActiveOnFloor || player.bitcoins < gambler.playPrice) {
+                    return null;
+                }
+
+                for (let y = 0; y < MAP.length; y++) {
+                    for (let x = 0; x < MAP[y].length; x++) {
+                        if (MAP[y][x]?.type === "gambler") {
+                            return { x, y };
+                        }
+                    }
+                }
+                return null;
+            },
         };
 
         const enemies = [
@@ -878,7 +4240,7 @@
             alaskaRaisins: {
                 name: "ALASKA RAISINS",
                 description: "Holy shit! It's the Alaska Raisins! Heals +70 HP",
-                use: () => {          
+                use: () => {
                     healPlayer(70);
                     playSFX('raisins');
                     updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
@@ -930,7 +4292,7 @@
         function useDowsingRod() {
             for (let y=0; y<MAP.length; y++) {
                 for (let x=0; x<MAP[y].length; x++) {
-                    if (MAP[y][x] === 'E') {
+                    if (MAP[y][x]?.type === 'exit') {
                         revealMapSpot(x, y, 1);
 
                         // Since there's only one exit per floor, we can render and exit early
@@ -963,6 +4325,14 @@
                 const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
                 currentEnemy.hp -= dmg;
                 updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+                if (currentEnemy.hp <= 0) {
+                    playSFX('scream');
+                    const nx = player.x + DX[player.dir];
+                    const ny = player.y + DY[player.dir];
+                    if (MAP[ny][nx]?.type === 'floor') {
+                        MAP[ny][nx] = new MapCell('bloodyCrater');
+                    }
+                }
                 endOfPlayerTurn();
             } else {
                 updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
@@ -1000,56 +4370,11 @@
 
             for (let y=yMin; y<=yMax; y++) {
                 for (let x=xMin; x<=xMax; x++) {
-                    breakMap(x, y);
+                    if (MAP[y]?.[x]) {
+                        MAP[y][x]?.onExplode?.(x, y);
+                        seenTiles[y][x] = true;
+                    }
                 }
-            }
-        }
-
-        function breakMap(x, y) {
-            if (coordsInBounds(x, y)) {
-                if (MAP[y][x] === '#') {
-                    MAP[y][x] = '.'; // Destroy walls
-                }
-
-                const killedMerchant =
-                    merchant.isAlive &&
-                    merchant.isActiveOnFloor &&
-                    merchant.x === x && merchant.y === y;
-                if (killedMerchant) {
-                    merchant.die();
-                }
-
-                // Only allow killing the gambler if he is visible (player has enough BTC)
-                const killedGambler =
-                    gambler.isAlive &&
-                    gambler.isActiveOnFloor &&
-                    gambler.x === x && gambler.y === y &&
-                    player.bitcoins >= gambler.playPrice;
-                if (killedGambler) {
-                    gambler.die();
-                }
-
-                // Destroy treasure chests
-                if (MAP[y][x] === 'T') {
-                    MAP[y][x] = '.';
-                    updateBattleLog('<span class="action">Gee willikers, you just destroyed a perfectly good treasure chest! Oh well...</span><br>');
-                }
-
-                // Destroy mimic chests and reward BTC
-                if (MAP[y][x] === 'M') {
-                    MAP[y][x] = '.'; // Remove the mimic chest from the map
-
-                    // Calculate scaled BTC reward
-                    const baseMimic = enemies.find(e => e.id === "mimic");
-                    const scaledMimic = scaleMimicStats(baseMimic);
-                    const mimicBTC = scaledMimic.bitcoins;
-
-                    player.bitcoins += mimicBTC; // Reward the player
-                    updateBattleLog(`<span class="action">WHAT THE FUCK? That was a mimic?!</span> You obtained <span class="BTC">${mimicBTC} BTC</span> from the intestines spilled from its gaping maw.`);
-                    playSFX('scream');
-                }
-
-                seenTiles[y][x] = true;
             }
         }
 
@@ -1184,7 +4509,7 @@
             for (let y = 0; y < HEIGHT; y++) {
                 MAP[y] = [];
                 for (let x = 0; x < WIDTH; x++) {
-                    MAP[y][x] = '#';
+                    MAP[y][x] = new MapCell('wall');
                     seenTiles[y][x] = false;
                 }
             }
@@ -1197,19 +4522,20 @@
             } while (stack === null);
 
             for (let i in stack) {
-                MAP[stack[i].y][stack[i].x] = '.';
+                MAP[stack[i].y][stack[i].x] = new MapCell();
             }
 
             for (let i = 0; i < 10; i++) {
                 dissolveMap();
             }
 
-            MAP[player.y][player.x] = '.';
-            MAP[exit.y][exit.x] = 'E';
+            MAP[player.y][player.x] = new MapCell();
+            MAP[exit.y][exit.x] = new MapCell('exit');
 
             // 100% chance to spawn merchant on floor 1
             if (floor === 1) {
                 merchant.isActiveOnFloor = merchant.isAlive;
+                placeWelcomeBanner();
             } else {
                 merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.35;
             }
@@ -1223,11 +4549,36 @@
                 setGambler();
             }
 
-            // Spawn treasure chests
             spawnTreasureChests();
-
-            // Spawn healing tiles
             spawnHealingTiles();
+        }
+
+        function placeWelcomeBanner() {
+            if (MAP[player.y - 1][player.x]?.type === 'floor') {
+                // North of player
+                MAP[player.y - 1][player.x] = new MapCell('tardspireBanner');
+                player.dir = DIRECTIONS.indexOf('N');
+            } else if (MAP[player.y + 1][player.x]?.type === 'floor') {
+                // South of player
+                MAP[player.y + 1][player.x] = new MapCell('tardspireBanner');
+                player.dir = DIRECTIONS.indexOf('S');
+            } else if (MAP[player.y][player.x - 1]?.type === 'floor') {
+                // West of player
+                MAP[player.y][player.x - 1] = new MapCell('tardspireBanner');
+                player.dir = DIRECTIONS.indexOf('W');
+            } else if (MAP[player.y][player.x + 1]?.type === 'floor') {
+                // East of player
+                MAP[player.y][player.x + 1] = new MapCell('tardspireBanner');
+                player.dir = DIRECTIONS.indexOf('E');
+            }
+
+            // If there's a wall behind the player, turn it into a glory wall
+            const gx = player.x - DX[player.dir];
+            const gy = player.y - DY[player.dir];
+
+            if (MAP[gy][gx]?.type === 'wall') {
+                MAP[gy][gx] = new MapCell('gloryWall');
+            }
         }
 
         function spawnTreasureChests() {
@@ -1240,7 +4591,7 @@
                     const y = Math.floor(Math.random() * HEIGHT);
 
                     const isEmptySpace =
-                        MAP[y][x] === '.' &&
+                        MAP[y][x]?.type === 'floor' &&
                         (y !== exit.y || x !== exit.x) &&
                         (y !== player.y || x !== player.x) &&
                         !isMerchantTile(x, y) &&
@@ -1248,7 +4599,7 @@
 
                     if (isEmptySpace) {
                         const isMimic = Math.random() < 0.2; // 20% chance for mimic
-                        MAP[y][x] = isMimic ? 'M' : 'T'; // 'M' for mimic, 'T' for normal chest
+                        MAP[y][x] = new MapCell(isMimic ? 'mimic' : 'treasureChest');
                         break;
                     }
                 }
@@ -1265,15 +4616,15 @@
                     const y = Math.floor(Math.random() * HEIGHT);
 
                     const isEmptySpace =
-                        MAP[y][x] === '.' &&
+                        MAP[y][x]?.type === 'floor' &&
                         (y !== exit.y || x !== exit.x) &&
                         (y !== player.y || x !== player.x) &&
                         !isMerchantTile(x, y) &&
                         !isGamblerTile(x, y) &&
-                        MAP[y][x] !== 'T'; // Ensure no overlap with treasure chests
+                        MAP[y][x]?.type !== 'treasureChest'; // Ensure no overlap with treasure chests
 
                     if (isEmptySpace) {
-                        MAP[y][x] = 'H'; // Place a healing tile
+                        MAP[y][x] = new MapCell('healingTile'); // Place a healing tile
                         break;
                     }
                 }
@@ -1281,9 +4632,7 @@
         }
 
         function interactWithChest(x, y) {
-            const tile = MAP[y][x];
-
-            if (tile === 'T' || tile === 'M') {
+            if (['mimic', 'treasureChest'].includes(MAP[y][x]?.type)) {
                 player.currentChest = { x, y };
                 menu.open("chest");
             }
@@ -1292,9 +4641,9 @@
         function interactWithHealingTile(x, y) {
             const healAmount = Math.ceil(getEffectiveStat('maxHp') * 0.3); // Heal 30% of effective max HP
             healPlayer(healAmount);
-            updateBattleLog(`An oddly colored, perfectly square floor tile <span class="friendly">heals you for <span class="healtile">${healAmount} HP</span></span>`);
+            updateBattleLog(`An oddly colored, perfectly square floor tile <span class="friendly">heals you for <span class="healingTile">${healAmount} HP</span></span>`);
 
-            MAP[y][x] = '.';
+            MAP[y][x] = new MapCell();
             render();
         }
 
@@ -1342,13 +4691,11 @@
                 const y = Math.floor(Math.random() * HEIGHT);
 
                 const isEmptySpace =
-                    MAP[y][x] === '.' &&
-                    (y !== exit.y && x !== exit.x) &&
+                    MAP[y][x]?.type === 'floor' &&
                     (y !== player.y && x !== player.x);
 
                 if (isEmptySpace) {
-                    merchant.x = x;
-                    merchant.y = y;
+                    MAP[y][x] = new MapCell('merchant');
                     return;
                 }
             } while (attempts++ < 1000);
@@ -1367,18 +4714,15 @@
 
                 const isMerchantSpace =
                     merchant.isActiveOnFloor &&
-                    y === merchant.y &&
-                    x === merchant.x;
+                    MAP[y][x]?.type === 'merchant';
 
                 const isEmptySpace =
-                    MAP[y][x] === '.' &&
-                    (y !== exit.y && x !== exit.x) &&
+                    MAP[y][x]?.type === 'floor' &&
                     (y !== player.y && x !== player.x) &&
                     !isMerchantSpace;
 
                 if (isEmptySpace) {
-                    gambler.x = x;
-                    gambler.y = y;
+                    MAP[y][x] = new MapCell('gambler');
                     return;
                 }
             } while (attempts++ < 1000);
@@ -1444,11 +4788,11 @@
             let dissolvePoints = [];
             for (let y = 2; y < HEIGHT - 2; y++) {
                 for (let x = 2; x < WIDTH - 2; x++) {
-                    const isDissolvePoint = MAP[y][x] === '#' && (
-                        (MAP[y - 1][x] === '#' ? 1 : 0) +
-                        (MAP[y + 1][x] === '#' ? 1 : 0) +
-                        (MAP[y][x - 1] === '#' ? 1 : 0) +
-                        (MAP[y][x + 1] === '#' ? 1 : 0)
+                    const isDissolvePoint = MAP[y][x]?.type === 'wall' && (
+                        (MAP[y - 1][x]?.type === 'wall' ? 1 : 0) +
+                        (MAP[y + 1][x]?.type === 'wall' ? 1 : 0) +
+                        (MAP[y][x - 1]?.type === 'wall' ? 1 : 0) +
+                        (MAP[y][x + 1]?.type === 'wall' ? 1 : 0)
                     ) === 3;
 
                     if (isDissolvePoint) {
@@ -1465,7 +4809,7 @@
             for (let i = 0; i < totalPointsToDissolve; i++) {
                 const index = Math.floor(Math.random() * dissolvePoints.length);
                 const dissolvePoint = dissolvePoints[index];
-                MAP[dissolvePoint.y][dissolvePoint.x] = '.';
+                MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell();
                 dissolvePoints = dissolvePoints.splice(index, 1);
             }
         }
@@ -1502,32 +4846,18 @@
                         tile = '?';
                         tileClass = 'unexplored';
                     } else {
-                        if (isMerchantTile(x, y)) {
-                            tile = 'M';
-                            tileClass = 'merchant';
-                        } else if (isGamblerTile(x, y)) {
-                            tile = 'G';
-                            tileClass = 'gambler';
-                        } else if (MAP[y][x] === 'T' || MAP[y][x] === 'M') {
-                            tile = 'T'; // Mimics appear as normal chests
-                            tileClass = 'treasurechest';
-                        } else if (MAP[y][x] === 'H') {
-                            tile = 'H';
-                            tileClass = 'healtile';
+                        // Use a visibility function if one is available
+                        // Otherwise, assume that the tile is visible
+                        const isVisible = typeof MAP[y][x]?.isVisible !== 'function' || MAP[y][x].isVisible();
+
+                        if (isVisible) {
+                            tile = MAP[y][x]?.mapCharacter || '?';
+                            tileClass = MAP[y][x]?.type || 'unknown';
+                            tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
                         } else {
-                            switch (MAP[y][x]) {
-                                case '#':
-                                    tile = '#';
-                                    tileClass = 'wall';
-                                    break;
-                                case 'E':
-                                    tile = 'E';
-                                    tileClass = 'exit';
-                                    break;
-                                default:
-                                    tile = '.';
-                                    tileClass = 'explored';
-                            }
+                            const emptyCell = new MapCell();
+                            tile = emptyCell.mapCharacter;
+                            tileClass = emptyCell.type;
                         }
                     }
                     out += `<span class="${tileClass}">${tile}</span>`;
@@ -1538,12 +4868,12 @@
         }
 
         function isMerchantTile(x, y) {
-            return merchant.isActiveOnFloor && x === merchant.x && y === merchant.y;
+            return merchant.isActiveOnFloor && MAP[y][x]?.type === 'merchant';
         }
 
         function isGamblerTile(x, y) {
             // The gambler won't appear if the player is broke
-            return gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice && x === gambler.x && y === gambler.y;
+            return gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice && MAP[y][x]?.type === 'gambler';
         }
 
         function updateBattleLog(entry) {
@@ -1574,278 +4904,41 @@
             sfx[name].play();
         }
 
-        function wallSlice(d) {
-            // Make sure to provide 6 slices, from farthest (6) to nearest (1)
-            return {
-                6: "||      /#####\\      ||\n",
-                5: "||     |#######|     ||\n",
-                4: "||    |#########|    ||\n",
-                3: "||   |###########|   ||\n",
-                2: "||  |#############|  ||\n",
-                1: "|| |###############| ||\n"
-            }[d];
-        }
-
-        function corridorSlice(d) {
-            return {
-                6: "||      /     \\      ||\n",
-                5: "||     |       |     ||\n",
-                4: "||    |         |    ||\n",
-                3: "||   |           |   ||\n",
-                2: "||  |             |  ||\n",
-                1: "|| |               | ||\n"
-            }[d];
-        }
-
-        function exitSlice(d) {
-            return {
-                6: "||      /  E  \\      ||\n",
-                5: "||     |   E   |     ||\n",
-                4: "||    |    E    |    ||\n",
-                3: "||   |     E     |   ||\n",
-                2: "||  |      E      |  ||\n",
-                1: "|| |       E       | ||\n"
-            }[d];
-        }
-
-        function healSlice(d) {
-            return {
-                6: "||      /  H  \\      ||\n",
-                5: "||     |   H   |     ||\n",
-                4: "||    |    H    |    ||\n",
-                3: "||   |     H     |   ||\n",
-                2: "||  |      H      |  ||\n",
-                1: "|| |       H       | ||\n"
-            }[d];
-        }
-
-        function treasureSlice(d) {
-            return {
-                6: "||      /  T  \\      ||\n",
-                5: "||     |   T   |     ||\n",
-                4: "||    |    T    |    ||\n",
-                3: "||   |     T     |   ||\n",
-                2: "||  |      T      |  ||\n",
-                1: "|| |       T       | ||\n"
-            }[d];
-        }
-
-        function merchantSlice(d) {
-            return {
-                6: "||      /  M  \\      ||\n",
-                5: "||     |   M   |     ||\n",
-                4: "||    |    M    |    ||\n",
-                3: "||   |     M     |   ||\n",
-                2: "||  |      M      |  ||\n",
-                1: "|| |       M       | ||\n"
-            }[d];
-        }
-
-        function gamblerSlice(d) {
-            return {
-                6: "||      /  G  \\      ||\n",
-                5: "||     |   G   |     ||\n",
-                4: "||    |    G    |    ||\n",
-                3: "||   |     G     |   ||\n",
-                2: "||  |      G      |  ||\n",
-                1: "|| |       G       | ||\n"
-            }[d];
-        }
-
-        function getEnemyArt() {
-            switch (currentEnemy?.id) {
-                case "snailSentinel":
-                    return `
-
-
-
-
-   ___   |_|
-  /   \\_/@ @
-__\\_______^/
-`;
-                case "stupidDog":
-                    return `
-
-
-
-
-/\\__/\\
-|@  @|
-|(00)|
- )vv(
-`;
-                case "keeperOfTheToiletBowl":
-                    return `
-
-
-
-   _______
-  |       |
-  |_______|=)
- -----------         ^
- |         |    O____|
- \\_________/   /|    |
-    |   |       |    |
-    |___|      / \\   |
-`;
-                case "mysteriousScooter":
-                    return `
-
-
-
-
-
-       [~~]=====[~~]
-            ||
-            ||
-            ||
-            ||
-(O)======(O)===O)
-`;
-                case "badassFlamingSkeleton":
-                    return `
-      |\\ |\\ |\\ |\\ |\\ /| /|
-          _______         /|
-    |\\   /   \\   \\      /|
-  |\\     | [ ]  [ ]        /|
-    |\\   |        |          /|
-         \\ \\=====/     //   /|
- |\\       \\______\\    ()/    /|
-  |\\       ||        //   /|
-     O==[==||==]====O      /|
-|\\   || [==||==]       /| /|
-  |\\ () [==||==]  /|  /| /|
-`;
-                case "wangRat":
-                    return `
-
-
-
-
-       ______
-    (|/      \\|)
-      \\O    o/___________________
-     --\\-()-/--        __|__|__|_\\
-        \\__/__________/
-        _|  _|  _|  _|
-`;
-
-                case "fridgeOfForgottenLeftovers":
-                    return `
-
-            ___.---+.
-       .--''       | '.
-       |           |  |
-       |     ______|  |
-       |----'      |  |
-       |       [==]|  |
-       |           |  |
-       |           |  |
-       |___        |  |
-           '---.___|.-'
-`;
-
-                case "lughead":
-                    return `
-
-
-
-            .--.
-            |oO|
-         ..-\\TT/-..
-        '          '
-        ( )      ( )
-        ( |------| )
-        'W . || . W'
-          (__)(__)
-`;
-
-                case "pissedOffPoultry":
-                    return `
-
-
-
-    .        .--.
-    |\\      .-:;
-    : \\    < O |'
-     \\ \\   ;    '.
-      \\/\\-(    (. '
-      (_)/ -_    ' ;
-             '-; ;
-            /|\\/|\\
-`;
-
-                case "krampusElf":
-                    return `
-
-
-
-             *
-            / \\
-        .-./___\\.-.
-         \\/ o o \\/
-         (__(_)__)
-           / : \\
-          (_|-|_)
-          (__|__)
-`;
-                case "mimic":
-                    return `
-
-
-
-     ______________
-    /    \\      /  \\
-    |  ((O)    ((O)|     __________
-    |______________|    (________(O) - - - -
-    |    /VVVVV\\   |=====[/\\/]
-    |    \\ | | /   |      [ ]
-    \\______| |_____/
-            \\|
-            `;
-                default:
-                    return '';
-            }
-        }
-
-
         function render() {
             updateSeenTiles();
             drawMinimap();
-            let output = "";
 
-        const equippedArmor = armor[player.armor];
-        const totalDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0);
-        const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
-        const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
+            const equippedArmor = armor[player.armor];
+            const totalDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0);
+            const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
+            const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
 
-        function getRingEffect(stat) {
-            return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
-        }
+            function getRingEffect(stat) {
+                return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
+            }
 
-        const displayMaxHp = player.maxHp + getRingEffect('maxHp');
-        const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
-        const displayPersuasion = player.persuasion + getRingEffect('persuasion');
-        const displaySpeed = player.speed + getRingEffect('speed');
-        const displayLuck = player.luck + getRingEffect('luck');
+            const displayMaxHp = player.maxHp + getRingEffect('maxHp');
+            const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
+            const displayPersuasion = player.persuasion + getRingEffect('persuasion');
+            const displaySpeed = player.speed + getRingEffect('speed');
+            const displayLuck = player.luck + getRingEffect('luck');
 
-        const stats1Html = `
-            <div class="stats-container">
-                <span>.-STATS-.</span>
-                <span>|===<span class="HP">HP</span>===|</span>
-                <span class="stats-label">${player.hp}/${displayMaxHp}</span>
-                <span>|==<span class="DEF">DEF</span>==|</span>
-                <span class="stats-label">${displayDefense}</span>
-                <span>|==<span class="PRS">PRS</span>==|</span>
-                <span class="stats-label">${displayPersuasion}</span>
-                <span>|==<span class="SPD">SPD</span>==|</span>
-                <span class="stats-label">${displaySpeed}</span>
-                <span>|==<span class="LUK">LUK</span>==|</span>
-                <span class="stats-label">${displayLuck}</span>
-                <span>._ _ _ _.</span>
-            </div>`;
-        document.getElementById('stats1').innerHTML = stats1Html;
+            const stats1Html = `
+                <div class="stats-container">
+                    <span>.-STATS-.</span>
+                    <span>|===<span class="HP">HP</span>===|</span>
+                    <span class="stats-label">${player.hp}/${displayMaxHp}</span>
+                    <span>|==<span class="DEF">DEF</span>==|</span>
+                    <span class="stats-label">${displayDefense}</span>
+                    <span>|==<span class="PRS">PRS</span>==|</span>
+                    <span class="stats-label">${displayPersuasion}</span>
+                    <span>|==<span class="SPD">SPD</span>==|</span>
+                    <span class="stats-label">${displaySpeed}</span>
+                    <span>|==<span class="LUK">LUK</span>==|</span>
+                    <span class="stats-label">${displayLuck}</span>
+                    <span>._ _ _ _.</span>
+                </div>`;
+            document.getElementById('stats1').innerHTML = stats1Html;
 
             const stats2Html = `<div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.---<span class="action">FLOOR</span>---.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
@@ -1853,65 +4946,39 @@ __\\_______^/
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="BTC">BTC</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.bitcoins}</span>
                 <span center>._ _ _ _ _ _.</span>
             `;
-            document.getElementById('stats2').innerHTML = stats2Html;    
+            document.getElementById('stats2').innerHTML = stats2Html;
 
             if (player.levelingUp) {
                 startLevelUpAllocation();
                 return;
             }
 
+            let partyHTML = '';
+            if (party.length > 0) {
+                partyHTML = `<strong>Your Party:</strong><br>`;
+                party.forEach(member => {
+                    partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
+                });
+            }
+            document.getElementById("partylist").innerHTML = partyHTML;
+
+            let output = sceneRenderer.render(player.x, player.y, DIRECTIONS[player.dir]);
+
             if (player.inCombat) {
-                output += `${getEnemyArt()}`;
-
-                if (party.length > 0) {
-                    let partyHTML = `<strong>Your Party:</strong><br>`;
-                    party.forEach(member => {
-                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
-                    });
-                    document.getElementById("partylist").innerHTML = partyHTML;
-                } else {
-                    document.getElementById("partylist").innerHTML = '';
-                }
-
+                output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
                         "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
                 }
-
             } else {
-                output += "\n\n\n\n";
-                for (let d = 6; d >= 1; d--) {
-                    let tx = player.x + DX[player.dir] * d;
-                    let ty = player.y + DY[player.dir] * d;
-                    let tile = getTile(tx, ty);
-
-                    output += (tx === merchant.x && ty === merchant.y && merchant.isActiveOnFloor) ? merchantSlice(d) :
-                        (tx === gambler.x && ty === gambler.y && gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice) ? gamblerSlice(d) :
-                        tile === '#' ? wallSlice(d) :
-                        tile === 'E' ? exitSlice(d) :
-                        tile === 'H' ? healSlice(d) :
-                        (tile === 'T' || tile === 'M') ? treasureSlice(d) :
-                        corridorSlice(d);
-                }
-
-                // Logo
-                output +=
-                    "||                   ||\n||    Welcome to     ||\n++-----TARDQUEST-----++\n";
-
-                // Party display
-                if (party.length > 0) {
-                    let partyHTML = `<strong>Your Party:</strong><br>`;
-                    party.forEach(member => {
-                        partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
-                    });
-                    document.getElementById("partylist").innerHTML = partyHTML;
-                } else {
-                    document.getElementById("partylist").innerHTML = '';
-                }
-
                 // Controls
                 document.getElementById("controls").textContent =
-                    "↑/W:      Move Forward\n↓/S:      Move Backward\n←/A, →/D: Turn\nT:        Talk\nI:        Inventory";
+                    "↑/W:      Move Forward\n" +
+                    "↓/S:      Move Backward\n" +
+                    "←/A, →/D: Turn\n" +
+                    "Q, E:     Strafe\n" +
+                    "T:        Talk\n" +
+                    "I:        Inventory";
             }
 
             if (player.hp <= 0) {
@@ -1921,6 +4988,7 @@ __\\_______^/
             }
 
             document.getElementById('game').innerHTML = output;
+            player.resetEventFlags();
         }
 
 
@@ -1932,7 +5000,7 @@ __\\_______^/
         }
 
         function getTile(x, y) {
-            return !coordsInBounds(x, y) ? '#' : MAP[y][x];
+            return !coordsInBounds(x, y) ? new MapCell('wall') : MAP[y][x];
         }
 
         function coordsInBounds(x, y) {
@@ -1946,11 +5014,16 @@ __\\_______^/
             player.movementDisabled = true;
 
             playSFX('footstep');
-            let nx, ny, randomEncounterChance;
+            let nx, ny, randomEncounterChance = 0.25;
             if (direction === 'forward') {
                 nx = player.x + DX[player.dir];
                 ny = player.y + DY[player.dir];
-                randomEncounterChance = 0.25; // When moving forward
+            } else if (direction === 'strafeLeft') {
+                nx = player.x + DX[(player.dir + 3) % 4];
+                ny = player.y + DY[(player.dir + 3) % 4];
+            } else if (direction === 'strafeRight') {
+                nx = player.x + DX[(player.dir + 1) % 4];
+                ny = player.y + DY[(player.dir + 1) % 4];
             } else {
                 nx = player.x - DX[player.dir];
                 ny = player.y - DY[player.dir];
@@ -1962,22 +5035,21 @@ __\\_______^/
             }
 
             const tile = getTile(nx, ny);
-            if (tile !== '#') {
+            if (!tile.isSolid) {
                 player.x = nx;
                 player.y = ny;
-                if (isMerchantTile(nx, ny)) {
-                    menu.open('merchant');
-                } else if (isGamblerTile(nx, ny)) {
-                    menu.open('gambler');
-                } else if (tile === 'E') {
-                    descend();
-                } else if (tile === 'H') {
-                    interactWithHealingTile(nx, ny);
-                } else if (tile === 'T' || tile === 'M') {
-                    interactWithChest(nx, ny);
+
+                const fireOnEnter =
+                    typeof tile.onEnter === "function" &&
+                    (typeof tile.isVisible !== "function" || tile.isVisible());
+
+                if (fireOnEnter) {
+                    tile.onEnter(nx, ny);
                 } else if (Math.random() < randomEncounterChance) {
                     startEncounter();
                 }
+            } else if (typeof tile.onTouch === "function") {
+                tile.onTouch();
             }
 
             // Set the movement delay range
@@ -2002,6 +5074,7 @@ __\\_______^/
             }
             playSFX('turn');
             player.dir = (player.dir + 3) % 4;
+            render();
         }
 
         function turnRight() {
@@ -2010,6 +5083,7 @@ __\\_______^/
             }
             playSFX('turn');
             player.dir = (player.dir + 1) % 4;
+            render();
         }
 
         function startEncounter() {
@@ -2032,7 +5106,7 @@ __\\_______^/
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
 
-            player.inCombat = true;
+            player.enterCombat();
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
             playRandomBattleMusic(); // <-- use this
@@ -2079,7 +5153,7 @@ __\\_______^/
                     player.exp += exp;
                 }
 
-                player.inCombat = false;
+                player.leaveCombat();
                 currentEnemy = null;
                 resumeExplorationMusic(); // <-- use this
                 party = party.filter(a => a.hp > 0);
@@ -2106,7 +5180,7 @@ __\\_______^/
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost; // Increase base damage by the floorBoost
 
-               
+
 
                 // Calculate damage based on player's defense
                 const playerArmor = armor[player.armor];
@@ -2150,8 +5224,8 @@ __\\_______^/
 
             playSFX('run');
             if (Math.random() < 0.5) {
-                updateBattleLog("YOU: Gee willikers, I'm outta here!");
-                player.inCombat = false;
+                player.say("Gee willikers, I'm outta here!");
+                player.leaveCombat();
                 currentEnemy = null;
                 resumeExplorationMusic(); // <-- use this
             } else {
@@ -2192,7 +5266,7 @@ __\\_______^/
                     render();
                     return;
                 }
-                updateBattleLog(`YOU: "${message}"`);
+                player.say(message);
                 e.target.value = "";
                 awaitingPersuasionText = false;
                 document.getElementById("inputBox").style.display = "none";
@@ -2236,9 +5310,9 @@ __\\_______^/
                     };
                     party.push(newAlly);
                     updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
-                    player.inCombat = false;
+                    player.leaveCombat();
                     currentEnemy = null;
-                    playMusic('exploration');
+                    playRandomExplorationMusic();
                 } else {
                     updateBattleLog(`${currentEnemy.name} really, quite genuinely, does not care...`);
                     enemyAttack();
@@ -2267,11 +5341,10 @@ __\\_______^/
                 for (let i = 0; i < 4; i++) {
                     const nx = player.x + DX[i];
                     const ny = player.y + DY[i];
-                    if (coordsInBounds(nx, ny) && MAP[ny][nx] === '.') {
+                    if (coordsInBounds(nx, ny) && MAP[ny][nx]?.type === 'floor') {
                         merchant.isAlive = true;
                         merchant.isActiveOnFloor = true;
-                        merchant.x = nx;
-                        merchant.y = ny;
+                        MAP[ny][nx] = new MapCell('merchant');
                         updateBattleLog('<span class="merchant">CHEAT: Merchant spawned</span>');
                         found = true;
                         break;
@@ -2287,11 +5360,11 @@ __\\_______^/
                 for (let i = 0; i < 4; i++) {
                     const nx = player.x + DX[i];
                     const ny = player.y + DY[i];
-                    if (coordsInBounds(nx, ny) && MAP[ny][nx] === '.') {
+                    if (coordsInBounds(nx, ny) && MAP[ny][nx]?.type === 'floor') {
                         gambler.isAlive = true;
                         gambler.isActiveOnFloor = true;
-                        gambler.x = nx;
-                        gambler.y = ny;
+                        player.bitcoins = Math.max(player.bitcoins, gambler.playPrice);
+                        MAP[ny][nx] = new MapCell('gambler');
                         updateBattleLog('<span class="gambler">CHEAT: Gambler spawned</span>');
                         found = true;
                         break;
@@ -2364,24 +5437,24 @@ __\\_______^/
                 return;
             }
             if (cmd === "/debug") {
-                player.maxHp = 69999;
-                player.hp = 69999;
-                player.defense = 69999;
-                player.persuasion = 69999;
-                player.speed = 69999;
-                player.luck = 69999;
-                player.bitcoins = 69999;
+                const yeahBoiii = 69999;
+                player.maxHp = yeahBoiii;
+                player.hp = yeahBoiii;
+                player.defense = yeahBoiii;
+                player.persuasion = yeahBoiii;
+                player.speed = yeahBoiii;
+                player.luck = yeahBoiii;
+                player.bitcoins = yeahBoiii;
 
                 let merchantSpawned = false;
                 let merchantPos = null;
                 for (let i = 0; i < 4; i++) {
                     const nx = player.x + DX[i];
                     const ny = player.y + DY[i];
-                    if (coordsInBounds(nx, ny) && MAP[ny][nx] === '.') {
+                    if (coordsInBounds(nx, ny) && MAP[ny][nx]?.type === 'floor') {
                         merchant.isAlive = true;
                         merchant.isActiveOnFloor = true;
-                        merchant.x = nx;
-                        merchant.y = ny;
+                        MAP[ny][nx] = new MapCell('merchant');
                         merchantSpawned = true;
                         merchantPos = { x: nx, y: ny };
                         break;
@@ -2391,38 +5464,41 @@ __\\_______^/
                 let gamblerSpawned = false;
                 if (merchantSpawned) {
                     for (let i = 0; i < 4; i++) {
-                        const gx = merchant.x + DX[i];
-                        const gy = merchant.y + DY[i];
+                        const merchantPosition = merchant.location();
+                        if (merchantPosition === null) {
+                            break;
+                        }
+                        const gx = merchantPosition.x + DX[i];
+                        const gy = merchantPosition.y + DY[i];
                         const notPlayer = gx !== player.x || gy !== player.y;
-                        const notMerchant = gx !== merchant.x || gy !== merchant.y;
+                        const notMerchant = gx !== merchantPosition.x || gy !== merchantPosition.y;
                         if (
                             coordsInBounds(gx, gy) &&
-                            MAP[gy][gx] === '.' &&
+                            MAP[gy][gx]?.type === 'floor' &&
                             notPlayer &&
                             notMerchant
                         ) {
                             gambler.isAlive = true;
                             gambler.isActiveOnFloor = true;
-                            gambler.x = gx;
-                            gambler.y = gy;
+                            MAP[gy][gx] = new MapCell('gambler');
                             gamblerSpawned = true;
                             break;
                         }
                     }
                 }
                 updateBattleLog(
-                    `<span class="action">CHEAT: Debug mode activated! All stats and BTC set to 69999. Merchant${merchantSpawned ? "" : " (FAILED)"} and Gambler${gamblerSpawned ? "" : " (FAILED)"} spawned next to you.</span>`
+                    `<span class="action">CHEAT: Debug mode activated! All stats and BTC set to ${yeahBoiii}. Merchant${merchantSpawned ? "" : " (FAILED)"} and Gambler${gamblerSpawned ? "" : " (FAILED)"} spawned next to you.</span>`
                 );
                 render();
                 return;
             }
 
-    
+
             if (cmd.startsWith("/setfloor ")) {
-                const amount = parseInt(cmd.split(" ")[1], 10);
-                if (!isNaN(amount) && amount > 0) {
-                    floor = amount;
-                    updateBattleLog(`<span class="action">CHEAT: Moved to Floor ${amount}</span>`);
+                const floorNumber = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(floorNumber) && floorNumber > 0) {
+                    floor = floorNumber;
+                    updateBattleLog(`<span class="action">CHEAT: Moved to Floor ${floorNumber}</span>`);
                     generateMap();
                     render();
                 } else {
@@ -2504,17 +5580,14 @@ __\\_______^/
                         html += `<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`;
                         break;
                 }
-                gambler.isActiveOnFloor = false;
-                updateBattleLog(html);
-                updateBattleLog('The gambler escapes into the shadows');
-                render();
             } else {
                 gambler.say('<span class="gambler">Hah! Tough luck, kid!</span> You gotta know when to hold \'em, know when to fold \'em, heh heh');
-                gambler.isActiveOnFloor = false;
-                updateBattleLog(html);
-                updateBattleLog('The gambler escapes into the shadows');
-                render();
             }
+
+            gambler.isActiveOnFloor = false;
+            updateBattleLog(html);
+            updateBattleLog('The gambler escapes into the shadows');
+            render();
 
             menu.close();
         }
@@ -2569,19 +5642,19 @@ __\\_______^/
             const { x, y } = player.currentChest;
             const tile = MAP[y][x];
 
-            if (tile === 'M') {
+            if (MAP[y][x]?.type === 'mimic') {
                 // Mimic detected, start a battle
                 playSFX('scream');
-                MAP[y][x] = '.'; // Remove the mimic from the map
+                MAP[y][x] = new MapCell(); // Remove the mimic from the map
 
                 // Spawn mimic and apply scaling
                 const baseMimic = enemies.find(e => e.id === "mimic");
                 currentEnemy = scaleMimicStats(baseMimic);
 
                 updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
-                player.inCombat = true;
-                playMusic('battle');
-            } else if (tile === 'T') {
+                player.enterCombat();
+                playRandomBattleMusic();
+            } else if (MAP[y][x]?.type === 'treasureChest') {
                 // Normal chest, provide loot
                 let lootTypeRoll = Math.random();
                 let chestContents;
@@ -2620,7 +5693,7 @@ __\\_______^/
                     updateBattleLog(`You found <span class="friendly">${rings[ringId].name}</span> in the chest!`);
                 }
 
-                MAP[y][x] = '.'; // Remove the chest from the map
+                MAP[y][x] = new MapCell(); // Remove the chest from the map
             }
 
             player.currentChest = null; // Clear the stored chest position
@@ -2647,7 +5720,7 @@ __\\_______^/
             const key = e.key.toLowerCase();
 
             if (gameOver) return;
-            if (!player.inCombat && key === 't' && !menu.isOpen() && !player.levelingUp) {
+            if (!player.inCombat && key === 't' && !awaitingPersuasionText && !menu.isOpen() && !player.levelingUp) {
                 speakingOutsideCombat = true;
                 tryPersuade(e);
                 return;
@@ -2695,10 +5768,20 @@ __\\_______^/
                         e.preventDefault();
                         turnRight();
                         break;
+                    case 'q':
+                        e.preventDefault();
+                        move('strafeLeft');
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        move('strafeRight');
+                        break;
+                    case 't':
+                        speakingOutsideCombat = true;
+                        tryPersuade(e);
+                        break;
                 }
             }
-
-            render();
         });
 
 
@@ -2742,10 +5825,10 @@ __\\_______^/
 
 
         generateMap();
-        updateSeenTiles(); 
-        drawMinimap(); 
+        updateSeenTiles();
+        drawMinimap();
         playRandomExplorationMusic();
-        render(); 
+        render();
 
         document.getElementById('musicToggle').addEventListener('click', () => {
             musicEnabled = !musicEnabled;
@@ -2832,7 +5915,7 @@ __\\_______^/
                 // Render the title and page indicator
                 const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
                 const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
-                const landingHtml = `<div>${activeMenu.landingHtml() || ''}</div>`;
+                const landingHtml = `<div>${activeMenu?.landingHtml?.() || ''}</div>`;
                 document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
 
                 // Render the options for the current page
@@ -2988,17 +6071,6 @@ __\\_______^/
                 },
                 inventoryEquipment: {
                     title: "EQUIPMENT",
-                    landingHtml: () => {
-                        const weapon = weapons[player.weapon];
-                        const armorPiece = armor[player.armor];
-                        const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
-                        const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
-                        return `
-${weapon ? `Weapon: ${weapon.name}` : "No weapon equipped"}
-${armorPiece ? `Armor: ${armorPiece.name}` : "No armor equipped"}
-Rings: ${ring1}, ${ring2}
-                        `;
-                    },
                     getOptions: () => {
                         const weapon = weapons[player.weapon];
                         const armorPiece = armor[player.armor];
@@ -3033,8 +6105,6 @@ Rings: ${ring1}, ${ring2}
                 },
                 equipHand: {
                     title: "EQUIP WEAPON",
-                    landingHtml: () => {
-                    },
                     getOptions: () => {
                         const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
                         const options = ownedWeapons.map((weaponId) => ({
@@ -3068,8 +6138,6 @@ Rings: ${ring1}, ${ring2}
 
                 equipBody: {
                     title: "EQUIP ARMOR",
-                    landingHtml: () => {
-                    },
                     getOptions: () => {
                         const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
                         const options = ownedArmor.map((armorId) => ({
@@ -3133,7 +6201,6 @@ Rings: ${ring1}, ${ring2}
 
                 ring1Select: {
                     title: "EQUIP RING 1",
-                    landingHtml: () => "",
                     getOptions: () => {
                         const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
                         const options = ownedRings.map((ringId) => ({
@@ -3176,7 +6243,6 @@ Rings: ${ring1}, ${ring2}
 
                 ring2Select: {
                     title: "EQUIP RING 2",
-                    landingHtml: () => "",
                     getOptions: () => {
                         const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
                         const options = ownedRings.map((ringId) => ({
@@ -3438,6 +6504,10 @@ Rings: ${ring1}, ${ring2}
                     },
                     onClose: () => {
                         gambler.isActiveOnFloor = false;
+                        const gamblerPosition = gambler.location();
+                        if (gamblerPosition) {
+                            MAP[gamblerPosition.y][gamblerPosition.x] = new MapCell();
+                        }
                     },
                     landingHtml: () => {
                         return (
@@ -3469,11 +6539,7 @@ Rings: ${ring1}, ${ring2}
                 chest: {
                     title: "TREASURE CHEST",
                     landingHtml: () => {
-                        return `
-
-                        
-You found a treasure chest! Do you want to open it?
-                        `;
+                        return `\n\n\nYou found a treasure chest! Do you want to open it?`;
                     },
                     getOptions: () => {
                         return [
@@ -3649,7 +6715,7 @@ You found a treasure chest! Do you want to open it?
         }
 
         function rollDiceForStats() {
-            resetStats(); 
+            resetStats();
             const stats = ["hp", "defense", "persuasion", "speed", "luck"];
             while (player.remainingPoints > 0) {
                 const randomStat = stats[Math.floor(Math.random() * stats.length)];
@@ -3816,22 +6882,10 @@ You found a treasure chest! Do you want to open it?
                           ..__
                 __________\`.  '-
                (___________ \`.  '-.
-                (___/_/\\ ___.
-                 (__\\_\\/|   ||
-                   (____|___||    _
-                        \`-______-'
-
-    `,
-
-    `
-
-                  ..__
-        __________\`.  '-
-       (___________ \`.  '-.
-        (__________
-         (________
-           (____
-                \`-______-
+                (__________
+                 (________
+                   (____
+                        \`-______-
 
 
     .----------.   .----------.
