@@ -6195,10 +6195,15 @@
                         ];
                     },
                     select: (selectedOptionId) => {
-                        menu.open(selectedOptionId);
+                        if (selectedOptionId === "ring1") {
+                            menu.open("ring1Select");
+                        } else if (selectedOptionId === "ring2") {
+                            menu.open("ring2Select");
+                        } else {
+                            menu.close();
+                        }
                     },
                 },
-
                 ring1Select: {
                     title: "EQUIP RING 1",
                     getOptions: () => {
@@ -6237,6 +6242,7 @@
                             player.ring1 = selectedOptionId || null;
                             updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 1 slot.`);
                             menu.close();
+                            render()
                         }
                     },
                 },
@@ -6279,6 +6285,7 @@
                             player.ring2 = selectedOptionId || null;
                             updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 2 slot.`);
                             menu.close();
+                            render()
                         }
                     },
                 },
