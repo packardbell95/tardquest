@@ -5322,13 +5322,13 @@
                 }
 
                 // ======== Persuasion During Combat ========
-                persuasionAttempts += 1;
-                if (persuasionAttempts > maxPersuasionAttempts) {
+                if (persuasionAttempts >= maxPersuasionAttempts) {
                     updateBattleLog(`Your words are no longer being heard... <span class="action">you have run out of persuasion attempts.</span>`);
                     enemyAttack();
                     render();
                     return;
                 }
+                persuasionAttempts++;
 
                 const prsStat = Math.min(getEffectiveStat('persuasion'), 100);
                 const totalChance = prsStat / 100; // Chances cap out at 100%. So a stat of 12 would be 12% chance at success, etc
