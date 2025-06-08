@@ -231,6 +231,10 @@
             white-space: pre-wrap;
             overflow-y: auto;
             justify-content: space-between;
+            font-size: 12px;
+        }
+        #yourparty {
+            font-size: 20px;
         }
         #stats1 {
             height: 338px;
@@ -3736,7 +3740,7 @@
         const baseStats = {
             maxHp: 20,
             defense: 5,
-            persuasion: 7,
+            persuasion: 15,
             speed: 12,
             luck: 2,
         };
@@ -4126,6 +4130,7 @@
                 merchantStockChance: 0.3,
                 chestChance: 0.04,
             },
+
         // HP Boosters
             ringValentines: {
                 name: "VALENTINES DAY RING",
@@ -4133,7 +4138,7 @@
                 effects: { maxHp: 5 },
                 price: 60,
                 merchantStockChance: 0.5,
-                chestChance: 0.1,
+                chestChance: 0.07,
             },
             ringBloodstream: {
                 name: "BLOODSTREAM NOSERING",
@@ -4150,7 +4155,7 @@
                 effects: { defense: 5 },
                 price: 60,
                 merchantStockChance: 0.4,
-                chestChance: 0.1,
+                chestChance: 0.07,
             },
             ringPectoralPiercing: {
                 name: "PECTORAL PIERCING",
@@ -4167,7 +4172,7 @@
                 effects: { speed: 1 },
                 price: 60,
                 merchantStockChance: 0.4,
-                chestChance: 0.1,
+                chestChance: 0.07,
             },
             ringCrack: {
                 name: "CRACK INFUSED RING",
@@ -4200,7 +4205,7 @@
                 description: "A ring with an eyeball so realistic looking, it could actually be real. Allows you to see better in the Tardspire",
                 effects: {},
                 price: 180,
-                merchantStockChance: 0.15,
+                merchantStockChance: 0.2,
                 chestChance: 0.0,
             },
             ringOfStinky: {
@@ -4208,8 +4213,16 @@
                 description: "A ring so stinky, SO putrid, that even monsters will reconsider confronting you. Reduces encounter rate by 30%",
                 effects: {},
                 price: 200,
-                merchantStockChance: 0.15,
+                merchantStockChance: 0.2,
                 chestChance: 0.0,
+            },
+            ringOfAmplifiedAudio: {
+                name: "RING OF AMPLIFIED AUDIO",
+                description: "A ring with a tiny, yet deceptively loud megaphone. Miniphone? idk. +2 PRS and an PRS attempt",
+                effects: { persuasion: 2 },
+                price: 130,
+                merchantStockChance: 0.2,
+                chestChance: 0.00,
             },
         };
 
@@ -4498,7 +4511,10 @@
         let party = [];
         let gameOver = false;
         let awaitingPersuasionText = false;
+        let persuasionAttempts = 0;
+        let maxPersuasionAttempts = 2;
         let speakingOutsideCombat = false;
+        let gambleAnimationActive = false;
         let battleLog = [];
         let floor = 1;
         let MAP = [];
@@ -4960,11 +4976,10 @@
                 return;
             }
 
-            let partyHTML = '';
+            let partyHTML = `<center><strong id="yourparty">.--------[=PARTY=]--------.</strong></center><br>`;
             if (party.length > 0) {
-                partyHTML = `<strong>Your Party:</strong><br>`;
                 party.forEach(member => {
-                    partyHTML += `- <span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span><br>`;
+                    partyHTML += `<center><span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span></center><br>`;
                 });
             }
             document.getElementById("partylist").innerHTML = partyHTML;
@@ -4989,7 +5004,7 @@
             }
 
             if (player.hp <= 0) {
-                output += `\nGood job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`;
+                updateBattleLog(`Good job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`);
                 gameOver = true;
                 setTimeout(() => window.location.href = "title.html", 5000);
             }
@@ -5112,7 +5127,9 @@
                 ];
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
-
+            persuasionAttempts = 0;
+            maxPersuasionAttempts =
+                (player.ring1 === "ringOfAmplifiedAudio" || player.ring2 === "ringOfAmplifiedAudio") ? 3 : 2;
             player.enterCombat();
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
@@ -5305,23 +5322,34 @@
                 }
 
                 // ======== Persuasion During Combat ========
-                const baseChance = 0.0;
-                const prsBonus = getEffectiveStat('persuasion') * 0.03;
-                const totalChance = Math.min(0.9, baseChance + prsBonus);
+                persuasionAttempts += 1;
+                if (persuasionAttempts > maxPersuasionAttempts) {
+                    updateBattleLog(`Your words are no longer being heard... <span class="action">you have run out of persuasion attempts.</span>`);
+                    enemyAttack();
+                    render();
+                    return;
+                }
+
+                const prsStat = Math.min(getEffectiveStat('persuasion'), 100);
+                const totalChance = prsStat / 100; // Chances cap out at 100%. So a stat of 12 would be 12% chance at success, etc
 
                 if (Math.random() < totalChance) {
-                    const newAlly = {
-                        name: currentEnemy.name,
-                        hp: Math.floor(currentEnemy.hp / 2),
-                        healedThisBattle: false
-                    };
-                    party.push(newAlly);
-                    updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
+                    if (party.length < 3) {
+                        const newAlly = {
+                            name: currentEnemy.name,
+                            hp: Math.floor(currentEnemy.hp / 2),
+                            healedThisBattle: false
+                        };
+                        party.push(newAlly);
+                        updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
+                    } else {
+                        updateBattleLog(`<span class="action">${currentEnemy.name}</span> was <span class="friendly">spared</span> and went back home...`);
+                    }
                     player.leaveCombat();
                     currentEnemy = null;
                     playRandomExplorationMusic();
                 } else {
-                    updateBattleLog(`${currentEnemy.name} really, quite genuinely, does not care...`);
+                    updateBattleLog(`<span class="action">${currentEnemy.name}</span> really, quite genuinely, does not care...`);
                     enemyAttack();
                 }
 
@@ -5614,6 +5642,7 @@
             const isFinalFrame = frameNumber >= maxFrames - 1;
 
             if (frameNumber === 0) {
+                gambleAnimationActive = true;
                 document.getElementById('animation').classList.remove('hidden');
                 document.getElementById('menu').classList.add('hidden');
             }
@@ -5640,6 +5669,7 @@
             } else {
                 document.getElementById('animation').classList.add('hidden');
                 document.getElementById('menu').classList.remove('hidden');
+                gambleAnimationActive = false;
                 typeof callback === 'function' && callback();
             }
         }
@@ -5948,6 +5978,7 @@
                 document.getElementById('menuList').innerHTML = menuHtml;
             },
             handleInput: (key) => {
+                if (gambleAnimationActive) return;
                 const activeMenu = menu.getActiveMenu();
                 const options = activeMenu.getOptions();
                 const itemsPerPage = 8; // Number of items per page
