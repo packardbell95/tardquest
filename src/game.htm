@@ -153,11 +153,11 @@
         #menuList {
             margin-bottom: auto;
             padding-left: 1em;
+            min-height: 150px;
         }
         #pageNum {
-            text-align: center;
-            font-size: 0.9em;
-            margin-top: 5px;
+            text-align: right;
+            margin-right: 14px;
             color: #ccc;
         }
 
@@ -757,7 +757,7 @@
                     p4_7: {
                         artIndex: 9,
                         drawOptions: { flippedX: true },
-                        drawAt: { x: 35, y: 9 },
+                        drawAt: { x: 35, y: 12 },
                     },
                     p4_8: {
                         artIndex: 9,
@@ -2421,7 +2421,7 @@
                     },
                     p0_2: {
                         artIndex: 0,
-                        drawAt: { x: 39, y: 25 },
+                        drawAt: { x: 39, y: 14 },
                     },
                     p1_0: {
                         artIndex: 0,
@@ -3525,8 +3525,6 @@
                 }
 
                 const art = sceneRenderer.formatArt(indexedArt);
-                const longestLine = Math.max(...art.split("\n").map((l) => l.length)) - 1;
-
                 let xPosition = indexedArt.drawAt.x;
                 let yPosition = indexedArt.drawAt.y;
 
@@ -3610,7 +3608,20 @@
                     },
                     healingTile: {
                         mapCharacter: "H",
-                        onEnter: (x, y) => interactWithHealingTile(x, y),
+                        onEnter: (x, y) => {
+                            // Heal 30% of effective max HP
+                            const healAmount = Math.ceil(getEffectiveStat('maxHp') * 0.3);
+                            player.heal(healAmount);
+                            updateBattleLog(
+                                `An oddly colored, perfectly square floor ` +
+                                `tile <span class="friendly">heals you for ` +
+                                `<span class="healingTile">${healAmount} HP ` +
+                                `</span></span>`
+                            );
+
+                            MAP[y][x] = new MapCell();
+                            render();
+                        },
                     },
                     wall: {
                         mapCharacter: "#",
@@ -3631,16 +3642,15 @@
                     },
                     exit: {
                         mapCharacter: "E",
-                        onEnter: (x, y) => descend(),
+                        onEnter: () => descend(),
                     },
                     merchant: {
                         mapCharacter: "M",
-                        onEnter: (x, y) => menu.open('merchant'),
+                        onEnter: () => menu.open('merchant'),
                         isVisible: () =>
                             merchant.isAlive &&
                             merchant.isActiveOnFloor,
                         onExplode: (x, y) => {
-                            console.log({ merchantTesting: this });
                             merchant.isAlive = false;
                             merchant.isActiveOnFloor = false;
                             MAP[y][x] = new MapCell('bloodyCrater');
@@ -3656,7 +3666,7 @@
                     },
                     gambler: {
                         mapCharacter: "G",
-                        onEnter: (x, y) => menu.open('gambler'),
+                        onEnter: () => menu.open('gambler'),
                         isVisible: () =>
                             gambler.isAlive &&
                             gambler.isActiveOnFloor &&
@@ -3687,7 +3697,7 @@
                     },
                     treasureChest: {
                         mapCharacter: "T",
-                        onEnter: (x, y) => interactWithChest(x, y),
+                        onEnter: () => menu.open("chest"),
                         onExplode: (x, y) => {
                             MAP[y][x] = new MapCell('crater');
                             updateBattleLog(
@@ -3699,7 +3709,7 @@
                     },
                     mimic: {
                         mapCharacter: "T",
-                        onEnter: (x, y) => interactWithChest(x, y),
+                        onEnter: () => menu.open("chest"),
                         onExplode: (x, y) => {
                             MAP[y][x] = new MapCell('bloodyCrater');
 
@@ -3790,6 +3800,9 @@
             leaveCombat: () => {
                 player.leavingCombat = true;
                 player.inCombat = false;
+            },
+            heal: (hp) => {
+                player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
             }
         };
 
@@ -3855,7 +3868,81 @@
                 const merchandiseText = getArticle(merchandise.name) + merchandise.name;
                 updateBattleLog(`You just bought ${merchandiseText}`);
                 render();
-            }
+            },
+            set: function () {
+                merchant.setWares();
+                merchant.setPosition();
+            },
+            setWares: function() {
+                const itemKeys = Object.keys(items);
+                if (itemKeys.length === 0) {
+                    console.error("No items available in the items object!");
+                    return;
+                }
+
+                let attempts = 0;
+                do {
+                    merchant.items = [];
+                    itemKeys.forEach((key) => {
+                        if (Math.random() < items[key].merchantStockChance) {
+                            merchant.items.push(key);
+                        }
+                    });
+
+                    attempts++;
+                    if (attempts > 100) {
+                        console.error(
+                            `Failed to generate merchant items after ` +
+                            `${attempts} attempts!`
+                        );
+                        break;
+                    }
+                } while (merchant.items.length === 0);
+
+                merchant.setRingWares();
+            },
+
+            setRingWares: function() {
+                const ringKeys = Object.keys(rings);
+                let attempts = 0;
+
+                do {
+                    merchant.rings = [];
+                    ringKeys.forEach((key) => {
+                        if (Math.random() < (rings[key].merchantStockChance || 0)) {
+                            merchant.rings.push(key);
+                        }
+                    });
+                    attempts++;
+                    if (attempts > 100) {
+                        break;
+                    }
+                } while (merchant.rings.length === 0 && ringKeys.length > 0);
+            },
+
+            setPosition: function() {
+                let attempts = 0;
+
+                do {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isEmptySpace =
+                        MAP[y][x]?.type === 'floor' &&
+                        (y !== player.y && x !== player.x);
+
+                    if (isEmptySpace) {
+                        MAP[y][x] = new MapCell('merchant');
+                        return;
+                    }
+                } while (attempts++ < 1000);
+
+                console.warn(
+                    `Unable to place the merchant after ${attempts} ` +
+                    `attempts. The merchant will be deactivated for this floor`
+                );
+                merchant.isActiveOnFloor = false;
+            },
         };
 
         const gambler = {
@@ -3889,6 +3976,34 @@
                 }
                 return null;
             },
+            set: function() {
+                let attempts = 0;
+
+                do {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isMerchantSpace =
+                        merchant.isActiveOnFloor &&
+                        MAP[y][x]?.type === 'merchant';
+
+                    const isEmptySpace =
+                        MAP[y][x]?.type === 'floor' &&
+                        (y !== player.y && x !== player.x) &&
+                        !isMerchantSpace;
+
+                    if (isEmptySpace) {
+                        MAP[y][x] = new MapCell('gambler');
+                        return;
+                    }
+                } while (attempts++ < 1000);
+
+                console.warn(
+                    `Unable to place the gambler after ${attempts} attempts. ` +
+                    `The gambler will be deactivated for this floor`
+                );
+                gambler.isActiveOnFloor = false;
+            }
         };
 
         const enemies = [
@@ -4231,7 +4346,7 @@
                 name: "CAN OF HAMM'S",
                 description: "A warm can of beer. Delicious..? Heals +5 HP",
                 use: () => {
-                    healPlayer(5);
+                    player.heal(5);
                     updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
                 },
                 merchantStockChance: 0.9,
@@ -4241,7 +4356,7 @@
                 name: "CUP OF LEAN",
                 description: "A crusty styrofoam cup filled with a strange purple syrup. Heals +20 HP",
                 use: () => {
-                    healPlayer(20);
+                    player.heal(20);
                     updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
                 },
                 merchantStockChance: 0.5,
@@ -4251,7 +4366,7 @@
                 name: "GLASS OF TOILET WATER",
                 description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied... Heals +50 HP",
                 use: () => {
-                    healPlayer(50);
+                    player.heal(50);
                     updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
                 },
                 merchantStockChance: .4,
@@ -4261,7 +4376,7 @@
                 name: "ALASKA RAISINS",
                 description: "Holy shit! It's the Alaska Raisins! Heals +70 HP",
                 use: () => {
-                    healPlayer(70);
+                    player.heal(70);
                     playSFX('raisins');
                     updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
                 },
@@ -4272,8 +4387,18 @@
                 name: "DOWSING ROD",
                 description: "A Y-shaped stick. Reveals the exit of the current floor",
                 use: () => {
-                    useDowsingRod();
-                    updateBattleLog("The exit has been revealed!");
+                    for (let y=0; y<MAP.length; y++) {
+                        for (let x=0; x<MAP[y].length; x++) {
+                            if (MAP[y][x]?.type === 'exit') {
+                                revealMapSpot(x, y, 1);
+
+                                // Since there's only one exit per floor, we can render and exit early
+                                updateBattleLog("The exit has been revealed!");
+                                render();
+                                return;
+                            }
+                        }
+                    }
                 },
                 merchantStockChance: 0.8,
                 price: 20,
@@ -4282,9 +4407,10 @@
                 name: "TORCH",
                 description: "An unlit torch. Using it will reveal the map of the current floor",
                 use: () => {
-                    revealMap();
                     playSFX('torch');
+                    seenTiles = seenTiles.map((col) => col.map(() => true));
                     updateBattleLog("Lo, the way has been made clear!");
+                    render();
                 },
                 merchantStockChance: 0.8,
                 price: 60,
@@ -4292,7 +4418,62 @@
             brickOfC4: {
                 name: "BRICK OF C-4",
                 description: "An incendiary plastic explosive. Great for turning anything into nothing real quick",
-                use: () => useC4(),
+                use: () => {
+                    playSFX('explosion');
+
+                    if (player.inCombat) {
+                        const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
+                        currentEnemy.hp -= dmg;
+                        updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+                        if (currentEnemy.hp <= 0) {
+                            playSFX('scream');
+                            const nx = player.x + DX[player.dir];
+                            const ny = player.y + DY[player.dir];
+                            if (MAP[ny][nx]?.type === 'floor') {
+                                MAP[ny][nx] = new MapCell('bloodyCrater');
+                            }
+                        }
+                        endOfPlayerTurn();
+                    } else {
+                        let xMin = player.x, xMax = player.x,
+                            yMin = player.y, yMax = player.y;
+
+                        switch (DIRECTIONS[player.dir]) {
+                            case 'N':
+                                xMin--;
+                                xMax++;
+                                yMin -= 3;
+                                break;
+                            case 'E':
+                                yMin--;
+                                yMax++;
+                                xMax += 3;
+                                break;
+                            case 'S':
+                                xMin--;
+                                xMax++;
+                                yMax += 3;
+                                break;
+                            case 'W':
+                                yMin--;
+                                yMax++;
+                                xMin -= 3;
+                                break;
+                        }
+
+                        for (let y=yMin; y<=yMax; y++) {
+                            for (let x=xMin; x<=xMax; x++) {
+                                if (MAP[y]?.[x]) {
+                                    MAP[y][x]?.onExplode?.(x, y);
+                                    seenTiles[y][x] = true;
+                                }
+                            }
+                        }
+
+                        updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                        render();
+                    }
+                },
                 merchantStockChance: 0.5,
                 price: 300,
             },
@@ -4305,24 +4486,6 @@
             return player[stat] + ringsEquipped.reduce((sum, ring) => sum + (ring.effects?.[stat] || 0), 0);
         }
 
-        function healPlayer(hp) {
-            player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
-        }
-
-        function useDowsingRod() {
-            for (let y=0; y<MAP.length; y++) {
-                for (let x=0; x<MAP[y].length; x++) {
-                    if (MAP[y][x]?.type === 'exit') {
-                        revealMapSpot(x, y, 1);
-
-                        // Since there's only one exit per floor, we can render and exit early
-                        render();
-                        return;
-                    }
-                }
-            }
-        }
-
         function revealMapSpot(x, y, radius) {
             for (let py=y-radius; py<=y+radius; py++) {
                 for (let px=x-radius; px<=x+radius; px++) {
@@ -4331,113 +4494,6 @@
                     }
                 }
             }
-        }
-
-        function revealMap() {
-            seenTiles = seenTiles.map((col) => col.map((cell) => true));
-            render();
-        }
-
-        function useC4() {
-            playSFX('explosion');
-
-            if (player.inCombat) {
-                const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
-                currentEnemy.hp -= dmg;
-                updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
-                if (currentEnemy.hp <= 0) {
-                    playSFX('scream');
-                    const nx = player.x + DX[player.dir];
-                    const ny = player.y + DY[player.dir];
-                    if (MAP[ny][nx]?.type === 'floor') {
-                        MAP[ny][nx] = new MapCell('bloodyCrater');
-                    }
-                }
-                endOfPlayerTurn();
-            } else {
-                updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
-                explodePath();
-                render();
-            }
-        }
-
-        function explodePath() {
-            let xMin = player.x, xMax = player.x,
-                yMin = player.y, yMax = player.y;
-
-            switch (DIRECTIONS[player.dir]) {
-                case 'N':
-                    xMin--;
-                    xMax++;
-                    yMin -= 3;
-                    break;
-                case 'E':
-                    yMin--;
-                    yMax++;
-                    xMax += 3;
-                    break;
-                case 'S':
-                    xMin--;
-                    xMax++;
-                    yMax += 3;
-                    break;
-                case 'W':
-                    yMin--;
-                    yMax++;
-                    xMin -= 3;
-                    break;
-            }
-
-            for (let y=yMin; y<=yMax; y++) {
-                for (let x=xMin; x<=xMax; x++) {
-                    if (MAP[y]?.[x]) {
-                        MAP[y][x]?.onExplode?.(x, y);
-                        seenTiles[y][x] = true;
-                    }
-                }
-            }
-        }
-
-        function setMerchantWares() {
-            const itemKeys = Object.keys(items);
-            if (itemKeys.length === 0) {
-                console.error("No items available in the items object!");
-                return;
-            }
-
-            let attempts = 0;
-            do {
-                merchant.items = [];
-                itemKeys.forEach((key) => {
-                    if (Math.random() < items[key].merchantStockChance) {
-                        merchant.items.push(key);
-                    }
-                });
-
-                attempts++;
-                if (attempts > 100) {
-                    console.error(`Failed to generate merchant items after ${attempts} attempts!`);
-                    break;
-                }
-            } while (merchant.items.length === 0);
-
-            setMerchantRingWares();
-        }
-
-        function setMerchantRingWares() {
-            const ringKeys = Object.keys(rings);
-            merchant.rings = [];
-            let attempts = 0;
-            do {
-                merchant.rings = [];
-                ringKeys.forEach((key) => {
-                    if (Math.random() < (rings[key].merchantStockChance || 0)) {
-                        merchant.rings.push(key);
-                    }
-                });
-                attempts++;
-                if (attempts > 100) break;
-            } while (merchant.rings.length === 0 && ringKeys.length > 0);
         }
 
         const sfx = {
@@ -4564,12 +4620,12 @@
             }
 
             if (merchant.isActiveOnFloor) {
-                setMerchant();
+                merchant.set();
             }
 
             gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
             if (gambler.isActiveOnFloor) {
-                setGambler();
+                gambler.set();
             }
 
             spawnTreasureChests();
@@ -4615,10 +4671,7 @@
 
                     const isEmptySpace =
                         MAP[y][x]?.type === 'floor' &&
-                        (y !== exit.y || x !== exit.x) &&
-                        (y !== player.y || x !== player.x) &&
-                        !isMerchantTile(x, y) &&
-                        !isGamblerTile(x, y);
+                        (y !== player.y || x !== player.x);
 
                     if (isEmptySpace) {
                         const isMimic = Math.random() < 0.2; // 20% chance for mimic
@@ -4640,11 +4693,7 @@
 
                     const isEmptySpace =
                         MAP[y][x]?.type === 'floor' &&
-                        (y !== exit.y || x !== exit.x) &&
-                        (y !== player.y || x !== player.x) &&
-                        !isMerchantTile(x, y) &&
-                        !isGamblerTile(x, y) &&
-                        MAP[y][x]?.type !== 'treasureChest'; // Ensure no overlap with treasure chests
+                        (y !== player.y || x !== player.x);
 
                     if (isEmptySpace) {
                         MAP[y][x] = new MapCell('healingTile'); // Place a healing tile
@@ -4652,22 +4701,6 @@
                     }
                 }
             }
-        }
-
-        function interactWithChest(x, y) {
-            if (['mimic', 'treasureChest'].includes(MAP[y][x]?.type)) {
-                player.currentChest = { x, y };
-                menu.open("chest");
-            }
-        }
-
-        function interactWithHealingTile(x, y) {
-            const healAmount = Math.ceil(getEffectiveStat('maxHp') * 0.3); // Heal 30% of effective max HP
-            healPlayer(healAmount);
-            updateBattleLog(`An oddly colored, perfectly square floor tile <span class="friendly">heals you for <span class="healingTile">${healAmount} HP</span></span>`);
-
-            MAP[y][x] = new MapCell();
-            render();
         }
 
         function getRandomMerchantItem() {
@@ -4699,60 +4732,6 @@
                     }
                 }
             }
-        }
-
-        function setMerchant() {
-            setMerchantWares();
-            setMerchantPosition();
-        }
-
-        function setMerchantPosition() {
-            let attempts = 0;
-
-            do {
-                const x = Math.floor(Math.random() * WIDTH);
-                const y = Math.floor(Math.random() * HEIGHT);
-
-                const isEmptySpace =
-                    MAP[y][x]?.type === 'floor' &&
-                    (y !== player.y && x !== player.x);
-
-                if (isEmptySpace) {
-                    MAP[y][x] = new MapCell('merchant');
-                    return;
-                }
-            } while (attempts++ < 1000);
-
-            // If we couldn't place the merchant, don't activate the merchant
-            console.warn(`Unable to place the merchant after ${attempts} attempts. The merchant will be deactivated for this floor`);
-            merchant.isActiveOnFloor = false;
-        }
-
-        function setGambler() {
-            let attempts = 0;
-
-            do {
-                const x = Math.floor(Math.random() * WIDTH);
-                const y = Math.floor(Math.random() * HEIGHT);
-
-                const isMerchantSpace =
-                    merchant.isActiveOnFloor &&
-                    MAP[y][x]?.type === 'merchant';
-
-                const isEmptySpace =
-                    MAP[y][x]?.type === 'floor' &&
-                    (y !== player.y && x !== player.x) &&
-                    !isMerchantSpace;
-
-                if (isEmptySpace) {
-                    MAP[y][x] = new MapCell('gambler');
-                    return;
-                }
-            } while (attempts++ < 1000);
-
-            // If we couldn't place the gambler, don't activate the gambler
-            console.warn(`Unable to place the gambler after ${attempts} attempts. The gambler will be deactivated for this floor`);
-            gambler.isActiveOnFloor = false;
         }
 
         function carvePath(stack) {
@@ -4890,15 +4869,6 @@
             document.getElementById('minimap').innerHTML = out;
         }
 
-        function isMerchantTile(x, y) {
-            return merchant.isActiveOnFloor && MAP[y][x]?.type === 'merchant';
-        }
-
-        function isGamblerTile(x, y) {
-            // The gambler won't appear if the player is broke
-            return gambler.isActiveOnFloor && player.bitcoins >= gambler.playPrice && MAP[y][x]?.type === 'gambler';
-        }
-
         function updateBattleLog(entry) {
             battleLog.push(entry);
             if (battleLog.length > 50) {
@@ -4932,7 +4902,6 @@
             drawMinimap();
 
             const equippedArmor = armor[player.armor];
-            const totalDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0);
             const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
             const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
 
@@ -5352,7 +5321,7 @@
                     updateBattleLog(`<span class="action">${currentEnemy.name}</span> really, quite genuinely, does not care...`);
                     enemyAttack();
                 }
-                
+
                 if (persuasionAttempts >= maxPersuasionAttempts) {
                     updateBattleLog(`<span class="action">You've used your last persuasion attempt for this fight..</span>`);
                 }
@@ -5486,7 +5455,6 @@
                 player.bitcoins = yeahBoiii;
 
                 let merchantSpawned = false;
-                let merchantPos = null;
                 for (let i = 0; i < 4; i++) {
                     const nx = player.x + DX[i];
                     const ny = player.y + DY[i];
@@ -5495,7 +5463,6 @@
                         merchant.isActiveOnFloor = true;
                         MAP[ny][nx] = new MapCell('merchant');
                         merchantSpawned = true;
-                        merchantPos = { x: nx, y: ny };
                         break;
                     }
                 }
@@ -5592,39 +5559,55 @@
             const win = sum === 12;
             const sumClass = win ? 'friendly' : 'enemy';
 
-            let html = 'You rolled a ' +
+            updateBattleLog(
+                'You rolled a ' +
                 `<span class="gambler">${dice[0]}</span> and a ` +
                 `<span class="gambler">${dice[1]}</span> ` +
-                `for a sum of <span class="${sumClass}">${sum}</span>\n`;
+                `for a sum of <span class="${sumClass}">${sum}</span>`
+            );
 
             if (win) {
                 const stats = ['hp', 'defense', 'persuasion'];
                 const randomStat = stats[Math.floor(Math.random() * stats.length)];
 
                 switch (randomStat) {
-                    case 'hp':
+                    case 'hp': {
                         const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5);
                         player.hp += healthBoost;
                         player.maxHp += healthBoost;
-                        html += `<span class="LV">You scored a health boost! +${healthBoost} HP!</span>`;
+                        updateBattleLog(
+                            `<span class="LV">You scored a health boost! ` +
+                            `+${healthBoost} HP!</span>`
+                        );
                         break;
-                    case 'defense':
+                    }
+                    case 'defense': {
                         const defenseBoost = 1 + Math.floor((Math.random() * 2));
                         player.defense += defenseBoost;
-                        html += `<span class="LV">You won a defense boost! +${defenseBoost} DEF!</span>`;
+                        updateBattleLog(
+                            `<span class="LV">You won a defense boost! ` +
+                            `+${defenseBoost} DEF!</span>`
+                        );
                         break;
-                    case 'persuasion':
+                    }
+                    case 'persuasion': {
                         const persuasionBoost = 1 + Math.floor((Math.random() * 2));
                         player.persuasion += persuasionBoost;
-                        html += `<span class="LV">You won a persuasion boost! +${persuasionBoost} PRS!</span> (Actually the gambler just handed you a beat-up copy of "How to Win Friends and Influence People", but whatever)`;
+                        updateBattleLog(
+                            `<span class="LV">You won a persuasion boost! ` +
+                            `+${persuasionBoost} PRS!</span> (Actually the ` +
+                            `gambler just handed you a beat-up copy of ` +
+                            `"How to Win Friends and Influence People", ` +
+                            `but whatever)`
+                        );
                         break;
+                    }
                 }
             } else {
                 gambler.say('<span class="gambler">Hah! Tough luck, kid!</span> You gotta know when to hold \'em, know when to fold \'em, heh heh');
             }
 
             gambler.isActiveOnFloor = false;
-            updateBattleLog(html);
             updateBattleLog('The gambler escapes into the shadows');
             render();
 
@@ -5680,13 +5663,10 @@
 
 
         function openChest() {
-            const { x, y } = player.currentChest;
-            const tile = MAP[y][x];
-
-            if (MAP[y][x]?.type === 'mimic') {
+            if (MAP[player.y][player.x]?.type === 'mimic') {
                 // Mimic detected, start a battle
                 playSFX('scream');
-                MAP[y][x] = new MapCell(); // Remove the mimic from the map
+                MAP[player.y][player.x] = new MapCell(); // Remove the mimic from the map
 
                 // Spawn mimic and apply scaling
                 const baseMimic = enemies.find(e => e.id === "mimic");
@@ -5695,7 +5675,7 @@
                 updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
                 player.enterCombat();
                 playRandomBattleMusic();
-            } else if (MAP[y][x]?.type === 'treasureChest') {
+            } else if (MAP[player.y][player.x]?.type === 'treasureChest') {
                 // Normal chest, provide loot
                 let lootTypeRoll = Math.random();
                 let chestContents;
@@ -5734,10 +5714,9 @@
                     updateBattleLog(`You found <span class="friendly">${rings[ringId].name}</span> in the chest!`);
                 }
 
-                MAP[y][x] = new MapCell(); // Remove the chest from the map
+                MAP[player.y][player.x] = new MapCell(); // Remove the chest from the map
             }
 
-            player.currentChest = null; // Clear the stored chest position
             render();
         }
 
@@ -5860,7 +5839,6 @@
             }
 
             generateMap();
-            setMerchantRingWares();
             playRandomExplorationMusic();
         }
 
@@ -5954,10 +5932,18 @@
                 const paginatedOptions = options.slice(startIndex, endIndex);
 
                 // Render the title and page indicator
-                const titleHtml = activeMenu.title ? `<span class="title">「${activeMenu.title}」</span>` : '';
-                const pageIndicatorHtml = `<div id="pageNum">Page ${menu.currentPage + 1} of ${totalPages}</div>`;
+                const titleText = typeof activeMenu.title === 'function' ? activeMenu.title() : activeMenu.title;
+                const titleHtml = activeMenu.title ? `<span class="title">「${titleText}」</span>` : '';
                 const landingHtml = `<div>${activeMenu?.landingHtml?.() || ''}</div>`;
-                document.getElementById('menuLanding').innerHTML = titleHtml + pageIndicatorHtml + landingHtml;
+                document.getElementById('menuLanding').innerHTML = titleHtml + landingHtml;
+
+                const paginationText = totalPages > 1 ? (
+                    (menu.currentPage > 0 ? '◀ ' : '  ') +
+                    `Page ${menu.currentPage + 1} of ${totalPages}` +
+                    (menu.currentPage + 1 < totalPages ? ' ▶' : '  ')
+                ) : '';
+
+                menuHtml += `<div id="pageNum">${paginationText}</div>`;
 
                 // Render the options for the current page
                 paginatedOptions.forEach((option, index) => {
@@ -5966,7 +5952,7 @@
                     const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
                     const trailText = option.trailText ? `${option.trailText}` : '';
 
-                    const maxLineLength = 40; // Max "." trail width
+                    const maxLineLength = 56; // Max "." trail width
                     const dots = trailText
                         ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
                         : '';
@@ -5987,6 +5973,9 @@
                 const options = activeMenu.getOptions();
                 const itemsPerPage = 8; // Number of items per page
                 const totalPages = Math.ceil(options.length / itemsPerPage);
+                const itemsOnCurrentPage = (menu.currentPage + 1) >= totalPages
+                    ? ((options.length % itemsPerPage) || itemsPerPage)
+                    : itemsPerPage;
 
                 switch (key) {
                     case 'escape':
@@ -5995,14 +5984,14 @@
                         break;
                     case 'w':
                     case 'arrowup':
-                        menu.selectionIndex = menu.selectionIndex === 0
-                            ? Math.min(options.length, itemsPerPage) - 1
+                        menu.selectionIndex = menu.selectionIndex <= 0
+                            ? itemsOnCurrentPage - 1
                             : menu.selectionIndex - 1;
                         playSFX('uiOption');
                         break;
                     case 's':
                     case 'arrowdown':
-                        menu.selectionIndex = menu.selectionIndex === Math.min(options.length, itemsPerPage) - 1
+                        menu.selectionIndex = menu.selectionIndex >= itemsOnCurrentPage - 1
                             ? 0
                             : menu.selectionIndex + 1;
                         playSFX('uiOption');
@@ -6025,7 +6014,7 @@
                         break;
                     case ' ':
                     case 'e':
-                    case 'enter':
+                    case 'enter': {
                         const selectedOptionId = options[menu.currentPage * itemsPerPage + menu.selectionIndex]?.id;
                         if (selectedOptionId === '_back') {
                             menu.close();
@@ -6038,6 +6027,7 @@
                             playSFX('uiSelect');
                         }
                         break;
+                    }
                 }
 
                 menu.render();
@@ -6097,17 +6087,11 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else if (selectedOptionId === "_exitAll") {
-                            menu.closeAll();
-                        } else {
-                            useItem(selectedOptionId);
-                            menu.closeAll(); // Close all menus after using an item
-                            if (currentEnemy && currentEnemy.hp > 0) {
-                                enemyAttack();
-                                render();
-                            }
+                        useItem(selectedOptionId);
+                        menu.closeAll(); // Close all menus after using an item
+                        if (currentEnemy && currentEnemy.hp > 0) {
+                            enemyAttack();
+                            render();
                         }
                     },
                 },
@@ -6168,13 +6152,9 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else {
-                            player.weapon = selectedOptionId;
-                            updateBattleLog(`You now wield a mighty <span class="friendly">${weapons[selectedOptionId].name}</span>! You feel like you're ready to take some dumbass kid's lunch money... sicko.`);
-                            menu.close();
-                        }
+                        player.weapon = selectedOptionId;
+                        updateBattleLog(`You now wield a mighty <span class="friendly">${weapons[selectedOptionId].name}</span>! You feel like you're ready to take some dumbass kid's lunch money... sicko.`);
+                        menu.close();
                     },
                 },
 
@@ -6200,21 +6180,13 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else {
-                            player.armor = selectedOptionId;
-                            updateBattleLog(`You are now wearing <span class="friendly">${armor[selectedOptionId].name}</span>! You know what they say about wearing protection...`);
-                            menu.close();
-                        }
+                        player.armor = selectedOptionId;
+                        updateBattleLog(`You are now wearing <span class="friendly">${armor[selectedOptionId].name}</span>! You know what they say about wearing protection...`);
+                        menu.close();
                     },
                 },
                 equipRings: {
                     title: "EQUIP RINGS",
-                    landingHtml: () => {
-                        const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
-                        const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
-                    },
                     getOptions: () => {
                         return [
                             {
@@ -6273,19 +6245,15 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else {
-                            // Prevent equipping the same ring in both slots
-                            if (selectedOptionId && selectedOptionId === player.ring2) {
-                                updateBattleLog("You can't equip the same ring in both slots!");
-                                return;
-                            }
-                            player.ring1 = selectedOptionId || null;
-                            updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 1 slot.`);
-                            menu.close();
-                            render()
+                        // Prevent equipping the same ring in both slots
+                        if (selectedOptionId && selectedOptionId === player.ring2) {
+                            updateBattleLog("You can't equip the same ring in both slots!");
+                            return;
                         }
+                        player.ring1 = selectedOptionId || null;
+                        updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 1 slot.`);
+                        menu.close();
+                        render()
                     },
                 },
 
@@ -6316,19 +6284,15 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else {
-                            // Prevent equipping the same ring in both slots
-                            if (selectedOptionId && selectedOptionId === player.ring1) {
-                                updateBattleLog("You can't equip the same ring in both slots!");
-                                return;
-                            }
-                            player.ring2 = selectedOptionId || null;
-                            updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 2 slot.`);
-                            menu.close();
-                            render()
+                        // Prevent equipping the same ring in both slots
+                        if (selectedOptionId && selectedOptionId === player.ring1) {
+                            updateBattleLog("You can't equip the same ring in both slots!");
+                            return;
                         }
+                        player.ring2 = selectedOptionId || null;
+                        updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 2 slot.`);
+                        menu.close();
+                        render()
                     },
                 },
 
@@ -6613,10 +6577,7 @@
                     },
                 },
                 statAllocation: {
-                    title: "STAT ALLOCATION",
-                    get title() {
-                        return isLevelUpAllocation ? "LEVEL UP" : "STAT ALLOCATION";
-                    },
+                    title: () => isLevelUpAllocation ? "LEVEL UP" : "STAT ALLOCATION",
                     landingHtml: () => {
                         return isLevelUpAllocation
                             ? `You leveled up! Allocate <span class="action">${player.remainingPoints}</span> points to your stats.`
@@ -6624,20 +6585,6 @@
                     },
                     getOptions: () => {
                         return [
-                            {
-                                id: "_confirm",
-                                displayText: "[Confirm]",
-                                description: isLevelUpAllocation
-                                    ? "Finish your level up and continue your adventure!"
-                                    : "Begin YOUR TardQuest!",
-                            },
-                            {
-                                id: "reset",
-                                displayText: "[Reset]",
-                                description: isLevelUpAllocation
-                                    ? "Reset your level up stat allocation."
-                                    : "Reset your stat allocation.",
-                            },
                             ...(!isLevelUpAllocation ? [{
                                 id: "rollDice",
                                 displayText: "[Diceroll]",
@@ -6646,27 +6593,47 @@
                             {
                                 id: "hp",
                                 displayText: `HP: ${player.maxHp}`,
+                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
                                 description: "Increases Health Points.",
                             },
                             {
                                 id: "defense",
                                 displayText: `DEF: ${player.defense}`,
+                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
                                 description: "Increases defense against enemy attacks.",
                             },
                             {
                                 id: "persuasion",
                                 displayText: `PRS: ${player.persuasion}`,
+                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
                                 description: "Increases your chances at persuading monsters to join your party.",
                             },
                             {
                                 id: "speed",
                                 displayText: `SPD: ${player.speed}`,
+                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
                                 description: "Increases your movement speed. Each point allows you to move 5% faster.",
                             },
                             {
                                 id: "luck",
                                 displayText: `LUK: ${player.luck}`,
+                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
                                 description: "Increases crit rates and BTC rewards from chests.",
+                            },
+                            {
+                                id: "reset",
+                                displayText: "[Reset]",
+                                description: isLevelUpAllocation
+                                    ? "Reset your level up stat allocation."
+                                    : "Reset your stat allocation.",
+                            },
+                            {
+                                id: "_confirm",
+                                displayText: "[Confirm]",
+                                className: player.remainingPoints > 0 ? 'tooExpensive' : undefined,
+                                description: isLevelUpAllocation
+                                    ? "Finish your level up and continue your adventure!"
+                                    : "Begin YOUR TardQuest!",
                             },
                         ];
                     },
@@ -6684,7 +6651,7 @@
                                 player.levelingUp = false;
                                 player.hp = player.maxHp;
                             } else {
-                                finalizeStats();
+                                updateBattleLog("Stat allocation complete! Your adventure begins...");
                             }
                             menu.close();
                             render();
@@ -6789,11 +6756,6 @@
                 player.remainingPoints--;
             }
             updateBattleLog("Points have been randomly allocated. Good luck!");
-        }
-
-        // Function to finalize stats after allocation
-        function finalizeStats() {
-            updateBattleLog("Stat allocation complete! Your adventure begins...");
         }
 
         menu.open("statAllocation");
