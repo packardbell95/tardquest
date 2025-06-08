@@ -5352,6 +5352,10 @@
                     updateBattleLog(`<span class="action">${currentEnemy.name}</span> really, quite genuinely, does not care...`);
                     enemyAttack();
                 }
+                
+                if (persuasionAttempts >= maxPersuasionAttempts) {
+                    updateBattleLog(`<span class="action">You've used your last persuasion attempt for this fight..</span>`);
+                }
 
                 render();
             }
