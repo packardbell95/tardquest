@@ -5030,6 +5030,9 @@
             const container = document.getElementById('viewportContainer');
             if (!container) return;
 
+            // Prevent player input during animation
+            window._inputBlocked = true;
+
             let overlay = document.getElementById('animEatRat');
             if (!overlay) {
                 overlay = document.createElement('div');
@@ -5037,29 +5040,11 @@
                 container.appendChild(overlay);
             }
             overlay.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = 'assets/fp-anim/hands-start.gif';
-            img.style.display = 'block';
-            overlay.appendChild(img);
-            overlay.style.display = 'flex';
-
-            // Immediately darken background layers (no animation delay)
-            const gameLayers = container.querySelectorAll('.layer');
-            gameLayers.forEach(layer => {
-                layer.classList.remove('lightening', 'darkening', 'dark');
-                layer.classList.add('dark');
-            });
-
-            // Prevent player input during animation
-            window._inputBlocked = true;
-
-            const gifDuration = 3400; // gif length in milliseconds
-
-            setTimeout(() => {
-                playSFX('gore');
-            }, 1500); // Sound effect plays 1.5s into the gif
-
-            setTimeout(() => {
+            const ratVideo = document.createElement('video');
+            ratVideo.src = 'assets/fp-anim/rat-chomp.webm';
+            ratVideo.autoplay = true;
+            ratVideo.playsInline = true;
+            ratVideo.addEventListener('ended', () => {
                 gameLayers.forEach(layer => {
                     layer.classList.remove('dark');
                     layer.classList.add('lightening');
@@ -5075,7 +5060,19 @@
                         layer.classList.remove('lightening');
                     });
                 }, 600); // Slightly longer than animation-duration
-            }, gifDuration);
+
+                ratVideo.remove();
+            });
+
+            overlay.appendChild(ratVideo);
+            overlay.style.display = 'flex';
+
+            // Immediately darken background layers (no animation delay)
+            const gameLayers = container.querySelectorAll('.layer');
+            gameLayers.forEach(layer => {
+                layer.classList.remove('lightening', 'darkening', 'dark');
+                layer.classList.add('dark');
+            });
         }
         const origKeydown = document.onkeydown;
         document.addEventListener('keydown', function(e) {
@@ -6062,9 +6059,11 @@
             },
             close: () => {
                 const previousMenu = menu.breadcrumbs.pop();
-                menu.menus[previousMenu.menuName].onClose?.();
-                menu.selectionIndex = previousMenu.selectionIndex;
-                menu.currentPage = previousMenu.currentPage;
+                if (previousMenu) {
+                    menu.menus[previousMenu.menuName].onClose?.();
+                    menu.selectionIndex = previousMenu.selectionIndex;
+                    menu.currentPage = previousMenu.currentPage;
+                }
 
                 if (menu.breadcrumbs.length === 0) {
                     document.getElementById('menu').classList.add('hidden');
@@ -6812,14 +6811,8 @@
                                 player.exp = 0;
                                 player.levelingUp = false;
                                 player.hp = player.maxHp;
-                                menu.close();
-                                render();
-                                setTimeout(() => animEatRat(), 0);
                             } else {
                                 updateBattleLog("Stat allocation complete! You consume an unsuspecting rat to ensure you are in good health, and your adventure begins...");
-                                menu.close();
-                                render();
-                                setTimeout(() => animEatRat(), 0);
                             }
                             menu.close();
                             render();
