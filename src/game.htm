@@ -148,12 +148,15 @@
             flex-direction: column;
             gap: 10px;
             padding-bottom: 10px;
+            background-color: #000;
+            z-index: 9;
         }
 
         #menuList {
             margin-bottom: auto;
             padding-left: 1em;
             min-height: 150px;
+            z-index: 9;
         }
         #pageNum {
             text-align: right;
@@ -195,6 +198,15 @@
             overflow: hidden;
             text-align: initial;
             width: 100%;
+            background: #000;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9;
         }
 
         #viewportContainer {
@@ -361,6 +373,18 @@
             white-space: pre-wrap;
             overflow: hidden;
             justify-content: space-between;
+        }
+        #animEatRat {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 9;
+        }
+        #animTorch {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 0;
         }
 
         .player {
@@ -4410,6 +4434,7 @@
                     playSFX('torch');
                     seenTiles = seenTiles.map((col) => col.map(() => true));
                     updateBattleLog("Lo, the way has been made clear!");
+                    animTorchStart();
                     render();
                 },
                 merchantStockChance: 0.8,
@@ -4504,6 +4529,7 @@
             persuade: new Audio('audio/persuade.wav'),
             explosion: new Audio('audio/explosion.mp3'),
             scream: new Audio('audio/scream.mp3'),
+            gore: new Audio('audio/gore.mp3'),
             kaching: new Audio('audio/kaching.mp3'),
             torch: new Audio('audio/torch.mp3'),
             gamble: new Audio('audio/gamble.mp3'),
@@ -4564,6 +4590,7 @@
         let currentMusic = null;
         let currentExplorationTrack = null;
         let currentEnemy = null;
+        let torchAnimActive = false;
         let party = [];
         let gameOver = false;
         let awaitingPersuasionText = false;
@@ -4980,6 +5007,7 @@
 
             document.getElementById('game').innerHTML = output;
             player.resetEventFlags();
+            setTorchOverlayVisibility();
         }
 
 
@@ -4998,6 +5026,132 @@
             return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
         }
 
+        function animEatRat(callback) {
+            const container = document.getElementById('viewportContainer');
+            if (!container) return;
+
+            // Create overlay if not already present
+            let overlay = document.getElementById('animEatRat');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'animEatRat';
+                overlay.innerHTML = `<img src="assets/fp-anim/hands-start.gif">`;
+                container.appendChild(overlay);
+            } else {
+                overlay.style.display = 'flex';
+            }
+
+            // Immediately darken background layers (no animation delay)
+            const gameLayers = container.querySelectorAll('.layer');
+            gameLayers.forEach(layer => {
+                layer.classList.remove('lightening', 'darkening');
+                layer.classList.add('dark');
+            });
+
+            // Block input
+            window._inputBlocked = true;
+
+            const gifDuration = 3400; // gif length in milliseconds
+
+            setTimeout(() => {
+                playSFX('gore');
+            }, 1500); // Sound effect plays 1.5s into the gif
+
+            setTimeout(() => {
+                gameLayers.forEach(layer => {
+                    layer.classList.remove('dark');
+                    layer.classList.add('lightening');
+                });
+
+                overlay.style.display = 'none';
+                window._inputBlocked = false;
+                if (typeof callback === 'function') callback();
+
+                setTimeout(() => {
+                    gameLayers.forEach(layer => {
+                        layer.classList.remove('lightening');
+                    });
+                }, 600); // Slightly longer than animation-duration
+            }, gifDuration);
+        }
+        const origKeydown = document.onkeydown;
+        document.addEventListener('keydown', function(e) {
+            if (window._inputBlocked) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
+            if (typeof origKeydown === 'function') origKeydown(e);
+        }, true);
+
+        function setTorchOverlayVisibility() {
+            const overlay = document.getElementById('animTorch');
+            if (!overlay) return;
+            // Hide torch in combat, resume after battle
+            if (torchAnimActive && !player.inCombat) {
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        // Update animTorchStart to always use setTorchOverlayVisibility
+        function animTorchStart() {
+            const container = document.getElementById('viewportContainer');
+            let overlay = document.getElementById('animTorch');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'animTorch';
+                container.appendChild(overlay);
+            }
+            overlay.innerHTML = `<img src="assets/fp-anim/fp-torch1.gif">`;
+            torchAnimActive = true;
+            setTorchOverlayVisibility();
+
+            // Play SFX if desired
+            // playSFX('torch');
+
+            // When first gif ends, swap to second gif and keep it onscreen
+            const torch1Duration = 1800;
+            setTimeout(() => {
+                overlay.innerHTML = `<img src="assets/fp-anim/fp-torch2.gif">`;
+                setTorchOverlayVisibility();
+            }, torch1Duration);
+        }
+
+        // Update animTorchEnd to always use setTorchOverlayVisibility
+        function animTorchEnd() {
+            const overlay = document.getElementById('animTorch');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.innerHTML = '';
+            }
+            torchAnimActive = false;
+        }
+
+        function shakeScreen() {
+            const container = document.getElementById('viewportContainer');
+            if (!container) return;
+            // Randomly pick a small vertical offset: -2, -1, 0, 1, or 2px
+            const offset = (Math.random() > -0.5 ? -1 : -1) * (Math.random() > -0.5 ? -2 : 1);
+            container.style.transition = 'transform 0.08s cubic-bezier(.36,.07,.19,.97)';
+            container.style.transform = `translateY(${offset}px)`;
+            setTimeout(() => {
+                container.style.transform = '';
+            }, 80);
+        }
+
+        function slideScreen(direction) {
+            const container = document.getElementById('viewportContainer');
+            if (!container) return;
+            const offset = direction === 'left' ? -2 : 2; // How many pixels the effect slides (-x is left, x is right)
+            container.style.transition = 'transform 0.12s cubic-bezier(.36,.07,.19,.97)';
+            container.style.transform = `translateX(${offset}px)`;
+            setTimeout(() => {
+                container.style.transform = '';
+            }, 120);
+        }
+
         function move(direction) {
             if (player.inCombat || gameOver || player.movementDisabled) {
                 return;
@@ -5009,16 +5163,20 @@
             if (direction === 'forward') {
                 nx = player.x + DX[player.dir];
                 ny = player.y + DY[player.dir];
+                shakeScreen();
             } else if (direction === 'strafeLeft') {
                 nx = player.x + DX[(player.dir + 3) % 4];
                 ny = player.y + DY[(player.dir + 3) % 4];
+                slideScreen('left');
             } else if (direction === 'strafeRight') {
                 nx = player.x + DX[(player.dir + 1) % 4];
                 ny = player.y + DY[(player.dir + 1) % 4];
+                slideScreen('right');
             } else {
                 nx = player.x - DX[player.dir];
                 ny = player.y - DY[player.dir];
                 randomEncounterChance = 0.5; // When moving backward
+                shakeScreen();
             }
             const hasStinky = player.ring1 === "ringOfStinky" || player.ring2 === "ringOfStinky";
             if (hasStinky) {
@@ -5064,6 +5222,7 @@
                 return;
             }
             playSFX('turn');
+            slideScreen('left');
             player.dir = (player.dir + 3) % 4;
             render();
         }
@@ -5073,6 +5232,7 @@
                 return;
             }
             playSFX('turn');
+            slideScreen('right');
             player.dir = (player.dir + 1) % 4;
             render();
         }
@@ -5148,8 +5308,10 @@
 
                 player.leaveCombat();
                 currentEnemy = null;
-                resumeExplorationMusic(); // <-- use this
+                resumeExplorationMusic();
                 party = party.filter(a => a.hp > 0);
+
+                setTorchOverlayVisibility();
 
                 if (player.exp >= player.level * 10) {
                     startLevelUpAllocation();
@@ -5159,6 +5321,7 @@
             }
 
             render();
+            setTorchOverlayVisibility();
         }
 
         function enemyAttack() {
@@ -5839,6 +6002,7 @@
             }
 
             generateMap();
+            animTorchEnd();
             playRandomExplorationMusic();
         }
 
@@ -6645,16 +6809,17 @@
                             }
                             if (isLevelUpAllocation) {
                                 isLevelUpAllocation = false;
-                                updateBattleLog("Stats increased! Time to pancake some yummy diapers!");
+                                updateBattleLog("Stats increased! You consume an unsuspecting rat to restore your health. Poor feller...");
                                 player.level++;
                                 player.exp = 0;
                                 player.levelingUp = false;
                                 player.hp = player.maxHp;
                             } else {
-                                updateBattleLog("Stat allocation complete! Your adventure begins...");
+                                updateBattleLog("Stat allocation complete! You consume an unsuspecting rat to ensure you are in good health, and your adventure begins...");
                             }
                             menu.close();
                             render();
+                            animEatRat();
                         } else if (selectedOptionId === "reset") {
                             if (isLevelUpAllocation) {
                                 player.maxHp = levelUpAllocatedStats.base.maxHp;
