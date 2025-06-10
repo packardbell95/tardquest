@@ -5579,7 +5579,6 @@
             const container = document.getElementById('viewportContainer');
             if (!container) return;
 
-            // Prevent player input during animation
             window._inputBlocked = true;
 
             let overlay = document.getElementById('animEatRat');
@@ -5593,36 +5592,51 @@
             ratVideo.src = 'assets/fp-anim/rat-chomp.webm';
             ratVideo.autoplay = true;
             ratVideo.playsInline = true;
-            ratVideo.addEventListener('ended', () => {
-                gameLayers.forEach(layer => {
-                    layer.classList.remove('dark');
-                    layer.classList.add('lightening');
-                });
 
-                overlay.style.display = 'none';
-                overlay.innerHTML = ''; // Remove the GIF from DOM
-                window._inputBlocked = false;
-                if (typeof callback === 'function') callback();
-
-                setTimeout(() => {
-                    gameLayers.forEach(layer => {
-                        layer.classList.remove('lightening');
-                    });
-                }, 600); // Slightly longer than animation-duration
-
-                ratVideo.remove();
-            });
-
-            overlay.appendChild(ratVideo);
-            overlay.style.display = 'flex';
-
-            // Immediately darken background layers (no animation delay)
             const gameLayers = container.querySelectorAll('.layer');
             gameLayers.forEach(layer => {
                 layer.classList.remove('lightening', 'darkening', 'dark');
                 layer.classList.add('dark');
             });
+
+            let finished = false;
+            function cleanup() {
+                if (finished) return;
+                finished = true;
+                // Lighten the scene
+                gameLayers.forEach(layer => {
+                    layer.classList.remove('dark');
+                    layer.classList.add('lightening');
+                });
+                setTimeout(() => {
+                    gameLayers.forEach(layer => {
+                        layer.classList.remove('lightening');
+                    });
+                }, 600);
+
+                overlay.style.display = 'none';
+                overlay.innerHTML = '';
+                window._inputBlocked = false;
+                if (typeof callback === 'function') callback();
+                ratVideo.remove();
+            }
+
+            // Fallback: always cleanup after 3.5 seconds, in case the .webm has some sort of playback error
+            let fallbackTimeout = setTimeout(cleanup, 3500);
+
+            ratVideo.addEventListener('ended', () => {
+                clearTimeout(fallbackTimeout);
+                cleanup();
+            });
+            ratVideo.addEventListener('error', () => {
+                clearTimeout(fallbackTimeout);
+                cleanup();
+            });
+
+            overlay.appendChild(ratVideo);
+            overlay.style.display = 'flex';
         }
+
         const origKeydown = document.onkeydown;
         document.addEventListener('keydown', function(e) {
             if (window._inputBlocked) {
@@ -6051,7 +6065,7 @@
         }
 
         function handleCheatCommand(cmd) {
-            if (cmd === "/spawn merchant") {
+            if (cmd === "/spawn m") {
                 let found = false;
                 for (let i = 0; i < 4; i++) {
                     const nx = player.x + DX[i];
@@ -6070,7 +6084,7 @@
                 }
                 return;
             }
-            if (cmd === "/spawn gambler") {
+            if (cmd === "/spawn g") {
                 let found = false;
                 for (let i = 0; i < 4; i++) {
                     const nx = player.x + DX[i];
@@ -6151,6 +6165,20 @@
                 }
                 return;
             }
+
+            if (cmd.startsWith("/setlv ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                    player.level = amount;
+                    player.exp = 0;
+                    updateBattleLog(`<span class="LV">CHEAT: Level set to ${amount}. Cheater.</span>`);
+                    render();
+                } else {
+                    updateBattleLog(`<span class="action">Invalid level number.</span>`);
+                }
+                return;
+            }
+
             if (cmd === "/debug") {
                 const yeahBoiii = 69999;
                 player.maxHp = yeahBoiii;
@@ -6987,7 +7015,11 @@
                     select: (selectedOptionId) => {
                         player.armor = selectedOptionId;
                         updateBattleLog(`You are now wearing <span class="friendly">${armor[selectedOptionId].name}</span>! You know what they say about wearing protection...`);
+                        if (player.hp > getEffectiveStat('maxHp')) {
+                            player.hp = getEffectiveStat('maxHp');
+                        }
                         menu.close();
+                        render();
                     },
                 },
                 equipRings: {
@@ -7019,7 +7051,11 @@
                         } else if (selectedOptionId === "ring2") {
                             menu.open("ring2Select");
                         } else {
+                        if (player.hp > getEffectiveStat('maxHp')) {
+                            player.hp = getEffectiveStat('maxHp');
+                        }                            
                             menu.close();
+                            render();
                         }
                     },
                 },
@@ -7057,8 +7093,11 @@
                         }
                         player.ring1 = selectedOptionId || null;
                         updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 1 slot.`);
+                        if (player.hp > getEffectiveStat('maxHp')) {
+                            player.hp = getEffectiveStat('maxHp');
+                        }
                         menu.close();
-                        render()
+                        render();
                     },
                 },
 
@@ -7096,8 +7135,11 @@
                         }
                         player.ring2 = selectedOptionId || null;
                         updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 2 slot.`);
+                        if (player.hp > getEffectiveStat('maxHp')) {
+                            player.hp = getEffectiveStat('maxHp');
+                        }
                         menu.close();
-                        render()
+                        render();
                     },
                 },
 
@@ -7454,7 +7496,7 @@
                                 player.level++;
                                 player.exp = 0;
                                 player.levelingUp = false;
-                                player.hp = player.maxHp;
+                                player.hp = getEffectiveStat('maxHp');
                             } else {
                                 updateBattleLog("Stat allocation complete! You consume an unsuspecting rat to ensure you are in good health, and your adventure begins...");
                             }
