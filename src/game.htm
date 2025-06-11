@@ -92,6 +92,7 @@
                 rgb(71, 54, 19) 100%
             );*/
             /* Bruised sky, gradient dirt ground */
+            /*
             background: linear-gradient(
                 180deg,
                 #950913 0%,
@@ -99,6 +100,44 @@
                 #000 50%,
                 #513805 100%
             );
+            */
+            background: linear-gradient(180deg,rgba(97, 0, 10, 1) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 70%, rgba(117, 62, 0, 1) 100%);
+        }
+
+        @keyframes torchFlicker {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1.14);
+            }
+            25%, 86% {
+                opacity: 0.25;
+                transform: scale(1.31);
+            }
+            50% {
+                opacity: 0.325;
+                transform: scale(1);
+            }
+            17%, 75% {
+                opacity: 0.275;
+                transform: scale(1.22);
+            }
+        }
+
+        #game.torch::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, #fff0 30%, #f2bb20cc 80%);
+            mix-blend-mode: screen;
+            animation: torchFlicker 3s infinite ease-in-out;
+        }
+
+        #game:not(.sightliness) {
+            filter: saturate(0.6);
         }
 
         #game > .layer {
@@ -106,13 +145,6 @@
             top: 0;
             left: 0;
         }
-
-        #game > .layer:nth-child(1) > span { color: rgb(42, 42, 42); }
-        #game > .layer:nth-child(2) > span { color: rgb(51, 51, 51); }
-        #game > .layer:nth-child(3) > span { color: rgb(63, 63, 63); }
-        #game > .layer:nth-child(4) > span { color: rgb(85, 85, 85); }
-        #game > .layer:nth-child(5) > span { color: rgb(127, 127, 127); }
-        #game > .layer:nth-child(6) > span { color: rgb(255, 255, 255); }
 
         #game > .layer.dark {
             filter: brightness(0);
@@ -139,6 +171,22 @@
             display: inline-block !important;
             font-size: 12px !important;
             line-height: 12px !important;
+        }
+
+        #animTorch {
+            width: 110px;
+            height: 256px;
+            image-rendering: pixelated;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            background-image: url(assets/fp-anim/fp-torch.gif);
+            transform: translate(-55px, 256px);
+            transition: transform .5s steps(8, jump-end);
+        }
+
+        #animTorch.onscreen {
+            transform: translate(0, 0);
         }
 
         #menu:not(.hidden) {
@@ -422,12 +470,6 @@
             right: 0;
             z-index: 9;
         }
-        #animTorch {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            z-index: 0;
-        }
 
         .player {
             color: #2aff00;
@@ -510,6 +552,11 @@
          * The renderer adds <span> elements around each rendered character with
          * a "scene_character_" prefix. So for example, a "wall"
          */
+        .scene_character_darkness {
+            color: #0009 !important;
+            filter: blur(2px);
+        }
+
         .scene_character_void {
             color: #000 !important;
         }
@@ -528,21 +575,21 @@
         }
 
         @keyframes scene_healingTileGlow {
-          0% {
-            color: #6CFF74;
-          }
-          25% {
-            color: #02B60E;
-          }
-          50% {
-            color: #02868C;
-          }
-          75% {
-            color: #00920A;
-          }
-          100% {
-            color: #8DD702;
-          }
+            0% {
+                color: #6CFF74;
+            }
+            25% {
+                color: #02B60E;
+            }
+            50% {
+                color: #02868C;
+            }
+            75% {
+                color: #00920A;
+            }
+            100% {
+                color: #8DD702;
+            }
         }
 
         .scene_character_healingTile {
@@ -636,6 +683,7 @@
   <div id="viewportContainer">
     <div id="game" class="render"></div>
     <div id="animation" class="hidden"></div>
+    <div id="animTorch" class="offscreen"></div>
     <div id="menu" class="hidden">
         <div id="menuLanding"></div>
         <div id="menuList"></div>
@@ -728,6 +776,7 @@
                 ],
             },
             wall: {
+                relativeColor: { r: 255, g: 255, b: 255 },
                 positions: {
                     p0_0: {
                         artIndex: 0,
@@ -1057,6 +1106,376 @@
                             ▄▄▄▄▄▄
                             ██████▓▄
                             ██████▓▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ███████▄
+                            ███████▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ███████
+                            ███████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ██████
+                            ██████
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
+            darkness: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 1 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 44, y: 1 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 4 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 4 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 4 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 8 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 8 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 8 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 9 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 12 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 11 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 11 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 34, y: 11 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 12 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 12 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 12 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 12 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 12 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 26, y: 12 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 12 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 12 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 40, y: 12 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 13 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 13 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 13 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 13 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 13 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 13 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 13 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 13 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 13 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄
+                            ██▄
+                            ████▄
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ████▀
+                            ██▀
+                            ▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████▄
+                            ████████▄
+                            ██████████▄
+                            ████████████▄
+                            ██████████████▄
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ███████████████
+                            ██████████████▀
+                            ████████████▀
+                            ██████████▀
+                            ████████▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            █████▄▄▄
+                            █████████
+                            █████████
+                            █████████
+                            █████████
+                            █████████
+                            █████████
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ████████████████▄
+                            ██████████████████▄
+                            ████████████████████
+                            ████████████████████
+                            ████████████████████
+                            ████████████████████
+                            ████████████████████
+                            ████████████████████
+                            ██████████████████▀
+                            ████████████████▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██▄▄
+                            ████
+                            ████
+                            ██▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████▄
+                            ██████████████▄
+                            ███████████████
+                            ███████████████
+                            ██████████████▀
+                            ████████████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████
+                            ████████████
+                            ████████████
+                            ████████████
+                            ████████████
+                            ████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            ███████▄
+                            ███████▀
                             ▀▀▀▀▀▀
                         `,
                     },
@@ -1882,6 +2301,7 @@
             },
 
             gloryWall: {
+                relativeColor: { r: 255, g: 255, b: 255 },
                 positions: {
                     p0_0: {
                         artIndex: 0,
@@ -3918,10 +4338,11 @@
         const sceneRenderer = {
             displayWidth: 50,
             displayHeight: 28,
-            viewDepth: 5,
+            maxViewDepth: 5,
 
-            render: (x, y, direction) => {
-                const view = sceneRenderer.getView(x, y, direction);
+            render: (x, y, direction, viewDepth, maxBrightness = 255) => {
+                const maxPlayerVisibilityDepth = viewDepth || sceneRenderer.maxViewDepth;
+                const view = sceneRenderer.getView(x, y, direction, maxPlayerVisibilityDepth);
                 const layerClasses = sceneRenderer.getLayerClasses();
                 let scene = '';
 
@@ -3933,7 +4354,17 @@
                     for (let i = 0; i < view[depth].length; i++) {
                         // Render the scene from the sides towards the middle
                         const index = i % 2 === 0 ? i - (i / 2) : view[depth].length - Math.floor(i / 2) - 1;
-                        sceneLayer = sceneRenderer.draw(sceneLayer, view[depth][index], depth, index);
+                        const isCentered = i === view[depth].length - 1;
+
+                        sceneLayer = sceneRenderer.draw(
+                            sceneLayer,
+                            view[depth][index],
+                            depth,
+                            maxPlayerVisibilityDepth,
+                            index,
+                            isCentered,
+                            maxBrightness
+                        );
                     }
 
                     scene +=
@@ -3958,7 +4389,8 @@
                 return layerClasses.join(' ');
             },
 
-            getView: (x, y, direction) => {
+            getView: (x, y, direction, viewDepth) => {
+                const fixedViewDepth = Math.min(viewDepth, sceneRenderer.maxViewDepth);
                 const grid = [];
 
                 const directionVectors = {
@@ -3974,12 +4406,16 @@
                     return [];
                 }
 
-                for (let depth = 0; depth <= sceneRenderer.viewDepth; depth++) {
+                for (let depth = 0; depth <= sceneRenderer.maxViewDepth; depth++) {
                     const row = [];
                     const offsetStart = depth === 0 ? -1 : -depth;
                     const offsetEnd = depth === 0 ? 1 : depth;
 
                     for (let offset = offsetStart; offset <= offsetEnd; offset++) {
+                        if (depth > fixedViewDepth) {
+                            row.push(new MapCell('darkness'));
+                            continue;
+                        }
                         const lateralOffset = offset * dir.flip;
                         const tx = x + dir.dx * depth + dir.lateral.dx * lateralOffset;
                         const ty = y + dir.dy * depth + dir.lateral.dy * lateralOffset;
@@ -3992,19 +4428,20 @@
                 return grid;
             },
 
-            draw: (scene, subject, depth, index) => {
+            draw: (scene, subject, depth, maxPlayerVisibilityDepth, index, isCentered, maxBrightness) => {
                 if (typeof subject?.isVisible === 'function' && !subject.isVisible()) {
                     return scene;
                 }
 
                 const entityName = sceneRenderer.getEntityName(subject);
+                const sceneEntity = sceneArt[entityName];
                 const key = `p${depth}_${index}`;
-                const entry = sceneArt[entityName]?.positions?.[key] || null;
+                const entry = sceneEntity?.positions?.[key] || null;
                 if (!entry) {
                     return scene;
                 }
 
-                const indexedArt = sceneArt[entityName].art[entry.artIndex] || null;
+                const indexedArt = sceneEntity.art[entry.artIndex] || null;
                 if (!indexedArt) {
                     return scene;
                 }
@@ -4040,11 +4477,32 @@
                                     '▞', '▟'
                                 ].includes(character);
 
+
+                            let characterStyle = '';
+
+                            if (sceneEntity.relativeColor) {
+                                const entityColor = sceneEntity.relativeColor;
+                                // Make the spaces directly in front of the
+                                // player fully bright
+                                const adjustedDepth = depth - (isCentered ? 1 : 0);
+
+                                const characterColor = {
+                                    r: sceneRenderer.getCharacterColor(entityColor.r, adjustedDepth, maxPlayerVisibilityDepth, maxBrightness),
+                                    g: sceneRenderer.getCharacterColor(entityColor.g, adjustedDepth, maxPlayerVisibilityDepth, maxBrightness),
+                                    b: sceneRenderer.getCharacterColor(entityColor.b, adjustedDepth, maxPlayerVisibilityDepth, maxBrightness),
+                                };
+                                characterStyle += `color: rgb(${characterColor.r}, ${characterColor.g}, ${characterColor.b}); `;
+                            }
+
                             // TODO: Fix this weird logic. This works best for
                             // walls, but isn't great for floors or much else
-                            const style = automask ? '' : ' style="background-color:#000"';
+                            if (!automask) {
+                                characterStyle += 'background-color: #000; ';
+                            }
+
+                            const styleHtml = characterStyle !== '' ? ` style="${characterStyle.trim()}"` : '';
                             scene[yPosition][xPosition] =
-                                `<span ${className}${style}>${character}</span>`;
+                                `<span ${className}${styleHtml}>${character}</span>`;
                         }
                     }
 
@@ -4052,6 +4510,24 @@
                 }
 
                 return scene;
+            },
+
+            getCharacterColor: (value, depth, maxPlayerVisibilityDepth, maxBrightness = 255) => {
+                if (depth <= 0) {
+                    return Math.min(value, maxBrightness);
+                }
+
+                if (depth >= maxPlayerVisibilityDepth) {
+                    return 0;
+                }
+
+                const brightnessFalloffRate = 4;
+                const ratio = depth / maxPlayerVisibilityDepth;
+                const brightnessFactor = Math.exp(-brightnessFalloffRate * ratio);
+                const normalizedValue = (value / 255) * maxBrightness;
+                const adjustedValue = Math.round(normalizedValue * brightnessFactor);
+
+                return Math.max(0, Math.min(maxBrightness, adjustedValue));
             },
 
             getEntityName: (entity) => {
@@ -4341,6 +4817,7 @@
             exp: 0,
             level: 1,
             inCombat: false,
+            isHoldingTorch: false,
             enteringCombat: false,
             leavingCombat: false,
             levelingUp: false,
@@ -4376,7 +4853,65 @@
             },
             heal: (hp) => {
                 player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
-            }
+            },
+            equipRing: (slotNumber, ringId) => {
+                if (![1, 2].includes(slotNumber)) {
+                    console.log("Ring slot number is out of range", { slotNumber });
+                    return false;
+                }
+
+                // Prevent equipping the same ring in both slots
+                const ringIsAlreadyEquippedOnOppositeHand =
+                    ringId && (
+                        (slotNumber === 1 && ringId === player.ring2) ||
+                        (slotNumber === 2 && ringId === player.ring1)
+                    );
+
+                if (ringIsAlreadyEquippedOnOppositeHand) {
+                    updateBattleLog("You can't equip the same ring in both slots!");
+                    return false;
+                }
+
+                if (slotNumber === 1) {
+                    player.ring1 = ringId || null;
+                } else if (slotNumber === 2) {
+                    player.ring2 = ringId || null;
+                }
+
+                const ringDisplayName = rings[ringId]?.name || "no ring";
+                updateBattleLog(
+                    `You equipped <span class="friendly">${ringDisplayName}` +
+                    `</span> in Ring ${slotNumber} slot.`
+                );
+                if (player.hp > getEffectiveStat('maxHp')) {
+                    player.hp = getEffectiveStat('maxHp');
+                }
+
+                const $game = document.getElementById('game');
+                if (player.hasEquippedRing('ringOfSightliness')) {
+                    $game.classList.add('sightliness');
+                } else {
+                    $game.classList.remove('sightliness');
+                }
+
+                return true;
+            },
+            hasEquippedRing: (ringId) => [player.ring1, player.ring2].includes(ringId),
+            getViewDepth: () => {
+                if (player.hasEquippedRing('ringOfSightliness')) {
+                    return 5;
+                }
+
+                if (player.isHoldingTorch) {
+                    return 3;
+                }
+
+                return 2;
+            },
+            getMaxBrightness: () =>
+                player.hasEquippedRing('ringOfSightliness') || player.isHoldingTorch
+                    ? 255
+                    : 192,
         };
 
         const merchant = {
@@ -4446,19 +4981,34 @@
                 merchant.setWares();
                 merchant.setPosition();
             },
-            setWares: function() {
+            setWares: function(hasEverythingInStock = false) {
                 const itemKeys = Object.keys(items);
+                const ringKeys = Object.keys(rings);
+
                 if (itemKeys.length === 0) {
                     console.error("No items available in the items object!");
+                    return;
+                }
+
+                if (ringKeys.length === 0) {
+                    console.error("No rings available in the rings object!");
                     return;
                 }
 
                 let attempts = 0;
                 do {
                     merchant.items = [];
+                    merchant.rings = [];
+
                     itemKeys.forEach((key) => {
-                        if (Math.random() < items[key].merchantStockChance) {
+                        if (hasEverythingInStock || Math.random() < (items[key].merchantStockChance || 0)) {
                             merchant.items.push(key);
+                        }
+                    });
+
+                    ringKeys.forEach((key) => {
+                        if (hasEverythingInStock || Math.random() < (rings[key].merchantStockChance || 0)) {
+                            merchant.rings.push(key);
                         }
                     });
 
@@ -4470,27 +5020,7 @@
                         );
                         break;
                     }
-                } while (merchant.items.length === 0);
-
-                merchant.setRingWares();
-            },
-
-            setRingWares: function() {
-                const ringKeys = Object.keys(rings);
-                let attempts = 0;
-
-                do {
-                    merchant.rings = [];
-                    ringKeys.forEach((key) => {
-                        if (Math.random() < (rings[key].merchantStockChance || 0)) {
-                            merchant.rings.push(key);
-                        }
-                    });
-                    attempts++;
-                    if (attempts > 100) {
-                        break;
-                    }
-                } while (merchant.rings.length === 0 && ringKeys.length > 0);
+                } while (merchant.items.length === 0 || merchant.rings.length === 0);
             },
 
             setPosition: function() {
@@ -4906,7 +5436,7 @@
             },
             ringOfAmplifiedAudio: {
                 name: "RING OF AMPLIFIED AUDIO",
-                description: "A ring with a tiny, yet deceptively loud megaphone. Miniphone? idk. +2 PRS and an PRS attempt",
+                description: "A ring with a tiny, yet deceptively loud megaphone. Miniphone? idk. +2 PRS and a PRS attempt",
                 effects: { persuasion: 2 },
                 price: 130,
                 merchantStockChance: 0.2,
@@ -4980,6 +5510,10 @@
                 name: "TORCH",
                 description: "An unlit torch. Using it will reveal the map of the current floor",
                 use: () => {
+                    if (player.isHoldingTorch) {
+                        updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
+                        return;
+                    }
                     playSFX('torch');
                     seenTiles = seenTiles.map((col) => col.map(() => true));
                     updateBattleLog("Lo, the way has been made clear!");
@@ -5139,7 +5673,6 @@
         let currentMusic = null;
         let currentExplorationTrack = null;
         let currentEnemy = null;
-        let torchAnimActive = false;
         let party = [];
         let gameOver = false;
         let awaitingPersuasionText = false;
@@ -5393,21 +5926,9 @@
         }
 
         function updateSeenTiles() {
-            seenTiles[player.y][player.x] = true;
-            const hasSightliness =
-                (player.ring1 === "ringOfSightliness" || player.ring2 === "ringOfSightliness");
-
-            const radius = hasSightliness ? 2 : 1; // Default reveal radius 1, 2 if Ring of Sightliness equipped
-
-            for (let dy = -radius; dy <= radius; dy++) {
-                for (let dx = -radius; dx <= radius; dx++) {
-                    let nx = player.x + dx;
-                    let ny = player.y + dy;
-                    if (nx >= 0 && ny >= 0 && nx < WIDTH && ny < HEIGHT) {
-                        seenTiles[ny][nx] = true;
-                    }
-                }
-            }
+             // Default reveal radius 1, 2 if Ring of Sightliness equipped
+            const radius = player.hasEquippedRing('ringOfSightliness') ? 2 : 1;
+            revealMapSpot(player.x, player.y, radius);
         }
 
         function drawMinimap() {
@@ -5529,7 +6050,13 @@
             }
             document.getElementById("partylist").innerHTML = partyHTML;
 
-            let output = sceneRenderer.render(player.x, player.y, DIRECTIONS[player.dir]);
+            let output = sceneRenderer.render(
+                player.x,
+                player.y,
+                DIRECTIONS[player.dir],
+                player.getViewDepth(),
+                player.getMaxBrightness()
+            );
 
             if (player.inCombat) {
                 output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
@@ -5648,43 +6175,25 @@
         }, true);
 
         function setTorchOverlayVisibility() {
-            const overlay = document.getElementById('animTorch');
-            if (!overlay) return;
             // Hide torch in combat, resume after battle
-            if (torchAnimActive && !player.inCombat) {
-                overlay.style.display = 'flex';
-            } else {
-                overlay.style.display = 'none';
-            }
+            $torch = document.getElementById('animTorch');
+            player.isHoldingTorch && !player.inCombat
+                ? $torch.classList.add('onscreen')
+                : $torch.classList.remove('onscreen');
         }
 
         // Update animTorchStart to always use setTorchOverlayVisibility
         function animTorchStart() {
-            const container = document.getElementById('viewportContainer');
-            let overlay = document.getElementById('animTorch');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'animTorch';
-                container.appendChild(overlay);
-            }
-            overlay.innerHTML = `<img src="assets/fp-anim/fp-torch1.gif">`;
-            torchAnimActive = true;
+            player.isHoldingTorch = true;
             setTorchOverlayVisibility();
             playSFX('torch');
-            const torch1Duration = 1800;
-            setTimeout(() => {
-                overlay.innerHTML = `<img src="assets/fp-anim/fp-torch2.gif">`;
-                setTorchOverlayVisibility();
-            }, torch1Duration);
+            document.getElementById('game').classList.add('torch');
         }
 
         function animTorchEnd() {
-            const overlay = document.getElementById('animTorch');
-            if (overlay) {
-                overlay.style.display = 'none';
-                overlay.innerHTML = '';
-            }
-            torchAnimActive = false;
+            player.isHoldingTorch = false;
+            setTorchOverlayVisibility();
+            document.getElementById('game').classList.remove('torch');
         }
 
         function shakeScreen() {
@@ -5815,8 +6324,7 @@
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
             persuasionAttempts = 0;
-            maxPersuasionAttempts =
-                (player.ring1 === "ringOfAmplifiedAudio" || player.ring2 === "ringOfAmplifiedAudio") ? 3 : 2;
+            maxPersuasionAttempts = player.hasEquippedRing('ringOfAmplifiedAudio') ? 3 : 2;
             player.enterCombat();
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
@@ -6196,6 +6704,7 @@
                     if (coordsInBounds(nx, ny) && MAP[ny][nx]?.type === 'floor') {
                         merchant.isAlive = true;
                         merchant.isActiveOnFloor = true;
+                        merchant.setWares(true);
                         MAP[ny][nx] = new MapCell('merchant');
                         merchantSpawned = true;
                         break;
@@ -7051,9 +7560,9 @@
                         } else if (selectedOptionId === "ring2") {
                             menu.open("ring2Select");
                         } else {
-                        if (player.hp > getEffectiveStat('maxHp')) {
-                            player.hp = getEffectiveStat('maxHp');
-                        }                            
+                            if (player.hp > getEffectiveStat('maxHp')) {
+                                player.hp = getEffectiveStat('maxHp');
+                            }
                             menu.close();
                             render();
                         }
@@ -7086,18 +7595,10 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        // Prevent equipping the same ring in both slots
-                        if (selectedOptionId && selectedOptionId === player.ring2) {
-                            updateBattleLog("You can't equip the same ring in both slots!");
-                            return;
+                        if (player.equipRing(1, selectedOptionId)) {
+                            menu.close();
+                            render();
                         }
-                        player.ring1 = selectedOptionId || null;
-                        updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 1 slot.`);
-                        if (player.hp > getEffectiveStat('maxHp')) {
-                            player.hp = getEffectiveStat('maxHp');
-                        }
-                        menu.close();
-                        render();
                     },
                 },
 
@@ -7128,18 +7629,10 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        // Prevent equipping the same ring in both slots
-                        if (selectedOptionId && selectedOptionId === player.ring1) {
-                            updateBattleLog("You can't equip the same ring in both slots!");
-                            return;
+                        if (player.equipRing(2, selectedOptionId)) {
+                            menu.close();
+                            render();
                         }
-                        player.ring2 = selectedOptionId || null;
-                        updateBattleLog(`You equipped <span class="friendly">${selectedOptionId ? rings[selectedOptionId].name : "no ring"}</span> in Ring 2 slot.`);
-                        if (player.hp > getEffectiveStat('maxHp')) {
-                            player.hp = getEffectiveStat('maxHp');
-                        }
-                        menu.close();
-                        render();
                     },
                 },
 
