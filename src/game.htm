@@ -104,6 +104,16 @@
             background: linear-gradient(180deg,rgba(97, 0, 10, 1) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 70%, rgba(117, 62, 0, 1) 100%);
         }
 
+        #game.terrain_iceCavern {
+            background: linear-gradient(
+                180deg,
+                rgb(100, 113, 182) 0%,
+                rgb(0, 0, 0) 30%,
+                rgb(0, 0, 0) 70%,
+                rgb(49, 41, 106) 100%
+            );
+        }
+
         @keyframes torchFlicker {
             0%, 100% {
                 opacity: 0.3;
@@ -406,6 +416,11 @@
             border-top: 0;
         }
 
+        #minimap .crackedFloorSlight,
+        #minimap .crackedFloorSevere {
+            color: #f00;
+        }
+
         .hidden {
             display: none;
         }
@@ -559,6 +574,16 @@
 
         .scene_character_void {
             color: #000 !important;
+        }
+
+        .scene_character_iceWall {
+            color: #e8e8ff !important;
+            opacity: .8;
+        }
+
+        .scene_character_crackedFloorSlight,
+        .scene_character_crackedFloorSevere {
+            color: #000;
         }
 
         .layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble1,
@@ -1819,6 +1844,377 @@
                 ],
             },
 
+            iceWall: {
+                relativeColor: { r: 255, g: 255, b: 255 },
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 1 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 44, y: 1 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 4 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 4 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 4 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 8 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 8 },
+                    },
+                    p2_3: {
+                        artIndex: 4,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 8 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 9 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 12 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 11 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 11 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 34, y: 11 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 12 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 12 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 12 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 12 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 12 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 26, y: 12 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 12 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 12 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 40, y: 12 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 13 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 13 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 13 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 13 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 13 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 13 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 13 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 13 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 13 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄
+                             ▀▄
+                               ▀▄
+                            ▝▘▝▘ █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                                 █
+                            ▗▖▗▖ █
+                               ▄▀
+                             ▄▀
+                            ▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▀▀▀▀▀▀▄
+                                  ▒▀▄
+                                  ▒  ▀▄
+                                  ▒    ▀▄
+                            ▖  ▗▖ ▒▗▖  ▗▖▀▄
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                                  ▒       █
+                            ▘  ▝▘ ▒▝▘  ▝▘▄▀
+                                  ▒    ▄▀
+                                  ▒  ▄▀
+                                  ▒▄▀
+                            ▄▄▄▄▄▄▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+                            █▝▘                                  ▝▘█
+                            █  ▝▘                              ▝▘  █
+                            █    ▝▘                          ▝▘    █
+                            █      ▝▘                      ▝▘      █
+                            █        ▝▘  ▝▘  ▝▘  ▝▘  ▝▘  ▝▘        █
+                            █        ▗▖                  ▗▖        █
+                            █                                      █
+                            █        ▗▖                  ▗▖        █
+                            █                                      █
+                            █        ▗▖                  ▗▖        █
+                            █                                      █
+                            █        ▗▖                  ▗▖        █
+                            █                                      █
+                            █        ▗▖  ▗▖  ▗▖  ▗▖  ▗▖  ▗▖        █
+                            █      ▗▖                      ▗▖      █
+                            █    ▗▖                          ▗▖    █
+                            █  ▗▖                              ▗▖  █
+                            █▗▖                                  ▗▖█
+                            █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                              ▀▀▀▄▄▄
+                                    █
+                                    █
+                                    █
+                                    █
+                                    █
+                                    █
+                              ▄▄▄▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                                           ▒▄
+                             .             ▒ ▀▄
+                              .  .  .  .  .▒ . █
+                             .             ▒   █
+                                           ▒   █
+                                           ▒   █
+                             .             ▒   █
+                              .  .  .  .  .▒ . █
+                             .             ▒ ▄▀
+                                           ▒▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            █ .                . █
+                            █   .   .    .   .   █
+                            █                    █
+                            █   .            .   █
+                            █                    █
+                            █                    █
+                            █   .            .   █
+                            █                    █
+                            █   .   .    .   .   █
+                            █ .                . █
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▀▀▄▄
+                               █
+                               █
+                            ▄▄▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            █▀▀▀▀▀▀▀▀▀▀▓▄
+                            █          ▓ ▀▄
+                            █          ▓  █
+                            █          ▓  █
+                            █          ▓ ▄▀
+                            █▄▄▄▄▄▄▄▄▄▄▓▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            █▀▀▀▀▀▀▀▀▀▀█
+                            █          █
+                            █          █
+                            █          █
+                            █          █
+                            █▄▄▄▄▄▄▄▄▄▄█
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █     ▓▄
+                            █     ▓▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █     █▄
+                            █     █▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █     █
+                            █     █
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █    █
+                            █    █
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            ▀▀
+                        `,
+                    },
+                ],
+            },
+
             rubble1: {
                 positions: {
                     p0_0: {
@@ -2907,6 +3303,490 @@
                         automaskBlockCharacters: true,
                         data: `
                             ▄▄██████▀▀
+                        `,
+                    },
+                ],
+            },
+
+            crackedFloorSlight: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -19, y: 24 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 24 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -12, y: 20 },
+                    },
+                    p1_1: {
+                        artIndex: 1,
+                        drawAt: { x: 8, y: 20 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 38, y: 20 },
+                    },
+                    p2_0: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 18 },
+                    },
+                    p2_1: {
+                        artIndex: 3,
+                        drawAt: { x: 3, y: 17 },
+                    },
+                    p2_2: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 17 },
+                    },
+                    p2_3: {
+                        artIndex: 5,
+                        drawAt: { x: 32, y: 17 },
+                    },
+                    p2_4: {
+                        artIndex: 2,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 42, y: 18 },
+                    },
+                    p3_0: {
+                        artIndex: 10,
+                        drawAt: { x: -9, y: 15 },
+                    },
+                    p3_1: {
+                        artIndex: 10,
+                        drawAt: { x: -3, y: 16 },
+                    },
+                    p3_2: {
+                        artIndex: 10,
+                        drawAt: { x: 8, y: 16 },
+                    },
+                    p3_3: {
+                        artIndex: 7,
+                        drawAt: { x: 20, y: 16 },
+                    },
+                    p3_4: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 29, y: 16 },
+                    },
+                    p3_5: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 16 },
+                    },
+                    p3_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 15 },
+                    },
+                    p4_0: {
+                        artIndex: 8,
+                        drawAt: { x: 2, y: 15 },
+                    },
+                    p4_1: {
+                        artIndex: 8,
+                        drawAt: { x: 7, y: 15 },
+                    },
+                    p4_2: {
+                        artIndex: 8,
+                        drawAt: { x: 12, y: 15 },
+                    },
+                    p4_3: {
+                        artIndex: 8,
+                        drawAt: { x: 17, y: 15 },
+                    },
+                    p4_4: {
+                        artIndex: 8,
+                        drawAt: { x: 22, y: 15 },
+                    },
+                    p4_5: {
+                        artIndex: 8,
+                        drawAt: { x: 27, y: 15 },
+                    },
+                    p4_6: {
+                        artIndex: 8,
+                        drawAt: { x: 32, y: 15 },
+                    },
+                    p4_7: {
+                        artIndex: 8,
+                        drawAt: { x: 37, y: 15 },
+                    },
+                    p4_8: {
+                        artIndex: 8,
+                        drawAt: { x: 42, y: 15 },
+                    },
+                    p5_0: {
+                        artIndex: 9,
+                        drawAt: { x: 14, y: 14 },
+                    },
+                    p5_1: {
+                        artIndex: 9,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p5_2: {
+                        artIndex: 9,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p5_3: {
+                        artIndex: 9,
+                        drawAt: { x: 20, y: 14 },
+                    },
+                    p5_4: {
+                        artIndex: 9,
+                        drawAt: { x: 22, y: 14 },
+                    },
+                    p5_5: {
+                        artIndex: 9,
+                        drawAt: { x: 24, y: 14 },
+                    },
+                    p5_6: {
+                        artIndex: 9,
+                        drawAt: { x: 26, y: 14 },
+                    },
+                    p5_7: {
+                        artIndex: 9,
+                        drawAt: { x: 28, y: 14 },
+                    },
+                    p5_8: {
+                        artIndex: 9,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p5_9: {
+                        artIndex: 9,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p5_10: {
+                        artIndex: 9,
+                        drawAt: { x: 34, y: 14 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▀▀█▀▀▄▄▄▄▄%%▄▀
+                            ▀▀▀▀%%%%%%▄▄▄▀▀▀▀▄
+                            %%%%%%%%%%%%%%%%%%▀▀
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄
+                            %%%%%%%%%▀▀█▀▀▄▄▄▄▄%%%%%▄▀
+                            %%%%%%%▀▀▀▀%%%%%%%%%▄▄▄▀▀▀▀▄
+                            %%%%%%%%%%%%%%%%%%%%%%%%%%%%▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▘%▗▟▖
+                            %▀▘%▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▀▀▄▄▘%▗▟▖
+                            %%%▀▀▀%%%▀▘%▝▄
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▀▀▄▄▘%%%▗▟▖
+                            %▀▀▀%%%%%▀▘%▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%▀▀▄▄▘%▗▟▖
+                            %%%▀▀▀%%%▀▘▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▒▒%▒░░%▒▒░░▒%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▒▒░▒▒░░▒%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▔▔%%▔
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ╶╴
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▒░▒▒░▒
+                        `,
+                    },
+                ],
+            },
+
+            crackedFloorSevere: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -19, y: 24 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 24 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -12, y: 20 },
+                    },
+                    p1_1: {
+                        artIndex: 1,
+                        drawAt: { x: 8, y: 20 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 38, y: 20 },
+                    },
+                    p2_0: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 18 },
+                    },
+                    p2_1: {
+                        artIndex: 3,
+                        drawAt: { x: 3, y: 17 },
+                    },
+                    p2_2: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 17 },
+                    },
+                    p2_3: {
+                        artIndex: 5,
+                        drawAt: { x: 32, y: 17 },
+                    },
+                    p2_4: {
+                        artIndex: 2,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 42, y: 18 },
+                    },
+                    p3_0: {
+                        artIndex: 10,
+                        drawAt: { x: -9, y: 15 },
+                    },
+                    p3_1: {
+                        artIndex: 10,
+                        drawAt: { x: -3, y: 16 },
+                    },
+                    p3_2: {
+                        artIndex: 10,
+                        drawAt: { x: 8, y: 16 },
+                    },
+                    p3_3: {
+                        artIndex: 7,
+                        drawAt: { x: 20, y: 16 },
+                    },
+                    p3_4: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 29, y: 16 },
+                    },
+                    p3_5: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 16 },
+                    },
+                    p3_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 15 },
+                    },
+                    p4_0: {
+                        artIndex: 8,
+                        drawAt: { x: 2, y: 15 },
+                    },
+                    p4_1: {
+                        artIndex: 8,
+                        drawAt: { x: 7, y: 15 },
+                    },
+                    p4_2: {
+                        artIndex: 8,
+                        drawAt: { x: 12, y: 15 },
+                    },
+                    p4_3: {
+                        artIndex: 8,
+                        drawAt: { x: 17, y: 15 },
+                    },
+                    p4_4: {
+                        artIndex: 8,
+                        drawAt: { x: 22, y: 15 },
+                    },
+                    p4_5: {
+                        artIndex: 8,
+                        drawAt: { x: 27, y: 15 },
+                    },
+                    p4_6: {
+                        artIndex: 8,
+                        drawAt: { x: 32, y: 15 },
+                    },
+                    p4_7: {
+                        artIndex: 8,
+                        drawAt: { x: 37, y: 15 },
+                    },
+                    p4_8: {
+                        artIndex: 8,
+                        drawAt: { x: 42, y: 15 },
+                    },
+                    p5_0: {
+                        artIndex: 9,
+                        drawAt: { x: 14, y: 14 },
+                    },
+                    p5_1: {
+                        artIndex: 9,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p5_2: {
+                        artIndex: 9,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p5_3: {
+                        artIndex: 9,
+                        drawAt: { x: 20, y: 14 },
+                    },
+                    p5_4: {
+                        artIndex: 9,
+                        drawAt: { x: 22, y: 14 },
+                    },
+                    p5_5: {
+                        artIndex: 9,
+                        drawAt: { x: 24, y: 14 },
+                    },
+                    p5_6: {
+                        artIndex: 9,
+                        drawAt: { x: 26, y: 14 },
+                    },
+                    p5_7: {
+                        artIndex: 9,
+                        drawAt: { x: 28, y: 14 },
+                    },
+                    p5_8: {
+                        artIndex: 9,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p5_9: {
+                        artIndex: 9,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p5_10: {
+                        artIndex: 9,
+                        drawAt: { x: 34, y: 14 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▀▀█▀▀▄▄▄▄▄%%▄▀▀▀▄▀
+                            ▀█▀▀%▀▄%▄%▄▄▄▀▀▀▀▄
+                            %%▀▀%▀%▀▀%%▀%▀▀%%%█▀
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄
+                            %%%%%%%%%▀▀█▀▀▄▄▄▄▄%%%%%▄▀▀▀▄▀
+                            %%%%%%%▀█▀▀%▀▄%▄%▄%%▄▄▄▀▀▀▀▄
+                            %%%%%%%%%▀▀%▀%▀▀%%▀%%▀%▀▀%%%█▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▀%▗▟▞▞
+                            %▜▚▚▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▀▀▄▄▀%▗▟▞▞
+                            %%%▜▜▀▞%%▜▚▚▝▄
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▀▀▄▄▀%%%▗▟▞▞
+                            %▜▜▀▞%▚%%▜▚▚▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%▀▀▄▄▀%▗▟▞▞
+                            %▜▜▀▞%▚%▜▚▚▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ░▓▓░▓▒▒░▓▓▒▒▓░
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ░▓▓▒▓▓▒▒▓░
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▀▔▀▔▘
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ╺╸
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ░░▓▒▓▓▒▓
                         `,
                     },
                 ],
@@ -4666,6 +5546,46 @@
                                 Math.random() < 0.5 ? 'rubble1' : 'rubble2'
                             ),
                     },
+                    iceWall: {
+                        mapCharacter: '#',
+                        isSolid: true,
+                        onExplode: (x, y) =>
+                            MAP[y][x] = new MapCell(
+                                Math.random() < 0.5 ? 'rubble1' : 'rubble2'
+                            ),
+                    },
+                    crackedFloorSlight: {
+                        mapCharacter: '✕',
+                        onEnter: (x, y) => {
+                            updateBattleLog(
+                                '<span class="action">The floor cracks under ' +
+                                'your feet!</span> You probably should not ' +
+                                'step here again'
+                            );
+                            playSFX('floorCrackSlight');
+                            MAP[y][x] = new MapCell('crackedFloorSevere');
+                        },
+                    },
+                    crackedFloorSevere: {
+                        mapCharacter: '✖',
+                        onEnter: (x, y) => {
+                            stopAllMusic();
+                            animTorchEnd();
+                            window._inputBlocked = true;
+                            // TODO: Add a cool animation here instead
+                            document.getElementById('game').style =
+                                "transition: opacity 2s, transform 2s; " +
+                                "opacity:0; transform: translateY(-400px)";
+                            updateBattleLog(
+                                '<span class="action">AUUUUUGH!</span> ' +
+                                'You scream out as the flimsy floor ' +
+                                'collapses beneath your feet and you plunge ' +
+                                'into a pit of spikes waiting beneath!'
+                            );
+                            playSFX('floorBreakScreamDie');
+                            player.hp = 0;
+                        },
+                    },
                     rubble1: {
                         mapCharacter: ".",
                         onExplode: (x, y) => MAP[y][x] = new MapCell('rubble2'),
@@ -5621,6 +6541,8 @@
             uiSelect: new Audio('audio/uiSelect.wav'),
             uiCancel: new Audio('audio/uiCancel.wav'),
             raisins: new Audio('audio/raisins.mp3'),
+            floorCrackSlight: new Audio('audio/floorCrackSlight.mp3'),
+            floorBreakScreamDie: new Audio('audio/floorBreakScreamDie.mp3'),
         };
 
         const music = {
@@ -5739,6 +6661,7 @@
 
             spawnTreasureChests();
             spawnHealingTiles();
+            spawnCrackedFloors();
         }
 
         function placeWelcomeBanner() {
@@ -5806,6 +6729,27 @@
 
                     if (isEmptySpace) {
                         MAP[y][x] = new MapCell('healingTile'); // Place a healing tile
+                        break;
+                    }
+                }
+            }
+        }
+
+        function spawnCrackedFloors() {
+            const crackedFloorCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 cracked floors
+            let attempts = 0;
+
+            for (let i = 0; i < crackedFloorCount; i++) {
+                while (attempts++ < 1000) {
+                    const x = Math.floor(Math.random() * WIDTH);
+                    const y = Math.floor(Math.random() * HEIGHT);
+
+                    const isEmptySpace =
+                        MAP[y][x]?.type === 'floor' &&
+                        (y !== player.y || x !== player.x);
+
+                    if (isEmptySpace) {
+                        MAP[y][x] = new MapCell('crackedFloorSlight');
                         break;
                     }
                 }
