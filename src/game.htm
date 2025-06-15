@@ -546,14 +546,23 @@
         .DEF {
             color: #1463BA;
         }
+        .STR {
+            color: #f7603b;
+        }
         .PRS {
             color: #A23AB4;
+        }
+        .END {
+            color: #89f39a;
         }
         .SPD {
             color: #7ec5ee;
         }
         .LUK {
             color: #f5b609;
+        }
+        .LOAD {
+            color: #f8d46f;
         }
         .action {
             color: #EC4134;
@@ -5719,7 +5728,9 @@
         const baseStats = {
             maxHp: 20,
             defense: 5,
+            strength: 1,
             persuasion: 15,
+            endurance: 0,
             speed: 12,
             luck: 2,
         };
@@ -5731,7 +5742,9 @@
             hp: baseStats.maxHp,
             maxHp: baseStats.maxHp,
             defense: baseStats.defense,
+            strength: baseStats.strength,
             persuasion: baseStats.persuasion,
+            endurance: baseStats.endurance,
             speed: baseStats.speed,
             luck: baseStats.luck,
             exp: 0,
@@ -6033,78 +6046,78 @@
             {
                 id: "snailSentinel",
                 name: "SNAIL SENTINEL",
-                hp: 10,
-                attack: [1, 4],
+                hp: 13,
+                attack: [2, 5],
                 bitcoins: 4,
             },
             {
                 id: "stupidDog",
                 name: "STUPID DOG",
-                hp: 6,
-                attack: [2, 5],
+                hp: 9,
+                attack: [3, 6],
                 bitcoins: 3,
             },
             {
                 id: "wangRat",
                 name: "WANG RAT",
-                hp: 5,
-                attack: [3, 5],
+                hp: 8,
+                attack: [4, 6],
                 bitcoins: 2,
             },
             {
                 id: "keeperOfTheToiletBowl",
                 name: "KEEPER OF THE TOILET BOWL",
-                hp: 15,
-                attack: [3, 7],
+                hp: 25,
+                attack: [8, 14],
                 bitcoins: 5,
             },
             {
                 id: "mysteriousScooter",
                 name: "MYSTERIOUS SCOOTER",
-                hp: 12,
-                attack: [3, 6],
+                hp: 17,
+                attack: [4, 7],
                 bitcoins: 4,
             },
             {
                 id: "badassFlamingSkeleton",
                 name: "BADASS FLAMING SKELETON",
-                hp: 13,
-                attack: [4, 9],
+                hp: 23,
+                attack: [9, 16],
                 bitcoins: 4,
             },
             {
                 id: "fridgeOfForgottenLeftovers",
                 name: "FRIDGE OF FORGOTTEN LEFTOVERS",
-                hp: 20,
-                attack: [2, 3],
+                hp: 27,
+                attack: [8, 14],
                 bitcoins: 3,
             },
             {
                 id: "lughead",
                 name: "LUGHEAD",
-                hp: 18,
-                attack: [2, 6],
+                hp: 28,
+                attack: [8, 13],
                 bitcoins: 4,
             },
             {
                 id: "pissedOffPoultry",
                 name: "PISSED-OFF POULTRY",
-                hp: 7,
-                attack: [2, 5],
+                hp: 15,
+                attack: [4, 7],
                 bitcoins: 2,
             },
             {
                 id: "krampusElf",
                 name: "KRAMPUS ELF",
-                hp: 7,
-                attack: [3, 4],
+                hp: 14,
+                attack: [4, 6],
                 bitcoins: 4,
             },
             {
                 id: "mimic",
                 name: "MIMIC",
-                hp: 120,
-                attack: [7, 14],
+                hp: 140,
+                attack: [10, 16],
                 bitcoins: 100,
             },
         ];
@@ -6124,83 +6137,72 @@
             fingerNail: {
                 name: "FINGERNAIL",
                 description: "Your very own fingernail! Careful not to break it!",
-                damage: {
-                    base: 1,
-                    randomMultiplier: 4,
-                },
+                damage: { base: 1, randomMultiplier: 4 },
                 price: 0,
+                requiredStr: 0, // No requirement
             },
             pointyStick: {
                 name: "POINTY STICK",
                 description: "A stick that fell off of a tree somewhere",
-                damage: {
-                    base: 2,
-                    randomMultiplier: 5,
-                },
+                damage: { base: 2, randomMultiplier: 5 },
                 price: 20,
+                requiredStr: 7,
             },
             wiffleBallBat: {
                 name: "WIFFLE BALL BAT",
                 description: "A hollow bat made of plastic",
-                damage: {
-                    base: 3,
-                    randomMultiplier: 6,
-                },
+                damage: { base: 3, randomMultiplier: 6 },
                 price: 50,
+                requiredStr: 13,
             },
             nunchucks: {
                 name: "NUNCHUCKS",
                 description: "Two pieces of wood connected by a chain",
-                damage: {
-                    base: 6,
-                    randomMultiplier: 9,
-                },
+                damage: { base: 6, randomMultiplier: 9 },
                 price: 100,
+                requiredStr: 20,
             },
             atlatlSpear: {
                 name: "ATLATL SPEAR",
                 description: "A spear with a throwing lever",
-                damage: {
-                    base: 10,
-                    randomMultiplier: 11,
-                },
+                damage: { base: 10, randomMultiplier: 11 },
                 price: 400,
+                requiredStr: 25,
             },
             bludgeoningMace: {
                 name: "BLUDGEONING MACE",
                 description: "A stick with a spikey metal ball at the end",
-                damage: {
-                    base: 10,
-                    randomMultiplier: 14,
-                },
+                damage: { base: 10, randomMultiplier: 14 },
                 price: 500,
+                requiredStr: 25,
+            },
+            danceClub: {
+                name: "DANCE CLUB",
+                description: "A club long enough to pole dance on... maybe it is one? You don't know. Legend has it, an obscure forum user once wielded one...",
+                damage: { base: 13, randomMultiplier: 15 },
+                price: 800,
+                requiredStr: 28,
             },
             cathodeRayTubeMonitor: {
                 name: "CATHODE RAY TUBE MONITOR",
                 description: "A CRT monitor. Heavy as piss.",
-                damage: {
-                    base: 13,
-                    randomMultiplier: 17,
-                },
+                damage: { base: 15, randomMultiplier: 17 },
                 price: 1000,
+                requiredStr: 33,
             },
             magicPencil: {
                 name: "MAGIC PENCIL",
                 description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
-                damage: {
-                    base: 15,
-                    randomMultiplier: 18,
-                },
+                damage: { base: 17, randomMultiplier: 18 },
                 price: 1400,
+                requiredStr: 38,
             },
             goldenWang: {
                 name: "GOLDEN WANG",
                 description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
-                damage: {
-                    base: 69,
-                    randomMultiplier: 69,
-                },
+                damage: { base: 69, randomMultiplier: 69 },
                 price: 6900,
+                requiredStr: 69,
             },
         };
 
@@ -6210,42 +6212,49 @@
                 description: "Your totally big, meaty pectorals! You're not fat at all...'",
                 defense: 1,
                 price: 0,
+                requiredEnd: 0,
             },
             graphicTee: {
                 name: "GRAPHIC TEE",
                 description: "A t-shirt that says 'Normal people scare me'",
                 defense: 2,
                 price: 20,
+                requiredEnd: 8,
             },
             barrelWithSuspenders: {
                 name: "BARREL (with suspenders)",
                 description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
                 defense: 3,
-                price: 50,
+                price: 100,
+                requiredEnd: 11,
             },
             leatherArmor: {
                 name: "LEATHER ARMOR",
                 description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
                 defense: 6,
-                price: 150,
+                price: 200,
+                requiredEnd: 15,
             },
             milaneseArmor: {
                 name: "MILANESE ARMOR",
                 description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
                 defense: 12,
-                price: 1000,
+                price: 500,
+                requiredEnd: 18,
             },
             blackPlateArmor: {
                 name: "BLACK PLATE ARMOR",
                 description: "Literally a giant black dinner plate. Deceptively protective.",
                 defense: 16,
-                price: 1500,
+                price: 1000,
+                requiredEnd: 25,
             },
             nokiaMail: {
                 name: "NOKIA MAIL",
                 description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
                 defense: 21,
                 price: 2000,
+                requiredEnd: 34,
             },
         };
 
@@ -6367,48 +6376,53 @@
         const items = {
             canOfHamms: {
                 name: "CAN OF HAMM'S",
-                description: "A warm can of beer. Delicious..? Heals +5 HP",
+                description: "A warm can of beer. Delicious..? +1 LOAD, +5 HP",
                 use: () => {
                     player.heal(5);
                     updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
                 },
                 merchantStockChance: 0.9,
+                weight: 1,
                 price: 10,
+                
             },
             cupOfLean: {
                 name: "CUP OF LEAN",
-                description: "A crusty styrofoam cup filled with a strange purple syrup. Heals +20 HP",
+                description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
                 use: () => {
                     player.heal(20);
                     updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
                 },
                 merchantStockChance: 0.5,
+                weight: 1.2,
                 price: 30,
             },
             glassOfToiletWater: {
                 name: "GLASS OF TOILET WATER",
-                description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied... Heals +50 HP",
+                description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied...  +1.2 LOAD, +50 HP",
                 use: () => {
                     player.heal(50);
                     updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
                 },
                 merchantStockChance: .4,
+                weight: 1.2,
                 price: 50,
             },
             alaskaRaisins: {
                 name: "ALASKA RAISINS",
-                description: "Holy shit! It's the Alaska Raisins! Heals +70 HP",
+                description: "Holy shit! It's the Alaska Raisins! +1.5 LOAD, +70 HP",
                 use: () => {
                     player.heal(70);
                     playSFX('raisins');
                     updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
                 },
                 merchantStockChance: .35,
+                weight: 1.5,
                 price: 80,
             },
             dowsingRod: {
                 name: "DOWSING ROD",
-                description: "A Y-shaped stick. Reveals the exit of the current floor",
+                description: "A Y-shaped stick. Reveals the exit of the current floor. +1.7 LOAD",
                 use: () => {
                     for (let y=0; y<MAP.length; y++) {
                         for (let x=0; x<MAP[y].length; x++) {
@@ -6424,11 +6438,12 @@
                     }
                 },
                 merchantStockChance: 0.8,
+                weight: 1.7,
                 price: 20,
             },
             torch: {
                 name: "TORCH",
-                description: "An unlit torch. Using it will reveal the map of the current floor",
+                description: "An unlit torch. Using it will reveal the map of the current floor. +1.2 LOAD",
                 use: () => {
                     if (player.isHoldingTorch) {
                         updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
@@ -6441,11 +6456,12 @@
                     render();
                 },
                 merchantStockChance: 0.8,
+                weight: 1.2,
                 price: 60,
             },
             brickOfC4: {
                 name: "BRICK OF C-4",
-                description: "An incendiary plastic explosive. Great for turning anything into nothing real quick",
+                description: "An incendiary plastic explosive. Great for turning anything into nothing real quick! +3 LOAD",
                 use: () => {
                     setTimeout(() => playSFX('explosion'), 50);
                     explosionAnimation(() => {
@@ -6504,11 +6520,22 @@
                     });
                 },
                 merchantStockChance: 0.5,
+                weight: 3,
                 price: 300,
             },
         };
 
         function getEffectiveStat(stat) {
+                if (stat === 'speed') {
+                    const baseSpd = player.speed;
+                    const carryWeight = getCarryWeight();
+                    const carryLimit = getCarryWeightLimit();
+                    if (carryWeight <= 0) return baseSpd;
+                    const percent = carryWeight / carryLimit;
+                    if (percent <= 0.5) return baseSpd; // Debuff: 5% at 50%, up to 100% at 100%
+                    const debuff = Math.min(1, (percent - 0.5) * 2) * 0.95 + 0.05; // Linear from 5% to 100%
+                    return Math.max(0, Math.floor(baseSpd * (1 - debuff)));
+                }
             const ringsEquipped = [player.ring1, player.ring2]
                 .map(ringId => ringId ? rings[ringId] : null)
                 .filter(Boolean);
@@ -6952,9 +6979,13 @@
 
             const displayMaxHp = player.maxHp + getRingEffect('maxHp');
             const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
+            const displayStrength = player.strength;
             const displayPersuasion = player.persuasion + getRingEffect('persuasion');
             const displaySpeed = player.speed + getRingEffect('speed');
             const displayLuck = player.luck + getRingEffect('luck');
+            const displayEndurance = player.endurance;
+            const displayCarryWeight = Number(getCarryWeight()).toFixed(1);
+            const displayCarryLimit = Number(getCarryWeightLimit()).toFixed(1);
 
             const stats1Html = `
                 <div class="stats-container">
@@ -6963,8 +6994,12 @@
                     <span class="stats-label">${player.hp}/${displayMaxHp}</span>
                     <span>|==<span class="DEF">DEF</span>==|</span>
                     <span class="stats-label">${displayDefense}</span>
+                    <span>|==<span class="STR">STR</span>==|</span>
+                    <span class="stats-label">${displayStrength}</span>
                     <span>|==<span class="PRS">PRS</span>==|</span>
                     <span class="stats-label">${displayPersuasion}</span>
+                    <span>|==<span class="END">END</span>==|</span>
+                    <span class="stats-label">${displayEndurance}</span>
                     <span>|==<span class="SPD">SPD</span>==|</span>
                     <span class="stats-label">${displaySpeed}</span>
                     <span>|==<span class="LUK">LUK</span>==|</span>
@@ -6977,6 +7012,8 @@
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="EXP">EXP</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.exp}/${player.level * 10}</span>
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="BTC">BTC</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.bitcoins}</span>
+                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+==<span class="LOAD">LOAD</span>==+</span><span style="font-size:0.95em; margin-top:2px;">${displayCarryWeight}/${displayCarryLimit}</span>
+  
                 <span center>._ _ _ _ _ _.</span>
             `;
             document.getElementById('stats2').innerHTML = stats2Html;
@@ -7248,6 +7285,24 @@
             render();
         }
 
+        function getCarryWeight() {
+            let total = 0;
+            for (const itemId in player.inventory) {
+                if (weapons[itemId] || armor[itemId] || rings[itemId]) continue;
+                const item = items[itemId];
+                const count = Math.max(0, player.inventory[itemId] || 0);
+                if (item && typeof item.weight === "number") {
+                    total += item.weight * count;
+                }
+            }
+            return total;
+        }
+
+        function getCarryWeightLimit() {
+            // Example: 10 base + 10 per END point
+            return 25 + player.endurance * 1.3;
+        }
+
         function startEncounter() {
             // Filter out the mimic from the random enemy pool
             const randomEnemies = enemies.filter(enemy => enemy.id !== "mimic");
@@ -7260,7 +7315,7 @@
             // Scale enemy stats based on floor
             const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
             if (floorBoost > 0) {
-                currentEnemy.hp += floorBoost * 5; // +5 HP per scaling
+                currentEnemy.hp += floorBoost * 7; // +5 HP per scaling
                 currentEnemy.attack = [
                     currentEnemy.attack[0] + (floorBoost * 3), // Adjust attack range based on floor scaling
                     currentEnemy.attack[1] + (floorBoost * 3)  // Adjust attack range based on floor scaling
@@ -7285,6 +7340,8 @@
             const playerWeapon = weapons[player.weapon];
             let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
 
+            dmg += player.strength;
+
             // Crit attacks based off LUK stat
             const critChance = getEffectiveStat('luck') * 0.01; // +0.1% chance per point
             let isCrit = Math.random() < critChance;
@@ -7304,9 +7361,9 @@
                     updateBattleLog(`The <span class='enemy'>MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
                     player.bitcoins += currentEnemy.bitcoins; // Award scaled BTC
                 } else {
-                    const baseExp = 5;
+                    const baseExp = 3;
                     const floorBoost = Math.floor(floor / 2);
-                    const exp = baseExp + (floorBoost * 5); // +5 EXP per boost
+                    const exp = baseExp + (floorBoost * 3); // +5 EXP per boost
                     const bitcoinsEarned = currentEnemy.bitcoins;
 
                     const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
@@ -7505,6 +7562,11 @@
 
 
         function useItem(itemName) {
+            if (!player.inventory[itemName] || player.inventory[itemName] <= 0) {
+                updateBattleLog("You don't have that item!");
+                return;
+            }
+
             if (items[itemName] && typeof items[itemName].use === "function") {
                 items[itemName].use();
                 player.inventory[itemName]--;
@@ -7587,6 +7649,16 @@
                 }
                 return;
             }
+            if (cmd.startsWith("/setstr ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount >= 0) {
+                    player.strength = amount;
+                    updateBattleLog(`<span class="STR">CHEAT: Strength set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid STR amount.</span>`);
+                }
+                return;
+            }
             if (cmd.startsWith("/setprs ")) {
                 const amount = parseInt(cmd.split(" ")[1], 10);
                 if (!isNaN(amount) && amount >= 0) {
@@ -7594,6 +7666,16 @@
                     updateBattleLog(`<span class="PRS">CHEAT: Persuasion set to ${amount}</span>`);
                 } else {
                     updateBattleLog(`<span class="action">Invalid PRS amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/setend ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount >= 0) {
+                    player.endurance = amount;
+                    updateBattleLog(`<span class="END">CHEAT: Endurance set to ${amount}</span>`);
+                } else {
+                    updateBattleLog(`<span class="action">Invalid END amount.</span>`);
                 }
                 return;
             }
@@ -7636,7 +7718,9 @@
                 player.maxHp = yeahBoiii;
                 player.hp = yeahBoiii;
                 player.defense = yeahBoiii;
+                player.strength = yeahBoiii;
                 player.persuasion = yeahBoiii;
+                player.endurance = yeahBoiii;
                 player.speed = yeahBoiii;
                 player.luck = yeahBoiii;
                 player.bitcoins = yeahBoiii;
@@ -8211,7 +8295,7 @@
                 }
 
                 const options = activeMenu.getOptions();
-                const itemsPerPage = 8; // Number of items per page
+                const itemsPerPage = menu.breadcrumbs.at(-1)?.menuName === "statAllocation" ? 12 : 8; // Number of items per stat allocation page : Number of items per every other menu page
                 const totalPages = Math.ceil(options.length / itemsPerPage); // Calculate total pages
                 const startIndex = menu.currentPage * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
@@ -8257,7 +8341,7 @@
                 if (animationActive) return;
                 const activeMenu = menu.getActiveMenu();
                 const options = activeMenu.getOptions();
-                const itemsPerPage = 8; // Number of items per page
+                const itemsPerPage = menu.breadcrumbs.at(-1)?.menuName === "statAllocation" ? 12 : 8; // Number of items per page
                 const totalPages = Math.ceil(options.length / itemsPerPage);
                 const itemsOnCurrentPage = (menu.currentPage + 1) >= totalPages
                     ? ((options.length % itemsPerPage) || itemsPerPage)
@@ -8419,28 +8503,44 @@
                     title: "EQUIP WEAPON",
                     getOptions: () => {
                         const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
-                        const options = ownedWeapons.map((weaponId) => ({
-                            id: weaponId,
-                            displayText: weapons[weaponId].name + (player.weapon === weaponId ? " (Equipped)" : ""),
-                            description:
-                                `${weapons[weaponId].description}\n` +
-                                `Base Damage: ${weapons[weaponId].damage.base}, ` +
-                                `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
-                            className: player.weapon === weaponId ? "friendly" : undefined,
-                        }));
-
-                        options.push({
+                        return ownedWeapons.map((weaponId) => {
+                            const req = weapons[weaponId].requiredStr || 0;
+                            const meetsReq = player.strength >= req;
+                            return {
+                                id: weaponId,
+                                displayText: weapons[weaponId].name + (player.weapon === weaponId ? " (Equipped)" : ""),
+                                description:
+                                    `${weapons[weaponId].description}\n` +
+                                    `Base Damage: ${weapons[weaponId].damage.base}, ` +
+                                    `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
+                                    `Requires STR: ${req}`,
+                                className: !meetsReq ? "tooExpensive" : (player.weapon === weaponId ? "friendly" : undefined),
+                                disabled: !meetsReq,
+                            };
+                        }).concat([{
                             id: "_back",
                             displayText: "[Back]",
                             description: "Return to equipment menu",
-                        });
+                        }]);
 
                         return options;
                     },
                     select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                            return;
+                        }
+                        const weapon = weapons[selectedOptionId];
+                        if (!weapon) return;
+                        const req = weapon.requiredStr || 0;
+                        if (player.strength < req) {
+                            updateBattleLog(`You require <span class="STR">${req} STR</span> to handle this weapon!`);
+                            return;
+                        }
                         player.weapon = selectedOptionId;
-                        updateBattleLog(`You now wield a mighty <span class="friendly">${weapons[selectedOptionId].name}</span>! You feel like you're ready to take some dumbass kid's lunch money... sicko.`);
+                        updateBattleLog(`You now wield a mighty <span class="friendly">${weapon.name}</span>!`);
                         menu.close();
+                        render();
                     },
                 },
 
@@ -8448,26 +8548,41 @@
                     title: "EQUIP ARMOR",
                     getOptions: () => {
                         const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
-                        const options = ownedArmor.map((armorId) => ({
-                            id: armorId,
-                            displayText: armor[armorId].name + (player.armor === armorId ? " (Equipped)" : ""),
-                            description:
-                                `${armor[armorId].description}\n` +
-                                `Defense: ${armor[armorId].defense}`,
-                            className: player.armor === armorId ? "friendly" : undefined,
-                        }));
-
-                        options.push({
+                        return ownedArmor.map((armorId) => {
+                            const req = armor[armorId].requiredEnd || 0;
+                            const meetsReq = player.endurance >= req;
+                            return {
+                                id: armorId,
+                                displayText: armor[armorId].name + (player.armor === armorId ? " (Equipped)" : ""),
+                                description:
+                                    `${armor[armorId].description}\n` +
+                                    `Defense: ${armor[armorId].defense}\n` +
+                                    `Requires END: ${req}`,
+                                className: !meetsReq ? "tooExpensive" : (player.armor === armorId ? "friendly" : undefined),
+                                disabled: !meetsReq,
+                            };
+                        }).concat([{
                             id: "_back",
                             displayText: "[Back]",
                             description: "Return to equipment menu",
-                        });
+                        }]);
 
                         return options;
                     },
                     select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back") {
+                            menu.close();
+                            return;
+                        }
+                        const armorPiece = armor[selectedOptionId];
+                        if (!armorPiece) return;
+                        const req = armorPiece.requiredEnd || 0;
+                        if (player.endurance < req) {
+                            updateBattleLog(`You need <span class="END">${req} END</span> to wear this garment!`);
+                            return;
+                        }
                         player.armor = selectedOptionId;
-                        updateBattleLog(`You are now wearing <span class="friendly">${armor[selectedOptionId].name}</span>! You know what they say about wearing protection...`);
+                        updateBattleLog(`You are now wearing <span class="friendly">${armorPiece.name}</span>!`);
                         if (player.hp > getEffectiveStat('maxHp')) {
                             player.hp = getEffectiveStat('maxHp');
                         }
@@ -8673,13 +8788,15 @@
                         const options = weaponKeys.map((weaponId) => {
                             const tooExpensive = weapons[weaponId].price > player.bitcoins;
                             const alreadyOwned = player.inventory[weaponId] > 0 || player.weapon === weaponId;
+                            const reqStr = weapons[weaponId].requiredStr || 0;
                             return {
                                 id: weaponId,
                                 displayText: weapons[weaponId].name,
                                 description:
                                     `${weapons[weaponId].description}\n` +
                                     `Base Damage: ${weapons[weaponId].damage.base}, ` +
-                                    `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}`,
+                                    `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
+                                    `Stat Requirement: STR ${reqStr}`,
                                 trailText: `${weapons[weaponId].price} BTC`,
                                 disabled: tooExpensive || alreadyOwned,
                                 className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
@@ -8716,12 +8833,14 @@
                         const options = armorKeys.map((armorId) => {
                             const tooExpensive = armor[armorId].price > player.bitcoins;
                             const alreadyOwned = player.inventory[armorId] > 0 || player.armor === armorId;
+                            const reqEnd = armor[armorId].requiredEnd || 0;
                             return {
                                 id: armorId,
                                 displayText: armor[armorId].name,
                                 description:
                                     `${armor[armorId].description}\n` +
-                                    `Defense: ${armor[armorId].defense}`,
+                                    `Defense: ${armor[armorId].defense}\n` +
+                                    `Stat Requirement: END ${reqEnd}`,
                                 trailText: `${armor[armorId].price} BTC`,
                                 disabled: tooExpensive || alreadyOwned,
                                 className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
@@ -8868,57 +8987,73 @@
                             : `Build your character using the <span class="action">${player.remainingPoints}</span> points you have been allotted. Use them wisely...`;
                     },
                     getOptions: () => {
-                        return [
-                            ...(!isLevelUpAllocation ? [{
-                                id: "rollDice",
-                                displayText: "[Diceroll]",
-                                description: "Randomly allocate your points.",
-                            }] : []),
-                            {
-                                id: "hp",
-                                displayText: `HP: ${player.maxHp}`,
-                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
-                                description: "Increases Health Points.",
-                            },
-                            {
-                                id: "defense",
-                                displayText: `DEF: ${player.defense}`,
-                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
-                                description: "Increases defense against enemy attacks.",
-                            },
-                            {
-                                id: "persuasion",
-                                displayText: `PRS: ${player.persuasion}`,
-                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
-                                description: "Increases your chances at persuading monsters to join your party.",
-                            },
-                            {
-                                id: "speed",
-                                displayText: `SPD: ${player.speed}`,
-                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
-                                description: "Increases your movement speed. Each point allows you to move 5% faster.",
-                            },
-                            {
-                                id: "luck",
-                                displayText: `LUK: ${player.luck}`,
-                                className: player.remainingPoints < 1 ? 'tooExpensive' : undefined,
-                                description: "Increases crit rates and BTC rewards from chests.",
-                            },
-                            {
-                                id: "reset",
-                                displayText: "[Reset]",
-                                description: isLevelUpAllocation
-                                    ? "Reset your level up stat allocation."
-                                    : "Reset your stat allocation.",
-                            },
-                            {
-                                id: "_confirm",
-                                displayText: "[Confirm]",
-                                className: player.remainingPoints > 0 ? 'tooExpensive' : undefined,
-                                description: isLevelUpAllocation
-                                    ? "Finish your level up and continue your adventure!"
-                                    : "Begin YOUR TardQuest!",
-                            },
+                    // Helper to determine if a stat should be red
+                    function isStatCapped(statKey) {
+                        return isLevelUpAllocation && levelUpStatPointsAllocated[statKey] >= 2;
+                    }
+                    return [
+                        ...(!isLevelUpAllocation ? [{
+                            id: "rollDice",
+                            displayText: "[Diceroll]",
+                            description: "Randomly allocate your points.",
+                        }] : []),
+                        {
+                            id: "hp",
+                            displayText: `HP: ${player.maxHp}`,
+                            className: isStatCapped("maxHp") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases Health Points.",
+                        },
+                        {
+                            id: "defense",
+                            displayText: `DEF: ${player.defense}`,
+                            className: isStatCapped("defense") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases defense against enemy attacks.",
+                        },
+                        {
+                            id: "strength",
+                            displayText: `STR: ${player.strength}`,
+                            className: isStatCapped("strength") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases your base ATK by 1 and allows you to equip higher grade weapons.",
+                        },
+                        {
+                            id: "persuasion",
+                            displayText: `PRS: ${player.persuasion}`,
+                            className: isStatCapped("persuasion") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases your chances at persuading monsters to join your party.",
+                        },
+                        {
+                            id: "endurance",
+                            displayText: `END: ${player.endurance}`,
+                            className: isStatCapped("endurance") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases your carry load and allows you to equip higher grade armor.",
+                        },
+                        {
+                            id: "speed",
+                            displayText: `SPD: ${player.speed}`,
+                            className: isStatCapped("speed") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases your movement speed. Each point allows you to move 5% faster.",
+                        },
+                        {
+                            id: "luck",
+                            displayText: `LUK: ${player.luck}`,
+                            className: isStatCapped("luck") ? 'tooExpensive' : (player.remainingPoints < 1 ? 'tooExpensive' : undefined),
+                            description: "Increases crit rates and BTC rewards from chests.",
+                        },
+                        {
+                            id: "reset",
+                            displayText: "[Reset]",
+                            description: isLevelUpAllocation
+                                ? "Reset your level up stat allocation."
+                                : "Reset your stat allocation.",
+                        },
+                        {
+                            id: "_confirm",
+                            displayText: "[Confirm]",
+                            className: player.remainingPoints > 0 ? 'tooExpensive' : undefined,
+                            description: isLevelUpAllocation
+                                ? "Finish your level up and continue your adventure!"
+                                : "Begin YOUR TardQuest!",
+                        },
                         ];
                     },
                     select: (selectedOptionId) => {
@@ -8944,39 +9079,86 @@
                             if (isLevelUpAllocation) {
                                 player.maxHp = levelUpAllocatedStats.base.maxHp;
                                 player.defense = levelUpAllocatedStats.base.defense;
+                                player.strength = levelUpAllocatedStats.base.strength;
                                 player.persuasion = levelUpAllocatedStats.base.persuasion;
                                 player.speed = levelUpAllocatedStats.base.speed;
                                 player.luck = levelUpAllocatedStats.base.luck;
-                                player.remainingPoints = 3;
+                                player.remainingPoints = 6;
+                                // Reset the per-stat allocation tracker
+                                levelUpStatPointsAllocated = {
+                                    maxHp: 0,
+                                    defense: 0,
+                                    strength: 0,
+                                    persuasion: 0,
+                                    endurance: 0,
+                                    speed: 0,
+                                    luck: 0
+                                };
                                 updateBattleLog("Level up stat allocation has been reset.");
                             } else {
                                 resetStats();
                             }
                             menu.render();
+                            render();
                         } else if (!isLevelUpAllocation && selectedOptionId === "rollDice") {
                             rollDiceForStats();
                             menu.render();
+                            render();
                         } else if (player.remainingPoints > 0) {
-                            switch (selectedOptionId) {
-                                case "hp":
-                                    player.maxHp += 1;
-                                    player.hp = player.maxHp;
-                                    break;
-                                case "defense":
-                                    player.defense += 1;
-                                    break;
-                                case "persuasion":
-                                    player.persuasion += 1;
-                                    break;
-                                case "speed":
-                                    player.speed += 1;
-                                    break;
-                                case "luck":
-                                    player.luck += 1;
-                                    break;
+                            // Only restrict during level up, not initial allocation
+                            if (isLevelUpAllocation) {
+                                let statKey = null;
+                                switch (selectedOptionId) {
+                                    case "hp": statKey = "maxHp"; break;
+                                    case "defense": statKey = "defense"; break;
+                                    case "strength": statKey = "strength"; break;
+                                    case "persuasion": statKey = "persuasion"; break;
+                                    case "endurance": statKey = "endurance"; break;
+                                    case "speed": statKey = "speed"; break;
+                                    case "luck": statKey = "luck"; break;
+                                }
+                                if (statKey && levelUpStatPointsAllocated[statKey] >= 2) {
+                                    updateBattleLog(`<span class="action">You are only allowed 2 points per stat at a time!</span>`);
+                                    return;
+                                }
+                                if (statKey) {
+                                    player[statKey] += 1;
+                                    levelUpStatPointsAllocated[statKey]++;
+                                    if (statKey === "maxHp") player.hp = player.maxHp;
+                                    player.remainingPoints--;
+                                    menu.render();
+                                    render();
+                                    return;
+                                }
+                            } else {
+                                switch (selectedOptionId) {
+                                    case "hp":
+                                        player.maxHp += 1;
+                                        player.hp = player.maxHp;
+                                        break;
+                                    case "defense":
+                                        player.defense += 1;
+                                        break;
+                                    case "strength":
+                                        player.strength += 1;
+                                        break;
+                                    case "persuasion":
+                                        player.persuasion += 1;
+                                        break;
+                                    case "endurance":
+                                        player.endurance += 1;
+                                        break;
+                                    case "speed":
+                                        player.speed += 1;
+                                        break;
+                                    case "luck":
+                                        player.luck += 1;
+                                        break;
+                                }
+                                player.remainingPoints--;
+                                menu.render();
+                                render();
                             }
-                            player.remainingPoints--;
-                            menu.render();
                         } else {
                             updateBattleLog("No points remaining to allocate!");
                         }
@@ -8987,28 +9169,41 @@
 
         let isLevelUpAllocation = false;
         let levelUpAllocatedStats = {};
+        let levelUpStatPointsAllocated = {};
 
         function startLevelUpAllocation() {
             isLevelUpAllocation = true;
             levelUpAllocatedStats = {};
-            player.remainingPoints = 3;
+            player.remainingPoints = 6;
             levelUpAllocatedStats.base = {
                 maxHp: player.maxHp,
                 defense: player.defense,
+                strength: player.strength,
                 persuasion: player.persuasion,
                 speed: player.speed,
                 luck: player.luck
             };
+            // Track how many points have been allocated to each stat this level-up
+            levelUpStatPointsAllocated = {
+                maxHp: 0,
+                defense: 0,
+                strength: 0,
+                persuasion: 0,
+                endurance: 0,
+                speed: 0,
+                luck: 0
+            };
             menu.open("statAllocation");
         }
 
-        player.remainingPoints = 10; //Points to allocate at start of game
+        player.remainingPoints = 12; //Points to allocate at start of game
 
         function resetStats() {
-            player.remainingPoints = 10;
+            player.remainingPoints = 12;
             player.maxHp = baseStats.maxHp;
             player.hp = player.maxHp;
             player.defense = baseStats.defense;
+            player.strength = baseStats.strength;
             player.persuasion = baseStats.persuasion;
             player.speed = baseStats.speed;
             player.luck = baseStats.luck;
@@ -9017,7 +9212,7 @@
 
         function rollDiceForStats() {
             resetStats();
-            const stats = ["hp", "defense", "persuasion", "speed", "luck"];
+            const stats = ["hp", "defense", "strength", "persuasion", "endurance", "speed", "luck"];
             while (player.remainingPoints > 0) {
                 const randomStat = stats[Math.floor(Math.random() * stats.length)];
                 switch (randomStat) {
@@ -9028,8 +9223,14 @@
                     case "defense":
                         player.defense += 1;
                         break;
+                    case "strength":
+                        player.strength += 1;
+                        break;
                     case "persuasion":
                         player.persuasion += 1;
+                        break;
+                    case "endurance":
+                        player.endurance += 1;
                         break;
                     case "speed":
                         player.speed += 1;
