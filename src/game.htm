@@ -7346,7 +7346,7 @@
             // Scale enemy stats based on floor
             const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
             if (floorBoost > 0) {
-                currentEnemy.hp += floorBoost * 7; // +5 HP per scaling
+                currentEnemy.hp += floorBoost * 7; // +7 HP per scaling
                 currentEnemy.attack = [
                     currentEnemy.attack[0] + (floorBoost * 3), // Adjust attack range based on floor scaling
                     currentEnemy.attack[1] + (floorBoost * 3)  // Adjust attack range based on floor scaling
@@ -7394,7 +7394,7 @@
                 } else {
                     const baseExp = 3;
                     const floorBoost = Math.floor(floor / 2);
-                    const exp = baseExp + (floorBoost * 3); // +5 EXP per boost
+                    const exp = baseExp + (floorBoost * 3); // +3 EXP per boost
                     const bitcoinsEarned = currentEnemy.bitcoins;
 
                     const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
@@ -8557,10 +8557,6 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                            return;
-                        }
                         const weapon = weapons[selectedOptionId];
                         if (!weapon) return;
                         const req = weapon.requiredStr || 0;
@@ -8601,10 +8597,6 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                            return;
-                        }
                         const armorPiece = armor[selectedOptionId];
                         if (!armorPiece) return;
                         const req = armorPiece.requiredEnd || 0;
@@ -8920,27 +8912,23 @@
                         return options;
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_back") {
-                            menu.close();
-                        } else {
-                            // Buy logic for rings
-                            const ring = rings[selectedOptionId];
-                            if (!ring) return;
-                            if (player.bitcoins < ring.price) {
-                                merchant.say('Too bad, kid. Come back when you get some coin!');
-                                return;
-                            }
-                            if (player.inventory[selectedOptionId] > 0 || player.ring1 === selectedOptionId || player.ring2 === selectedOptionId) {
-                                merchant.say("You already own that, stupid!");
-                                return;
-                            }
-                            player.bitcoins -= ring.price;
-                            playSFX('kaching');
-                            player.inventory[selectedOptionId] = (player.inventory[selectedOptionId] || 0) + 1;
-                            merchant.say("HAHA! You won't regret it!");
-                            updateBattleLog(`You just bought a ${ring.name}`);
-                            menu.render();
+                        // Buy logic for rings
+                        const ring = rings[selectedOptionId];
+                        if (!ring) return;
+                        if (player.bitcoins < ring.price) {
+                            merchant.say('Too bad, kid. Come back when you get some coin!');
+                            return;
                         }
+                        if (player.inventory[selectedOptionId] > 0 || player.ring1 === selectedOptionId || player.ring2 === selectedOptionId) {
+                            merchant.say("You already own that, stupid!");
+                            return;
+                        }
+                        player.bitcoins -= ring.price;
+                        playSFX('kaching');
+                        player.inventory[selectedOptionId] = (player.inventory[selectedOptionId] || 0) + 1;
+                        merchant.say("HAHA! You won't regret it!");
+                        updateBattleLog(`You just bought a ${ring.name}`);
+                        menu.render();
                     },
                 },
 
