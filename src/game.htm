@@ -374,6 +374,11 @@
             font-size: 12px;
             font-weight: bold;
             line-height: 1.0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
         }
         .stats-container {
             text-align: center;
@@ -384,12 +389,20 @@
             margin: 0;
         }
 
-        .stats-label {
+        .stats1-label {
             font-size: 14px;
             margin-top: 2px;
             margin-bottom: 0;
             padding: 0;
         }
+
+        .stats2-label {
+            font-size: 10px;
+            margin-top: 2px;
+            margin-bottom: 0;
+            padding: 0;
+        }
+
         #battleLog,
         #minimap {
             background: #000;
@@ -6990,29 +7003,47 @@
             const stats1Html = `
                 <div class="stats-container">
                     <span>.-STATS-.</span>
+
                     <span>|===<span class="HP">HP</span>===|</span>
-                    <span class="stats-label">${player.hp}/${displayMaxHp}</span>
+                    <span class="stats1-label">${player.hp}/${displayMaxHp}</span>
+
                     <span>|==<span class="DEF">DEF</span>==|</span>
-                    <span class="stats-label">${displayDefense}</span>
+                    <span class="stats1-label">${displayDefense}</span>
+
                     <span>|==<span class="STR">STR</span>==|</span>
-                    <span class="stats-label">${displayStrength}</span>
+                    <span class="stats1-label">${displayStrength}</span>
+
                     <span>|==<span class="PRS">PRS</span>==|</span>
-                    <span class="stats-label">${displayPersuasion}</span>
+                    <span class="stats1-label">${displayPersuasion}</span>
+
                     <span>|==<span class="END">END</span>==|</span>
-                    <span class="stats-label">${displayEndurance}</span>
+                    <span class="stats1-label">${displayEndurance}</span>
+
                     <span>|==<span class="SPD">SPD</span>==|</span>
-                    <span class="stats-label">${displaySpeed}</span>
+                    <span class="stats1-label">${displaySpeed}</span>
+
                     <span>|==<span class="LUK">LUK</span>==|</span>
-                    <span class="stats-label">${displayLuck}</span>
+                    <span class="stats1-label">${displayLuck}</span>
+
                     <span>._ _ _ _.</span>
                 </div>`;
             document.getElementById('stats1').innerHTML = stats1Html;
 
-            const stats2Html = `<div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>.---<span class="action">FLOOR</span>---.</span><span style="font-size:0.95em; margin-top:2px;">${floor}</span>
-                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="LV">LV</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.level}</span>
-                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="EXP">EXP</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.exp}/${player.level * 10}</span>
-                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+===<span class="BTC">BTC</span>===+</span><span style="font-size:0.95em; margin-top:2px;">${player.bitcoins}</span>
-                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; line-height:1;"><span>+==<span class="LOAD">LOAD</span>==+</span><span style="font-size:0.95em; margin-top:2px;">${displayCarryWeight}/${displayCarryLimit}</span>
+            const stats2Html = `
+                <div>.---<span class="action">FLOOR</span>---.</div>
+                <span class="stats2-label">${floor}</span>
+
+                <div><span>+====<span class="LV">LV</span>====+</div>
+                <span class="stats2-label">${player.level}</span>
+
+                <div><span>+====<span class="EXP">EXP</span>====+</div>
+                <span class="stats2-label">${player.exp}/${player.level * 10}</span>
+
+                <div><span>+====<span class="BTC">BTC</span>====+</div>
+                <span class="stats2-label">${player.bitcoins}</span>
+
+                <div><span>+===<span class="LOAD">LOAD</span>===+</div>
+                <span class="stats2-label">${displayCarryWeight}/${displayCarryLimit}</span>
   
                 <span center>._ _ _ _ _ _.</span>
             `;
