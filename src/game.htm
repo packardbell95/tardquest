@@ -577,6 +577,15 @@
         .LOAD {
             color: #f8d46f;
         }
+        .load-normal {
+            color: white;
+        }
+        .load-caution {
+            color: yellow;
+        }
+        .load-danger {
+            color: red;
+        }
         .action {
             color: #EC4134;
         }
@@ -5579,33 +5588,80 @@
                     crackedFloorSlight: {
                         mapCharacter: '✕',
                         onEnter: (x, y) => {
-                            updateBattleLog(
-                                '<span class="action">The floor cracks under ' +
-                                'your feet!</span> You probably should not ' +
-                                'step here again'
-                            );
-                            playSFX('floorCrackSlight');
-                            MAP[y][x] = new MapCell('crackedFloorSevere');
+                            const key = `${x},${y}`;
+                            // Determine step threshold based on carry weight
+                            const percent = getCarryWeight() / getCarryWeightLimit();
+                            let threshold = 3;
+                            if (percent >= 0.8) threshold = 1;
+                            else if (percent >= 0.5) threshold = 2;
+
+                            crackedFloorSteps[key] = (crackedFloorSteps[key] || 0) + 1;
+
+                            if (crackedFloorSteps[key] < threshold) {
+                                // Not yet breaking, but upgrade to severe if not already
+                                if (MAP[y][x].type !== 'crackedFloorSevere') {
+                                    MAP[y][x] = new MapCell('crackedFloorSevere');
+                                    updateBattleLog(
+                                        '<span class="action">The floor cracks under ' +
+                                        'your feet!</span> You probably should not ' +
+                                        'step here again'
+                                    );
+                                    playSFX('floorCrackSlight');
+                                }
+                            } else {
+                                // Break and kill
+                                stopAllMusic();
+                                animTorchEnd();
+                                window._inputBlocked = true;
+                                document.getElementById('game').style =
+                                    "transition: opacity 2s, transform 2s; " +
+                                    "opacity:0; transform: translateY(-400px)";
+                                updateBattleLog(
+                                    '<span class="action">AUUUUUGH!</span> ' +
+                                    'You scream out as the flimsy floor ' +
+                                    'collapses beneath your feet and you plunge ' +
+                                    'into a pit of spikes waiting beneath!'
+                                );
+                                playSFX('floorBreakScreamDie');
+                                player.hp = 0;
+                            }
                         },
                     },
                     crackedFloorSevere: {
                         mapCharacter: '✖',
                         onEnter: (x, y) => {
-                            stopAllMusic();
-                            animTorchEnd();
-                            window._inputBlocked = true;
-                            // TODO: Add a cool animation here instead
-                            document.getElementById('game').style =
-                                "transition: opacity 2s, transform 2s; " +
-                                "opacity:0; transform: translateY(-400px)";
-                            updateBattleLog(
-                                '<span class="action">AUUUUUGH!</span> ' +
-                                'You scream out as the flimsy floor ' +
-                                'collapses beneath your feet and you plunge ' +
-                                'into a pit of spikes waiting beneath!'
-                            );
-                            playSFX('floorBreakScreamDie');
-                            player.hp = 0;
+                            const key = `${x},${y}`;
+                            // Determine step threshold based on carry weight
+                            const percent = getCarryWeight() / getCarryWeightLimit();
+                            let threshold = 3;
+                            if (percent >= 0.8) threshold = 1;
+                            else if (percent >= 0.5) threshold = 2;
+
+                            crackedFloorSteps[key] = (crackedFloorSteps[key] || 0) + 1;
+
+                            if (crackedFloorSteps[key] < threshold) {
+                                // Still not breaking, but warn
+                                updateBattleLog(
+                                    '<span class="action">The floor cracks even more under your feet!</span> One more step and you\'re done for!'
+                                );
+                                playSFX('floorCrackSlight');
+                            } else {
+                                // Break and kill
+                                stopAllMusic();
+                                animTorchEnd();
+                                window._inputBlocked = true;
+                                document.getElementById('game').style =
+                                    "transition: opacity 2s, transform 2s; " +
+                                    "opacity:0; transform: translateY(-400px)";
+                                updateBattleLog(
+                                    '<span class="action">AUUUUUGH!</span> ' +
+                                    'You scream out as the flimsy floor ' +
+                                    'collapses beneath your feet and you plunge ' +
+                                    'into a pit of spikes waiting beneath!'
+                                );
+                                playSFX('floorBreakScreamDie');
+                                player.hp = 0;
+                            }
                         },
                     },
                     rubble1: {
@@ -6573,6 +6629,8 @@
             persuade: new Audio('audio/persuade.wav'),
             explosion: new Audio('audio/explosion.mp3'),
             scream: new Audio('audio/scream.mp3'),
+            breathe1: new Audio('audio/breathe1.mp3'),
+            breathe2: new Audio('audio/breathe2.mp3'),
             kaching: new Audio('audio/kaching.mp3'),
             torch: new Audio('audio/torch.mp3'),
             gamble: new Audio('audio/gamble.mp3'),
@@ -6642,9 +6700,11 @@
         let maxPersuasionAttempts = 2;
         let speakingOutsideCombat = false;
         let animationActive = false;
+        let currentBreathing = null;
         let battleLog = [];
         let floor = 1;
         let MAP = [];
+        const crackedFloorSteps = {};
         let exit = {
             x: WIDTH - 2,
             y: HEIGHT - 2
@@ -6698,7 +6758,7 @@
             if (gambler.isActiveOnFloor) {
                 gambler.set();
             }
-
+            Object.keys(crackedFloorSteps).forEach(k => delete crackedFloorSteps[k]);
             spawnTreasureChests();
             spawnHealingTiles();
             spawnCrackedFloors();
@@ -6981,6 +7041,7 @@
         function render() {
             updateSeenTiles();
             drawMinimap();
+            updateBreathingSFX();
 
             const equippedArmor = armor[player.armor];
             const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
@@ -6999,6 +7060,13 @@
             const displayEndurance = player.endurance;
             const displayCarryWeight = Number(getCarryWeight()).toFixed(1);
             const displayCarryLimit = Number(getCarryWeightLimit()).toFixed(1);
+            const percentLoad = getCarryWeight() / getCarryWeightLimit();
+            let loadClass = "load-normal";
+            if (percentLoad >= 0.8) {
+                loadClass = "load-danger";
+            } else if (percentLoad >= 0.5) {
+                loadClass = "load-caution";
+            }
 
             const stats1Html = `
                 <div class="stats-container">
@@ -7043,8 +7111,8 @@
                 <span class="stats2-label">${player.bitcoins}</span>
 
                 <div><span>+===<span class="LOAD">LOAD</span>===+</div>
-                <span class="stats2-label">${displayCarryWeight}/${displayCarryLimit}</span>
-  
+                <span class="stats2-label"><span class="${loadClass}">${displayCarryWeight}<span class="load-normal">/${displayCarryLimit}</span></span></span>
+
                 <span center>._ _ _ _ _ _.</span>
             `;
             document.getElementById('stats2').innerHTML = stats2Html;
@@ -7330,8 +7398,62 @@
         }
 
         function getCarryWeightLimit() {
-            // Example: 10 base + 10 per END point
-            return 25 + player.endurance * 1.3;
+            // Example: 35 base + 1.3 per END point
+            return 35 + player.endurance * 1.3;
+        }
+
+        function updateBreathingSFX() {
+            // Pause breathing SFX if in battle or killed
+            if (player.inCombat || player.hp <= 0) {
+                if (currentBreathing) {
+                    sfx[currentBreathing].pause();
+                    sfx[currentBreathing].currentTime = 0;
+                    currentBreathing = null;
+                }
+                return;
+            }
+
+            const percentLoad = getCarryWeight() / getCarryWeightLimit();
+
+            // Stop all breathing sounds if below 50%
+            if (percentLoad < 0.5) {
+                if (currentBreathing) {
+                    sfx[currentBreathing].pause();
+                    sfx[currentBreathing].currentTime = 0;
+                    currentBreathing = null;
+                }
+                return;
+            }
+
+            // 80%+: Only breathe2, looped
+            if (percentLoad >= 0.8) {
+                if (currentBreathing !== "breathe2") {
+                    if (currentBreathing) {
+                        sfx[currentBreathing].pause();
+                        sfx[currentBreathing].currentTime = 0;
+                    }
+                    sfx.breathe2.loop = true;
+                    sfx.breathe2.currentTime = 0;
+                    sfx.breathe2.play();
+                    currentBreathing = "breathe2";
+                }
+                return;
+            }
+
+            // 50%-80%: Only breathe1, looped
+            if (percentLoad >= 0.5) {
+                if (currentBreathing !== "breathe1") {
+                    if (currentBreathing) {
+                        sfx[currentBreathing].pause();
+                        sfx[currentBreathing].currentTime = 0;
+                    }
+                    sfx.breathe1.loop = true;
+                    sfx.breathe1.currentTime = 0;
+                    sfx.breathe1.play();
+                    currentBreathing = "breathe1";
+                }
+                return;
+            }
         }
 
         function startEncounter() {
@@ -8928,6 +9050,7 @@
                         player.inventory[selectedOptionId] = (player.inventory[selectedOptionId] || 0) + 1;
                         merchant.say("HAHA! You won't regret it!");
                         updateBattleLog(`You just bought a ${ring.name}`);
+                        render();
                         menu.render();
                     },
                 },
@@ -9156,22 +9279,12 @@
                                         player.hp = player.maxHp;
                                         break;
                                     case "defense":
-                                        player.defense += 1;
-                                        break;
                                     case "strength":
-                                        player.strength += 1;
-                                        break;
                                     case "persuasion":
-                                        player.persuasion += 1;
-                                        break;
                                     case "endurance":
-                                        player.endurance += 1;
-                                        break;
                                     case "speed":
-                                        player.speed += 1;
-                                        break;
                                     case "luck":
-                                        player.luck += 1;
+                                        player[selectedOptionId]++;
                                         break;
                                 }
                                 player.remainingPoints--;
@@ -9224,6 +9337,7 @@
             player.defense = baseStats.defense;
             player.strength = baseStats.strength;
             player.persuasion = baseStats.persuasion;
+            player.endurance = baseStats.endurance;
             player.speed = baseStats.speed;
             player.luck = baseStats.luck;
             updateBattleLog("Stat allocation has been reset. Start over!");
