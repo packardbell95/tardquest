@@ -6208,6 +6208,7 @@
                 description: "Your very own fingernail! Careful not to break it!",
                 damage: { base: 1, randomMultiplier: 4 },
                 price: 0,
+                weight: 0, // No weight
                 requiredStr: 0, // No requirement
             },
             pointyStick: {
@@ -6215,6 +6216,7 @@
                 description: "A stick that fell off of a tree somewhere",
                 damage: { base: 2, randomMultiplier: 5 },
                 price: 20,
+                weight: 5,
                 requiredStr: 7,
             },
             wiffleBallBat: {
@@ -6222,6 +6224,7 @@
                 description: "A hollow bat made of plastic",
                 damage: { base: 3, randomMultiplier: 6 },
                 price: 50,
+                weight: 6,
                 requiredStr: 13,
             },
             nunchucks: {
@@ -6229,6 +6232,7 @@
                 description: "Two pieces of wood connected by a chain",
                 damage: { base: 6, randomMultiplier: 9 },
                 price: 100,
+                weight: 8,
                 requiredStr: 20,
             },
             atlatlSpear: {
@@ -6236,6 +6240,7 @@
                 description: "A spear with a throwing lever",
                 damage: { base: 10, randomMultiplier: 11 },
                 price: 400,
+                weight: 10,
                 requiredStr: 25,
             },
             bludgeoningMace: {
@@ -6243,6 +6248,7 @@
                 description: "A stick with a spikey metal ball at the end",
                 damage: { base: 10, randomMultiplier: 14 },
                 price: 500,
+                weight: 11,
                 requiredStr: 25,
             },
             danceClub: {
@@ -6250,6 +6256,7 @@
                 description: "A club long enough to pole dance on... maybe it is one? You don't know. Legend has it, an obscure forum user once wielded one...",
                 damage: { base: 13, randomMultiplier: 15 },
                 price: 800,
+                weight: 12,
                 requiredStr: 28,
             },
             cathodeRayTubeMonitor: {
@@ -6257,6 +6264,7 @@
                 description: "A CRT monitor. Heavy as piss.",
                 damage: { base: 15, randomMultiplier: 17 },
                 price: 1000,
+                weight: 15,
                 requiredStr: 33,
             },
             magicPencil: {
@@ -6264,6 +6272,7 @@
                 description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
                 damage: { base: 17, randomMultiplier: 18 },
                 price: 1400,
+                weight: 5,
                 requiredStr: 38,
             },
             goldenWang: {
@@ -6271,6 +6280,7 @@
                 description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
                 damage: { base: 69, randomMultiplier: 69 },
                 price: 6900,
+                weight: 69,
                 requiredStr: 69,
             },
         };
@@ -6281,6 +6291,7 @@
                 description: "Your totally big, meaty pectorals! You're not fat at all...'",
                 defense: 1,
                 price: 0,
+                weight: 0,
                 requiredEnd: 0,
             },
             graphicTee: {
@@ -6288,6 +6299,7 @@
                 description: "A t-shirt that says 'Normal people scare me'",
                 defense: 2,
                 price: 20,
+                weight: 3,
                 requiredEnd: 8,
             },
             barrelWithSuspenders: {
@@ -6295,6 +6307,7 @@
                 description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
                 defense: 3,
                 price: 100,
+                weight: 5,
                 requiredEnd: 11,
             },
             leatherArmor: {
@@ -6302,6 +6315,7 @@
                 description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
                 defense: 6,
                 price: 200,
+                weight: 6,
                 requiredEnd: 15,
             },
             milaneseArmor: {
@@ -6309,6 +6323,7 @@
                 description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
                 defense: 12,
                 price: 500,
+                weight: 9,
                 requiredEnd: 18,
             },
             blackPlateArmor: {
@@ -6316,6 +6331,7 @@
                 description: "Literally a giant black dinner plate. Deceptively protective.",
                 defense: 16,
                 price: 1000,
+                weight: 13,
                 requiredEnd: 25,
             },
             nokiaMail: {
@@ -6323,6 +6339,7 @@
                 description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
                 defense: 21,
                 price: 2000,
+                weight: 18,
                 requiredEnd: 34,
             },
         };
@@ -6336,6 +6353,7 @@
                 price: 60,
                 merchantStockChance: 0.5,
                 chestChance: 0.1,
+                weight: 1,
             },
 
             ringOfFrenchAccent: {
@@ -6345,6 +6363,7 @@
                 price: 100,
                 merchantStockChance: 0.3,
                 chestChance: 0.04,
+                weight: 1,
             },
 
         // HP Boosters
@@ -6355,6 +6374,7 @@
                 price: 60,
                 merchantStockChance: 0.5,
                 chestChance: 0.07,
+                weight: 1,
             },
             ringBloodstream: {
                 name: "BLOODSTREAM NOSERING",
@@ -6363,23 +6383,26 @@
                 price: 100,
                 merchantStockChance: 0.3,
                 chestChance: 0.04,
+                weight: 1,
             },
         //DEF Boosters
             ringOfHardening: {
                 name: "COCKRING OF HARDENING",
                 description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +5 DEF",
-                effects: { defense: 5 },
+                effects: { defense: 2 },
                 price: 60,
                 merchantStockChance: 0.4,
                 chestChance: 0.07,
+                weight: 1,
             },
             ringPectoralPiercing: {
                 name: "PECTORAL PIERCING",
                 description: "A piercing that can fit anywhere on your big, juicy pectorals. +10 DEF",
-                effects: { defense: 10 },
+                effects: { defense: 5 },
                 price: 100,
                 merchantStockChance: 0.3,
                 chestChance: 0.04,
+                weight: 1,
             },
         // SPD Boosters
             ringPinkyToe: {
@@ -6389,6 +6412,7 @@
                 price: 60,
                 merchantStockChance: 0.4,
                 chestChance: 0.07,
+                weight: 1,
             },
             ringCrack: {
                 name: "CRACK INFUSED RING",
@@ -6397,6 +6421,7 @@
                 price: 100,
                 merchantStockChance: 0.3,
                 chestChance: 0.04,
+                weight: 1,
             },
         // LUK Boosters
             ringGamble: {
@@ -6406,6 +6431,7 @@
                 price: 150,
                 merchantStockChance: 0.1,
                 chestChance: 0.05,
+                weight: 1,
             },
             ringEscobar: {
                 name: "PABLO ESCOBAR'S GOLDEN RING",
@@ -6414,6 +6440,7 @@
                 price: 200,
                 merchantStockChance: 0.07,
                 chestChance: 0.02,
+                weight: 1,
             },
         // Special
             ringOfSightliness: {
@@ -6423,6 +6450,7 @@
                 price: 180,
                 merchantStockChance: 0.2,
                 chestChance: 0.0,
+                weight: 2,
             },
             ringOfStinky: {
                 name: "RING OF STINKY",
@@ -6431,6 +6459,7 @@
                 price: 200,
                 merchantStockChance: 0.2,
                 chestChance: 0.0,
+                weight: 2,
             },
             ringOfAmplifiedAudio: {
                 name: "RING OF AMPLIFIED AUDIO",
@@ -6439,6 +6468,7 @@
                 price: 130,
                 merchantStockChance: 0.2,
                 chestChance: 0.00,
+                weight: 2,
             },
         };
 
@@ -7386,12 +7416,31 @@
 
         function getCarryWeight() {
             let total = 0;
+            // Consumables
             for (const itemId in player.inventory) {
                 if (weapons[itemId] || armor[itemId] || rings[itemId]) continue;
                 const item = items[itemId];
                 const count = Math.max(0, player.inventory[itemId] || 0);
                 if (item && typeof item.weight === "number") {
                     total += item.weight * count;
+                }
+            }
+            // Weapons
+            for (const weaponId in weapons) {
+                if (player.inventory[weaponId] && weaponId !== player.weapon) {
+                    total += weapons[weaponId].weight * player.inventory[weaponId];
+                }
+            }
+            // Armor
+            for (const armorId in armor) {
+                if (player.inventory[armorId] && armorId !== player.armor) {
+                    total += armor[armorId].weight * player.inventory[armorId];
+                }
+            }
+            // Rings
+            for (const ringId in rings) {
+                if (player.inventory[ringId] && ringId !== player.ring1 && ringId !== player.ring2) {
+                    total += rings[ringId].weight * player.inventory[ringId];
                 }
             }
             return total;
@@ -8666,6 +8715,7 @@
                                     `${weapons[weaponId].description}\n` +
                                     `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                     `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
+                                    `LOAD: ${weapons[weaponId].weight}\n` +
                                     `Requires STR: ${req}`,
                                 className: !meetsReq ? "tooExpensive" : (player.weapon === weaponId ? "friendly" : undefined),
                                 disabled: !meetsReq,
@@ -8706,6 +8756,7 @@
                                 description:
                                     `${armor[armorId].description}\n` +
                                     `Defense: ${armor[armorId].defense}\n` +
+                                    `LOAD: ${armor[armorId].weight}\n` +
                                     `Requires END: ${req}`,
                                 className: !meetsReq ? "tooExpensive" : (player.armor === armorId ? "friendly" : undefined),
                                 disabled: !meetsReq,
@@ -8876,6 +8927,11 @@
                                 description: "Jewelry that will probably turn you gay",
                             },
                             {
+                                id: "merchantSell",
+                                displayText: "Sell",
+                                description: "Sell your items, filthy garb, and dangerous arms",
+                            },
+                            {
                                 id: "_back",
                                 displayText: "Leave",
                                 description: "Get back to spelunking",
@@ -8941,6 +8997,7 @@
                                     `${weapons[weaponId].description}\n` +
                                     `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                     `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
+                                    `LOAD: ${weapons[weaponId].weight}\n` +
                                     `Stat Requirement: STR ${reqStr}`,
                                 trailText: `${weapons[weaponId].price} BTC`,
                                 disabled: tooExpensive || alreadyOwned,
@@ -8985,6 +9042,7 @@
                                 description:
                                     `${armor[armorId].description}\n` +
                                     `Defense: ${armor[armorId].defense}\n` +
+                                    `LOAD: ${armor[armorId].weight}\n` +
                                     `Stat Requirement: END ${reqEnd}`,
                                 trailText: `${armor[armorId].price} BTC`,
                                 disabled: tooExpensive || alreadyOwned,
@@ -9050,6 +9108,127 @@
                         player.inventory[selectedOptionId] = (player.inventory[selectedOptionId] || 0) + 1;
                         merchant.say("HAHA! You won't regret it!");
                         updateBattleLog(`You just bought a ${ring.name}`);
+                        render();
+                        menu.render();
+                    },
+                },
+
+                merchantSell: {
+                    title: "SELL",
+                    landingHtml: () => {
+                        return `Sell your unwanted inventory for a small sum.\n\nYou have <span class="BTC">${player.bitcoins} BTC</span> in your wallet.`;
+                    },
+                    getOptions: () => {
+                        const weaponOptions = Object.keys(weapons)
+                            .filter(w => player.inventory[w] > 0)
+                            .map(weaponId => ({
+                                id: `sell_weapon_${weaponId}`,
+                                displayText: `[W] ${weapons[weaponId].name}`,
+                                description: `Sell for ${Math.max(1, Math.floor(weapons[weaponId].price / 10))} BTC`,
+                                trailText: `${player.inventory[weaponId]}`,
+                                disabled: player.weapon === weaponId,
+                                className: player.weapon === weaponId ? "muted" : undefined,
+                            }));
+                        const armorOptions = Object.keys(armor)
+                            .filter(a => player.inventory[a] > 0)
+                            .map(armorId => ({
+                                id: `sell_armor_${armorId}`,
+                                displayText: `[A] ${armor[armorId].name}`,
+                                description: `Sell for ${Math.max(1, Math.floor(armor[armorId].price / 10))} BTC`,
+                                trailText: `${player.inventory[armorId]}`,
+                                disabled: player.armor === armorId,
+                                className: player.armor === armorId ? "muted" : undefined,
+                            }));
+                        const itemOptions = Object.keys(items)
+                            .filter(itemId => player.inventory[itemId] > 0)
+                            .map(itemId => ({
+                                id: `sell_item_${itemId}`,
+                                displayText: `[I] ${items[itemId].name}`,
+                                description: `Sell for ${Math.max(1, Math.floor(items[itemId].price / 5))} BTC`,
+                                trailText: `${player.inventory[itemId]}`,
+                                disabled: false,
+                                className: undefined,
+                            }));
+                        const ringOptions = Object.keys(rings)
+                            .filter(ringId => player.inventory[ringId] > 0)
+                            .map(ringId => ({
+                                id: `sell_ring_${ringId}`,
+                                displayText: `[R] ${rings[ringId].name}`,
+                                description: `Sell for ${Math.max(1, Math.floor(rings[ringId].price / 5))} BTC`,
+                                trailText: `${player.inventory[ringId]}`,
+                                disabled: player.ring1 === ringId || player.ring2 === ringId,
+                                className: (player.ring1 === ringId || player.ring2 === ringId) ? "muted" : undefined,
+                            }));
+
+                        const options = [...weaponOptions, ...armorOptions, ...ringOptions, ...itemOptions];
+                        if (options.length === 0) {
+                            options.push({
+                                id: "_none",
+                                displayText: "Nothing to sell",
+                                description: "You have no weapons, armor, or items to sell.",
+                                disabled: true,
+                                className: "muted",
+                            });
+                        }
+                        options.push({
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to the merchant menu",
+                        });
+                        return options;
+                    },
+                    select: (selectedOptionId) => {
+                        if (selectedOptionId === "_back" || selectedOptionId === "_none") {
+                            menu.close();
+                            return;
+                        }
+
+                        const [_, type, itemId] = selectedOptionId.split("_");
+                        if (type === "weapon") {
+                            if (player.weapon === itemId) {
+                                merchant.say("You sure you wanna point that thing at me? I've got a 12 gauge hidden under my sleeve, you know...");
+                                return;
+                            }
+                            if (player.inventory[itemId] > 0) {
+                                const value = Math.max(1, Math.floor(weapons[itemId].price / 10)); // Sell for 10% of original value
+                                player.bitcoins += value;
+                                player.inventory[itemId]--;
+                                if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+                                updateBattleLog(`You sold <span class="friendly">${weapons[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            }
+                        } else if (type === "armor") {
+                            if (player.armor === itemId) {
+                                merchant.say("What are you, a Lughead? You gotta strip down before you go selling that!");
+                                return;
+                            }
+                            if (player.inventory[itemId] > 0) {
+                                const value = Math.max(1, Math.floor(armor[itemId].price / 10)); // Sell for 10% of original value
+                                player.bitcoins += value;
+                                player.inventory[itemId]--;
+                                if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+                                updateBattleLog(`You sold <span class="friendly">${armor[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            }                        
+                        } else if (type === "ring") {
+                            if (player.ring1 === itemId || player.ring2 === itemId) {
+                                merchant.say("I don't swing that way, kid, but if you really wanna propose you gotta take the damn ring off.");
+                                return;
+                            }
+                            if (player.inventory[itemId] > 0) {
+                                const value = Math.max(1, Math.floor(rings[itemId].price / 5)); // Sell for 5% of original value
+                                player.bitcoins += value;
+                                player.inventory[itemId]--;
+                                if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+                                updateBattleLog(`You sold <span class="friendly">${rings[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            }
+                        } else if (type === "item") {
+                            if (player.inventory[itemId] > 0) {
+                                const value = Math.max(1, Math.floor(items[itemId].price / 5)); // Sell for 5% of original value
+                                player.bitcoins += value;
+                                player.inventory[itemId]--;
+                                if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+                                updateBattleLog(`You sold <span class="friendly">${items[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            }
+                        }
                         render();
                         menu.render();
                     },
