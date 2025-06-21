@@ -5822,7 +5822,6 @@
             isHoldingTorch: false,
             enteringCombat: false,
             leavingCombat: false,
-            levelingUp: false,
             inventory: {
                 canOfHamms: 2,
                 cupOfLean: 2,
@@ -5914,6 +5913,13 @@
                 player.hasEquippedRing('ringOfSightliness') || player.isHoldingTorch
                     ? 255
                     : 192,
+            getExpRequiredForLevelUp: () => player.level * 10,
+            levelUp: () => {
+                const rolledOverExp = Math.max(0, player.exp - player.getExpRequiredForLevelUp());
+                player.level++;
+                player.exp = rolledOverExp;
+                player.hp = getEffectiveStat('maxHp');
+            },
         };
 
         const merchant = {
@@ -7135,7 +7141,7 @@
                 <span class="stats2-label">${player.level}</span>
 
                 <div><span>+====<span class="EXP">EXP</span>====+</div>
-                <span class="stats2-label">${player.exp}/${player.level * 10}</span>
+                <span class="stats2-label">${player.exp}/${player.getExpRequiredForLevelUp()}</span>
 
                 <div><span>+====<span class="BTC">BTC</span>====+</div>
                 <span class="stats2-label">${player.bitcoins}</span>
@@ -7146,11 +7152,6 @@
                 <span center>._ _ _ _ _ _.</span>
             `;
             document.getElementById('stats2').innerHTML = stats2Html;
-
-            if (player.levelingUp) {
-                startLevelUpAllocation();
-                return;
-            }
 
             let partyHTML = `<center><strong id="yourparty">.--------[=PARTY=]--------.</strong></center><br>`;
             if (party.length > 0) {
@@ -7582,7 +7583,7 @@
 
                 setTorchOverlayVisibility();
 
-                if (player.exp >= player.level * 10) {
+                if (player.exp >= player.getExpRequiredForLevelUp()) {
                     startLevelUpAllocation();
                 }
             } else {
@@ -8309,7 +8310,7 @@
             const key = e.key.toLowerCase();
 
             if (gameOver) return;
-            if (!player.inCombat && key === 't' && !awaitingPersuasionText && !menu.isOpen() && !player.levelingUp) {
+            if (!player.inCombat && key === 't' && !awaitingPersuasionText && !menu.isOpen()) {
                 speakingOutsideCombat = true;
                 tryPersuade(e);
                 return;
@@ -8318,8 +8319,6 @@
 
             if (menu.isOpen()) {
                 menu.handleInput(key);
-            } else if (player.levelingUp) {
-                handleLevelUpInput(key); // Call the level-up input handler
             } else if (key === 'i') {
                 playSFX('inventoryOpen');
                 menu.open('inventory');
@@ -9368,7 +9367,7 @@
                                 : "Reset your stat allocation.",
                         },
                         {
-                            id: "_confirm",
+                            id: "confirm",
                             displayText: "[Confirm]",
                             className: player.remainingPoints > 0 ? 'tooExpensive' : undefined,
                             description: isLevelUpAllocation
@@ -9378,7 +9377,7 @@
                         ];
                     },
                     select: (selectedOptionId) => {
-                        if (selectedOptionId === "_confirm") {
+                        if (selectedOptionId === "confirm") {
                             if (player.remainingPoints > 0) {
                                 updateBattleLog("You must allocate all points before continuing!");
                                 return;
@@ -9386,10 +9385,7 @@
                             if (isLevelUpAllocation) {
                                 isLevelUpAllocation = false;
                                 updateBattleLog("Stats increased! You consume an unsuspecting rat to restore your health. Poor feller...");
-                                player.level++;
-                                player.exp = 0;
-                                player.levelingUp = false;
-                                player.hp = getEffectiveStat('maxHp');
+                                player.levelUp();
                             } else {
                                 updateBattleLog("Stat allocation complete! You consume an unsuspecting rat to ensure you are in good health, and your adventure begins...");
                             }
