@@ -6054,6 +6054,24 @@
                 );
                 merchant.isActiveOnFloor = false;
             },
+
+            getSalePrice: function(itemType, price) {
+                if (typeof price !== 'number') {
+                    console.error("Price is not a number", { itemType, price });
+                    return 0;
+                }
+                const factors = {
+                    weapon: 10,
+                    armor: 10,
+                    item: 5,
+                    ring: 5,
+                };
+                const factor = factors[itemType] || 10; // Default to 10% of the original price
+                if (!Object.hasOwn(factors, itemType)) {
+                    console.error("Unknown item type", { itemType });
+                }
+                return Math.max(1, Math.floor(price / factor));
+            },
         };
 
         const gambler = {
@@ -9189,7 +9207,7 @@
                                 return;
                             }
                             if (player.inventory[itemId] > 0) {
-                                const value = Math.max(1, Math.floor(weapons[itemId].price / 10)); // Sell for 10% of original value
+                                const value = merchant.getSalePrice('weapon', weapons[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
