@@ -7440,7 +7440,7 @@
             }
             // Rings
             for (const ringId in rings) {
-                if (player.inventory[ringId] && ringId !== player.ring1 && ringId !== player.ring2) {
+                if (player.inventory[ringId] && !player.hasEquippedRing(ringId)) {
                     total += rings[ringId].weight * player.inventory[ringId];
                 }
             }
