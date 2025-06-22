@@ -7435,33 +7435,38 @@
 
         function getCarryWeight() {
             let total = 0;
-            // Consumables
+
+            // 1. Consumables
             for (const itemId in player.inventory) {
                 if (weapons[itemId] || armor[itemId] || rings[itemId]) continue;
                 const item = items[itemId];
-                const count = Math.max(0, player.inventory[itemId] || 0);
                 if (item && typeof item.weight === "number") {
-                    total += item.weight * count;
+                    total += item.weight * player.inventory[itemId];
                 }
             }
-            // Weapons
+
+            // 2. Weapons
             for (const weaponId in weapons) {
-                if (player.inventory[weaponId] && weaponId !== player.weapon) {
-                    total += weapons[weaponId].weight * player.inventory[weaponId];
-                }
+                let count = player.inventory[weaponId] || 0;
+                if (player.weapon === weaponId && count === 0) count = 1;
+                total += weapons[weaponId].weight * count;
             }
-            // Armor
+
+            // 3. Armor
             for (const armorId in armor) {
-                if (player.inventory[armorId] && armorId !== player.armor) {
-                    total += armor[armorId].weight * player.inventory[armorId];
-                }
+                let count = player.inventory[armorId] || 0;
+                if (player.armor === armorId && count === 0) count = 1;
+                total += armor[armorId].weight * count;
             }
-            // Rings
+
+            // 4. Rings
             for (const ringId in rings) {
-                if (player.inventory[ringId] && !player.hasEquippedRing(ringId)) {
-                    total += rings[ringId].weight * player.inventory[ringId];
-                }
+                let count = player.inventory[ringId] || 0;
+                if (player.ring1 === ringId && count === 0) count += 1;
+                if (player.ring2 === ringId && count === 0 && player.ring1 !== ringId) count += 1;
+                total += rings[ringId].weight * count;
             }
+
             return total;
         }
 
