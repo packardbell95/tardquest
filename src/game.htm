@@ -9219,7 +9219,7 @@
                                 return;
                             }
                             if (player.inventory[itemId] > 0) {
-                                const value = Math.max(1, Math.floor(armor[itemId].price / 10)); // Sell for 10% of original value
+                                const value = merchant.getSalePrice('armor', armor[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
@@ -9231,7 +9231,7 @@
                                 return;
                             }
                             if (player.inventory[itemId] > 0) {
-                                const value = Math.max(1, Math.floor(rings[itemId].price / 5)); // Sell for 5% of original value
+                                const value = merchant.getSalePrice('ring', rings[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
@@ -9239,7 +9239,7 @@
                             }
                         } else if (type === "item") {
                             if (player.inventory[itemId] > 0) {
-                                const value = Math.max(1, Math.floor(items[itemId].price / 5)); // Sell for 5% of original value
+                                const value = merchant.getSalePrice('item', items[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
