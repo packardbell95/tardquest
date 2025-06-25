@@ -7440,7 +7440,7 @@
         }
 
         function getMapDissolvePoints() {
-            let dissolvePoints = [];
+            const dissolvePoints = [];
             for (let y = 2; y < HEIGHT - 2; y++) {
                 for (let x = 2; x < WIDTH - 2; x++) {
                     const isDissolvePoint = MAP[y][x]?.type === 'wall' && (
