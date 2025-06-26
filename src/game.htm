@@ -478,6 +478,10 @@
             padding-top: 9px;
         }
 
+        .menus > p:first-child {
+            margin-top: 0;
+        }
+
         #controls {
             font-size: 14px;
             height: 130px;
@@ -509,7 +513,8 @@
             color: #f19b32;
         }
         .wall,
-        .gloryWall {
+        .gloryWall,
+        .noboWall {
             color: #e9ff00;
         }
         .floor {
@@ -719,43 +724,41 @@
   </style>
 </head>
 <body>
-  <div class="menus">
-        <a href="title.html">TITLE</a>  <a href="#" id="resetButton">RESET</a>  <a href="#" id="musicToggle">DISABLE MUSIC</a>
-
+    <div class="menus">
         <p><strong>KEY</strong></p>
         <p><span class="player">↑</span> Player: It's you!</p>
         <p><span class="wall">#</span> Wall: It's a fucking wall</p>
         <p><span class="exit">E</span> Exit: Touch to descend further</p>
         <p><span class="merchant">M</span> Merchant: Sells you crap</p>
         <p><span class="gambler">G</span> Gambler: A shady shyster</p>
-        <p><span class="healingTile">H</span> Healing Tile: Heals you by 30% of max HP</p>
+        <p><span class="healingTile">H</span> HealTile: Heals you by 30% of max HP</p>
         <p><span class="treasureChest">T</span> Treasure Chest: Contains items</p>
         <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
-      </div>
-  <div id="partylist"></div>
-  <div id="stats1"></div>
-  <div id="stats2"></div>
-  <div id="controls"></div>
-  <div id="viewportContainer">
-    <div id="game" class="render"></div>
-    <div id="animation" class="hidden"></div>
-    <div id="animTorch" class="offscreen"></div>
-    <div id="menu" class="hidden">
-        <div id="menuLanding"></div>
-        <div id="menuList"></div>
-        <div id="menuSelectionDescription"></div>
-        <div class="alignRight">Press Escape to go back</div>
     </div>
-  </div>
-  <div id="ui">
-    <div id="sidePanel">
-      <div id="battleLog"></div>
-      <div id="minimap"></div>
-      <div id="inputBox">
-        <input type="text" id="persuadeInput" placeholder="Say your piece...">
-      </div>
+    <div id="partylist"></div>
+    <div id="stats1"></div>
+    <div id="stats2"></div>
+    <div id="controls"></div>
+    <div id="viewportContainer">
+        <div id="game" class="render"></div>
+        <div id="animation" class="hidden"></div>
+        <div id="animTorch" class="offscreen"></div>
+        <div id="menu" class="hidden">
+            <div id="menuLanding"></div>
+            <div id="menuList"></div>
+            <div id="menuSelectionDescription"></div>
+            <div id="escapeMessage" class="alignRight">Press Escape to go back</div>
+        </div>
     </div>
-  </div>
+    <div id="ui">
+        <div id="sidePanel">
+            <div id="battleLog"></div>
+            <div id="minimap"></div>
+            <div id="inputBox">
+                <input type="text" id="persuadeInput" placeholder="Say your piece...">
+            </div>
+        </div>
+    </div>
 
     <script>
         /**
@@ -3093,6 +3096,425 @@
                         data: `
                             ▄▄
                             ▀▀
+                        `,
+                    },
+                ],
+            },
+
+            noboWall: {
+                relativeColor: { r: 255, g: 255, b: 255 },
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: 0, y: 1 },
+                    },
+                    p0_2: {
+                        artIndex: 15,
+                        drawAt: { x: 44, y: 1 },
+                    },
+                    p1_0: {
+                        artIndex: 1,
+                        drawAt: { x: 0, y: 4 },
+                    },
+                    p1_1: {
+                        artIndex: 2,
+                        drawAt: { x: 5, y: 4 },
+                    },
+                    p1_2: {
+                        artIndex: 1,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 4 },
+                    },
+                    p2_0: {
+                        artIndex: 3,
+                        drawAt: { x: 0, y: 9 },
+                    },
+                    p2_1: {
+                        artIndex: 4,
+                        drawAt: { x: 0, y: 8 },
+                    },
+                    p2_2: {
+                        artIndex: 5,
+                        drawAt: { x: 14, y: 8 },
+                    },
+                    p2_3: {
+                        artIndex: 14,
+                        drawAt: { x: 30, y: 8 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 41, y: 9 },
+                    },
+                    p3_0: {
+                        artIndex: 6,
+                        drawAt: { x: 0, y: 12 },
+                    },
+                    p3_1: {
+                        artIndex: 7,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_2: {
+                        artIndex: 7,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p3_3: {
+                        artIndex: 8,
+                        drawAt: { x: 19, y: 11 },
+                    },
+                    p3_4: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 27, y: 11 },
+                    },
+                    p3_5: {
+                        artIndex: 7,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 34, y: 11 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 12 },
+                    },
+                    p4_0: {
+                        artIndex: 9,
+                        drawAt: { x: 2, y: 12 },
+                    },
+                    p4_1: {
+                        artIndex: 9,
+                        drawAt: { x: 7, y: 12 },
+                    },
+                    p4_2: {
+                        artIndex: 10,
+                        drawAt: { x: 12, y: 12 },
+                    },
+                    p4_3: {
+                        artIndex: 11,
+                        drawAt: { x: 17, y: 12 },
+                    },
+                    p4_4: {
+                        artIndex: 12,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p4_5: {
+                        artIndex: 11,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 26, y: 12 },
+                    },
+                    p4_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 30, y: 12 },
+                    },
+                    p4_7: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 35, y: 12 },
+                    },
+                    p4_8: {
+                        artIndex: 9,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 40, y: 12 },
+                    },
+                    p5_0: {
+                        artIndex: 13,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p5_1: {
+                        artIndex: 13,
+                        drawAt: { x: 16, y: 13 },
+                    },
+                    p5_2: {
+                        artIndex: 13,
+                        drawAt: { x: 18, y: 13 },
+                    },
+                    p5_3: {
+                        artIndex: 13,
+                        drawAt: { x: 20, y: 13 },
+                    },
+                    p5_4: {
+                        artIndex: 13,
+                        drawAt: { x: 22, y: 13 },
+                    },
+                    p5_5: {
+                        artIndex: 13,
+                        drawAt: { x: 24, y: 13 },
+                    },
+                    p5_6: {
+                        artIndex: 13,
+                        drawAt: { x: 26, y: 13 },
+                    },
+                    p5_7: {
+                        artIndex: 13,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p5_8: {
+                        artIndex: 13,
+                        drawAt: { x: 30, y: 13 },
+                    },
+                    p5_9: {
+                        artIndex: 13,
+                        drawAt: { x: 32, y: 13 },
+                    },
+                    p5_10: {
+                        artIndex: 13,
+                        drawAt: { x: 34, y: 13 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄
+                            ██▄
+                            ████▄
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ▒▒████
+                            ▒▒▒███
+                            █▒▒███
+                            ███░██
+                            ████░█
+                            █████░
+                            ██████
+                            ██░███
+                            ░░░███
+                            ░░░███
+                            ░░░███
+                            ░░░███
+                            ░░░███
+                            ░░██▀
+                            ░█▀
+                            ▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██████▄
+                            ██████▒█▄
+                            ██████▒███▄
+                            ██████▒█████▄
+                            ██████▒███████▄
+                            ▓▓▓▓██▒█▒▒█████
+                            ▓▓████▒█▒▒▒▒███
+                            █▓▓▓██▒██▒▒█▒▒█
+                            ▓▓████▒█▒▒▓▓▒▒█
+                            ██████▒█▒▒▒█▒▒█
+                            ██████▒███▓▓▒▒█
+                            ██████▒████▓▓▒█
+                            ██████▒█████▒▒█
+                            ██████▒████▓▓██
+                            ██████▒████████
+                            ██████▒███████▀
+                            ██████▒█████▀
+                            ██████▒███▀
+                            ██████▒█▀
+                            ██████▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: false,
+                        data: `
+                            ████████████████████████████████████████
+                            ████████████████████████████████████████
+                            █▀███▀██▀▀██▀▀▀███▀▀████████████████████
+                            █ ▄▀█ █ ██ █ ▀▀▄█ ██ ████████▀▀▀▀▀▀▀████
+                            █ ██▄ █ ██ █ ██ █ ██ ████ ▄▄▄██████ ████
+                            █▄███▄██▄▄██▄▄▄███▄▄█████ ▀▀▀▀▄▀▀▀▀ ████
+                            ███ ███ █▀▄▄▀█▀▄▄▄███████   ▀███▀   ████
+                            ███ █ █ █ ▄▄ ██▄▄▄▀███▀▀▀   ▀▀ ▀▀   ▀▀██
+                            ████▄█▄██▄██▄█▄▄▄▄███ ▀▀▀▀▀██████████▀ █
+                            █ ███ █ ▄▄▄█ ▄▄▀█ ▄▄▄█▒▒▒▄    ▄     ▒▒▒█
+                            █ ▄▄▄ █ ▄▄▄█ ▄▄▀█ ▄▄▄██▒▒▒███ █████ ▒▒██
+                            █▄███▄█▄▄▄▄█▄██▄█▄▄▄▄█▀▀▒▒███▄▀▄██▀ ▒▀██
+                            ██████████████████▀▀▄▄████ ██▀▀▀█  ███ ▀
+                            █████████████████ █████████▄ ▀▀▀   █████
+                            █████████████████ █████████▀▀██   ██████
+                            █████████████████ ████████ ██ █  ███████
+                            ████████████████ ███████  █▄▄█▄▀█▀████▀█
+                            ████████████████ ██████   ██▄▄▄ █      █
+                            █████████████████ ███▀    ██▄▄ ▄▀      █
+                            █████████████████ ██        ▄▄█ 6/22/25 
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            █████▄▄▄
+                            █▓▓██████
+                            ██▓▓▓▓▓▓█
+                            ██████▓▓█
+                            █████▓▓▓▓
+                            █████▓▓▓▓
+                            █████▓▓██
+                            █████▀▀▀
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ███████████████▒▄
+                            ███████████████▒██▄
+                            █▒▒▒▒▒▒███▓▓███▒████
+                            ███▓▓▓██▒▒▒▒▒▒█▒█▓▓█
+                            █▒▒▒▒▒▒██▓▓▓███▒██▓█
+                            ████████▒▓▓▓▓▓█▒█▓▓█
+                            ██████▒▓▓▓▓▓▓▓█▒█▓▓█
+                            ██████▒▓▓▓▓▓▓▓█▒██▓█
+                            ███████▓▒▒▒▒▒▒█▒██▀
+                            ███████████████▒▀
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            ██████████████████████
+                            ██████████████████████
+                            ██▒▒▒▒▒▒▒▒████▓▓██████
+                            ███▓▓▓▓▓▓███▒▒▒▒▒▒████
+                            ██▒▒▒▒▒▒▒▒███▒▒▒▒█████
+                            ██████████▒▒▒▒▒▒▒▒████
+                            ██████████▒▒▒▒▒▒▒▒▒███
+                            ███████████▒▒▒▒▒▒▒▒███
+                            ████████████▓▓▓▓▓▓▓███
+                            ██████████████████████
+                            ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ██▄▄
+                            █▓▓█
+                            ██▓█
+                            ██▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ███████████▓▄
+                            ██▓▓▓██▓▓██▓██▄
+                            ██▓▓▓█▓▓▓▓█▓█▓█
+                            ███▓█▓█▓▓██▓█▓█
+                            ███████████▓██▀
+                            ███████████▓▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ████████████
+                            ██▓▓▓█▓▓▓███
+                            ██▓▓▓█▓▓▓▓██
+                            ███▓█▓▓▓▓▓██
+                            ██████▓▓▓▓██
+                            ████████████
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓▓▓█▓▄
+                            ██▓▓▓██▓▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓▓▓██▄
+                            ██▓▓▓██▀
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓▓▓██
+                            ██▓▓▓██
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄▄▄▄▄
+                            █▓▓▓▓█
+                            ██▓▓▓█
+                            ▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ▄▄
+                            ▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                            %%%▄▒███████████████
+                            %▄██▒███████████████
+                            ████▒█▒▒▒▒▒▒███▓▓███
+                            █▓▓█▒███▓▓▓██▒▒▒▒▒▒█
+                            ▓▓▓█▒█▒▒▒▒▒▒██▓▓▓███
+                            █▓▓█▒████████▒▓▓▓▓▓█
+                            █▓▓█▒██████▒▓▓▓▓▓▓▓█
+                            ██▓█▒██████▒▓▓▓▓▓▓▓█
+                            %▀██▒███████▓▒▒▒▒▒▒█
+                            %%%▀▒███████████████
+                            %%%%%▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%▄
+                            %%%▄██
+                            %▄████
+                            ██████
+                            █████░
+                            ██░░█░
+                            ██░█░░
+                            ██░██░
+                            █████░
+                            ██████
+                            ███░█░
+                            ████░█
+                            ██████
+                            █████░
+                            ██░██░
+                            ██░░░░
+                            ██░██░
+                            █████░
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            ██████
+                            %▀████
+                            %%%▀██
+                            %%%%%▀
                         `,
                     },
                 ],
@@ -5681,6 +6103,17 @@
                                 Math.random() < 0.5 ? 'rubble1' : 'rubble2'
                             ),
                     },
+                    noboWall: {
+                        mapCharacter: "#",
+                        isSolid: true,
+                        onTouch: () => player.say(
+                            "Who's that? ... Just some nobody, I guess"
+                        ),
+                        onExplode: (x, y) =>
+                            MAP[y][x] = new MapCell(
+                                Math.random() < 0.5 ? 'rubble1' : 'rubble2'
+                            ),
+                    },
                     crater: {
                         mapCharacter: ".",
                     },
@@ -5845,6 +6278,8 @@
                 player.leavingCombat = false;
             },
             enterCombat: () => {
+                persuasionAttempts = 0;
+                maxPersuasionAttempts = player.hasEquippedRing('ringOfAmplifiedAudio') ? 3 : 2;
                 player.enteringCombat = true;
                 player.inCombat = true;
             },
@@ -6804,6 +7239,10 @@
                 merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.35;
             }
 
+            if (floor === 40) {
+                placeNoboWall();
+            }
+
             if (merchant.isActiveOnFloor) {
                 merchant.set();
             }
@@ -6844,6 +7283,13 @@
             if (MAP[gy][gx]?.type === 'wall') {
                 MAP[gy][gx] = new MapCell('gloryWall');
             }
+        }
+
+        function placeNoboWall() {
+            const dissolvePoints = getMapDissolvePoints();
+            const index = Math.floor(Math.random() * dissolvePoints.length);
+            const dissolvePoint = dissolvePoints[index];
+            MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell('noboWall');
         }
 
         function spawnTreasureChests() {
@@ -6993,8 +7439,8 @@
             return result;
         }
 
-        function dissolveMap() {
-            let dissolvePoints = [];
+        function getMapDissolvePoints() {
+            const dissolvePoints = [];
             for (let y = 2; y < HEIGHT - 2; y++) {
                 for (let x = 2; x < WIDTH - 2; x++) {
                     const isDissolvePoint = MAP[y][x]?.type === 'wall' && (
@@ -7010,6 +7456,11 @@
                 }
             }
 
+            return dissolvePoints;
+        }
+
+        function dissolveMap() {
+            let dissolvePoints = getMapDissolvePoints();
             const totalPointsToDissolve = Math.floor(dissolvePoints.length / 2);
             if (totalPointsToDissolve < 1) {
                 return;
@@ -7191,7 +7642,11 @@
                 output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
                 if (!awaitingPersuasionText) {
                     document.getElementById("controls").textContent =
-                        "A:      Attack\nR:      Run\nP:      Persuade\nI:      Inventory";
+                        "A:      Attack\n" +
+                        "R:      Run\n" +
+                        "P:      Persuade\n" +
+                        "I:      Inventory\n" +
+                        "ESC:    Game Menu";
                 }
             } else {
                 // Controls
@@ -7201,7 +7656,8 @@
                     "←/A, →/D: Turn\n" +
                     "Q, E:     Strafe\n" +
                     "T:        Talk\n" +
-                    "I:        Inventory";
+                    "I:        Inventory\n" +
+                    "Escape:   Game Menu";
             }
 
             if (player.hp <= 0) {
@@ -7548,8 +8004,6 @@
                 ];
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
-            persuasionAttempts = 0;
-            maxPersuasionAttempts = player.hasEquippedRing('ringOfAmplifiedAudio') ? 3 : 2;
             player.enterCombat();
             party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
@@ -8342,6 +8796,8 @@
 
             if (menu.isOpen()) {
                 menu.handleInput(key);
+            } else if (key === 'escape') {
+                menu.open('gameSettings');
             } else if (key === 'i') {
                 playSFX('inventoryOpen');
                 menu.open('inventory');
@@ -8441,25 +8897,6 @@
         playRandomExplorationMusic();
         render();
 
-        document.getElementById('musicToggle').addEventListener('click', () => {
-            musicEnabled = !musicEnabled;
-            const btn = document.getElementById('musicToggle');
-            btn.textContent = musicEnabled ? "DISABLE MUSIC" : "ENABLE MUSIC";
-
-            stopAllMusic();
-            if (musicEnabled) {
-                if (player.inCombat) {
-                    playRandomBattleMusic();
-                } else {
-                    if (currentExplorationTrack) {
-                        resumeExplorationMusic();
-                    } else {
-                        playRandomExplorationMusic();
-                    }
-                }
-            }
-        });
-
         const menu = {
             breadcrumbs: [],
             selectionIndex: 0,
@@ -8468,7 +8905,7 @@
             isOpen: () => menu.breadcrumbs.length > 0,
             open: (menuName) => {
                 if (typeof menu.menus[menuName] === 'undefined') {
-                    console.error('No matching entry for the designated menu name', { menuName });
+                    console.error('The requested menu does not exist', { menuName });
                     return;
                 }
 
@@ -8560,6 +8997,13 @@
                 });
 
                 document.getElementById('menuList').innerHTML = menuHtml;
+
+                const $escapeMessage = document.getElementById("escapeMessage");
+                if (activeMenu.escapeDisabled) {
+                    $escapeMessage.classList.add("hidden");
+                } else {
+                    $escapeMessage.classList.remove("hidden");
+                }
             },
             handleInput: (key) => {
                 if (animationActive) return;
@@ -8573,6 +9017,10 @@
 
                 switch (key) {
                     case 'escape':
+                        if (activeMenu.escapeDisabled) {
+                            break;
+                        }
+
                         menu.close();
                         playSFX('uiCancel');
                         break;
@@ -8627,6 +9075,100 @@
                 menu.render();
             },
             menus: {
+                gameSettings: {
+                    title: "GAME SETTINGS",
+                    getOptions: () => [
+                        {
+                            id: "_back",
+                            displayText: "Return to the game",
+                            description: "Continue your quest",
+                        },
+                        {
+                            id: "toggleMusic",
+                            displayText: musicEnabled
+                                ? "Disable music"
+                                : "Enable music",
+                            description: musicEnabled
+                                ? "Turn off the in-game music"
+                                : "Turn on the in game music",
+                        },
+                        {
+                            id: "resetGame",
+                            displayText: "Reset the game",
+                            description:
+                                "Abandon your current game and restart your " +
+                                "quest from the first floor",
+                        },
+                        {
+                            id: "returnToTitleScreen",
+                            displayText: "Exit to the title screen",
+                            description:
+                                "Abandon your current game and return to the " +
+                                "title screen",
+                        },
+                    ],
+                    select: (selectedOptionId) => {
+                        switch (selectedOptionId) {
+                            case "toggleMusic":
+                                musicEnabled = !musicEnabled;
+
+                                stopAllMusic();
+                                if (musicEnabled) {
+                                    player.inCombat
+                                        ? playRandomBattleMusic()
+                                        : (currentExplorationTrack
+                                            ? resumeExplorationMusic()
+                                            : playRandomExplorationMusic()
+                                        );
+                                }
+                                break;
+                            case "resetGame":
+                            case "returnToTitleScreen":
+                                menu.open(`${selectedOptionId}Confirmation`);
+                                break;
+                        }
+                    },
+                },
+                resetGameConfirmation: {
+                    title: "RESET GAME",
+                    landingHtml: () =>
+                        "Are you sure you want to reset the game?",
+                    getOptions: () => [
+                        {
+                            id: "_back",
+                            displayText: "NO! Do not reset the game!",
+                            description: "Go back to the previous menu",
+                        },
+                        {
+                            id: "reset",
+                            displayText: "Yes, waste my progress",
+                            description:
+                                "Abandon the current game and start again " +
+                                "from the first floor",
+                        },
+                    ],
+                    select: () => window.location.reload(),
+                },
+                returnToTitleScreenConfirmation: {
+                    title: "RETURN TO TITLE SCREEN",
+                    landingHtml: () =>
+                        "Are you sure you want to return to the title screen?",
+                    getOptions: () => [
+                        {
+                            id: "_back",
+                            displayText: "NO! Do not return to the title screen!",
+                            description: "Go back to the previous menu",
+                        },
+                        {
+                            id: "returnToTitleScreen",
+                            displayText: "Yes, waste my progress",
+                            description:
+                                "Abandon the current game and start again " +
+                                "from the title screen",
+                        },
+                    ],
+                    select: () => window.location.assign("title.html"),
+                },
                 inventory: {
                     title: "INVENTORY",
                     landingHtml: () => {
@@ -8747,8 +9289,6 @@
                             displayText: "[Back]",
                             description: "Return to equipment menu",
                         }]);
-
-                        return options;
                     },
                     select: (selectedOptionId) => {
                         const weapon = weapons[selectedOptionId];
@@ -8788,8 +9328,6 @@
                             displayText: "[Back]",
                             description: "Return to equipment menu",
                         }]);
-
-                        return options;
                     },
                     select: (selectedOptionId) => {
                         const armorPiece = armor[selectedOptionId];
@@ -9323,6 +9861,8 @@
                     },
                 },
                 statAllocation: {
+                    // Prevent menu from being closed with the Escape key
+                    escapeDisabled: true,
                     title: () => isLevelUpAllocation ? "LEVEL UP" : "STAT ALLOCATION",
                     landingHtml: () => {
                         return isLevelUpAllocation
@@ -9576,8 +10116,6 @@
         }
 
         menu.open("statAllocation");
-
-        document.getElementById('resetButton').addEventListener('click', () => window.location.reload());
 
         const gambleFrames = [
     `
