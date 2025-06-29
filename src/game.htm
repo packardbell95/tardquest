@@ -449,18 +449,18 @@
         #inputBox input {
             color: white;
             font-size: 13px;
-            width: 600px;
+            width: 672px;
             height: 2px;
             z-index: 9;
             background-color: #000;
-            border: 3px dotted #A23AB4;
+            border: 2px solid #ffffff;
             padding: 10px;
             font-size: 16px;
             border-radius: 0px;
             text-align: left;
             position: absolute;
-            top: 125px;
-            left: 58px;
+            top: 117px;
+            left: 28px;
             outline: none;
         }
 
@@ -6577,6 +6577,13 @@
                 hp: 13,
                 attack: [2, 5],
                 bitcoins: 4,
+                talkSlots: [
+                    ["Sss...", "Hrk!", "Glorp", "Snail"],
+                    ["you", "I", "we", "that guy", "snail"],
+                    ["am", "is", "are", "was", "snail", "violated"],
+                    ["slimy", "slow", "fast", "hungry", "snail", "the law"],
+                    ["?", "!", "!!!", "?!", "...", ".",]
+                ]  
             },
             {
                 id: "stupidDog",
@@ -6626,6 +6633,12 @@
                 hp: 28,
                 attack: [8, 13],
                 bitcoins: 4,
+                talkSlots: [
+                    ["Ugh", "LUG", "Arrgh", "UNG", "Borf", "AHHHHHHH", "Bunginga"],
+                    ["smash", "eat", "touch", "rip","friend", "rock", "dance", "pull teeth", "over there"],
+                    ["now", "later", "soon", "maybe", "never", "happy", "punch", "kill", "death"],
+                    ["?", "!", "!!!", "?!", "...", ".",]
+                ]
             },
             {
                 id: "pissedOffPoultry",
@@ -7200,6 +7213,7 @@
         };
 
         let musicEnabled = true;
+        let eatRatAnimationEnabled = true;
 
         function generateMap() {
             setExitPosition();
@@ -7256,6 +7270,21 @@
             spawnHealingTiles();
             spawnCrackedFloors();
         }
+
+        function loadSettings() {
+            const music = localStorage.getItem("musicEnabled");
+            if (music !== null) musicEnabled = music === "true";
+            const eatRat = localStorage.getItem("eatRatAnimationEnabled");
+            if (eatRat !== null) eatRatAnimationEnabled = eatRat === "true";
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem("musicEnabled", musicEnabled);
+            localStorage.setItem("eatRatAnimationEnabled", eatRatAnimationEnabled);
+        }
+
+        loadSettings();
 
         function placeWelcomeBanner() {
             if (MAP[player.y - 1][player.x]?.type === 'floor') {
@@ -7526,8 +7555,8 @@
                 .slice()
                 .reverse()
                 .map((msg, i) => {
-                    const lightness = 100 - (i * 15); // Fade effect
-                    const color = `hsl(0, 0%, ${Math.max(lightness, 50)}%)`; // Prevent it from getting too dark
+                    const lightness = 100 - (i * 4); // Fade effect
+                    const color = `hsl(0, 0%, ${Math.max(lightness, 60)}%)`;
                     return `<div style="color: ${color};">${msg}</div>`;
                 })
                 .join("");
@@ -8155,8 +8184,6 @@
             }, 10);
         }
 
-
-
         document.getElementById("persuadeInput").addEventListener("keydown", e => {
             if (e.key === "Enter") {
                 const message = e.target.value;
@@ -8180,20 +8207,31 @@
 
                     if (party.length > 0) {
                         const responder = party[Math.floor(Math.random() * party.length)];
-                        const responses = [
-                            "--you pull out your translator-- 'Wow! Please shut the fuck up.'",
-                            "--you pull out your translator-- 'Just so you know, we're not even...'",
-                            "--you pull out your translator-- 'You can't be fucking serious...'",
-                            "--you pull out your translator-- 'I've come for your pickleeee...'",
-                            "--you pull out your translator-- 'Hey that's cool and all, but have you ever played SpongeBob SquarePants: Revenge of the Flying Dutchman on the Sony PlayStation 2?",
-                            "--they're too busy playing Burnout Revenge on the PS2--",
-                            "--they're too busy sexting your mom--",
-                            "--they pick their own nose, and then they pick YOUR nose...--",
-                            "--you notice them scratching their nuts whilst ignoring your interjection--",
-                        ];
 
-                        const reply = responses[Math.floor(Math.random() * responses.length)];
-                        updateBattleLog(`${responder.name}: ${reply}`);
+                        const enemyDef = enemies.find(e => e.name === responder.name);
+
+                        // Allow use of enemy specific talk slots
+                        let talkSlots = enemyDef?.talkSlots;
+                        if (!Array.isArray(talkSlots) || talkSlots.length === 0) {
+                            // Fallback to default talk slots if an enemy does not have a unique set
+                            talkSlots = [
+                                ["You", "I", "What", "Hey", "Listen", "They", "He", "She"],
+                                ["are", "can't", "should", "will", "must", "here", "a need to", "need", "needed"],
+                                ["a pot roast", "many pot roasts", "a total dumbass", "gay", "my friend", "a sandwich", "obey"],
+                                ["?", "!", "!!!", "?!", "...", ".",]
+                            ];
+                        }
+
+                        // Sentence assembly - also removes the space before the punctioation slot
+                        const chosen = talkSlots.map(slot => slot[Math.floor(Math.random() * slot.length)]);
+                        const sentence =
+                            chosen.length > 1
+                                ? chosen.slice(0, -1).join(" ") + chosen[chosen.length - 1]
+                                : chosen[0];
+
+                        updateBattleLog(
+                            `<span class="friendly">${responder.name}:</span> <span class="player">--you pull out your translator--</span> "${sentence}"`
+                        );
                     }
 
                     render();
@@ -9093,6 +9131,15 @@
                                 : "Turn on the in game music",
                         },
                         {
+                            id: "toggleEatRatAnimation",
+                            displayText: eatRatAnimationEnabled
+                                ? "Disable level up animation"
+                                : "Enable level up animation",
+                            description: eatRatAnimationEnabled
+                                ? "Disable rat consumption animation on level up"
+                                : "Enable rat consumption animation on level up",
+                        },
+                        {
                             id: "resetGame",
                             displayText: "Reset the game",
                             description:
@@ -9111,7 +9158,7 @@
                         switch (selectedOptionId) {
                             case "toggleMusic":
                                 musicEnabled = !musicEnabled;
-
+                                saveSettings();
                                 stopAllMusic();
                                 if (musicEnabled) {
                                     player.inCombat
@@ -9121,6 +9168,10 @@
                                             : playRandomExplorationMusic()
                                         );
                                 }
+                                break;
+                            case "toggleEatRatAnimation":
+                                eatRatAnimationEnabled = !eatRatAnimationEnabled;
+                                saveSettings();
                                 break;
                             case "resetGame":
                             case "returnToTitleScreen":
@@ -9954,7 +10005,7 @@
                             }
                             menu.close();
                             render();
-                            animEatRat();
+                            if (eatRatAnimationEnabled) animEatRat();
                         } else if (selectedOptionId === "reset") {
                             if (isLevelUpAllocation) {
                                 player.maxHp = levelUpAllocatedStats.base.maxHp;
