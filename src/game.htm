@@ -7213,6 +7213,7 @@
         };
 
         let musicEnabled = true;
+        let sfxEnabled = true;
         let eatRatAnimationEnabled = true;
 
         function generateMap() {
@@ -7276,12 +7277,14 @@
             if (music !== null) musicEnabled = music === "true";
             const eatRat = localStorage.getItem("eatRatAnimationEnabled");
             if (eatRat !== null) eatRatAnimationEnabled = eatRat === "true";
+            const sfx = localStorage.getItem("sfxEnabled");
+            if (sfx !== null) sfxEnabled = sfx === "true";
         }
 
-        // Save settings to localStorage
         function saveSettings() {
             localStorage.setItem("musicEnabled", musicEnabled);
             localStorage.setItem("eatRatAnimationEnabled", eatRatAnimationEnabled);
+            localStorage.setItem("sfxEnabled", sfxEnabled);
         }
 
         loadSettings();
@@ -7563,11 +7566,11 @@
         }
 
         function playSFX(name) {
+            if (!sfxEnabled) return;
             if (!sfx[name]) {
                 console.error("SFX not found", { name });
                 return;
             }
-
             sfx[name].currentTime = 0;
             sfx[name].play();
         }
@@ -9132,6 +9135,13 @@
                                 : "Turn on the in game music",
                         },
                         {
+                            id: "toggleSFX",
+                            displayText: sfxEnabled ? "Disable SFX" : "Enable SFX",
+                            description: sfxEnabled
+                                ? "Disable sound effects"
+                                : "Enable sound effects",
+                        },
+                        {
                             id: "toggleEatRatAnimation",
                             displayText: eatRatAnimationEnabled
                                 ? "Disable level up animation"
@@ -9169,6 +9179,10 @@
                                             : playRandomExplorationMusic()
                                         );
                                 }
+                                break;
+                            case "toggleSFX":
+                                sfxEnabled = !sfxEnabled;
+                                saveSettings();
                                 break;
                             case "toggleEatRatAnimation":
                                 eatRatAnimationEnabled = !eatRatAnimationEnabled;
