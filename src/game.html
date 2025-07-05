@@ -9367,15 +9367,8 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                             id: "resetGame",
                             displayText: "Reset the game",
                             description:
-                                "Abandon your current game and restart your " +
-                                "quest from the first floor",
-                        },
-                        {
-                            id: "returnToTitleScreen",
-                            displayText: "Exit to the title screen",
-                            description:
-                                "Abandon your current game and return to the " +
-                                "title screen",
+                                "Abandon your current quest and return to " +
+                                "the title screen",
                         },
                     ],
                     select: (selectedOptionId) => {
@@ -9406,8 +9399,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                                 saveSettings();
                                 break;
                             case "resetGame":
-                            case "returnToTitleScreen":
-                                menu.open(`${selectedOptionId}Confirmation`);
+                                menu.open("resetGameConfirmation");
                                 break;
                         }
                     },
@@ -9431,27 +9423,6 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                         },
                     ],
                     select: () => window.location.reload(),
-                },
-                returnToTitleScreenConfirmation: {
-                    title: "RETURN TO TITLE SCREEN",
-                    landingHtml: () =>
-                        "Are you sure you want to return to the title screen?",
-                    getOptions: () => [
-                        {
-                            id: "_back",
-                            displayText: "NO! Do not return to the title screen!",
-                            description: "Go back to the previous menu",
-                        },
-                        {
-                            id: "returnToTitleScreen",
-                            displayText: "Yes, waste my progress",
-                            description:
-                                "Abandon the current game and start again from the title screen",
-                        },
-                    ],
-                    select: () => {
-                        window.location.reload();
-                    },
                 },
                 inventory: {
                     title: "INVENTORY",
