@@ -7467,6 +7467,23 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
 
         loadSettings();
 
+        function loadSettings() {
+            const music = localStorage.getItem("musicEnabled");
+            if (music !== null) musicEnabled = music === "true";
+            const eatRat = localStorage.getItem("eatRatAnimationEnabled");
+            if (eatRat !== null) eatRatAnimationEnabled = eatRat === "true";
+            const sfx = localStorage.getItem("sfxEnabled");
+            if (sfx !== null) sfxEnabled = sfx === "true";
+        }
+
+        function saveSettings() {
+            localStorage.setItem("musicEnabled", musicEnabled);
+            localStorage.setItem("eatRatAnimationEnabled", eatRatAnimationEnabled);
+            localStorage.setItem("sfxEnabled", sfxEnabled);
+        }
+
+        loadSettings();
+
         function placeWelcomeBanner() {
             if (MAP[player.y - 1][player.x]?.type === 'floor') {
                 // North of player
