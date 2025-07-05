@@ -414,6 +414,31 @@
             justify-content: space-between;
         }
 
+        @keyframes fadeGradient {
+            0% {
+                opacity: 0;
+            }
+            1% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        #viewportContainer.playerFellIntoAPitAndDied::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #900 40%, #0000 100%);
+            opacity: 0;
+            pointer-events: none;
+            animation: fadeGradient 1s ease-out forwards;
+            animation-delay: 2s;
+        }
 
         #sidePanel {
             margin-left: 0px;
@@ -6243,21 +6268,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                                 );
                                 playSFX('floorCrackSlight');
                             } else {
-                                // Break and kill
-                                stopAllMusic();
-                                animTorchEnd();
-                                window._inputBlocked = true;
-                                document.getElementById('game').style =
-                                    "transition: opacity 2s, transform 2s; " +
-                                    "opacity:0; transform: translateY(-400px)";
-                                updateBattleLog(
-                                    '<span class="action">AUUUUUGH!</span> ' +
-                                    'You scream out as the flimsy floor ' +
-                                    'collapses beneath your feet and you plunge ' +
-                                    'into a pit of spikes waiting beneath!'
-                                );
-                                playSFX('floorBreakScreamDie');
-                                player.hp = 0;
+                                player.fallThroughFloorAndDie();
                             }
                         },
                     },
@@ -6465,6 +6476,9 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             heal: (hp) => {
                 player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
             },
+            damage: (hp) => {
+                player.hp = Math.max(player.hp - hp, 0);
+            },
             equipRing: (slotNumber, ringId) => {
                 if (![1, 2].includes(slotNumber)) {
                     console.log("Ring slot number is out of range", { slotNumber });
@@ -6529,6 +6543,23 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 player.level++;
                 player.exp = rolledOverExp;
                 player.hp = getEffectiveStat('maxHp');
+            },
+            fallThroughFloorAndDie: () => {
+                stopAllMusic();
+                animTorchEnd();
+                window._inputBlocked = true;
+                document.getElementById('game').style =
+                    "transition: opacity 1.2s linear, transform 1.2s linear; " +
+                    "opacity: 0; transform: translateY(-400px);";
+                document.getElementById('viewportContainer')
+                    .classList.add('playerFellIntoAPitAndDied');
+                updateBattleLog(
+                    '<span class="action">AUUUUUGH!</span> You scream out as ' +
+                    'the flimsy floor collapses beneath your feet and you ' +
+                    'plunge into a pit of spikes waiting beneath!'
+                );
+                playSFX('floorBreakScreamDie');
+                player.hp = 0;
             },
         };
 
@@ -7892,7 +7923,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 gameOver = true;
                 setTimeout(() => {
                     window.location.reload();
-                }, 2000);
+                }, 3000);
             }
 
             document.getElementById('game').innerHTML = output;
@@ -8348,7 +8379,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 const totalDefense = getEffectiveStat('defense') + (playerArmor ? playerArmor.defense : 0);
 
                 const dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
-                player.hp -= dmg;
+                player.damage(dmg);
 
                 updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="HP">${dmg} HP</span> to <span class="friendly">you</span>`);
 
