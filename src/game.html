@@ -41,6 +41,7 @@
             padding: 20px;
             display: flex;
             box-sizing: content-box;
+            user-select: none;
         }
 
         a:visited,
@@ -70,6 +71,95 @@
             to {
                 filter: brightness(1);
             }
+        }
+
+        #titleScreen {
+            position: fixed;
+            left: 0; 
+            top: 0;
+            width: 100vw; 
+            height: 100vh;
+            background: #000;
+            color: #fff;
+            z-index: 999;
+            font-family: monospace;
+            font-size: 15px;
+            white-space: pre;
+            user-select: none;
+            padding: 5px;
+        }
+        #titleScreen .content{
+            position: absolute;
+            left: 0px;
+            top: 0px;
+
+        }
+        #titleScreen a:link, #titleScreen a:visited { 
+            color: #fff; 
+            text-decoration: underline; 
+        }
+        #titleScreen .logo { 
+            position: absolute;
+            left: 0px; 
+            top: 0px; 
+            padding: 3px; 
+            font-size: 9px;
+        }
+
+        #titleScreen .startgame {
+            position: absolute;
+            left: 50px;
+            top: 170px;
+            padding: 8px;
+            text-align: center;
+            line-height: 0%;
+            white-space: nowrap;
+            align-content: center;
+            border-style: solid;
+            border-width: 2px;
+            border-top-width: 10px;
+            border-color: #ffffff;
+            background-color: #000000;
+            z-index: 999;
+        }
+
+        #titleScreen .artwork {
+            position: absolute;
+            left: 270px;
+            top: 220px;
+            font-size: 9px;
+        }
+
+        #titleScreen .credits {
+            position: absolute;
+            top: 554px;
+            left: 30px;
+            border-style: solid;
+            border-width: 2px;
+            border-top-width: 10px;
+            border-color: #ffffff;
+            background-color: #000000;
+            padding: 9px;
+            z-index: 999;
+        }
+
+        #screenWipe {
+            position: fixed;
+            left: 0; bottom: 0; top: auto;
+            width: 100vw;
+            height: 0vh;
+            background: #000;
+            z-index: 10000;
+            pointer-events: none;
+            transition: height 0.5s cubic-bezier(.77,0,.18,1);
+        }
+        #screenWipe.active {
+            height: 100vh;
+            transition: height 0.5s cubic-bezier(.77,0,.18,1);
+        }
+        #screenWipe.reveal {
+            height: 0vh;
+            transition: height 0.5s cubic-bezier(.77,0,.18,1);
         }
 
         #game {
@@ -449,18 +539,18 @@
         #inputBox input {
             color: white;
             font-size: 13px;
-            width: 600px;
+            width: 672px;
             height: 2px;
             z-index: 9;
             background-color: #000;
-            border: 3px dotted #A23AB4;
+            border: 2px solid #ffffff;
             padding: 10px;
             font-size: 16px;
             border-radius: 0px;
             text-align: left;
             position: absolute;
-            top: 125px;
-            left: 58px;
+            top: 117px;
+            left: 28px;
             outline: none;
         }
 
@@ -724,6 +814,91 @@
   </style>
 </head>
 <body>
+
+<!-- Title screen -->
+    <div id="titleScreen">
+        <div id="content">
+            <audio id="titleMusic" src="audio/title.wav" loop></audio>
+            <pre class="logo">
+                                                         ▄▄                                    
+▄                                                ▄         ▀█                                  
+ ▀▀██████████████▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀██████           ▀█         █░                        ▀▀▀▀▀▀▀▀▄
+     ████░            ██████    █▀░░░█            █         █░▄███████▄     ▄█▄ ▄▄█████████▀▀▀ 
+     ██░░     ██████  █░░░██    █░  ██      ▄    ▄█        ██░██░░░░░▀█   ███░ █    █████░     
+     ██░     ██░   █░ █████░    █░  █░ ▄█████░   █  █     ██░██████▄  ▀  ██░░       ███░░      
+    ███░     ███████░ █░░███░ █░█░ ██░ █░░░██░   █  █░   ██░ █░     ▄▄    ███▄      ██░░       
+    ██░      █░░░░░█░██░   ████░████░░ ▀█████░   █  ██░███░  █▄   ███░   ████▀      ██░        
+     █░       ░     ░  ░       ░░░░░░       █░  ██   ███░░   ██████░░ ████░░░      ██░         
+     █░                             ░     ▄██░███░    ░░░     ░░░░░████▄▄▄▄▄▄▄▄▄▄▄▄██░         
+     █░                             ░     █░░██░░                 ██░░░░░░░░░░░░░░░░░          
+     █░                                   ▀███░░                  █░                           
+     ░░                                     ░░░                   █░                           
+     ░                                                           ██░                           
+     ░                                                           █░                            
+     ░                                                           ░░                            
+     ░                                                           ░                             
+     ░                                                                                         
+     ░
+     ░
+     ░
+     ░
+     ░
+     ░
+     ░                                                                                                                                                                                                                                                                                 
+            </pre>
+
+            <div class="startgame">
+            Press [ENTER] 
+            <p>to begin your descent into</p>
+            <p>the TardSpire...</p>
+            </div>
+
+            <pre class="artwork">
+                ║═════════║  ╪    ║            ╪     
+   ╪ ║══║       ║         ║  ║    ║║═════║     ║     
+   ║ ║  ║║══║   ║         ║ ║║    ║║     ║    ║║     
+  ║║ ║  ║║  ║   ║         ║ ║║║══║║║     ║   ║║║║    
+ ██████████████████■■████████████████████████████████
+█ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓■■■  ▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓ ▓▓ ▓  ▓██
+██ ▓▓ ▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓ ■■  ▓▓▓  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓ ██ 
+ █ ▓▓▓■■▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓■■■▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓ ▓██  
+ ██▓▓   ■■■■■▓▓▓▓▓▓▓▓ ▓▓▓■■ ▓▓▓  ■■■■■ ▓▓▓▓▓▓▓ ███   
+  █▓▓    ▓▓▓▓▓  ▓▓▓ ▓▓▓ ▓▓■ ■■■■■■ ▓▓▓▓▓ ▓▓ ████     
+  █▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓   ■■■■▓▓▓▓▓▓▓▓▓▓▓▓▓▓███        
+  █▓  ▓    ▓▓▓   ▓▓ ■■■■▓▓▓▓▓ ▓  ▓ ▓▓▓  ███          
+  ██  ▓▓      ■■■■■■■   ▓▓▓▓▓   ▓▓▓ ▓ ██■            
+   ██  ▓■■■■■■■ ▓▓▓▓▓■■■■■■■■■■■▓ ▓▓███■■            
+  ■■██ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓  ▓▓▓▓   █■■  ■             
+  ■■ ██  ▓▓■■■■ ▓▓▓▓▓▓▓ ▓▓▓▓    ██■■   ■             
+   ■■ █ ▓▓▓▓▓▓■■■■ ▓▓▓▓▓▓▓▓▓   ██ ■    ■             
+    ■■██  ▓▓ ▓▓  ■■■■■■■■■■   ██  ■   ■■             
+     ■ ██  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ██    ■                  
+     ■■ ██  ▓▓  ▓▓     ▓▓  ██■   ■■                  
+     ■■  █     ▓  ■■■■▓ ▓▓██ ■   ■                   
+     ■   ██■■■■■■■   ▓▓ ▓ █ ■■  ■■                   
+          █▓▓▓▓▓▓■■■■ ▓ ▓██ ■   ■                    
+          ■█ ▓▓▓ ▓▓▓■▓▓  █  ■■■                      
+         ■■██ ▓▓ ▓■■■■■ ██    ■                      
+        ■■  █ ▓▓■■■▓▓▓▓ █     ■■                     
+        ■   ██▓■■▓▓▓▓▓ ██■                           
+        ■    ██▓▓■■■▓  █ ■                           
+              ██ ▓▓■■ ██ ■                           
+               ██▓▓▓ ██  ■                           
+                ██ ▓██   ■                           
+                 ██ █                                
+                  ███                                
+                   ██                                  
+            </pre>
+
+            <pre class="credits">
+A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_blank">Xx_TheMilkMan69_xX</a> and <a href="https://packardbell95.com/" target="_blank">MySpace Tom</a>
+     TardQuest™ (2025) || <a href="https://github.com/packardbell95/tardquest" target="_blank">GitHub</a> || <a href="https://milklounge.wang/dungeon/game_preview">Preview Build</a>
+            </pre>
+        </div>
+    </div>
+    <div id="screenWipe"></div>
+
+<!-- In-game -->
     <div class="menus">
         <p><strong>KEY</strong></p>
         <p><span class="player">↑</span> Player: It's you!</p>
@@ -6577,6 +6752,13 @@
                 hp: 13,
                 attack: [2, 5],
                 bitcoins: 4,
+                talkSlots: [
+                    ["Sss...", "Hrk!", "Glorp", "Snail", "Halt!", "Beware"],
+                    ["you", "I", "we", "that guy", "snail", "he", "she", "it", "has"],
+                    ["am", "is", "are", "was", "snail", "violated", "trespassing", "guarding"],
+                    ["slimy", "slow", "fast", "hungry", "snail", "the law", "Judge Joody", "my antennae", "the shell"],
+                    ["?", "!", "!!!", "?!", "...", ".",]
+                ]  
             },
             {
                 id: "stupidDog",
@@ -6626,6 +6808,12 @@
                 hp: 28,
                 attack: [8, 13],
                 bitcoins: 4,
+                talkSlots: [
+                    ["Ugh", "LUG", "Arrgh", "UNG", "Borf", "AHHHHHHH", "Bunginga"],
+                    ["smash", "eat", "touch", "rip", "grab", "friend", "befriend", "love", "rock", "dance", "pull teeth", "over there"],
+                    ["now", "later", "soon", "maybe", "never", "happy", "punch", "kill", "death", "Phillips CD-i", "Bubsy 3D"],
+                    ["?", "!", "!!!", "?!", "...", ".",]
+                ]
             },
             {
                 id: "pissedOffPoultry",
@@ -7200,6 +7388,9 @@
         };
 
         let musicEnabled = true;
+        let sfxEnabled = true;
+        let skipTitleScreen = false;
+        let eatRatAnimationEnabled = true;
 
         function generateMap() {
             setExitPosition();
@@ -7256,6 +7447,25 @@
             spawnHealingTiles();
             spawnCrackedFloors();
         }
+        function loadSettings() {
+            const music = localStorage.getItem("musicEnabled");
+            if (music !== null) musicEnabled = music === "true";
+            const eatRat = localStorage.getItem("eatRatAnimationEnabled");
+            if (eatRat !== null) eatRatAnimationEnabled = eatRat === "true";
+            const sfx = localStorage.getItem("sfxEnabled");
+            if (sfx !== null) sfxEnabled = sfx === "true";
+            const skipTitle = localStorage.getItem("skipTitleScreen");
+            if (skipTitle !== null) skipTitleScreen = skipTitle === "true";
+        }
+
+        function saveSettings() {
+            localStorage.setItem("musicEnabled", musicEnabled);
+            localStorage.setItem("eatRatAnimationEnabled", eatRatAnimationEnabled);
+            localStorage.setItem("sfxEnabled", sfxEnabled);
+            localStorage.setItem("skipTitleScreen", skipTitleScreen);
+        }
+
+        loadSettings();
 
         function placeWelcomeBanner() {
             if (MAP[player.y - 1][player.x]?.type === 'floor') {
@@ -7526,19 +7736,19 @@
                 .slice()
                 .reverse()
                 .map((msg, i) => {
-                    const lightness = 100 - (i * 15); // Fade effect
-                    const color = `hsl(0, 0%, ${Math.max(lightness, 50)}%)`; // Prevent it from getting too dark
+                    const lightness = 100 - (i * 4); // Fade effect
+                    const color = `hsl(0, 0%, ${Math.max(lightness, 60)}%)`;
                     return `<div style="color: ${color};">${msg}</div>`;
                 })
                 .join("");
         }
 
         function playSFX(name) {
+            if (!sfxEnabled) return;
             if (!sfx[name]) {
                 console.error("SFX not found", { name });
                 return;
             }
-
             sfx[name].currentTime = 0;
             sfx[name].play();
         }
@@ -7663,7 +7873,9 @@
             if (player.hp <= 0) {
                 updateBattleLog(`Good job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`);
                 gameOver = true;
-                setTimeout(() => window.location.href = "title.html", 5000);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             }
 
             document.getElementById('game').innerHTML = output;
@@ -7751,6 +7963,15 @@
 
         const origKeydown = document.onkeydown;
         document.addEventListener('keydown', function(e) {
+            const $titleScreen = document.getElementById('titleScreen');
+            if (
+                window._inputBlocked &&
+                $titleScreen &&
+                $titleScreen.style.display !== 'none' &&
+                (e.key === 'Enter' || e.key === ' ')
+            ) {
+                return;
+            }
             if (window._inputBlocked) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -8155,8 +8376,6 @@
             }, 10);
         }
 
-
-
         document.getElementById("persuadeInput").addEventListener("keydown", e => {
             if (e.key === "Enter") {
                 const message = e.target.value;
@@ -8180,20 +8399,32 @@
 
                     if (party.length > 0) {
                         const responder = party[Math.floor(Math.random() * party.length)];
-                        const responses = [
-                            "--you pull out your translator-- 'Wow! Please shut the fuck up.'",
-                            "--you pull out your translator-- 'Just so you know, we're not even...'",
-                            "--you pull out your translator-- 'You can't be fucking serious...'",
-                            "--you pull out your translator-- 'I've come for your pickleeee...'",
-                            "--you pull out your translator-- 'Hey that's cool and all, but have you ever played SpongeBob SquarePants: Revenge of the Flying Dutchman on the Sony PlayStation 2?",
-                            "--they're too busy playing Burnout Revenge on the PS2--",
-                            "--they're too busy sexting your mom--",
-                            "--they pick their own nose, and then they pick YOUR nose...--",
-                            "--you notice them scratching their nuts whilst ignoring your interjection--",
-                        ];
 
-                        const reply = responses[Math.floor(Math.random() * responses.length)];
-                        updateBattleLog(`${responder.name}: ${reply}`);
+                        const enemyDef = enemies.find(e => e.name === responder.name);
+
+                        // Allow use of enemy specific talk slots
+                        let talkSlots = enemyDef?.talkSlots;
+                        if (!Array.isArray(talkSlots) || talkSlots.length === 0) {
+                            // Fallback to default talk slots if an enemy does not have a unique set
+                            talkSlots = [
+                                ["You", "I", "What", "Hey", "Listen here, you", "They", "He", "She"],
+                                ["are", "can't", "should", "will", "must", "need to", "need", "needs", "needed"],
+                                ["go", "find a", "smack a", "kill the", "eat a", "snack on a", "pick my", "pick your", "obey my", "obey your"],
+                                ["pot roast", "many pot roasts", "total dumbass", "gay", "friend", "sandwich", "nose", "orbital laser", "Burnout Revenge on the PS2", "one big dandruff"],
+                                ["?", "!", "!!!", "?!", "...", ".",]
+                            ];
+                        }
+
+                        // Sentence assembly - also removes the space before the punctioation slot
+                        const chosen = talkSlots.map(slot => slot[Math.floor(Math.random() * slot.length)]);
+                        const sentence =
+                            chosen.length > 1
+                                ? chosen.slice(0, -1).join(" ") + chosen[chosen.length - 1]
+                                : chosen[0];
+
+                        updateBattleLog(
+                            `<span class="friendly">${responder.name}:</span> <span class="player">--you pull out your translator--</span> "${sentence}"`
+                        );
                     }
 
                     render();
@@ -8220,7 +8451,7 @@
                             healedThisBattle: false
                         };
                         party.push(newAlly);
-                        updateBattleLog(`<span class="PRS">${currentEnemy.name}</span> is now following your trail of sweat.`);
+                        updateBattleLog(`<span class="friendly">${currentEnemy.name}</span> is now following your trail of sweat.`);
                     } else {
                         updateBattleLog(`<span class="action">${currentEnemy.name}</span> was <span class="friendly">spared</span> and went back home...`);
                     }
@@ -9093,6 +9324,29 @@
                                 : "Turn on the in game music",
                         },
                         {
+                            id: "toggleSFX",
+                            displayText: sfxEnabled ? "Disable SFX" : "Enable SFX",
+                            description: sfxEnabled
+                                ? "Disable sound effects"
+                                : "Enable sound effects",
+                        },
+                        {
+                            id: "toggleSkipTitleScreen",
+                            displayText: skipTitleScreen ? "Disable quickstart" : "Enable quickstart",
+                            description: skipTitleScreen
+                                ? "Skip the title screen automatically upon starting the game"
+                                : "Enable the title screen upon starting the game",                               
+                        },
+                        {
+                            id: "toggleEatRatAnimation",
+                            displayText: eatRatAnimationEnabled
+                                ? "Disable level up animation"
+                                : "Enable level up animation",
+                            description: eatRatAnimationEnabled
+                                ? "Disable rat consumption animation on level up"
+                                : "Enable rat consumption animation on level up",
+                        },
+                        {
                             id: "resetGame",
                             displayText: "Reset the game",
                             description:
@@ -9111,7 +9365,7 @@
                         switch (selectedOptionId) {
                             case "toggleMusic":
                                 musicEnabled = !musicEnabled;
-
+                                saveSettings();
                                 stopAllMusic();
                                 if (musicEnabled) {
                                     player.inCombat
@@ -9121,6 +9375,18 @@
                                             : playRandomExplorationMusic()
                                         );
                                 }
+                                break;
+                            case "toggleSFX":
+                                sfxEnabled = !sfxEnabled;
+                                saveSettings();
+                                break;
+                            case "toggleSkipTitleScreen":
+                                skipTitleScreen = !skipTitleScreen;
+                                saveSettings();
+                                break;
+                            case "toggleEatRatAnimation":
+                                eatRatAnimationEnabled = !eatRatAnimationEnabled;
+                                saveSettings();
                                 break;
                             case "resetGame":
                             case "returnToTitleScreen":
@@ -9163,11 +9429,12 @@
                             id: "returnToTitleScreen",
                             displayText: "Yes, waste my progress",
                             description:
-                                "Abandon the current game and start again " +
-                                "from the title screen",
+                                "Abandon the current game and start again from the title screen",
                         },
                     ],
-                    select: () => window.location.assign("title.html"),
+                    select: () => {
+                        window.location.reload();
+                    },
                 },
                 inventory: {
                     title: "INVENTORY",
@@ -9954,7 +10221,7 @@
                             }
                             menu.close();
                             render();
-                            animEatRat();
+                            if (eatRatAnimationEnabled) animEatRat();
                         } else if (selectedOptionId === "reset") {
                             if (isLevelUpAllocation) {
                                 player.maxHp = levelUpAllocatedStats.base.maxHp;
@@ -10328,6 +10595,58 @@
         ['█▀▀▀ ', '▀▀▀▄ ', '▀▄▄▀ '], // 5
         ['▄▀▀▀ ', '█▀▀▄ ', '▀▄▄▀ '], // 6
     ];
+
+    // --- TITLE SCREEN LOGIC ---
+    const $titleScreen = document.getElementById('titleScreen');
+    const $titleMusic = document.getElementById('titleMusic');
+
+        function showTitleScreen() {
+            $titleScreen.style.display = 'flex';
+            $titleMusic.currentTime = 0;
+            $titleMusic.play();
+            stopAllMusic();
+            window._inputBlocked = true;
+        }
+        function hideTitleScreen() {
+            // Start wipe-in
+            const wipe = document.getElementById('screenWipe');
+            wipe.classList.add('active');
+            $titleScreen.style.transition = '';
+            $titleScreen.style.opacity = 1;
+
+            setTimeout(() => {
+                $titleScreen.style.display = 'none';
+                $titleMusic.pause();
+                $titleMusic.currentTime = 0;
+                window._inputBlocked = false;
+                playRandomExplorationMusic();
+                render();
+
+                // Start wipe-out (reveal)
+                wipe.classList.remove('active');
+                wipe.classList.add('reveal');
+
+                setTimeout(() => {
+                    wipe.classList.remove('reveal');
+                }, 500);
+            }, 500);
+        }
+
+        document.addEventListener('keydown', function titleScreenHandler(e) {
+            if ($titleScreen.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
+                hideTitleScreen();
+                document.removeEventListener('keydown', titleScreenHandler);
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+
+        if (skipTitleScreen) {
+            hideTitleScreen();
+        } else {
+            showTitleScreen();
+        }
+
     </script>
 
 
