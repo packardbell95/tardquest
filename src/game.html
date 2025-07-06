@@ -6485,7 +6485,20 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             ring2: null,
             movementDisabled: false,
             say: function(str) {
-                updateBattleLog(`<span class="player">&lt;YOU&gt;</span> "${str}"`);
+                const message = str.trim();
+                if (message) {
+                    updateBattleLog(`<span class="player">&lt;YOU&gt;</span> "${message}"`);
+                    return;
+                }
+
+                const noMessageFlavorText = [
+                    "With glassy eyes and a slack jaw, you vacantly stare off into the distance",
+                    "Shh... listen. <em>The wind!</em>",
+                    `<span class="player">&lt;YOU&gt;</span> DUHHH BUH BUH DURRRR I AM A BIG FAT DUMB MORON BUUUUHHHHH`,
+                    "This message was intentionally left blank",
+                ];
+                const messageText = noMessageFlavorText[Math.floor(Math.random() * noMessageFlavorText.length)];
+                updateBattleLog(messageText);
             },
             // Resets event flags that are used during rendering. Called after every render
             resetEventFlags: () => {
@@ -8540,6 +8553,15 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
         }
 
         document.getElementById("persuadeInput").addEventListener("keydown", e => {
+            if (e.key === "Escape") {
+                document.getElementById("inputBox").style.display = "none";
+                setTimeout(() => {
+                    awaitingPersuasionText = false;
+                }, 200);
+                render();
+                return;
+            }
+
             if (e.key === "Enter") {
                 const message = e.target.value;
                 // ======== CHEAT COMMANDS ========
@@ -9182,7 +9204,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
 
             if (menu.isOpen()) {
                 menu.handleInput(key);
-            } else if (key === 'escape') {
+            } else if (key === 'escape' && !awaitingPersuasionText) {
                 menu.open('gameSettings');
             } else if (key === 'i') {
                 playSFX('inventoryOpen');
