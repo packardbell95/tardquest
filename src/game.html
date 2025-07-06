@@ -7315,7 +7315,13 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                             for (let y=yMin; y<=yMax; y++) {
                                 for (let x=xMin; x<=xMax; x++) {
                                     if (MAP[y]?.[x]) {
-                                        MAP[y][x]?.onExplode?.(x, y);
+                                        const isVisible =
+                                            typeof MAP[y][x].isVisible !== 'function' ||
+                                            MAP[y][x].isVisible();
+
+                                        if (isVisible) {
+                                            MAP[y][x]?.onExplode?.(x, y);
+                                        }
                                         seenTiles[y][x] = true;
                                     }
                                 }
