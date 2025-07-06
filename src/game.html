@@ -6622,7 +6622,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 return null;
             },
             buy: function(type, key) {
-                const merchandise = (type === 'item' ? items : (type === 'weapon' ? weapons : armor))?.[key];
+                const merchandise = merchant.getMerchandiseCollection(type)?.[key];
                 if (!merchandise) {
                     console.error(`${key} doesn't exist!`);
                     return;
@@ -6634,7 +6634,10 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 }
 
                 // Prevent buying equipment you already own
-                if (type !== 'item' && (player.inventory[key] > 0 || player[type] === key)) {
+                const alreadyOwnedEquipment = type !== 'item' && (player.inventory[key] > 0 || player[type] === key);
+                const alreadyOwnedRing = type === 'ring' && player.hasEquippedRing(key);
+                const alreadyOwned = alreadyOwnedEquipment || alreadyOwnedRing;
+                if (alreadyOwned) {
                     merchant.say("You already own that, stupid!");
                     return;
                 }
@@ -6652,9 +6655,19 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 const merchantText = purchaseFlavorText[Math.floor(Math.random() * purchaseFlavorText.length)];
                 merchant.say(merchantText);
 
-                const merchandiseText = getArticle(merchandise.name) + merchandise.name;
-                updateBattleLog(`You just bought ${merchandiseText}`);
+                merchant.printTransactionMessage('bought', merchandise, merchandise.price);
                 render();
+            },
+            getMerchandiseCollection: function(category) {
+                switch (category) {
+                    case 'item': return items;
+                    case 'weapon': return weapons;
+                    case 'armor': return armor;
+                    case 'ring': return rings;
+                    default:
+                        console.error("Unknown merchanidse category", { category });
+                        return {};
+                }
             },
             set: function () {
                 merchant.setWares();
@@ -6742,6 +6755,29 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                     console.error("Unknown item type", { itemType });
                 }
                 return Math.max(1, Math.floor(price / factor));
+            },
+
+            printTransactionMessage: function(transactionType, merchandise, priceBtc) {
+                if (!['bought', 'sold'].includes(transactionType)) {
+                    console.error(
+                        'Unknown transaction type', {
+                            transactionType,
+                            merchandise,
+                            priceBtc
+                        }
+                    );
+                    return;
+                }
+
+                // Add a space if an article is present
+                const article =
+                    merchandise?.article ? `${merchandise.article} ` : '';
+
+                const message =
+                    `You ${transactionType} ${article}` +
+                    `<span class="friendly">${merchandise.name}</span> for ` +
+                    `<span class="BTC">${priceBtc} BTC</span>.`;
+                updateBattleLog(message);
             },
         };
 
@@ -6912,6 +6948,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
 
         const weapons = {
             fingerNail: {
+                article: 'a',
                 name: "FINGERNAIL",
                 description: "Your very own fingernail! Careful not to break it!",
                 damage: { base: 1, randomMultiplier: 4 },
@@ -6920,6 +6957,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 0, // No requirement
             },
             pointyStick: {
+                article: 'a',
                 name: "POINTY STICK",
                 description: "A stick that fell off of a tree somewhere",
                 damage: { base: 2, randomMultiplier: 5 },
@@ -6928,6 +6966,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 7,
             },
             wiffleBallBat: {
+                article: 'a',
                 name: "WIFFLE BALL BAT",
                 description: "A hollow bat made of plastic",
                 damage: { base: 3, randomMultiplier: 6 },
@@ -6936,6 +6975,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 13,
             },
             nunchucks: {
+                article: '',
                 name: "NUNCHUCKS",
                 description: "Two pieces of wood connected by a chain",
                 damage: { base: 6, randomMultiplier: 9 },
@@ -6944,6 +6984,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 20,
             },
             atlatlSpear: {
+                article: 'an',
                 name: "ATLATL SPEAR",
                 description: "A spear with a throwing lever",
                 damage: { base: 10, randomMultiplier: 11 },
@@ -6952,6 +6993,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 25,
             },
             bludgeoningMace: {
+                article: 'a',
                 name: "BLUDGEONING MACE",
                 description: "A stick with a spikey metal ball at the end",
                 damage: { base: 10, randomMultiplier: 14 },
@@ -6960,6 +7002,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 25,
             },
             danceClub: {
+                article: 'a',
                 name: "DANCE CLUB",
                 description: "A club long enough to pole dance on... maybe it is one? You don't know. Legend has it, an obscure forum user once wielded one...",
                 damage: { base: 13, randomMultiplier: 15 },
@@ -6968,6 +7011,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 28,
             },
             cathodeRayTubeMonitor: {
+                article: 'a',
                 name: "CATHODE RAY TUBE MONITOR",
                 description: "A CRT monitor. Heavy as piss.",
                 damage: { base: 15, randomMultiplier: 17 },
@@ -6976,6 +7020,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 33,
             },
             magicPencil: {
+                article: 'a',
                 name: "MAGIC PENCIL",
                 description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
                 damage: { base: 17, randomMultiplier: 18 },
@@ -6984,6 +7029,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredStr: 38,
             },
             goldenWang: {
+                article: 'a',
                 name: "GOLDEN WANG",
                 description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
                 damage: { base: 69, randomMultiplier: 69 },
@@ -6995,6 +7041,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
 
         const armor = {
             pectoralMass: {
+                article: 'a',
                 name: "PECTORAL MASS",
                 description: "Your totally big, meaty pectorals! You're not fat at all...'",
                 defense: 1,
@@ -7003,6 +7050,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredEnd: 0,
             },
             graphicTee: {
+                article: 'a',
                 name: "GRAPHIC TEE",
                 description: "A t-shirt that says 'Normal people scare me'",
                 defense: 2,
@@ -7011,6 +7059,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredEnd: 8,
             },
             barrelWithSuspenders: {
+                article: 'a',
                 name: "BARREL (with suspenders)",
                 description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
                 defense: 3,
@@ -7019,6 +7068,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredEnd: 11,
             },
             leatherArmor: {
+                article: '',
                 name: "LEATHER ARMOR",
                 description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
                 defense: 6,
@@ -7027,6 +7077,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredEnd: 15,
             },
             milaneseArmor: {
+                article: '',
                 name: "MILANESE ARMOR",
                 description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
                 defense: 12,
@@ -7035,6 +7086,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredEnd: 18,
             },
             blackPlateArmor: {
+                article: '',
                 name: "BLACK PLATE ARMOR",
                 description: "Literally a giant black dinner plate. Deceptively protective.",
                 defense: 16,
@@ -7043,6 +7095,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 requiredEnd: 25,
             },
             nokiaMail: {
+                article: '',
                 name: "NOKIA MAIL",
                 description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
                 defense: 21,
@@ -7055,6 +7108,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
         const rings = {
         // PRS Boosters
             ringOfSexyUnderwear: {
+                article: 'a',
                 name: "RING OF SEXY UNDERWEAR",
                 description: "A ring with an engraving of a pair of strangely attractive undergarments. +3 PRS",
                 effects: { persuasion: 3 },
@@ -7065,6 +7119,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             },
 
             ringOfFrenchAccent: {
+                article: 'a',
                 name: "FRENCHLY ACCENTED RING",
                 description: "A ring that somehow magically forces you to speak in a French accent. VERY sexy! +5 PRS",
                 effects: { persuasion: 5 },
@@ -7076,7 +7131,8 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
 
         // HP Boosters
             ringValentines: {
-                name: "VALENTINES DAY RING",
+                article: 'a',
+                name: "VALENTINE'S DAY RING",
                 description: "A ring that was given to somebody by their Valentine... and dumped down a hole. You see 'Amy' engraved onto a heart. How sad. +5 HP",
                 effects: { maxHp: 5 },
                 price: 60,
@@ -7085,6 +7141,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 weight: 1,
             },
             ringBloodstream: {
+                article: 'a',
                 name: "BLOODSTREAM NOSERING",
                 description: "A nosering that injects blood into your veins. Sounds painful... +8 HP",
                 effects: { maxHp: 8 },
@@ -7095,6 +7152,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             },
         //DEF Boosters
             ringOfHardening: {
+                article: 'a',
                 name: "COCKRING OF HARDENING",
                 description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +5 DEF",
                 effects: { defense: 2 },
@@ -7104,6 +7162,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 weight: 1,
             },
             ringPectoralPiercing: {
+                article: 'a',
                 name: "PECTORAL PIERCING",
                 description: "A piercing that can fit anywhere on your big, juicy pectorals. +10 DEF",
                 effects: { defense: 5 },
@@ -7114,6 +7173,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             },
         // SPD Boosters
             ringPinkyToe: {
+                article: 'a',
                 name: "PINKY TOE RING",
                 description: "A ring for your pinky toe. The only way for this to work is by putting it directly through the toenail... kinda like that SpongeBob episode! +1 SPD",
                 effects: { speed: 1 },
@@ -7123,6 +7183,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 weight: 1,
             },
             ringCrack: {
+                article: 'a',
                 name: "CRACK INFUSED RING",
                 description: "A ring infused with crack cocaine. +2 SPD",
                 effects: { speed: 2 },
@@ -7133,6 +7194,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             },
         // LUK Boosters
             ringGamble: {
+                article: 'the',
                 name: "GAMBLER'S RING",
                 description: "A cheap looking ring with a 240p image of a slot machine on it. +4 LUK",
                 effects: { luck: 4 },
@@ -7142,6 +7204,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 weight: 1,
             },
             ringEscobar: {
+                article: '',
                 name: "PABLO ESCOBAR'S GOLDEN RING",
                 description: "A golden ring that once belonged to Pablo Escobar. It smells rather illegal, but who give a shit? +9 LUK",
                 effects: { luck: 9 },
@@ -7152,6 +7215,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             },
         // Special
             ringOfSightliness: {
+                article: 'a',
                 name: "RING OF SIGHTLINESS",
                 description: "A ring with an eyeball so realistic looking, it could actually be real. Allows you to see better in the Tardspire",
                 effects: {},
@@ -7161,6 +7225,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 weight: 2,
             },
             ringOfStinky: {
+                article: 'a',
                 name: "RING OF STINKY",
                 description: "A ring so stinky, SO putrid, that even monsters will reconsider confronting you. Reduces encounter rate by 30%",
                 effects: {},
@@ -7170,6 +7235,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 weight: 2,
             },
             ringOfAmplifiedAudio: {
+                article: 'a',
                 name: "RING OF AMPLIFIED AUDIO",
                 description: "A ring with a tiny, yet deceptively loud megaphone. Miniphone? idk. +2 PRS and a PRS attempt",
                 effects: { persuasion: 2 },
@@ -7182,6 +7248,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
 
         const items = {
             canOfHamms: {
+                article: 'a',
                 name: "CAN OF HAMM'S",
                 description: "A warm can of beer. Delicious..? +1 LOAD, +5 HP",
                 use: () => {
@@ -7194,6 +7261,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 
             },
             cupOfLean: {
+                article: 'a',
                 name: "CUP OF LEAN",
                 description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
                 use: () => {
@@ -7205,6 +7273,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 price: 30,
             },
             glassOfToiletWater: {
+                article: 'a',
                 name: "GLASS OF TOILET WATER",
                 description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied...  +1.2 LOAD, +50 HP",
                 use: () => {
@@ -7216,6 +7285,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 price: 50,
             },
             alaskaRaisins: {
+                article: '',
                 name: "ALASKA RAISINS",
                 description: "Holy shit! It's the Alaska Raisins! +1.5 LOAD, +70 HP",
                 use: () => {
@@ -7228,6 +7298,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 price: 80,
             },
             dowsingRod: {
+                article: 'a',
                 name: "DOWSING ROD",
                 description: "A Y-shaped stick. Reveals the exit of the current floor. +1.7 LOAD",
                 use: () => {
@@ -7249,6 +7320,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 price: 20,
             },
             torch: {
+                article: 'a',
                 name: "TORCH",
                 description: "An unlit torch. Using it will reveal the map of the current floor. +1.2 LOAD",
                 use: () => {
@@ -7267,6 +7339,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 price: 60,
             },
             brickOfC4: {
+                article: 'a',
                 name: "BRICK OF C-4",
                 description: "An incendiary plastic explosive. Great for turning anything into nothing real quick! +3 LOAD",
                 use: () => {
@@ -8789,14 +8862,6 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             updateBattleLog(`<span class="action">RETARD ALERT! INVALID CHEAT: ${cmd}</span>`);
         }
 
-        function getArticle(noun) {
-            if (noun.match(/^\w*s\b|\barmor$/i)) {
-                return '';
-            }
-
-            return ['a', 'e', 'i', 'o', 'u'].includes(noun.substr(0, 1).toLowerCase()) ? 'an ' : 'a ';
-        }
-
         function gamble() {
             player.bitcoins -= gambler.playPrice;
             updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
@@ -9866,8 +9931,10 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                             ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
                             : "Your wallet is emptier than a lughead's skull. But you can still look around";
 
-                        const currentWeapon = weapons[player.weapon].name;
-                        const currentWeaponDisplay = getArticle(currentWeapon) + currentWeapon;
+                        const currentWeapon = weapons[player.weapon];
+                        const article =
+                            currentWeapon?.article ? `${currentWeapon.article} ` : '';
+                        const currentWeaponDisplay = article + currentWeapon.name;
                         const wieldingMessage = `You are currently wielding ${currentWeaponDisplay}`;
 
                         return `${message}\n\n${wieldingMessage}`;
@@ -9912,8 +9979,10 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                             ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
                             : "Your wallet is emptier than a lughead's skull. But you can still look around";
 
-                        const currentArmor = armor[player.armor].name;
-                        const currentArmorDisplay = getArticle(currentArmor) + currentArmor;
+                        const currentArmor = armor[player.armor];
+                        const article =
+                            currentArmor?.article ? `${currentArmor.article} ` : '';
+                        const currentArmorDisplay = article + currentArmor.name;
                         const wearingMessage = `You are currently wearing ${currentArmorDisplay}`;
 
                         return `${message}\n\n${wearingMessage}`;
@@ -9981,21 +10050,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                     },
                     select: (selectedOptionId) => {
                         // Buy logic for rings
-                        const ring = rings[selectedOptionId];
-                        if (!ring) return;
-                        if (player.bitcoins < ring.price) {
-                            merchant.say('Too bad, kid. Come back when you get some coin!');
-                            return;
-                        }
-                        if (player.inventory[selectedOptionId] > 0 || player.ring1 === selectedOptionId || player.ring2 === selectedOptionId) {
-                            merchant.say("You already own that, stupid!");
-                            return;
-                        }
-                        player.bitcoins -= ring.price;
-                        playSFX('kaching');
-                        player.inventory[selectedOptionId] = (player.inventory[selectedOptionId] || 0) + 1;
-                        merchant.say("HAHA! You won't regret it!");
-                        updateBattleLog(`You just bought a ${ring.name}`);
+                        merchant.buy('ring', selectedOptionId);
                         render();
                         menu.render();
                     },
@@ -10072,17 +10127,22 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                         }
 
                         const [_, type, itemId] = selectedOptionId.split("_");
+                        let soldObject, value = 0;
+
                         if (type === "weapon") {
                             if (player.weapon === itemId) {
                                 merchant.say("You sure you wanna point that thing at me? I've got a 12 gauge hidden under my sleeve, you know...");
                                 return;
                             }
                             if (player.inventory[itemId] > 0) {
-                                const value = merchant.getSalePrice('weapon', weapons[itemId].price);
+                                soldObject = weapons[itemId];
+                                value = merchant.getSalePrice('weapon', weapons[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
-                                updateBattleLog(`You sold <span class="friendly">${weapons[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            } else {
+                                console.error("Tried to sell an item that the player does not have", { itemId });
+                                return;
                             }
                         } else if (type === "armor") {
                             if (player.armor === itemId) {
@@ -10090,35 +10150,47 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                                 return;
                             }
                             if (player.inventory[itemId] > 0) {
-                                const value = merchant.getSalePrice('armor', armor[itemId].price);
+                                soldObject = armor[itemId];
+                                value = merchant.getSalePrice('armor', armor[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
-                                updateBattleLog(`You sold <span class="friendly">${armor[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
-                            }                        
+                            } else {
+                                console.error("Tried to sell armor that the player does not have", { itemId });
+                                return;
+                            }
                         } else if (type === "ring") {
-                            if (player.ring1 === itemId || player.ring2 === itemId) {
+                            if (player.hasEquippedRing(itemId)) {
                                 merchant.say("I don't swing that way, kid, but if you really wanna propose you gotta take the damn ring off.");
                                 return;
                             }
                             if (player.inventory[itemId] > 0) {
-                                const value = merchant.getSalePrice('ring', rings[itemId].price);
+                                soldObject = rings[itemId];
+                                value = merchant.getSalePrice('ring', rings[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
-                                updateBattleLog(`You sold <span class="friendly">${rings[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            } else {
+                                console.error("Tried to sell a ring that the player does not have", { itemId });
+                                return;
                             }
                         } else if (type === "item") {
                             if (player.inventory[itemId] > 0) {
-                                const value = merchant.getSalePrice('item', items[itemId].price);
+                                soldObject = items[itemId];
+                                value = merchant.getSalePrice('item', items[itemId].price);
                                 player.bitcoins += value;
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
-                                updateBattleLog(`You sold <span class="friendly">${items[itemId].name}</span> for <span class="BTC">${value} BTC</span>.`);
+                            } else {
+                                console.error("Tried to sell an item that the player does not have", { itemId });
+                                return;
                             }
                         }
-                        render();
+
+                        playSFX('kaching');
+                        merchant.printTransactionMessage('sold', soldObject, value);
                         menu.render();
+                        render();
                     },
                 },
 
