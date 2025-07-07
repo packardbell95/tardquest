@@ -7183,7 +7183,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             ringOfHardening: {
                 article: 'a',
                 name: "COCKRING OF HARDENING",
-                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +5 DEF",
+                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +2 DEF",
                 effects: { defense: 2 },
                 price: 60,
                 merchantStockChance: 0.4,
@@ -7193,7 +7193,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             ringPectoralPiercing: {
                 article: 'a',
                 name: "PECTORAL PIERCING",
-                description: "A piercing that can fit anywhere on your big, juicy pectorals. +10 DEF",
+                description: "A piercing that can fit anywhere on your big, juicy pectorals. +5 DEF",
                 effects: { defense: 5 },
                 price: 100,
                 merchantStockChance: 0.3,
@@ -7225,8 +7225,8 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             ringGamble: {
                 article: 'the',
                 name: "GAMBLER'S RING",
-                description: "A cheap looking ring with a 240p image of a slot machine on it. +4 LUK",
-                effects: { luck: 4 },
+                description: "A cheap looking ring with a 240p image of a slot machine on it. +2 LUK",
+                effects: { luck: 2 },
                 price: 150,
                 merchantStockChance: 0.1,
                 chestChance: 0.05,
@@ -7235,8 +7235,8 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
             ringEscobar: {
                 article: '',
                 name: "PABLO ESCOBAR'S GOLDEN RING",
-                description: "A golden ring that once belonged to Pablo Escobar. It smells rather illegal, but who give a shit? +9 LUK",
-                effects: { luck: 9 },
+                description: "A golden ring that once belonged to Pablo Escobar. It smells rather illegal, but who give a shit? +4 LUK",
+                effects: { luck: 4 },
                 price: 200,
                 merchantStockChance: 0.07,
                 chestChance: 0.02,
@@ -8438,8 +8438,8 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
         }
 
         function getCarryWeightLimit() {
-            // Example: 35 base + 0.4 per END point
-            return 35 + player.endurance * 0.3;
+            // Example: 35 base + 0.6 per END point
+            return 35 + player.endurance * 0.4;
         }
 
         function updateBreathingSFX() {
@@ -10530,6 +10530,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                                 player.defense = levelUpAllocatedStats.base.defense;
                                 player.strength = levelUpAllocatedStats.base.strength;
                                 player.persuasion = levelUpAllocatedStats.base.persuasion;
+                                player.endurance = levelUpAllocatedStats.base.endurance;
                                 player.speed = levelUpAllocatedStats.base.speed;
                                 player.luck = levelUpAllocatedStats.base.luck;
                                 player.remainingPoints = 6;
@@ -10618,6 +10619,7 @@ A Javascript game by <a href="https://xxthemilkman69xx.neocities.org/" target="_
                 maxHp: player.maxHp,
                 defense: player.defense,
                 strength: player.strength,
+                endurance: player.endurance,
                 persuasion: player.persuasion,
                 speed: player.speed,
                 luck: player.luck
