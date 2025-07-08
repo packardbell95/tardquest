@@ -30,6 +30,9 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 [endless_self](https://forum.agoraroad.com/index.php?members/endless_self.6570/)
 
+### LIBRARIES USED
+- Synthesized voices are powered by [Imrane03/better-sam (SAM Software Automatic Mouth)](https://github.com/Imrane03/better-sam)
+
 # Objective
 Fight your way to the end of the dungeon!
 
