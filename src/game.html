@@ -7967,6 +7967,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             drawFrame();
         }
 
+        // Death
+        function showDeathAsciiArt() {
+            const overlay = document.getElementById('portraitArtOverlay');
+            if (!overlay) return;
+            clearTimeout(inventoryAsciiAnimInterval);
+            inventoryAsciiFrame = 0;
+            overlay.classList.remove('hidden');
+
+            function drawFrame() {
+                overlay.innerText = portraitFramesDeath[inventoryAsciiFrame];
+                inventoryAsciiFrame++;
+                if (inventoryAsciiFrame < portraitFramesDeath.length) {
+                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 100);
+                } else {
+                    inventoryAsciiFrame = 0; // Loop
+                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 100);
+                }
+            }
+            drawFrame();
+        }
+
                 function getRandomMerchantItem() {
             const availableItems = Object.keys(items).filter(itemId => items[itemId].merchantStockChance > 0);
             return availableItems[Math.floor(Math.random() * availableItems.length)];
@@ -8278,6 +8299,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
 
             if (player.hp <= 0) {
+                showDeathAsciiArt();
                 updateBattleLog(`Good job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`);
                 gameOver = true;
                 setTimeout(() => {
@@ -11901,6 +11923,138 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
       █                              █                █          
       █                              █                █          
        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀                        
+    `
+    ];
+
+    const portraitFramesDeath = [
+    `
+                                                                 
+                                                                 
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
+                 ▄▀▀▀                  ▀▀▄▄                      
+                █▀                         ███                   
+             ▄▄▀▀                            ███                 
+            ▄▀                                 ██                
+           ▄▀                   ▄  ▄▄▄▄▄▄▄      ██               
+           █▀              ▄    ▀▄▀       █      ██              
+          █      ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄         █              
+          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █              
+           █       █▒▒▒▒██        ██▒▒▒▒█        ██              
+            █      █████            █████        █               
+            █                ▄▄                  █               
+            █▄▄             █▓▓█                █                
+            █ ▀▀█          █▓▓▓▓█              ██                
+            ██   ▀▄▄        ▀▀▀▀         ▄    ██                 
+             █   █▒▒█▄                  ▄▀▀▀▀▀██                 
+             ██  █▒▒▒▒█               ▄▄█    ██                  
+              ██ ██▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    █                   
+               ██ ██▒▒█ █  █  █  █  ██▒▒█  ██                    
+                █  ██▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒██ ██                     
+                ██  █▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█ ██                      
+                 ██ ▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀ █                       
+                  ██  █ █  █    █   █ █  █                       
+                   █  █▄█  █    █   █ █  █                       
+                   ███  ▀▀█▀▀█▀▀█▀▀█▀▀  ██                       
+                     ██                ██                        
+                      █                █                         
+                       ████████████████              
+    `,
+    `
+                                                                 
+                                                                 
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
+                 ▄▀▀▀                  ▀▀▄▄                      
+                █▀                         ███                   
+             ▄▄▀▀                            ███                 
+            ▄▀                  ▄  ▄▄▄▄▄▄▄     ██                
+           ▄▀              ▄    ▀▄▀       █     ██               
+           █▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄        ██              
+          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █              
+          █        █▒▒▒▒██        ██▒▒▒▒█         █              
+           █       █████            █████        ██              
+            █                ▄▄                  █               
+            █               █▓▓█                 █               
+            █              █▓▓▓▓█               █                
+            █▄▄▄▄           ▀▀▀▀               ██                
+            ██   ▀▄▄                          ██                 
+             █   █▒▒█▄                ▄▄▄▄▄▄▄ ██                 
+             ██  █▒▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    ██                  
+              ██ ██▒▒▒█ █  █  █  █  ██▒▒█    █                   
+               ██ ██▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▒█  ██                    
+                █  ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██ ██                     
+                ██  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ ██                      
+                 ██ ▀ █ █  █    █   █ █▀ █                       
+                  ██  █▄█  █    █   █ █  █                       
+                   █    ▀▀█▀▀█▀▀█▀▀█▀▀   █                       
+                   ███                  ██                       
+                     ██                ██                        
+                      ██████████████████                         
+                                                                                                                          
+    `,
+    `
+                                                                 
+                                                                 
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
+                 ▄▀▀▀                  ▀▀▄▄                      
+                █▀              ▄  ▄▄▄▄▄▄▄ ███                   
+             ▄▄▀▀               ▀▄▀       █  ███                 
+            ▄▀             ▄                   ██                
+           ▄▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄       ██               
+           █▀      █▒▒▒▒▒█        █▒▒▒▒▒█        ██              
+          █        ███████        ███████         █              
+          █                                       █              
+           █                 ▄▄                  ██              
+            █               █▓▓█                 █               
+            █              █▓▓▓▓█                █               
+            █               ▀▀▀▀                █                
+            █                                  ██                
+            ██                                ██                 
+             █▄                               ██                 
+             ██     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄     ██                  
+              ██▄▄▀▀▒▒█ █  █  █  █  █ █▒▀▄▄ ▀█                   
+               ██ ██▒▒█ █  █  █  █  █ █▒▒▒▒██                    
+                █  ██▄█ █  █  █  █  █ █▒▄█▒█                     
+                ██    █▄█  █  █  █  █ █▀ ██                      
+                 ██     ▀▀█▀▀█▀▀█▀▀█▀▀   █                       
+                  ██                     █                       
+                   █                     █                       
+                    ▀▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀▀▀                        
+                                                                 
+                                                                 
+                                                                                                                  
+    `,
+    `
+                                                                 
+                                                                 
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
+                 ▄▀▀▀                  ▀▀▄▄                      
+                █▀                         ███                   
+             ▄▄▀▀                            ███                 
+            ▄▀                  ▄  ▄▄▄▄▄▄▄     ██                
+           ▄▀              ▄    ▀▄▀       █     ██               
+           █▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄        ██              
+          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █              
+          █        █▒▒▒▒██        ██▒▒▒▒█         █              
+           █       █████            █████        ██              
+            █                ▄▄                  █               
+            █               █▓▓█                 █               
+            █              █▓▓▓▓█               █                
+            █▄▄▄▄           ▀▀▀▀               ██                
+            ██   ▀▄▄                          ██                 
+             █   █▒▒█▄                ▄▄▄▄▄▄▄ ██                 
+             ██  █▒▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    ██                  
+              ██ ██▒▒▒█ █  █  █  █  ██▒▒█    █                   
+               ██ ██▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▒█  ██                    
+                █  ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██ ██                     
+                ██  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ ██                      
+                 ██ ▀ █ █  █    █   █ █▀ █                       
+                  ██  █▄█  █    █   █ █  █                       
+                   █    ▀▀█▀▀█▀▀█▀▀█▀▀   █                       
+                   ███                  ██                       
+                     ██                ██                        
+                      ██████████████████                         
+                                                                                                                
+                      
     `
     ];
 
