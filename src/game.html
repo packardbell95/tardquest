@@ -545,7 +545,8 @@
         }
 
         #battleLog,
-        #minimap {
+        #minimap,
+        #portraitArtOverlay {
             background: #000;
             border: 2px solid #fff;
             padding: 10px;
@@ -561,13 +562,26 @@
             overflow-y: scroll;
         }
 
-        #minimap {
+        #minimap,
+        #portraitArtOverlay {
             height: 166px;
             width: 216px;
             padding: 2px;
             white-space: pre;
             font-size: 12px;
+        }
+
+        #minimap {
             border-top: 0;
+        }
+
+        #minimap > span {
+            cursor: help;
+        }
+
+        #minimap > span:hover {
+            color: #000;
+            background-color: #fff;
         }
 
         #minimap .crackedFloorSlight,
@@ -577,16 +591,22 @@
 
         #portraitArtOverlay.portrait-art {
             position: absolute;
-            left: 31px;
-            top: 140px;
-            width: 217px;
-            height: 166px;
+            top: 135px;
             pointer-events: none;
-            z-index: 10;
             font-size: 5px;
             line-height: 1;
-            white-space: pre;
-            background-color: #000000;
+        }
+
+        #portraitArtOverlay.chest {
+            color: #FAEB4A;
+        }
+
+        #portraitArtOverlay.settings {
+            color: #eef;
+        }
+
+        #portraitArtOverlay.inventory {
+            color: #fc8;
         }
 
         .hidden {
@@ -875,6 +895,89 @@
         .scene_character_bloodyCrater {
             color: #9009 !important;
             background-color: #3003 !important;
+        }
+
+        /* Tooltip styles */
+        [role="tooltip"] {
+            opacity: 0;
+            position: absolute;
+            width: auto;
+            height: auto;
+            min-height: 25px;
+            line-height: 25px;
+            font-size: 1rem;
+            background-color: #000d;
+            color: #fff;
+            margin-top: 10px;
+            padding: 4px;
+            transform: translateX(-50%);
+        }
+
+        [role="tooltip"].top {
+            transform: translateX(calc(-50% + 4.5px)) translateY(calc(-100% - 20px));
+        }
+
+        [role="tooltip"].bottom {
+            transform: translateX(calc(-50% + 4.5px)) translateY(15px);
+        }
+
+        [role="tooltip"].left {
+            transform: translateX(calc(-100% - 10px)) translateY(calc(-50% - 2.5px));
+        }
+
+        [role="tooltip"].right {
+            transform: translateX(18px) translateY(calc(-50% - 2.5px));
+        }
+
+        [role="tooltip"].active {
+            opacity: 1;
+            transition: opacity 0.1s;
+        }
+
+        [role="tooltip"]::before {
+            content: "";
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+            border-top: 0;
+            position: absolute;
+            margin-top: -20px;
+            transform: translateX(-50%);
+            left: 50%;
+        }
+
+        .mapCellDetails {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            padding: 10px;
+            border: 2px solid #fff;
+        }
+
+        .mapCellDetails .enlargedTile {
+            height: 40px;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            border: 2px solid #fff;
+        }
+
+        .mapCellDetails .details {
+            display: flex;
+            flex-direction: column;
+            height: 44px;
+        }
+
+        .mapCellDetails .details .coordinates {
+            font-size: 12px;
+            font-style: italic;
+            line-height: 16px;
+        }
+
+        .mapCellDetails .details .name {
+            font-size: 18px;
         }
     </style>
 </head>
@@ -5910,6 +6013,1257 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
         };
 
+        const Tooltip = {
+            delayTimeMs: 300,
+            timer: null,
+            display: (e) => {
+                const trigger = e.target;
+                const tooltip = trigger.querySelector("[role=tooltip]");
+                const { x, y, width, height } = trigger.getBoundingClientRect();
+
+                tooltip.style.left = `${Math.floor(x)}px`;
+                tooltip.style.top = `${Math.floor(y)}px`;
+                tooltip.classList.add("active");
+            },
+            hide: (e) => {
+                const tooltip = e.target.querySelector("[role=tooltip]");
+                tooltip.classList.remove("active");
+            },
+            refresh: () => {
+                document.querySelectorAll("[data-tooltipHtml]").forEach((trigger) => {
+                    let tooltip = document.createElement("div");
+
+                    tooltip.setAttribute("role", "tooltip");
+                    tooltip.setAttribute("inert", true);
+                    if (trigger.dataset?.tooltipposition) {
+                        tooltip.classList.add(trigger.dataset.tooltipposition);
+                    }
+                    tooltip.innerHTML = trigger.dataset.tooltiphtml;
+
+                    trigger.appendChild(tooltip);
+
+                    trigger.addEventListener("mouseenter", (e) => {
+                        clearTimeout(Tooltip.timer);
+
+                        Tooltip.timer = setTimeout(() => {
+                            Tooltip.display(e);
+                        }, Tooltip.delayTimeMs);
+                    });
+
+                    trigger.addEventListener("mouseleave", (e) => {
+                        clearTimeout(Tooltip.timer);
+                        Tooltip.hide(e);
+                    });
+                });
+            },
+        };
+
+        const Minimap = {
+            hide: () => document.getElementById('minimap').classList.add('hidden'),
+            show: () => document.getElementById('minimap').classList.remove('hidden'),
+            draw: () => {
+                const $minimap = document.getElementById('minimap');
+                $minimap.replaceChildren();
+
+                for (let y = 0; y < HEIGHT; y++) {
+                    for (let x = 0; x < WIDTH; x++) {
+                        let tile = '';
+                        let tileClass = '';
+                        if (x === player.x && y === player.y) {
+                            const arrow = ['↑', '→', '↓', '←'][player.dir];
+                            tile = arrow;
+                            tileClass = 'player';
+                        } else if (!seenTiles[y][x]) {
+                            tile = '?';
+                            tileClass = 'unexplored';
+                        } else {
+                            // Use a visibility function if one is available
+                            // Otherwise, assume that the tile is visible
+                            const isVisible = typeof MAP[y][x]?.isVisible !== 'function' || MAP[y][x].isVisible();
+
+                            if (isVisible) {
+                                tile = MAP[y][x]?.mapCharacter || '?';
+                                tileClass = MAP[y][x]?.type || 'unknown';
+                                tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
+                            } else {
+                                const emptyCell = new MapCell();
+                                tile = emptyCell.mapCharacter;
+                                tileClass = emptyCell.type;
+                            }
+                        }
+
+                        const displayName =
+                            (x === player.x && y === player.y)
+                                ? 'You ヽ(°٢° )ノ'
+                                : (seenTiles[y][x]
+                                    ? MAP[y][x].displayName
+                                    : "Unexplored"
+                                );
+
+                        const $cell = document.createElement('span');
+                        $cell.classList.add(tileClass);
+                        $cell.setAttribute(
+                            'data-tooltipHtml',
+                            `<div class="mapCellDetails">
+                                <div class="enlargedTile ${tileClass}">${tile}</div>
+                                <div class="details">
+                                    <div class="name">${displayName}</div>
+                                    <div class="coordinates">(${x}, ${y})</div>
+                                </div>
+                            </div>`
+                        );
+
+                        $cell.setAttribute('data-tooltipPosition', 'right');
+                        $cell.innerText = tile;
+                        $minimap.append($cell);
+                    }
+
+                    if (y < HEIGHT - 1) {
+                        $minimap.append(document.createElement('br'));
+                    }
+                }
+
+                Tooltip.refresh();
+            }
+        };
+
+        const Portrait = {
+            activeFrame: 0,
+            timer: null,
+            hide: () => {
+                clearTimeout(Portrait.timer);
+                document.getElementById('portraitArtOverlay').classList.add('hidden');
+                Minimap.show();
+            },
+            show: (portraitName) => {
+                const $overlay = document.getElementById('portraitArtOverlay');
+                if (!$overlay) {
+                    console.error("Could not find portraitArtOverlay");
+                    return;
+                }
+
+                const animation = Portrait.animations[portraitName];
+                if (typeof animation !== 'object') {
+                    console.error("Could not find specified portrait", {
+                        portraitName,
+                    });
+                    return;
+                }
+
+                Minimap.hide();
+
+                clearTimeout(Portrait.timer);
+                Portrait.activeFrame = 0;
+                $overlay.className = `portrait-art ${portraitName}`
+
+                function drawFrame() {
+                    const formattedFrame =
+                        ('\n'.repeat(animation.padding.y)) +
+                        (animation.frames[Portrait.activeFrame]
+                            .split("\n")
+                            .map((l) => " ".repeat(animation.padding.x || 0) + l)
+                            .join('\n')
+                    );
+
+                    $overlay.innerText = formattedFrame;
+                    Portrait.activeFrame++;
+
+                    if (Portrait.activeFrame < animation.frames.length) {
+                        Portrait.timer = setTimeout(
+                            drawFrame,
+                            animation.frameDelayMs
+                        );
+                    } else {
+                        if (animation.playbackMode === "repeat") {
+                            Portrait.activeFrame = 0;
+                            Portrait.timer = setTimeout(
+                                drawFrame,
+                                animation.frameDelayMs
+                            );
+                        }
+                    }
+                }
+                drawFrame();
+            },
+            animations: {
+                inventory: {
+                    frameDelayMs: 110,
+                    playbackMode: "once",
+                    padding: {
+                        x: 6,
+                        y: 3,
+                    },
+                    frames: [
+                        `
+                            ██████
+                       ██████    ████
+                    ████  ██   ███  ██
+                    █      █  ██   ███
+                    █████       ███
+                        ██      █
+                         █      █        █
+                        ██████████████████
+                         █      █
+                        ██      ██
+                      ███        █
+                    ███  ██       █
+                 ████    █        ███
+             █████      ██    █     ████
+          ████         ██      █       ████
+       ████           ██       █          █████████
+    ███             ██         ██                 ██████
+  ███             ██            █       ███            ██
+  █              ██              █         ███████      ██
+ █                               ██               █████  █
+ █                                ██                     █
+ █                                 ██                   ██
+██                                  ██                 ██
+██                                   █               ███
+ █                                                 ███
+  ██                                             ███
+   ███                                       █████
+     ████                                █████
+        █████████████████████████████████
+                        `,
+                        `
+
+                   █████████████████
+                 ███  ███      ███ ████
+                ██      █     ██      ███
+                ███           █      ████
+                  ██████          ████
+                       ██       ███    ███
+                        ██   ███████████
+                         █      █
+                        ██      ██
+                      ███        █
+                    ███           █
+                 ████             ███
+             █████                  ████
+          ████                         ████
+       ████         ██                    █████████
+    ███            ██        █                    ██████
+  ███             ██         ██        ███             ██
+  █              █            █          ████           ██
+ █              ██            ██             ████        █
+ █           ████              █                ███      █
+ █        ████                  █                 ██    ██
+██      ███                      ██                █   ██
+██     ██                         ██                 ███
+ █     █                           ██              ███
+  ██   █                            ██           ███
+   ███                                       █████
+     ████                                █████
+        █████████████████████████████████
+                        `,
+                        `
+
+           █████████████████████
+         ███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████
+        ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████
+        ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████
+         █████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███
+             ███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██████
+               ███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████
+                 ██  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███
+                 ██          ▒▒▒▒▒██████████
+             █████                  ████   ███████
+          ████      █                  ████      ██████
+       ████        ██                ██   █████████   ████
+    ███           ██                  ███         ██████ ████
+  ███            ██                     ████           ██   ██
+  █            ███             █           ███          ██   █
+ █           ███               █             ███         █
+ █        ████                 ██              ██        █
+ █     ████                     █               ██      ██
+██  ████                        ██               █     ██
+██ ██                            █               ██  ███
+ █                               ██                ███
+  ██                              █              ███
+   ███                            ██         █████
+     ████                                █████
+        █████████████████████████████████
+                        `,
+                    ],
+                },
+
+                gambler: {
+                    frameDelayMs: 180,
+                    playbackMode: "repeat",
+                    padding: {
+                        x: 10,
+                        y: 1,
+                    },
+                    frames: [
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██               ███  █████████  █           █
+█                  ████       █████  █       █
+█         █          ████   █████ ██ ██     ██
+█     █ █ █             █████  █ █  █ █    ██
+██   █ █ ██ █             █  █ █      █  ███
+ █████    ██                  ██      ████ █
+  █  █    █                    █      █    █
+  █  █████                      ██████     █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██               ███  █████████  █           █
+█                  ████       █████  █       █
+█         █          ████   █████ ██ ██     ██
+█     █ █ █             █████  █ █  █ █    ██
+██   █ █ ██ █             █  █ █      █  ███
+ █████    ██                  ██      ████ █
+  █  █    █                    █      █    █
+  █  █████                      ██████     █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██               ███  █████████  █           █
+█                  ████       █████  █       █
+█         █          ████   █████ ██ ██     ██
+█     █ █ █             █████  █ █  █ █    ██
+██   █ █ ██ █             █  █ █      █  ███
+ █████    ██                  ██      ████ █
+  █  █    █                    █      █    █
+  █  █████                      ██████     █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █        ██               ██            █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █       ██               ██             █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █        ██               ██            █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                                       █
+      █       ████████         █████████      █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                        █████████      █
+      █       ████████             ██         █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                        █████████      █
+      █                            ██         █
+      █       ████████             ██         █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+
+                        `
+                                      ██
+              ███                    ██ ███
+           ████ █ ████████████████████    ████
+         ███    ███               ███        █
+       ███      ██               ██          ██
+      ██         █                            █
+      █                                       █
+      █                        █████████      █
+      █       ████████             ██         █
+      █          ██                ██         █
+      █                                      ██
+      █     ███                      ███     █
+      █     █ █                      █ █    ██
+      ██      █                     ██     ██
+       █      █                     █    ███
+       ██     ██                    █   ██
+        ███    █                    █ ████
+       █████████                    ███  ██
+     ███      ██                   ██     ██
+   ███         █                   █       ██
+  ██           ██                 ██        █
+ ██             ██               ██         ██
+██       █       ███  █████████ ██           █
+█     █  █  █      ████       ███ █          █
+█     ██ ██ ██       ████   ████  █ █ █     ██
+█     █ █  █ █ █        █████    █ █ ██    ██
+██    █      ██           █    █ █    █  ███
+ ████ █      █                  ██    ████ █
+  █  ██      █                   █████     █
+  █    ██████                              █
+                        `,
+                    ],
+                },
+
+
+                merchant: {
+                    frameDelayMs: 250,
+                    playbackMode: "repeat",
+                    padding: {
+                        x: 5,
+                        y: 1,
+                    },
+                    frames: [
+                        `
+                              ██
+                            ███████
+     ▄▄█▀▀▀▀▀█            ███░░░░░███
+    ██░░    █           ███░░░░░░░░░██
+    █   ░░░█▀         ███░░░░░░░░░░░░██
+   ██░░░   █        ███░░░░░░░░░░░░░░░██
+   █   ░░░░█       ██░░░░░░░░░░░░░░░░░░██
+   █░░    ██       █░░░░░░░░░░░░░░░░░░░░░██
+  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░░██
+  █      ██        █░░░░░░░░░░░░░░░░░░░░░░░███
+  █░░░░  ███████████░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █   ░░░█░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███
+  █      █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █░░    ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████
+  █ ░░░░░█  ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████
+  █      ██    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
+  █░░░    █    ████████████████████████████████░░░░░░░░░░░░░████
+  █  ░░░░░█    ███████▓▓▓▓▓▓▓████████████████████████████████
+  █      ░█    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█
+  █░░░░  ██    ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██
+  █   ░░██         ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██
+ ███████████▄       ██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██
+██          █▄    ▄▄█ █▄▄▄                 ▄██
+█      ▀▀▀▀▀▀▀█▄▄▀▀░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██
+█           ▄▄▀░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█
+██     ▀▀▀▀▀▄░░░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█
+ █           █▄░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█
+  █▄▄▄▄▄▄▄▄▄█▀▀█▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█
+   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█
+   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█
+                        `,
+
+                        `
+                              ██
+     ▄▄█▀▀▀▀▀█              ███████
+    ██░░    █             ███░░░░░███
+    █   ░░░█▀           ███░░░░░░░░░██
+   ██░░░   █          ███░░░░░░░░░░░░██
+   █   ░░░░█        ███░░░░░░░░░░░░░░░██
+   █░░    ██       ██░░░░░░░░░░░░░░░░░░██
+  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░██
+  █      ██        █░░░░░░░░░░░░░░░░░░░░░░██
+  █░░░░  █         █░░░░░░░░░░░░░░░░░░░░░░░███
+  █   ░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███
+  █░░    █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █ ░░░░░███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████
+  █      ██ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████
+  █░░░    █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
+  █  ░░░░░█    ████████████████████████████████░░░░░░░░░░░░░████
+  █      ░█    ███████▓▓▓▓▓▓▓████████████████████████████████
+  █░░░░  ██    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█
+  █    ▒▒█     ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██
+ ███████████▄      ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██
+██          █▄    ▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██
+█      ▀▀▀▀▀▀▀█▄▄▀▀░█ █▄▄▄                 ▄██
+█           ▄▄▀░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██
+██     ▀▀▀▀▀▄░░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█
+ █           █▄░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█
+  █▄▄▄▄▄▄▄▄▄█▀█░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█
+   █    █      █▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█
+   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█
+   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█
+                        `,
+
+                        `
+     ▄▄█▀▀▀▀▀█                ██
+    ██░░    █               ███████
+    █   ░░░█▀             ███░░░░░███
+   ██░░░   █            ███░░░░░░░░░██
+   █   ░░░░█          ███░░░░░░░░░░░░██
+   █░░    ██        ███░░░░░░░░░░░░░░░██
+  ██ ░░░░ █        ██░░░░░░░░░░░░░░░░░░██
+  █   ░░░█         █░░░░░░░░░░░░░░░░░░░░░██
+  █      █         █░░░░░░░░░░░░░░░░░░░░░░██
+  █░░    █         █░░░░░░░░░░░░░░░░░░░░░░░███
+  █ ░░░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███
+  █░░░   █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █  ░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████
+  █      ░█ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████
+  █       █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
+  █░░░░   █    ████████████████████████████████░░░░░░░░░░░░░████
+  █   ░░░█     ███████▓▓▓▓▓▓▓████████████████████████████████
+  █      █     █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█
+ ███████████▄  ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██
+██          █▄     ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██
+█      ▀▀▀▀▀▀▀█▄▄▄▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██
+█           ▄▄▀░░░░░█ █▄▄▄                 ▄██
+██     ▀▀▀▀▀▄░░░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██
+ █           █░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█
+  █▄▄▄▄▄▄▄▄▄█▀█░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█
+   █    █      █▄░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█
+   █░   █       ▀█░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█
+   █░░░░█         ██░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█
+   █  ░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█
+                        `,
+
+                        `
+     ▄▄█▀▀▀▀▀█                ██
+    ██░░    █               ███████
+    █   ░░░█▀             ███░░░░░███
+   ██░░░   █            ███░░░░░░░░░██
+   █   ░░░░█          ███░░░░░░░░░░░░██
+   █░░    ██        ███░░░░░░░░░░░░░░░██
+  ██ ░░░░ █        ██░░░░░░░░░░░░░░░░░░██
+  █   ░░░█         █░░░░░░░░░░░░░░░░░░░░░██
+  █      █         █░░░░░░░░░░░░░░░░░░░░░░██
+  █░░    █         █░░░░░░░░░░░░░░░░░░░░░░░███
+  █ ░░░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███
+  █░░░   █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █  ░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████
+  █      ░█ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████
+  █       █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
+  █░░░░   █    ████████████████████████████████░░░░░░░░░░░░░████
+  █   ░░░█     ███████▓▓▓▓▓▓▓████████████████████████████████
+  █      █     █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█
+ ███████████▄  ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██
+██          █▄     ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██
+█      ▀▀▀▀▀▀▀█▄▄▄▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██
+█           ▄▄▀░░░░░█ █▄▄▄                 ▄██
+██     ▀▀▀▀▀▄░░░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██
+ █           █░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█
+  █▄▄▄▄▄▄▄▄▄█▀█░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█
+   █    █      █▄░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█
+   █░   █       ▀█░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█
+   █░░░░█         ██░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█
+   █  ░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█
+                        `,
+
+                        `
+                              ██
+     ▄▄█▀▀▀▀▀█              ███████
+    ██░░    █             ███░░░░░███
+    █   ░░░█▀           ███░░░░░░░░░██
+   ██░░░   █          ███░░░░░░░░░░░░██
+   █   ░░░░█        ███░░░░░░░░░░░░░░░██
+   █░░    ██       ██░░░░░░░░░░░░░░░░░░██
+  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░██
+  █      ██        █░░░░░░░░░░░░░░░░░░░░░░██
+  █░░░░  █         █░░░░░░░░░░░░░░░░░░░░░░░███
+  █   ░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███
+  █░░    █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █ ░░░░░███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████
+  █      ██ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████
+  █░░░    █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
+  █  ░░░░░█    ████████████████████████████████░░░░░░░░░░░░░████
+  █      ░█    ███████▓▓▓▓▓▓▓████████████████████████████████
+  █░░░░  ██    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█
+  █    ▒▒█     ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██
+ ███████████▄      ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██
+██          █▄    ▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██
+█      ▀▀▀▀▀▀▀█▄▄▀▀░█ █▄▄▄                 ▄██
+█           ▄▄▀░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██
+██     ▀▀▀▀▀▄░░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█
+ █           █▄░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█
+  █▄▄▄▄▄▄▄▄▄█▀█░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█
+   █    █      █▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█
+   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█
+   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█
+                        `,
+
+                        `
+                              ██
+                            ███████
+     ▄▄█▀▀▀▀▀█            ███░░░░░███
+    ██░░    █           ███░░░░░░░░░██
+    █   ░░░█▀         ███░░░░░░░░░░░░██
+   ██░░░   █        ███░░░░░░░░░░░░░░░██
+   █   ░░░░█       ██░░░░░░░░░░░░░░░░░░██
+   █░░    ██       █░░░░░░░░░░░░░░░░░░░░░██
+  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░░██
+  █      ██        █░░░░░░░░░░░░░░░░░░░░░░░███
+  █░░░░  ███████████░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █   ░░░█░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███
+  █      █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██
+  █░░    ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████
+  █ ░░░░░█  ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████
+  █      ██    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
+  █░░░    █    ████████████████████████████████░░░░░░░░░░░░░████
+  █  ░░░░░█    ███████▓▓▓▓▓▓▓████████████████████████████████
+  █      ░█    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█
+  █░░░░  ██    ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██
+  █   ░░██         ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██
+ ███████████▄       ██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██
+██          █▄    ▄▄█ █▄▄▄                 ▄██
+█      ▀▀▀▀▀▀▀█▄▄▀▀░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██
+█           ▄▄▀░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█
+██     ▀▀▀▀▀▄░░░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█
+ █           █▄░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█
+  █▄▄▄▄▄▄▄▄▄█▀▀█▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█
+   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█
+   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█
+                        `,
+                    ],
+                },
+
+
+                settings: {
+                    frameDelayMs: 140,
+                    playbackMode: "repeat",
+                    padding: {
+                        x: 6,
+                        y: 1,
+                    },
+                    frames: [
+                        `
+
+                        ███████████
+                        █         █         ██
+               ████     █         █       █████
+           █████  ███   █         █      ██   ███
+       █████        ██  █         █    ███      ███
+      ██            ████           ████           ███
+       ██                                           ██
+         ██                                       ███
+          ███                                   ███
+            █                                 ███
+            █            ███████              █
+    █████████          ██       ██            █████████
+    █                 █           █                   █
+    █                 █           █                   █
+    █                 █           █                   █
+    █████████          ██       ██            █████████
+            █            ███████              █
+           ██                                 ██
+        ████                                   ███
+       ██                                        ███
+      ██                                            ██
+      ██             ███           ███           ████
+       ██           ██  █         █  ███      ████
+        ███      ████   █         █    ███  ███
+          ██  ████      █         █      ████
+           ████         █         █
+                        ███████████
+                        `,
+
+                        `
+                       ██████
+                 ███████    ██       █████
+                 ██          █     ███   █████
+                  █          █   ███         █████
+                  ██         ██ ██              ██
+      ██████       ██        █████            ██
+     ██    ████     ██                       ██
+    ██         █████                       ███
+   ██                                      █
+  ██                                        █
+  █████                                      ██   ████████
+      ████               ███████              █████      ██
+         ███           ██       ██                        █
+           █          █           █                       █
+           █          █           █                       █
+           █          █           █                       █
+       █████           ██       ██             ████████████
+ ███████                 ███████              █
+█                                            ██
+██                                           ██
+ ██     █████████                             ██
+  ██████         ███                           ██
+                   █               ████         ██
+                  ██         ██████   ██          █
+                  █         █          ███     ████
+                ███       ██              ██████
+               ███      ███
+                 ████████
+                        `,
+                    ],
+                },
+
+
+                chest: {
+                    frameDelayMs: 140,
+                    playbackMode: "once",
+                    padding: {
+                        x: 5,
+                        y: 0,
+                    },
+                    frames: [
+                        `
+
+
+
+
+
+
+
+
+                      ▄▄▄▄▄▄▄▄▄▄▄
+                ▄▀▀▀▀▀▀         ▀▀▀▀▀▀▀█▄▄▄▄
+            ▄█▀▀                         █▀▀█▄▄
+          ▄█▀                           ▄▀   ▀▀█▄
+         ▄█                           ▄█        ▀█▄
+       ▄█▀                            █           ▀█▄
+       █                             █▀             ▀▄
+      █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+      █         █        █           █                █
+      █         █  ████  █           █                █
+      █         █   ██   █           █                █
+      █         █▄▄▄▄▄▄▄▄█           █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+
+                        `
+
+
+
+
+
+
+
+                  ▄█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▄▄▄
+              ▄█▀▀▀                       █▀▀▀▀█
+            ▄█▀                          █▀    ▀▀▀▀█
+         ▄█▀▀                          █▀          ▀▀█
+        ▄█                            █▀             ▀█
+      ▄▄█                             █               █
+      ▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄           █▀               █
+            ██████████████▄▄▄▄▄▄▄▄▄▄▄█▄▄▄▄▄▄▄         █
+      ▄▄▄▄▄▄▄▄█████████████████████████████████████████
+      █         █        █           █                █
+      █         █  ████  █           █                █
+      █         █   ██   █           █                █
+      █         █▄▄▄▄▄▄▄▄█           █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+      █                              █                █
+       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                        `,
+                    ],
+                },
+
+
+                death: {
+                    frameDelayMs: 100,
+                    playbackMode: "repeat",
+                    padding: {
+                        x: 5,
+                        y: 0,
+                    },
+                    frames: [
+                        `
+
+
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄
+                 ▄▀▀▀                  ▀▀▄▄
+                █▀                         ███
+             ▄▄▀▀                            ███
+            ▄▀                                 ██
+           ▄▀                   ▄  ▄▄▄▄▄▄▄      ██
+           █▀              ▄    ▀▄▀       █      ██
+          █      ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄         █
+          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █
+           █       █▒▒▒▒██        ██▒▒▒▒█        ██
+            █      █████            █████        █
+            █                ▄▄                  █
+            █▄▄             █▓▓█                █
+            █ ▀▀█          █▓▓▓▓█              ██
+            ██   ▀▄▄        ▀▀▀▀         ▄    ██
+             █   █▒▒█▄                  ▄▀▀▀▀▀██
+             ██  █▒▒▒▒█               ▄▄█    ██
+              ██ ██▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    █
+               ██ ██▒▒█ █  █  █  █  ██▒▒█  ██
+                █  ██▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒██ ██
+                ██  █▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█ ██
+                 ██ ▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀ █
+                  ██  █ █  █    █   █ █  █
+                   █  █▄█  █    █   █ █  █
+                   ███  ▀▀█▀▀█▀▀█▀▀█▀▀  ██
+                     ██                ██
+                      █                █
+                       ████████████████
+                        `,
+
+                        `
+
+
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄
+                 ▄▀▀▀                  ▀▀▄▄
+                █▀                         ███
+             ▄▄▀▀                            ███
+            ▄▀                  ▄  ▄▄▄▄▄▄▄     ██
+           ▄▀              ▄    ▀▄▀       █     ██
+           █▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄        ██
+          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █
+          █        █▒▒▒▒██        ██▒▒▒▒█         █
+           █       █████            █████        ██
+            █                ▄▄                  █
+            █               █▓▓█                 █
+            █              █▓▓▓▓█               █
+            █▄▄▄▄           ▀▀▀▀               ██
+            ██   ▀▄▄                          ██
+             █   █▒▒█▄                ▄▄▄▄▄▄▄ ██
+             ██  █▒▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    ██
+              ██ ██▒▒▒█ █  █  █  █  ██▒▒█    █
+               ██ ██▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▒█  ██
+                █  ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██ ██
+                ██  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ ██
+                 ██ ▀ █ █  █    █   █ █▀ █
+                  ██  █▄█  █    █   █ █  █
+                   █    ▀▀█▀▀█▀▀█▀▀█▀▀   █
+                   ███                  ██
+                     ██                ██
+                      ██████████████████
+
+                        `,
+
+                        `
+
+
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄
+                 ▄▀▀▀                  ▀▀▄▄
+                █▀              ▄  ▄▄▄▄▄▄▄ ███
+             ▄▄▀▀               ▀▄▀       █  ███
+            ▄▀             ▄                   ██
+           ▄▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄       ██
+           █▀      █▒▒▒▒▒█        █▒▒▒▒▒█        ██
+          █        ███████        ███████         █
+          █                                       █
+           █                 ▄▄                  ██
+            █               █▓▓█                 █
+            █              █▓▓▓▓█                █
+            █               ▀▀▀▀                █
+            █                                  ██
+            ██                                ██
+             █▄                               ██
+             ██     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄     ██
+              ██▄▄▀▀▒▒█ █  █  █  █  █ █▒▀▄▄ ▀█
+               ██ ██▒▒█ █  █  █  █  █ █▒▒▒▒██
+                █  ██▄█ █  █  █  █  █ █▒▄█▒█
+                ██    █▄█  █  █  █  █ █▀ ██
+                 ██     ▀▀█▀▀█▀▀█▀▀█▀▀   █
+                  ██                     █
+                   █                     █
+                    ▀▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀▀▀
+
+
+
+                        `,
+
+                        `
+
+
+                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄
+                 ▄▀▀▀                  ▀▀▄▄
+                █▀                         ███
+             ▄▄▀▀                            ███
+            ▄▀                  ▄  ▄▄▄▄▄▄▄     ██
+           ▄▀              ▄    ▀▄▀       █     ██
+           █▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄        ██
+          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █
+          █        █▒▒▒▒██        ██▒▒▒▒█         █
+           █       █████            █████        ██
+            █                ▄▄                  █
+            █               █▓▓█                 █
+            █              █▓▓▓▓█               █
+            █▄▄▄▄           ▀▀▀▀               ██
+            ██   ▀▄▄                          ██
+             █   █▒▒█▄                ▄▄▄▄▄▄▄ ██
+             ██  █▒▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    ██
+              ██ ██▒▒▒█ █  █  █  █  ██▒▒█    █
+               ██ ██▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▒█  ██
+                █  ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██ ██
+                ██  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ ██
+                 ██ ▀ █ █  █    █   █ █▀ █
+                  ██  █▄█  █    █   █ █  █
+                   █    ▀▀█▀▀█▀▀█▀▀█▀▀   █
+                   ███                  ██
+                     ██                ██
+                      ██████████████████
+
+
+                        `,
+                    ],
+                },
+            },
+        };
+
         const SpeechSynthesizer = {
             isSpeaking: false,
             speak: (sentence, voiceOptions, onEnded) => {
@@ -6197,6 +7551,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             constructor(type = "floor", options = {}) {
                 const defaults = MapCell.defaultsByType(type);
                 this.type = type;
+                this.displayName = options?.displayName || defaults.displayName;
                 this.mapCharacter = options?.mapCharacter || defaults.mapCharacter;
                 this.isSolid = options?.isSolid || defaults.isSolid;
                 this.onEnter = options?.onEnter || defaults.onEnter;
@@ -6208,6 +7563,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             static defaultsByType(type) {
                 /**
                  * A MapCell can have the following properties:
+                 *
+                 * displayName
+                 *   The name that is displayed for the tile when hovering it on
+                 *   the minimap
                  *
                  * mapCharacter
                  *   The character that represents the tile on the minimap
@@ -6235,6 +7594,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                  *   returns false, the tile appears as a generic floor instead
                  */
                 const defaults = {
+                    displayName: "Unknown",
                     mapCharacter: "?",
                     isSolid: false,
                     onEnter: null,
@@ -6245,9 +7605,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 const types = {
                     floor: {
+                        displayName: "Floor",
                         mapCharacter: ".",
                     },
                     healingTile: {
+                        displayName: "Healing Tile",
                         mapCharacter: "H",
                         onEnter: (x, y) => {
                             player.steppingOnHealingTile = true;
@@ -6266,6 +7628,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         },
                     },
                     wall: {
+                        displayName: "Wall",
                         mapCharacter: "#",
                         isSolid: true,
                         onExplode: (x, y) =>
@@ -6274,6 +7637,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             ),
                     },
                     iceWall: {
+                        displayName: "Wall",
                         mapCharacter: '#',
                         isSolid: true,
                         onExplode: (x, y) =>
@@ -6282,6 +7646,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             ),
                     },
                     crackedFloorSlight: {
+                        displayName: "Slightly-Cracked Floor",
                         mapCharacter: '✕',
                         onEnter: (x, y) => {
                             const key = `${x},${y}`;
@@ -6324,6 +7689,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         },
                     },
                     crackedFloorSevere: {
+                        displayName: "Severely-Cracked Floor",
                         mapCharacter: '✖',
                         onEnter: (x, y) => {
                             const key = `${x},${y}`;
@@ -6347,14 +7713,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         },
                     },
                     rubble1: {
+                        displayName: "Floor",
                         mapCharacter: ".",
                         onExplode: (x, y) => MAP[y][x] = new MapCell('rubble2'),
                     },
                     rubble2: {
+                        displayName: "Floor",
                         mapCharacter: ".",
                         onExplode: (x, y) => MAP[y][x] = new MapCell('rubble1'),
                     },
                     gloryWall: {
+                        displayName: "Wall",
                         mapCharacter: "#",
                         isSolid: true,
                         onTouch: () => player.say("Uh, no thanks. I'm not THAT brave"),
@@ -6364,6 +7733,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             ),
                     },
                     noboWall: {
+                        displayName: "Wall",
                         mapCharacter: "#",
                         isSolid: true,
                         onTouch: () => player.say(
@@ -6375,16 +7745,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             ),
                     },
                     crater: {
+                        displayName: "Floor",
                         mapCharacter: ".",
                     },
                     bloodyCrater: {
+                        displayName: "Floor",
                         mapCharacter: ".",
                     },
                     exit: {
+                        displayName: "Exit",
                         mapCharacter: "E",
                         onEnter: () => descend(),
                     },
                     merchant: {
+                        displayName: "Merchant",
                         mapCharacter: "M",
                         onEnter: () => menu.open('merchant'),
                         isVisible: () =>
@@ -6405,6 +7779,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         },
                     },
                     gambler: {
+                        displayName: "Gambler",
                         mapCharacter: "G",
                         onEnter: () => menu.open('gambler'),
                         isVisible: () =>
@@ -6431,11 +7806,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         },
                     },
                     tardspireBanner: {
+                        displayName: "Floor",
                         mapCharacter: ".",
                         onEnter: (x, y) => MAP[y][x] = new MapCell(),
                         onExplode: (x, y) => MAP[y][x] = new MapCell(),
                     },
                     treasureChest: {
+                        displayName: "Treasure Chest",
                         mapCharacter: "T",
                         onEnter: () => menu.open("chest"),
                         onExplode: (x, y) => {
@@ -6448,6 +7825,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         },
                     },
                     mimic: {
+                        displayName: "Treasure Chest",
                         mapCharacter: "T",
                         onEnter: () => menu.open("chest"),
                         onExplode: (x, y) => {
@@ -7675,8 +9053,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let speechEnabled = true;
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
-        let inventoryAsciiAnimInterval = null;
-        let inventoryAsciiFrame = 0;
 
         function generateMap() {
             setExitPosition();
@@ -7855,140 +9231,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-// Menu ASCII Portraits
-        // Inventory portrait
-        function showInventoryAsciiArt() {
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (!overlay) return;
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiFrame = 0;
-            overlay.classList.remove('hidden');
-
-            function drawFrame() {
-                overlay.innerText = portraitFramesInventory[inventoryAsciiFrame];
-                inventoryAsciiFrame++;
-                if (inventoryAsciiFrame < portraitFramesInventory.length) {
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 110);
-                } else {
-                    inventoryAsciiAnimInterval = null;
-                }
-            }
-            drawFrame();
-        }
-
-        function hideInventoryAsciiArtAndRestoreMinimap() {
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiAnimInterval = null;
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (overlay) overlay.classList.add('hidden');
-            drawMinimap();
-        }
-
-        // Gambler portrait
-        function showGamblerAsciiArt() {
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (!overlay) return;
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiFrame = 0;
-            overlay.classList.remove('hidden');
-
-            function drawFrame() {
-                overlay.innerText = portraitFramesGambler[inventoryAsciiFrame];
-                inventoryAsciiFrame++;
-                if (inventoryAsciiFrame < portraitFramesGambler.length) {
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 180);
-                } else {
-                    inventoryAsciiFrame = 0;
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 180);
-                }
-            }
-            drawFrame();
-        }
-
-        // Merchant portrait
-        function showMerchantAsciiArt() {
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (!overlay) return;
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiFrame = 0;
-            overlay.classList.remove('hidden');
-
-            function drawFrame() {
-                overlay.innerText = portraitFramesMerchant[inventoryAsciiFrame];
-                inventoryAsciiFrame++;
-                if (inventoryAsciiFrame < portraitFramesMerchant.length) {
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 250);
-                } else {
-                    inventoryAsciiFrame = 0; // Loop
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 250);
-                }
-            }
-            drawFrame();
-        }
-
-        // Chest portrait
-        function showChestAsciiArt() {
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (!overlay) return;
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiFrame = 0;
-            overlay.classList.remove('hidden');
-
-            function drawFrame() {
-                overlay.innerText = portraitFramesChest[inventoryAsciiFrame];
-                inventoryAsciiFrame++;
-                if (inventoryAsciiFrame < portraitFramesChest.length) {
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 400);
-                } else {
-                    inventoryAsciiAnimInterval = null;
-                }
-            }
-            drawFrame();
-        }
-
-        // Settings portrait
-        function showSettingsAsciiArt() {
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (!overlay) return;
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiFrame = 0;
-            overlay.classList.remove('hidden');
-
-            function drawFrame() {
-                overlay.innerText = portraitFramesSettings[inventoryAsciiFrame];
-                inventoryAsciiFrame++;
-                if (inventoryAsciiFrame < portraitFramesSettings.length) {
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 140);
-                } else {
-                    inventoryAsciiFrame = 0; // Loop
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 140);
-                }
-            }
-            drawFrame();
-        }
-
-        // Death
-        function showDeathAsciiArt() {
-            const overlay = document.getElementById('portraitArtOverlay');
-            if (!overlay) return;
-            clearTimeout(inventoryAsciiAnimInterval);
-            inventoryAsciiFrame = 0;
-            overlay.classList.remove('hidden');
-
-            function drawFrame() {
-                overlay.innerText = portraitFramesDeath[inventoryAsciiFrame];
-                inventoryAsciiFrame++;
-                if (inventoryAsciiFrame < portraitFramesDeath.length) {
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 100);
-                } else {
-                    inventoryAsciiFrame = 0; // Loop
-                    inventoryAsciiAnimInterval = setTimeout(drawFrame, 100);
-                }
-            }
-            drawFrame();
-        }
-
-                function getRandomMerchantItem() {
+        function getRandomMerchantItem() {
             const availableItems = Object.keys(items).filter(itemId => items[itemId].merchantStockChance > 0);
             return availableItems[Math.floor(Math.random() * availableItems.length)];
         }
@@ -8112,42 +9355,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             revealMapSpot(player.x, player.y, radius);
         }
 
-        function drawMinimap() {
-            if (inventoryAsciiAnimInterval) return;
-            let out = '';
-            for (let y = 0; y < HEIGHT; y++) {
-                for (let x = 0; x < WIDTH; x++) {
-                    let tile = '';
-                    let tileClass = '';
-                    if (x === player.x && y === player.y) {
-                        const arrow = ['↑', '→', '↓', '←'][player.dir];
-                        tile = arrow;
-                        tileClass = 'player';
-                    } else if (!seenTiles[y][x]) {
-                        tile = '?';
-                        tileClass = 'unexplored';
-                    } else {
-                        // Use a visibility function if one is available
-                        // Otherwise, assume that the tile is visible
-                        const isVisible = typeof MAP[y][x]?.isVisible !== 'function' || MAP[y][x].isVisible();
-
-                        if (isVisible) {
-                            tile = MAP[y][x]?.mapCharacter || '?';
-                            tileClass = MAP[y][x]?.type || 'unknown';
-                            tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
-                        } else {
-                            const emptyCell = new MapCell();
-                            tile = emptyCell.mapCharacter;
-                            tileClass = emptyCell.type;
-                        }
-                    }
-                    out += `<span class="${tileClass}">${tile}</span>`;
-                }
-                out += '<br>';
-            }
-            document.getElementById('minimap').innerHTML = out;
-        }
-
         function updateBattleLog(entry) {
             battleLog.push(entry);
             if (battleLog.length > 50) {
@@ -8178,7 +9385,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function render() {
             updateSeenTiles();
-            drawMinimap();
+            Minimap.draw();
             updateBreathingSFX();
 
             const equippedArmor = armor[player.armor];
@@ -8299,7 +9506,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
 
             if (player.hp <= 0) {
-                showDeathAsciiArt();
+                Portrait.show('death');
                 updateBattleLog(`Good job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`);
                 gameOver = true;
                 setTimeout(() => {
@@ -8342,6 +9549,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
             overlay.innerHTML = '';
             const ratVideo = document.createElement('video');
+            ratVideo.disablePictureInPicture = true;
             ratVideo.src = 'assets/fp-anim/rat-chomp.webm';
             ratVideo.autoplay = true;
             ratVideo.playsInline = true;
@@ -8857,7 +10065,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             const newAlly = {
                                 id: currentEnemy.id,
                                 name: currentEnemy.name,
-                                hp: Math.floor(currentEnemy.hp / 2),
+                                hp: Math.max(Math.floor(currentEnemy.hp / 2), 1),
                                 healedThisBattle: false
                             };
                             party.push(newAlly);
@@ -9569,7 +10777,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         generateMap();
         updateSeenTiles();
-        drawMinimap();
+        Minimap.draw();
         playRandomExplorationMusic();
         render();
 
@@ -9754,10 +10962,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 gameSettings: {
                     title: "GAME SETTINGS",
                     onOpen: () => {
-                        showSettingsAsciiArt();
+                        Portrait.show('settings');
                     },
                     onClose: () => {
-                        hideInventoryAsciiArtAndRestoreMinimap();
+                        Portrait.hide();
                     },
                     getOptions: () => [
                         {
@@ -9897,10 +11105,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         menu.open(selectedOptionId);
                     },
                     onOpen: () => {
-                        showInventoryAsciiArt();
+                        Portrait.show('inventory');
                     },
                     onClose: () => {
-                        hideInventoryAsciiArtAndRestoreMinimap();
+                        Portrait.hide();
                     },
                 },
                 inventoryItems: {
@@ -10160,12 +11368,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 merchant: {
                     title: "MERCHANT",
                     onOpen: () => {
+                        Portrait.show('merchant');
                         merchant.say('Welcome to SlobMart!');
-                        showMerchantAsciiArt();
                     },
                     onClose: () => {
                         merchant.say('Thank you. Come again!');
-                        hideInventoryAsciiArtAndRestoreMinimap();
+                        Portrait.hide();
                     },
                     landingHtml: () => {
                         return player.bitcoins > 0
@@ -10512,8 +11720,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 gambler: {
                     title: "GAMBLER",
                     onOpen: () => {
+                        Portrait.show('gambler');
                         gambler.say('Place yer bets!');
-                        showGamblerAsciiArt();
                     },
                     onClose: () => {
                         gambler.isActiveOnFloor = false;
@@ -10521,7 +11729,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         if (gamblerPosition) {
                             MAP[gamblerPosition.y][gamblerPosition.x] = new MapCell();
                         }
-                        hideInventoryAsciiArtAndRestoreMinimap();
+                        Portrait.hide();
                     },
                     landingHtml: () => {
                         return (
@@ -10553,10 +11761,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 chest: {
                     title: "TREASURE CHEST",
                     onOpen: () => {
-                        showChestAsciiArt();
+                        Portrait.show('chest');
                     },
                     onClose: () => {
-                        hideInventoryAsciiArtAndRestoreMinimap();
+                        Portrait.hide();
                     },
                     landingHtml: () => {
                         return `\n\n\nYou found a treasure chest! Do you want to open it?`;
@@ -11054,1009 +12262,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         ['▄▀▀▀ ', '█▀▀▄ ', '▀▄▄▀ '], // 6
     ];
 
-    const portraitFramesInventory = [
-    `
-                            ██████                        
-                       ██████    ████                     
-                    ████  ██   ███  ██                    
-                    █      █  ██   ███                    
-                    █████       ███                       
-                        ██      █                         
-                         █      █        █                
-                        ██████████████████                
-                         █      █                         
-                        ██      ██                        
-                      ███        █                        
-                    ███  ██       █                       
-                 ████    █        ███                     
-             █████      ██    █     ████                  
-          ████         ██      █       ████               
-       ████           ██       █          █████████       
-    ███             ██         ██                 ██████  
-  ███             ██            █       ███            ██ 
-  █              ██              █         ███████      ██
- █                               ██               █████  █
- █                                ██                     █
- █                                 ██                   ██
-██                                  ██                 ██ 
-██                                   █               ███  
- █                                                 ███    
-  ██                                             ███      
-   ███                                       █████        
-     ████                                █████            
-        █████████████████████████████████                 
-    `,
-    `
-    
-                   █████████████████                      
-                 ███  ███      ███ ████                   
-                ██      █     ██      ███                 
-                ███           █      ████                 
-                  ██████          ████                    
-                       ██       ███    ███                
-                        ██   ███████████                  
-                         █      █                         
-                        ██      ██                        
-                      ███        █                        
-                    ███           █                       
-                 ████             ███                     
-             █████                  ████                  
-          ████                         ████               
-       ████         ██                    █████████       
-    ███            ██        █                    ██████  
-  ███             ██         ██        ███             ██ 
-  █              █            █          ████           ██
- █              ██            ██             ████        █
- █           ████              █                ███      █
- █        ████                  █                 ██    ██
-██      ███                      ██                █   ██ 
-██     ██                         ██                 ███  
- █     █                           ██              ███    
-  ██   █                            ██           ███      
-   ███                                       █████        
-     ████                                █████            
-        █████████████████████████████████                 
-    `,
-    `
-
-
-
-
-           █████████████████████                              
-         ███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████                        
-        ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███████                  
-        ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████              
-         █████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███            
-             ███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██████            
-               ███▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████                 
-                 ██  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒███                      
-                 ██          ▒▒▒▒▒██████████                  
-             █████                  ████   ███████            
-          ████      █                  ████      ██████       
-       ████        ██                ██   █████████   ████    
-    ███           ██                  ███         ██████ ████ 
-  ███            ██                     ████           ██   ██
-  █            ███             █           ███          ██   █
- █           ███               █             ███         █    
- █        ████                 ██              ██        █    
- █     ████                     █               ██      ██    
-██  ████                        ██               █     ██     
-██ ██                            █               ██  ███      
- █                               ██                ███        
-  ██                              █              ███          
-   ███                            ██         █████            
-     ████                                █████                
-        █████████████████████████████████                     
-    `,
-    ];
-
-    const portraitFramesGambler = [
-    ` 
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-    `,
-    `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██               ███  █████████  █           █ 
-█                  ████       █████  █       █ 
-█         █          ████   █████ ██ ██     ██ 
-█     █ █ █             █████  █ █  █ █    ██  
-██   █ █ ██ █             █  █ █      █  ███   
- █████    ██                  ██      ████ █   
-  █  █    █                    █      █    █   
-  █  █████                      ██████     █   
-    `,
-    ` 
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-    `,
-    `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██               ███  █████████  █           █ 
-█                  ████       █████  █       █ 
-█         █          ████   █████ ██ ██     ██ 
-█     █ █ █             █████  █ █  █ █    ██  
-██   █ █ ██ █             █  █ █      █  ███   
- █████    ██                  ██      ████ █   
-  █  █    █                    █      █    █   
-  █  █████                      ██████     █   
-    `,
-    ` 
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-    `,
-    `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██               ███  █████████  █           █ 
-█                  ████       █████  █       █ 
-█         █          ████   █████ ██ ██     ██ 
-█     █ █ █             █████  █ █  █ █    ██  
-██   █ █ ██ █             █  █ █      █  ███   
- █████    ██                  ██      ████ █   
-  █  █    █                    █      █    █   
-  █  █████                      ██████     █   
-    `,
-    `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-    `,
-    `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █        ██               ██            █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-    `,
-    `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █       ██               ██             █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-  `,
-  `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █        ██               ██            █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-  `,
-  `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                                       █
-      █       ████████         █████████      █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-  `,
-  `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                        █████████      █
-      █       ████████             ██         █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-  `,
-  `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                        █████████      █
-      █                            ██         █
-      █       ████████             ██         █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-  `,
-  `
-                                      ██       
-              ███                    ██ ███    
-           ████ █ ████████████████████    ████ 
-         ███    ███               ███        █ 
-       ███      ██               ██          ██
-      ██         █                            █
-      █                                       █
-      █                        █████████      █
-      █       ████████             ██         █
-      █          ██                ██         █
-      █                                      ██
-      █     ███                      ███     █ 
-      █     █ █                      █ █    ██ 
-      ██      █                     ██     ██  
-       █      █                     █    ███   
-       ██     ██                    █   ██     
-        ███    █                    █ ████     
-       █████████                    ███  ██    
-     ███      ██                   ██     ██   
-   ███         █                   █       ██  
-  ██           ██                 ██        █  
- ██             ██               ██         ██ 
-██       █       ███  █████████ ██           █ 
-█     █  █  █      ████       ███ █          █ 
-█     ██ ██ ██       ████   ████  █ █ █     ██ 
-█     █ █  █ █ █        █████    █ █ ██    ██  
-██    █      ██           █    █ █    █  ███   
- ████ █      █                  ██    ████ █   
-  █  ██      █                   █████     █   
-  █    ██████                              █   
-  `
-    ];
-
-    const portraitFramesMerchant = [
-    ` 
-                              ██                                
-                            ███████                             
-     ▄▄█▀▀▀▀▀█            ███░░░░░███                           
-    ██░░    █           ███░░░░░░░░░██                          
-    █   ░░░█▀         ███░░░░░░░░░░░░██                         
-   ██░░░   █        ███░░░░░░░░░░░░░░░██                        
-   █   ░░░░█       ██░░░░░░░░░░░░░░░░░░██                       
-   █░░    ██       █░░░░░░░░░░░░░░░░░░░░░██                     
-  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░░██                    
-  █      ██        █░░░░░░░░░░░░░░░░░░░░░░░███                  
-  █░░░░  ███████████░░░░░░░░░░░░░░░░░░░░░░░░░██                 
-  █   ░░░█░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███               
-  █      █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              
-  █░░    ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████        
-  █ ░░░░░█  ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████   
-  █      ██    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
-  █░░░    █    ████████████████████████████████░░░░░░░░░░░░░████
-  █  ░░░░░█    ███████▓▓▓▓▓▓▓████████████████████████████████   
-  █      ░█    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█              
-  █░░░░  ██    ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██              
-  █   ░░██         ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██               
- ███████████▄       ██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██                
-██          █▄    ▄▄█ █▄▄▄                 ▄██                  
-█      ▀▀▀▀▀▀▀█▄▄▀▀░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██                
-█           ▄▄▀░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█               
-██     ▀▀▀▀▀▄░░░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█             
- █           █▄░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█            
-  █▄▄▄▄▄▄▄▄▄█▀▀█▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█           
-   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█           
-   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█                         
-    `,
-    `
-                              ██                                
-     ▄▄█▀▀▀▀▀█              ███████                             
-    ██░░    █             ███░░░░░███                           
-    █   ░░░█▀           ███░░░░░░░░░██                          
-   ██░░░   █          ███░░░░░░░░░░░░██                         
-   █   ░░░░█        ███░░░░░░░░░░░░░░░██                        
-   █░░    ██       ██░░░░░░░░░░░░░░░░░░██                       
-  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░██                     
-  █      ██        █░░░░░░░░░░░░░░░░░░░░░░██                    
-  █░░░░  █         █░░░░░░░░░░░░░░░░░░░░░░░███                  
-  █   ░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██                 
-  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███               
-  █░░    █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              
-  █ ░░░░░███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████        
-  █      ██ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████   
-  █░░░    █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
-  █  ░░░░░█    ████████████████████████████████░░░░░░░░░░░░░████
-  █      ░█    ███████▓▓▓▓▓▓▓████████████████████████████████   
-  █░░░░  ██    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█              
-  █    ▒▒█     ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██              
- ███████████▄      ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██               
-██          █▄    ▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██                
-█      ▀▀▀▀▀▀▀█▄▄▀▀░█ █▄▄▄                 ▄██                  
-█           ▄▄▀░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██                
-██     ▀▀▀▀▀▄░░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█               
- █           █▄░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█             
-  █▄▄▄▄▄▄▄▄▄█▀█░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█            
-   █    █      █▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█           
-   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█           
-   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█                        
-    `,
-    `
-     ▄▄█▀▀▀▀▀█                ██                                
-    ██░░    █               ███████                             
-    █   ░░░█▀             ███░░░░░███                           
-   ██░░░   █            ███░░░░░░░░░██                          
-   █   ░░░░█          ███░░░░░░░░░░░░██                         
-   █░░    ██        ███░░░░░░░░░░░░░░░██                        
-  ██ ░░░░ █        ██░░░░░░░░░░░░░░░░░░██                       
-  █   ░░░█         █░░░░░░░░░░░░░░░░░░░░░██                     
-  █      █         █░░░░░░░░░░░░░░░░░░░░░░██                    
-  █░░    █         █░░░░░░░░░░░░░░░░░░░░░░░███                  
-  █ ░░░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██                 
-  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███               
-  █░░░   █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              
-  █  ░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████        
-  █      ░█ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████   
-  █       █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
-  █░░░░   █    ████████████████████████████████░░░░░░░░░░░░░████
-  █   ░░░█     ███████▓▓▓▓▓▓▓████████████████████████████████   
-  █      █     █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█              
- ███████████▄  ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██              
-██          █▄     ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██               
-█      ▀▀▀▀▀▀▀█▄▄▄▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██                
-█           ▄▄▀░░░░░█ █▄▄▄                 ▄██                  
-██     ▀▀▀▀▀▄░░░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██                
- █           █░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█               
-  █▄▄▄▄▄▄▄▄▄█▀█░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█             
-   █    █      █▄░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█            
-   █░   █       ▀█░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█           
-   █░░░░█         ██░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█           
-   █  ░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█                   
-    `,
-    `
-     ▄▄█▀▀▀▀▀█                ██                                
-    ██░░    █               ███████                             
-    █   ░░░█▀             ███░░░░░███                           
-   ██░░░   █            ███░░░░░░░░░██                          
-   █   ░░░░█          ███░░░░░░░░░░░░██                         
-   █░░    ██        ███░░░░░░░░░░░░░░░██                        
-  ██ ░░░░ █        ██░░░░░░░░░░░░░░░░░░██                       
-  █   ░░░█         █░░░░░░░░░░░░░░░░░░░░░██                     
-  █      █         █░░░░░░░░░░░░░░░░░░░░░░██                    
-  █░░    █         █░░░░░░░░░░░░░░░░░░░░░░░███                  
-  █ ░░░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██                 
-  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███               
-  █░░░   █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              
-  █  ░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████        
-  █      ░█ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████   
-  █       █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
-  █░░░░   █    ████████████████████████████████░░░░░░░░░░░░░████
-  █   ░░░█     ███████▓▓▓▓▓▓▓████████████████████████████████   
-  █      █     █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█              
- ███████████▄  ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██              
-██          █▄     ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██               
-█      ▀▀▀▀▀▀▀█▄▄▄▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██                
-█           ▄▄▀░░░░░█ █▄▄▄                 ▄██                  
-██     ▀▀▀▀▀▄░░░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██                
- █           █░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█               
-  █▄▄▄▄▄▄▄▄▄█▀█░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█             
-   █    █      █▄░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█            
-   █░   █       ▀█░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█           
-   █░░░░█         ██░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█           
-   █  ░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█                  
-    `,
-    `
-                              ██                                
-     ▄▄█▀▀▀▀▀█              ███████                             
-    ██░░    █             ███░░░░░███                           
-    █   ░░░█▀           ███░░░░░░░░░██                          
-   ██░░░   █          ███░░░░░░░░░░░░██                         
-   █   ░░░░█        ███░░░░░░░░░░░░░░░██                        
-   █░░    ██       ██░░░░░░░░░░░░░░░░░░██                       
-  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░██                     
-  █      ██        █░░░░░░░░░░░░░░░░░░░░░░██                    
-  █░░░░  █         █░░░░░░░░░░░░░░░░░░░░░░░███                  
-  █   ░░░███████████░░░░░░░░░░░░░░░░░░░░░░░░░██                 
-  █      █░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███               
-  █░░    █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              
-  █ ░░░░░███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████        
-  █      ██ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████   
-  █░░░    █    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
-  █  ░░░░░█    ████████████████████████████████░░░░░░░░░░░░░████
-  █      ░█    ███████▓▓▓▓▓▓▓████████████████████████████████   
-  █░░░░  ██    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█              
-  █    ▒▒█     ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██              
- ███████████▄      ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██               
-██          █▄    ▄▄██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██                
-█      ▀▀▀▀▀▀▀█▄▄▀▀░█ █▄▄▄                 ▄██                  
-█           ▄▄▀░░░░░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██                
-██     ▀▀▀▀▀▄░░░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█               
- █           █▄░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█             
-  █▄▄▄▄▄▄▄▄▄█▀█░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█            
-   █    █      █▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█           
-   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█           
-   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█                          
-    `,
-    `
-                              ██                                
-                            ███████                             
-     ▄▄█▀▀▀▀▀█            ███░░░░░███                           
-    ██░░    █           ███░░░░░░░░░██                          
-    █   ░░░█▀         ███░░░░░░░░░░░░██                         
-   ██░░░   █        ███░░░░░░░░░░░░░░░██                        
-   █   ░░░░█       ██░░░░░░░░░░░░░░░░░░██                       
-   █░░    ██       █░░░░░░░░░░░░░░░░░░░░░██                     
-  ██ ░░░░ █        █░░░░░░░░░░░░░░░░░░░░░░██                    
-  █      ██        █░░░░░░░░░░░░░░░░░░░░░░░███                  
-  █░░░░  ███████████░░░░░░░░░░░░░░░░░░░░░░░░░██                 
-  █   ░░░█░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░░░░░███               
-  █      █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██              
-  █░░    ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░███████        
-  █ ░░░░░█  ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░██░░██████   
-  █      ██    █████████████████░░░░░░░░░░░░░░░░░░░░██░░░░░░████
-  █░░░    █    ████████████████████████████████░░░░░░░░░░░░░████
-  █  ░░░░░█    ███████▓▓▓▓▓▓▓████████████████████████████████   
-  █      ░█    █████▓▓▓▓▓▓▓▓▓▓██████▓▓▓█████████▓█              
-  █░░░░  ██    ██  █▒▒▒▒▒▒▓▓▓▓▓▓████▓▓▓▓▓▓▓████▓██              
-  █   ░░██         ██  ▒▒▒▒▒▒▒▓▓▓██▓▓▓▒▒▒▒▒▒▒▒▒██               
- ███████████▄       ██       ▒▒▒▒▓▓▒▒▒▒▒▒▒▒▒▒ ██                
-██          █▄    ▄▄█ █▄▄▄                 ▄██                  
-█      ▀▀▀▀▀▀▀█▄▄▀▀░░█▄  █▄▄▄▄     ▄▄▄▄▄▀▀▀█░▀██                
-█           ▄▄▀░░░░░░░▀█     ▀▀▀▀▀▀▀▀    ▄▄▀░░░▀█               
-██     ▀▀▀▀▀▄░░░░░░░░░░▀█▄         ▄▄▄▄▄▄█▀░░░░░░▀█             
- █           █▄░░░░░█░░░░▀█▄     ▄██░░░░░░█░░░░░░░▀█            
-  █▄▄▄▄▄▄▄▄▄█▀▀█▄░░██░░░░░░█▄   █▀░░░░░░░░██░░░░░░░▀█           
-   █░   █       ▀███░░░░░░░░░▀▀▀░░░░░░░░░░░█░░░░░░░░█           
-   █░░░░█         ██░░░░░░░░░░░░░░░░░░░░░░░█░░░░░░░░▀█                  
-    `,
-    ];
-
-    const portraitFramesSettings = [
-    `
-                                                                 
-                        ███████████                              
-                        █         █         ██                   
-               ████     █         █       █████                  
-           █████  ███   █         █      ██   ███                
-       █████        ██  █         █    ███      ███              
-      ██            ████           ████           ███            
-       ██                                           ██           
-         ██                                       ███            
-          ███                                   ███              
-            █                                 ███                
-            █            ███████              █                  
-    █████████          ██       ██            █████████          
-    █                 █           █                   █          
-    █                 █           █                   █          
-    █                 █           █                   █          
-    █████████          ██       ██            █████████          
-            █            ███████              █                  
-           ██                                 ██                 
-        ████                                   ███               
-       ██                                        ███             
-      ██                                            ██           
-      ██             ███           ███           ████            
-       ██           ██  █         █  ███      ████               
-        ███      ████   █         █    ███  ███                  
-          ██  ████      █         █      ████                    
-           ████         █         █                              
-                        ███████████                                                                                                                                                                                                                                                                    
-    `,
-    `
-                       ██████                              
-                 ███████    ██       █████                 
-                 ██          █     ███   █████             
-                  █          █   ███         █████         
-                  ██         ██ ██              ██         
-      ██████       ██        █████            ██           
-     ██    ████     ██                       ██            
-    ██         █████                       ███             
-   ██                                      █               
-  ██                                        █              
-  █████                                      ██   ████████ 
-      ████               ███████              █████      ██
-         ███           ██       ██                        █
-           █          █           █                       █
-           █          █           █                       █
-           █          █           █                       █
-       █████           ██       ██             ████████████
- ███████                 ███████              █            
-█                                            ██            
-██                                           ██            
- ██     █████████                             ██           
-  ██████         ███                           ██          
-                   █               ████         ██         
-                  ██         ██████   ██          █        
-                  █         █          ███     ████        
-                ███       ██              ██████           
-               ███      ███                                
-                 ████████                                                                                                
-    `
-    ];
-
-    const portraitFramesChest = [
-    `
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                      ▄▄▄▄▄▄▄▄▄▄▄                                
-                ▄▀▀▀▀▀▀         ▀▀▀▀▀▀▀█▄▄▄▄                     
-            ▄█▀▀                         █▀▀█▄▄                  
-          ▄█▀                           ▄▀   ▀▀█▄                
-         ▄█                           ▄█        ▀█▄              
-       ▄█▀                            █           ▀█▄            
-       █                             █▀             ▀▄           
-      █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█          
-      █         █        █           █                █          
-      █         █  ████  █           █                █          
-      █         █   ██   █           █                █          
-      █         █▄▄▄▄▄▄▄▄█           █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀                        
-    `,
-    `
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                                                                 
-                  ▄█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▄▄▄                    
-              ▄█▀▀▀                       █▀▀▀▀█                 
-            ▄█▀                          █▀    ▀▀▀▀█             
-         ▄█▀▀                          █▀          ▀▀█           
-        ▄█                            █▀             ▀█          
-      ▄▄█                             █               █          
-      ▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄           █▀               █          
-            ██████████████▄▄▄▄▄▄▄▄▄▄▄█▄▄▄▄▄▄▄         █          
-      ▄▄▄▄▄▄▄▄█████████████████████████████████████████          
-      █         █        █           █                █          
-      █         █  ████  █           █                █          
-      █         █   ██   █           █                █          
-      █         █▄▄▄▄▄▄▄▄█           █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-      █                              █                █          
-       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀                        
-    `
-    ];
-
-    const portraitFramesDeath = [
-    `
-                                                                 
-                                                                 
-                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
-                 ▄▀▀▀                  ▀▀▄▄                      
-                █▀                         ███                   
-             ▄▄▀▀                            ███                 
-            ▄▀                                 ██                
-           ▄▀                   ▄  ▄▄▄▄▄▄▄      ██               
-           █▀              ▄    ▀▄▀       █      ██              
-          █      ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄         █              
-          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █              
-           █       █▒▒▒▒██        ██▒▒▒▒█        ██              
-            █      █████            █████        █               
-            █                ▄▄                  █               
-            █▄▄             █▓▓█                █                
-            █ ▀▀█          █▓▓▓▓█              ██                
-            ██   ▀▄▄        ▀▀▀▀         ▄    ██                 
-             █   █▒▒█▄                  ▄▀▀▀▀▀██                 
-             ██  █▒▒▒▒█               ▄▄█    ██                  
-              ██ ██▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    █                   
-               ██ ██▒▒█ █  █  █  █  ██▒▒█  ██                    
-                █  ██▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒██ ██                     
-                ██  █▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█ ██                      
-                 ██ ▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀ █                       
-                  ██  █ █  █    █   █ █  █                       
-                   █  █▄█  █    █   █ █  █                       
-                   ███  ▀▀█▀▀█▀▀█▀▀█▀▀  ██                       
-                     ██                ██                        
-                      █                █                         
-                       ████████████████              
-    `,
-    `
-                                                                 
-                                                                 
-                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
-                 ▄▀▀▀                  ▀▀▄▄                      
-                █▀                         ███                   
-             ▄▄▀▀                            ███                 
-            ▄▀                  ▄  ▄▄▄▄▄▄▄     ██                
-           ▄▀              ▄    ▀▄▀       █     ██               
-           █▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄        ██              
-          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █              
-          █        █▒▒▒▒██        ██▒▒▒▒█         █              
-           █       █████            █████        ██              
-            █                ▄▄                  █               
-            █               █▓▓█                 █               
-            █              █▓▓▓▓█               █                
-            █▄▄▄▄           ▀▀▀▀               ██                
-            ██   ▀▄▄                          ██                 
-             █   █▒▒█▄                ▄▄▄▄▄▄▄ ██                 
-             ██  █▒▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    ██                  
-              ██ ██▒▒▒█ █  █  █  █  ██▒▒█    █                   
-               ██ ██▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▒█  ██                    
-                █  ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██ ██                     
-                ██  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ ██                      
-                 ██ ▀ █ █  █    █   █ █▀ █                       
-                  ██  █▄█  █    █   █ █  █                       
-                   █    ▀▀█▀▀█▀▀█▀▀█▀▀   █                       
-                   ███                  ██                       
-                     ██                ██                        
-                      ██████████████████                         
-                                                                                                                          
-    `,
-    `
-                                                                 
-                                                                 
-                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
-                 ▄▀▀▀                  ▀▀▄▄                      
-                █▀              ▄  ▄▄▄▄▄▄▄ ███                   
-             ▄▄▀▀               ▀▄▀       █  ███                 
-            ▄▀             ▄                   ██                
-           ▄▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄       ██               
-           █▀      █▒▒▒▒▒█        █▒▒▒▒▒█        ██              
-          █        ███████        ███████         █              
-          █                                       █              
-           █                 ▄▄                  ██              
-            █               █▓▓█                 █               
-            █              █▓▓▓▓█                █               
-            █               ▀▀▀▀                █                
-            █                                  ██                
-            ██                                ██                 
-             █▄                               ██                 
-             ██     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄     ██                  
-              ██▄▄▀▀▒▒█ █  █  █  █  █ █▒▀▄▄ ▀█                   
-               ██ ██▒▒█ █  █  █  █  █ █▒▒▒▒██                    
-                █  ██▄█ █  █  █  █  █ █▒▄█▒█                     
-                ██    █▄█  █  █  █  █ █▀ ██                      
-                 ██     ▀▀█▀▀█▀▀█▀▀█▀▀   █                       
-                  ██                     █                       
-                   █                     █                       
-                    ▀▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀▀▀                        
-                                                                 
-                                                                 
-                                                                                                                  
-    `,
-    `
-                                                                 
-                                                                 
-                    ▄▄▄▄▄▀▀▀▀▀▀▀▀▀▀▀▄▄▄▄                         
-                 ▄▀▀▀                  ▀▀▄▄                      
-                █▀                         ███                   
-             ▄▄▀▀                            ███                 
-            ▄▀                  ▄  ▄▄▄▄▄▄▄     ██                
-           ▄▀              ▄    ▀▄▀       █     ██               
-           █▀    ▀▄▄▄▄▄▄▄▄▀       ▄▄▄▄▄▄▄        ██              
-          █        █▒▒▒▒▒█        █▒▒▒▒▒█         █              
-          █        █▒▒▒▒██        ██▒▒▒▒█         █              
-           █       █████            █████        ██              
-            █                ▄▄                  █               
-            █               █▓▓█                 █               
-            █              █▓▓▓▓█               █                
-            █▄▄▄▄           ▀▀▀▀               ██                
-            ██   ▀▄▄                          ██                 
-             █   █▒▒█▄                ▄▄▄▄▄▄▄ ██                 
-             ██  █▒▒▒▒██▄▄█▄▄█▄▄█▄▄█▄█▒▒█    ██                  
-              ██ ██▒▒▒█ █  █  █  █  ██▒▒█    █                   
-               ██ ██▒▒▒▀▀▀▀▀▀▀▀▀▀▀▀▀▀▒▒▒█  ██                    
-                █  ██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██ ██                     
-                ██  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ ██                      
-                 ██ ▀ █ █  █    █   █ █▀ █                       
-                  ██  █▄█  █    █   █ █  █                       
-                   █    ▀▀█▀▀█▀▀█▀▀█▀▀   █                       
-                   ███                  ██                       
-                     ██                ██                        
-                      ██████████████████                         
-                                                                                                                
-                      
-    `
-    ];
 
 
     // --- TITLE SCREEN LOGIC ---
