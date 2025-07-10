@@ -1,18 +1,22 @@
 # TardQuest
 ```
-    ▄▄▄▄▀ ██   █▄▄▄▄ ██▄   ▄▄ █    ▄   ▄███▄     ▄▄▄▄▄      ▄▄▄▄▀
-▀▀▀ █    █ █  █  ▄▀ █  █ █   █     █  █▀   ▀   █     ▀▄ ▀▀▀ █
-    █    █▄▄█ █▀▀▌  █   █ ▀▀▀█  █   █ ██▄▄   ▄  ▀▀▀▀▄       █
-   █     █  █ █  █  █  █     █  █   █ █▄   ▄▀ ▀▄▄▄▄▀       █
-  ▀         █   █   ███▀      █ █▄ ▄█ ▀███▀               ▀
-           █   ▀        _______▀ ▀▀▀
-          ▀            |       |
-                       |_______|=)
-                      -----------         ^    /\__/\
-         ___   |_|    |         |    O____|    |@  @|
-        /   \_/@ @    \_________/   /|    |    |(00)|
-      __\_______^/       |   |       |    |     )vv(
-                         |___|      / \   |
+                                                         ▄▄
+▄                                                ▄         ▀█
+ ▀▀██████████████▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀██████           ▀█         █░                        ▀▀▀▀▀▀▀▀▄
+     ████░            ██████    █▀░░░█            █         █░▄███████▄     ▄█▄ ▄▄█████████▀▀▀
+     ██░░     ██████  █░░░██    █░  ██      ▄    ▄█        ██░██░░░░░▀█   ███░ █    █████░
+     ██░     ██░   █░ █████░    █░  █░ ▄█████░   █  █     ██░██████▄  ▀  ██░░       ███░░
+    ███░     ███████░ █░░███░ █░█░ ██░ █░░░██░   █  █░   ██░ █░     ▄▄    ███▄      ██░░
+    ██░      █░░░░░█░██░   ████░████░░ ▀█████░   █  ██░███░  █▄   ███░   ████▀      ██░
+     █░       ░     ░  ░       ░░░░░░       █░  ██   ███░░   ██████░░ ████░░░      ██░
+     █░                             ░     ▄██░███░    ░░░     ░░░░░████▄▄▄▄▄▄▄▄▄▄▄▄██░
+     █░                             ░     █░░██░░                 ██░░░░░░░░░░░░░░░░░
+     █░                                   ▀███░░                  █░
+     ░░                                     ░░░                   █░
+     ░                                                           ██░
+     ░                                                           █░
+     ░                                                           ░░
+     ░                                                           ░
 ```
 
 # [►►► PLAY ONLINE ◄◄◄](https://milklounge.wang/tardquest)
@@ -51,6 +55,7 @@ Good job, idiot. You have fallen into a dungeon and have no way out except to ge
 | E   | Strafe Right |
 | T   | Talk |
 | I   | Open Inventory |
+| ESC | Open Settings |
 
 ### Battle
 | Key | Action |
@@ -59,6 +64,7 @@ Good job, idiot. You have fallen into a dungeon and have no way out except to ge
 | R | Run Away |
 | P | Persuade |
 | I | Open Inventory |
+| ESC | Open Settings |
 
 #### About Persuasion
 During battle, you can try to persuade an enemy to join you in your quest. To persuade them, you can say whatever you want. Unfortunately, the enemies don't speak your language, so your words don't actually have any influence on their decision to join you or not, but they might be swayed by your attempts. Normally, you only have two attempts per battle... though there may be a way to alleviate that problem.
