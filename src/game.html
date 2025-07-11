@@ -37,7 +37,6 @@
             background: #000;
             color: #fff;
             font-size: 10px;
-            white-space: pre;
             padding: 20px;
             display: flex;
             box-sizing: content-box;
@@ -78,8 +77,8 @@
             position: fixed;
             left: 0;
             top: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background: #000;
             color: #fff;
             z-index: 999;
@@ -172,7 +171,6 @@
 
             font-size: unset;
             margin-top: unset;
-            white-space: pre;
             /* Blue sky, dirt ground */
             /*
             background: linear-gradient(
@@ -324,6 +322,7 @@
             padding-bottom: 10px;
             background-color: #000;
             z-index: 9;
+            margin: 5px;
         }
 
         #menuList {
@@ -425,21 +424,6 @@
             animation-timing-function: linear;
         }
 
-        #viewportContainer {
-            position: absolute;
-            left: 256px;
-            top: 147px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            width: 360px;
-            height: 338px;
-            overflow: hidden;
-            box-sizing: content-box;
-            align-items: center;
-            justify-content: space-between;
-        }
-
         @keyframes fadeGradient {
             0% {
                 opacity: 0;
@@ -452,7 +436,7 @@
             }
         }
 
-        #viewportContainer.playerFellIntoAPitAndDied::after {
+        #viewport.playerFellIntoAPitAndDied::after {
             content: "";
             position: absolute;
             top: 0;
@@ -471,56 +455,11 @@
             display: flex;
             flex-direction: column;
         }
-        #partylist {
-            height: 130px;
-            width: 348px;
-            position: absolute;
-            border: 2px solid #fff;
-            top: 489px;
-            left: 250px;
-            padding: 10px;
-            text-overflow: ellipsis;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            overflow-y: auto;
-            justify-content: space-between;
-            font-size: 12px;
-        }
+
         #yourparty {
             font-size: 20px;
         }
-        #stats1 {
-            height: 338px;
-            width: 90px;
-            position: absolute;
-            border: 2px solid #fff;
-            top: 140px;
-            left: 620px;
-            padding: 5px;
-            overflow: hidden;
-            font-size: 18px;
-            font-weight: bold;
-            text-align: left;
-            line-height: 1.1;
-        }
-        #stats2 {
-            height: 140px;
-            width: 90px;
-            position: absolute;
-            border: 2px solid #fff;
-            top: 489px;
-            left: 620px;
-            padding: 5px;
-            overflow: hidden;
-            font-size: 12px;
-            font-weight: bold;
-            line-height: 1.0;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
 
-        }
         .stats-container {
             text-align: center;
             display: flex;
@@ -544,22 +483,16 @@
             padding: 0;
         }
 
-        #battleLog,
-        #minimap,
-        #portraitArtOverlay {
-            background: #000;
-            border: 2px solid #fff;
-            padding: 10px;
-            width: 672px;
-            height: auto;
-        }
-
         #battleLog {
-            height: 90px;
+            padding: 10px;
             text-overflow: ellipsis;
             word-wrap: break-word;
             white-space: pre-wrap;
             overflow-y: scroll;
+        }
+
+        #party {
+            padding: 10px;
         }
 
         #minimap,
@@ -639,38 +572,52 @@
             outline: none;
         }
 
-        .menus {
-            position: absolute;
-            border: solid white 2px;
-            border-top: 0;
-            top: 314px;
-            width: 212px;
-            height: 163px;
-            overflow: hidden;
-            line-height: 0px;
-            font-size: 9px;
-            padding: 4px;
-            padding-top: 9px;
+        #interface {
+            display: grid;
+            width: 692px;
+            height: 611px;
+            gap: 2px;
+            padding: 2px;
+            background: white;
+
+            grid-template-columns: 220px 368px 100px;
+            grid-template-rows: 110px 170px 176px 148px;
+            grid-template-areas:
+                "battleLog  battleLog   battleLog"
+                "topLeft    viewport    inventory"
+                "stats      viewport    inventory"
+                "controls   party       inventory";
         }
 
-        .menus > p:first-child {
-            margin-top: 0;
+        #interface > div {
+            background-color: #000;
+        }
+
+        #battleLog  { grid-area: battleLog; }
+        #topLeft    { grid-area: topLeft; }
+        #stats      { grid-area: stats; }
+        #controls   { grid-area: controls; }
+        #viewport   { grid-area: viewport; position: relative; overflow: hidden; }
+        #party      { grid-area: party; }
+        #inventory  { grid-area: inventory; }
+
+        #viewport > div {
+            position: absolute;
         }
 
         #controls {
-            font-size: 14px;
-            height: 130px;
-            width: 200px;
-            position: absolute;
-            border: 2px solid #fff;
-            top: 489px;
             padding: 10px;
-            text-overflow: ellipsis;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            overflow: hidden;
-            justify-content: space-between;
+            font-size: 14px;
+            line-height: 14px;
+            display: flex;
+            flex-direction: column;
         }
+
+        #controls > div {
+            display: flex;
+            flex-direction: row;
+        }
+
         #animEatRat {
             position: absolute;
             bottom: 0;
@@ -1068,41 +1015,47 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <div id="screenWipe"></div>
 
 <!-- In-game -->
-    <div class="menus">
-        <p><strong>KEY</strong></p>
-        <p><span class="player">↑</span> Player: It's you!</p>
-        <p><span class="wall">#</span> Wall: It's a fucking wall</p>
-        <p><span class="exit">E</span> Exit: Touch to descend further</p>
-        <p><span class="merchant">M</span> Merchant: Sells you crap</p>
-        <p><span class="gambler">G</span> Gambler: A shady shyster</p>
-        <p><span class="healingTile">H</span> HealTile: Heals you by 30% of max HP</p>
-        <p><span class="treasureChest">T</span> Treasure Chest: Contains items</p>
-        <p><span class="unexplored">?</span> Undiscovered: Who knows?</p>
-    </div>
-    <div id="partylist"></div>
-    <div id="stats1"></div>
-    <div id="stats2"></div>
-    <div id="controls"></div>
-    <div id="viewportContainer">
-        <div id="game" class="render"></div>
-        <div id="animation" class="hidden"></div>
-        <div id="animTorch" class="offscreen"></div>
-        <div id="menu" class="hidden">
-            <div id="menuLanding"></div>
-            <div id="menuList"></div>
-            <div id="menuSelectionDescription"></div>
-            <div id="escapeMessage" class="alignRight">Press Escape to go back</div>
-        </div>
-    </div>
-    <div id="ui">
-        <div id="sidePanel">
-            <div id="battleLog"></div>
+    <div id="interface">
+        <div id="battleLog"></div>
+        <div id="topLeft">
             <div id="minimap"></div>
             <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
-            <div id="inputBox">
-                <input type="text" id="persuadeInput" placeholder="Say your piece...">
+        </div>
+        <div id="inputBox">
+            <input type="text" id="persuadeInput" placeholder="Say your piece...">
+        </div>
+        <div id="stats"></div>
+        <div id="controls">
+            <table id="controlsExploration">
+                <tr><td>↑/W:</td><td>Move Forward</td></tr>
+                <tr><td>↓/S:</td><td>Move Backward</td></tr>
+                <tr><td>←/A, →/D:</td><td>Turn</td></tr>
+                <tr><td>Q, E:</td><td>Strafe</td></tr>
+                <tr><td>T:</td><td>Talk</td></tr>
+                <tr><td>I:</td><td>Inventory</td></tr>
+                <tr><td>Escape:</td><td>Game Menu</td></tr>
+            </table>
+            <table id="controlsCombat" class="hidden">
+                <tr><td>A:</td><td>Attack</td></tr>
+                <tr><td>R</td><td>Run</td></tr>
+                <tr><td>P</td><td>Persuade</td></tr>
+                <tr><td>I:</td><td>Inventory</td></tr>
+                <tr><td>Escape:</td><td>Game Menu</td></tr>
+            </table>
+        </div>
+        <div id="viewport">
+            <div id="game" class="render"></div>
+            <div id="animation" class="hidden"></div>
+            <div id="animTorch" class="offscreen"></div>
+            <div id="menu" class="hidden">
+                <div id="menuLanding"></div>
+                <div id="menuList"></div>
+                <div id="menuSelectionDescription"></div>
+                <div id="escapeMessage" class="alignRight">Press Escape to go back</div>
             </div>
         </div>
+        <div id="party"></div>
+        <div id="inventory"></div>
     </div>
 
     <script src="scripts/sam.js"></script>
@@ -8023,7 +7976,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 document.getElementById('game').style =
                     "transition: opacity 1.2s linear, transform 1.2s linear; " +
                     "opacity: 0; transform: translateY(-400px);";
-                document.getElementById('viewportContainer')
+                document.getElementById('viewport')
                     .classList.add('playerFellIntoAPitAndDied');
                 updateBattleLog(
                     '<span class="action">AUUUUUGH!</span> You scream out as ' +
@@ -9414,6 +9367,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 loadClass = "load-caution";
             }
 
+            // @TODO Finish placing stats in the new layout
             const stats1Html = `
                 <div class="stats-container">
                     <span>.-STATS-.</span>
@@ -9441,7 +9395,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     <span>._ _ _ _.</span>
                 </div>`;
-            document.getElementById('stats1').innerHTML = stats1Html;
+            // document.getElementById('stats1').innerHTML = stats1Html;
 
             const stats2Html = `
                 <div>.---<span class="action">FLOOR</span>---.</div>
@@ -9461,7 +9415,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 <span center>._ _ _ _ _ _.</span>
             `;
-            document.getElementById('stats2').innerHTML = stats2Html;
+            //document.getElementById('stats2').innerHTML = stats2Html;
 
             let partyHTML = `<center><strong id="yourparty">.--------[=PARTY=]--------.</strong></center><br>`;
             if (party.length > 0) {
@@ -9469,7 +9423,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     partyHTML += `<center><span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span></center><br>`;
                 });
             }
-            document.getElementById("partylist").innerHTML = partyHTML;
+            document.getElementById("party").innerHTML = partyHTML;
 
             let output = sceneRenderer.render(
                 player.x,
@@ -9479,26 +9433,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.getMaxBrightness()
             );
 
+            const $controlsExploration = document.getElementById("controlsExploration");
+            const $controlsCombat = document.getElementById("controlsCombat");
+
             if (player.inCombat) {
                 output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
                 if (!awaitingPersuasionText) {
-                    document.getElementById("controls").textContent =
-                        "A:      Attack\n" +
-                        "R:      Run\n" +
-                        "P:      Persuade\n" +
-                        "I:      Inventory\n" +
-                        "ESC:    Game Menu";
+                    $controlsExploration.className = "hidden";
+                    $controlsCombat.className = "";
                 }
             } else {
-                // Controls
-                document.getElementById("controls").textContent =
-                    "↑/W:      Move Forward\n" +
-                    "↓/S:      Move Backward\n" +
-                    "←/A, →/D: Turn\n" +
-                    "Q, E:     Strafe\n" +
-                    "T:        Talk\n" +
-                    "I:        Inventory\n" +
-                    "Escape:   Game Menu";
+                $controlsExploration.className = "";
+                $controlsCombat.className = "hidden";
             }
 
             if (player.steppingOnHealingTile) {
@@ -9537,7 +9483,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function animEatRat(callback) {
-            const container = document.getElementById('viewportContainer');
+            const container = document.getElementById('viewport');
             if (!container) return;
 
             window._inputBlocked = true;
@@ -9641,26 +9587,45 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function shakeScreen() {
-            const container = document.getElementById('viewportContainer');
-            if (!container) return;
+            const $children = document.getElementById('viewport').children;
+
             // Randomly pick a small vertical offset: -2, -1, 0, 1, or 2px
             const offset = (Math.random() > -0.5 ? -1 : -1) * (Math.random() > -0.5 ? -2 : 1);
-            container.style.transition = 'transform 0.08s cubic-bezier(.36,.07,.19,.97)';
-            container.style.transform = `translateY(${offset}px)`;
-            setTimeout(() => {
-                container.style.transform = '';
-            }, 80);
+            for (let $child of $children) {
+                const childIsVisible =
+                    !$child.classList.contains('hidden') &&
+                    !$child.classList.contains('offscreen');
+
+                if (!childIsVisible) {
+                    continue;
+                }
+
+                $child.style.transition = 'transform 0.08s cubic-bezier(.36,.07,.19,.97)';
+                $child.style.transform = `translateY(${offset}px)`;
+                setTimeout(() => {
+                    $child.style.transform = '';
+                }, 80);
+            }
         }
 
         function slideScreen(direction) {
-            const container = document.getElementById('viewportContainer');
-            if (!container) return;
+            const $children = document.getElementById('viewport').children;
             const offset = direction === 'left' ? -2 : 2; // Slide effect pixel amount (-x is left, x is right)
-            container.style.transition = 'transform 0.12s cubic-bezier(.36,.07,.19,.97)';
-            container.style.transform = `translateX(${offset}px)`;
-            setTimeout(() => {
-                container.style.transform = '';
-            }, 120);
+            for (let $child of $children) {
+                const childIsVisible =
+                    !$child.classList.contains('hidden') &&
+                    !$child.classList.contains('offscreen');
+
+                if (!childIsVisible) {
+                    continue;
+                }
+
+                $child.style.transition = 'transform 0.12s cubic-bezier(.36,.07,.19,.97)';
+                $child.style.transform = `translateX(${offset}px)`;
+                setTimeout(() => {
+                    $child.style.transform = '';
+                }, 120);
+            }
         }
 
         function move(direction) {
