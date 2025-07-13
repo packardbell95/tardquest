@@ -911,7 +911,6 @@
             margin-top: 10px;
             padding: 4px;
             transform: translateX(-50%);
-            z-index: 100; /* Appear over everything except title screen items */
         }
 
         [role="tooltip"].top {
@@ -987,7 +986,6 @@
 <!-- Title screen -->
     <div id="titleScreen">
         <div id="content">
-            <audio id="titleMusic" src="audio/title.wav" loop></audio>
             <pre class="logo">
                                                          ▄▄
 ▄                                                ▄         ▀█
@@ -8983,6 +8981,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         const music = {
+            titleTrack: 
+                new Audio("audio/title.wav"), // Title screen
             explorationTracks: [
                 new Audio("audio/explore.mp3"),
                 new Audio("audio/metalspoons.mp3"), // Metal Spoons - endless_self
@@ -8997,12 +8997,28 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         music.explorationTracks.forEach(track => track.loop = true);
         music.battleTracks.forEach(track => track.loop = true);
+        music.titleTrack.loop = true;
 
         function stopAllMusic() {
             [...music.explorationTracks, ...music.battleTracks].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
             });
+            
+        }
+        function playTitleMusic() {
+            stopAllMusic();
+            if (!musicEnabled) return;
+            currentMusic = music.titleTrack;
+            currentMusic.play();
+        }
+
+        function stopTitleMusic() {
+            if (currentMusic === music.titleTrack) {
+                currentMusic.pause();
+                currentMusic.currentTime = 0;
+                currentMusic = null;
+            }
         }
 
         function playRandomExplorationMusic() {
@@ -12267,16 +12283,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
     // --- TITLE SCREEN LOGIC ---
     const $titleScreen = document.getElementById('titleScreen');
-    const $titleMusic = document.getElementById('titleMusic');
 
         function showTitleScreen() {
+            playTitleMusic();
             $titleScreen.style.display = 'flex';
-            $titleMusic.currentTime = 0;
-            $titleMusic.play();
             stopAllMusic();
             window._inputBlocked = true;
         }
         function hideTitleScreen() {
+            stopTitleMusic();
             // Start wipe-in
             const wipe = document.getElementById('screenWipe');
             wipe.classList.add('active');
@@ -12285,8 +12300,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             setTimeout(() => {
                 $titleScreen.style.display = 'none';
-                $titleMusic.pause();
-                $titleMusic.currentTime = 0;
                 window._inputBlocked = false;
                 playRandomExplorationMusic();
                 render();
@@ -12312,6 +12325,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         if (skipTitleScreen) {
             hideTitleScreen();
+            stopAllMusic();
         } else {
             showTitleScreen();
         }
