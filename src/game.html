@@ -44,6 +44,34 @@
             overflow: hidden;
         }
 
+        button {
+            color: #fff;
+            background-color: #000;
+            cursor: pointer;
+            height: 20px;
+        }
+
+        button:hover {
+            background-color: #fff;
+            color: #000;
+        }
+
+        button.release:hover {
+            background-color: #f00;
+            color: #fff;
+        }
+
+        button:disabled,
+        button:disabled:hover {
+            color: #999;
+            border-color: #999;
+            cursor: not-allowed;
+        }
+
+        .strikethrough {
+            text-decoration: line-through;
+        }
+
         a:visited,
         a:link {
             color: #fff;
@@ -322,7 +350,6 @@
             padding-bottom: 10px;
             background-color: #000;
             z-index: 9;
-            margin: 5px;
         }
 
         #menuList {
@@ -491,14 +518,8 @@
             overflow-y: scroll;
         }
 
-        #party {
-            padding: 10px;
-        }
-
         #minimap,
         #portraitArtOverlay {
-            height: 166px;
-            width: 216px;
             padding: 2px;
             white-space: pre;
             font-size: 12px;
@@ -581,7 +602,7 @@
             background: white;
 
             grid-template-columns: 220px 368px 100px;
-            grid-template-rows: 110px 170px 176px 148px;
+            grid-template-rows: 110px 184px 162px 148px;
             grid-template-areas:
                 "battleLog  battleLog   battleLog"
                 "topLeft    viewport    inventory"
@@ -593,6 +614,23 @@
             background-color: #000;
         }
 
+        .ui-header {
+            display: flex;
+            flex-direction: row;
+            background-color: #fff;
+            color: #000;
+            margin: 1px;
+            padding: 0 4px;
+        }
+
+        .ui-header.space-between {
+            justify-content: space-between;
+        }
+
+        .ui-header.space-around {
+            justify-content: space-around;
+        }
+
         #battleLog  { grid-area: battleLog; }
         #topLeft    { grid-area: topLeft; }
         #stats      { grid-area: stats; }
@@ -601,21 +639,125 @@
         #party      { grid-area: party; }
         #inventory  { grid-area: inventory; }
 
+        #viewport {
+            border: 4px solid transparent;
+        }
+
+        #infoContainer {
+            display: grid;
+            gap: 2px;
+            padding: 4px;
+            grid-template-columns: 1fr 3fr;
+            margin-bottom: 2px;
+        }
+
+        #infoContainer > *,
+        #statContainer > * {
+            height: 14px;
+            line-height: 14px;
+        }
+
+        #infoContainer > :nth-child(2n) {
+            text-align: right;
+        }
+
+        #infoContainer > .BTC {
+            padding-right: 1em;
+        }
+
+        #statContainer {
+            display: grid;
+            gap: 4px;
+            padding: 4px;
+
+            grid-template-columns: 3fr 1fr 3fr 1fr;
+        }
+
+        #statContainer > div {
+            width: 50%;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        #statContainer > :nth-child(2n) {
+            justify-content: right;
+        }
+
+        #partyMembers {
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            margin-top: 2px;
+        }
+
+        #partyMembers:empty::after {
+            content: "You ain't got no party. Go persuade some fools!";
+            display: block;
+            margin-top: 50px;
+            text-align: center;
+            color: #fff6;
+            font-style: italic;
+        }
+
+        #partyMembers > [data-partyMemberId] {
+            background-color: #000;
+            clip-path: rect(0 100% 100% 0);
+            height: 35px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            transition:
+                background-color .5s linear,
+                clip-path .5s linear,
+                height .5s linear .5s,
+                margin-bottom .5s linear .5s;
+        }
+
+        #partyMembers > [data-partyMemberId].sweepItUp {
+            background-color: #900;
+            clip-path: rect(0 0% 100% 0);
+            height: 0;
+            margin-bottom: 0;
+        }
+
         #viewport > div {
             position: absolute;
         }
 
         #controls {
-            padding: 10px;
-            font-size: 14px;
-            line-height: 14px;
             display: flex;
             flex-direction: column;
         }
 
-        #controls > div {
+        .control-list:not(.hidden) {
+            display: grid;
+            gap: 4px;
+            padding: 4px;
+            grid-template-columns: 1fr 2fr;
+            margin: 4px 2px;
+        }
+
+        .party-member {
+            gap: 2px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .party-member > .info {
             display: flex;
             flex-direction: row;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .party-member > .info > progress-bar {
+            flex-grow: 1;
+        }
+
+        .party-member > .info > .buttons {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
         }
 
         #animEatRat {
@@ -684,7 +826,7 @@
             color: #F1483D;
         }
         .DEF {
-            color: #1463BA;
+            color: #0ff;
         }
         .STR {
             color: #f7603b;
@@ -703,15 +845,6 @@
         }
         .LOAD {
             color: #f8d46f;
-        }
-        .load-normal {
-            color: white;
-        }
-        .load-caution {
-            color: yellow;
-        }
-        .load-danger {
-            color: red;
         }
         .action {
             color: #EC4134;
@@ -1018,30 +1151,87 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <div id="interface">
         <div id="battleLog"></div>
         <div id="topLeft">
-            <div id="minimap"></div>
+            <div id="minimapContainer">
+                <div id="minimapHeader" class="ui-header space-around">Dungeon Floor --</div>
+                <div id="minimap"></div>
+            </div>
             <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
         </div>
         <div id="inputBox">
             <input type="text" id="persuadeInput" placeholder="Say your piece...">
         </div>
-        <div id="stats"></div>
+        <div id="stats">
+            <div class="ui-header space-between">
+                <span>Player</span>
+                <span>Level <span id="playerLevel">1</span></span>
+            </div>
+            <div id="infoContainer">
+                <div>
+                    HP
+                </div>
+                <progress-bar
+                    id="statHp"
+                    cautionBelowPercentage="26"
+                    dangerBelowPercentage="11"
+                ></progress-bar>
+
+                <div>
+                    EXP
+                </div>
+                <progress-bar
+                    id="statExp"
+                    emptyColor="#000"
+                    filledColor="#009"
+                ></progress-bar>
+
+                <div>
+                    Load
+                </div>
+                <progress-bar
+                    id="statLoad"
+                    cautionAbovePercentage="50"
+                    dangerAbovePercentage="80"
+                    emptyColor="#000"
+                    filledColor="#f04"
+                ></progress-bar>
+
+                <div>
+                    Bitcoins
+                </div>
+                <div class="BTC">
+                    ₿ <span id="playerBitcoins">0</span>
+                </div>
+            </div>
+            <div class="ui-header">
+                Stats
+            </div>
+            <div id="statContainer">
+                <div>Strength</div><div id="statStrength" class="STR">4</div>
+                <div>Defense</div><div id="statDefense" class="DEF">7</div>
+                <div>Persuasion</div><div id="statPersuasion" class="PRS">15</div>
+                <div>Endurance</div><div id="statEndurance" class="END">4</div>
+                <div>Speed</div><div id="statSpeed" class="SPD">13</div>
+                <div>Luck</div><div id="statLuck" class="LUK">2</div>
+            </div>
+        </div>
         <div id="controls">
-            <table id="controlsExploration">
-                <tr><td>↑/W:</td><td>Move Forward</td></tr>
-                <tr><td>↓/S:</td><td>Move Backward</td></tr>
-                <tr><td>←/A, →/D:</td><td>Turn</td></tr>
-                <tr><td>Q, E:</td><td>Strafe</td></tr>
-                <tr><td>T:</td><td>Talk</td></tr>
-                <tr><td>I:</td><td>Inventory</td></tr>
-                <tr><td>Escape:</td><td>Game Menu</td></tr>
-            </table>
-            <table id="controlsCombat" class="hidden">
-                <tr><td>A:</td><td>Attack</td></tr>
-                <tr><td>R</td><td>Run</td></tr>
-                <tr><td>P</td><td>Persuade</td></tr>
-                <tr><td>I:</td><td>Inventory</td></tr>
-                <tr><td>Escape:</td><td>Game Menu</td></tr>
-            </table>
+            <div class="ui-header">Controls</div>
+            <div id="controlsExploration" class="control-list">
+                <div>↑/W:</div><div>Move Forward</div>
+                <div>↓/S:</div><div>Move Backward</div>
+                <div>←/A, →/D:</div><div>Turn</div>
+                <div>Q, E:</div><div>Strafe</div>
+                <div>T:</div><div>Talk</div>
+                <div>I:</div><div>Inventory</div>
+                <div>Escape:</div><div>Game Menu</div>
+            </div>
+            <div id="controlsCombat" class="control-list hidden">
+                <div>A:</div><div>Attack</div>
+                <div>R:</div><div>Run</div>
+                <div>P:</div><div>Persuade</div>
+                <div>I:</div><div>Inventory</div>
+                <div>Escape:</div><div>Game Menu</div>
+            </div>
         </div>
         <div id="viewport">
             <div id="game" class="render"></div>
@@ -1054,10 +1244,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 <div id="escapeMessage" class="alignRight">Press Escape to go back</div>
             </div>
         </div>
-        <div id="party"></div>
-        <div id="inventory"></div>
+        <div id="party">
+            <div class="ui-header">Party</div>
+            <div id="partyMembers"></div>
+        </div>
+        <div id="inventory">
+            <!--div class="ui-header space-around">Inventory</div-->
+        </div>
     </div>
 
+    <script src="scripts/progress-bar.js"></script>
     <script src="scripts/sam.js"></script>
     <script>
         /**
@@ -6013,8 +6209,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         const Minimap = {
-            hide: () => document.getElementById('minimap').classList.add('hidden'),
-            show: () => document.getElementById('minimap').classList.remove('hidden'),
+            hide: () => document.getElementById('minimapContainer').classList.add('hidden'),
+            show: () => document.getElementById('minimapContainer').classList.remove('hidden'),
             draw: () => {
                 const $minimap = document.getElementById('minimap');
                 $minimap.replaceChildren();
@@ -7227,6 +7423,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return;
                 }
 
+                if (!voiceOptions) {
+                    console.error("No voice options provided", { sentence });
+                    return;
+                }
+
                 SpeechSynthesizer.isSpeaking = true;
                 const options = structuredClone(voiceOptions);
                 options.singmode = Math.random() < 0.5;
@@ -7618,27 +7819,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                     MAP[y][x] = new MapCell('crackedFloorSevere');
                                     updateBattleLog(
                                         '<span class="action">The floor cracks under ' +
-                                        'your feet!</span> You probably should not ' +
-                                        'step here again'
+                                        'your feet!</span>'
                                     );
                                     playSFX('floorCrackSlight');
                                 }
                             } else {
-                                // Break and kill
-                                stopAllMusic();
-                                animTorchEnd();
-                                window._inputBlocked = true;
-                                document.getElementById('game').style =
-                                    "transition: opacity 2s, transform 2s; " +
-                                    "opacity:0; transform: translateY(-400px)";
-                                updateBattleLog(
-                                    '<span class="action">AUUUUUGH!</span> ' +
-                                    'You scream out as the flimsy floor ' +
-                                    'collapses beneath your feet and you plunge ' +
-                                    'into a pit of spikes waiting beneath!'
-                                );
-                                playSFX('floorBreakScreamDie');
-                                player.hp = 0;
+                                player.fallThroughFloorAndDie();
                             }
                         },
                     },
@@ -7723,7 +7909,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             merchant.isActiveOnFloor = false;
                             MAP[y][x] = new MapCell('bloodyCrater');
                             playSFX('scream');
-                            merchant.say('AIEEEEEEEEEEEEEE!');
+                            merchant.say('AIEEEEEEEEEEEEEE!', true);
                             updateBattleLog(
                                 'HOLY SHIT! The <span class="friendly">' +
                                 'merchant</span> has been ' +
@@ -7747,9 +7933,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                             // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
                             const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
-                            player.bitcoins += rewardBtc;
+                            player.giveBitcoins(rewardBtc);
                             playSFX('scream');
-                            gambler.say('AUGH!!');
+                            gambler.say('AUGH!!', true);
                             updateBattleLog(
                                 `The <span class="gambler">gambler</span> ` +
                                 `has been reduced to a confetti of shrapnel ` +
@@ -7790,7 +7976,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             const scaledMimic = scaleMimicStats(baseMimic);
                             const mimicBTC = scaledMimic.bitcoins;
 
-                            player.bitcoins += mimicBTC; // Reward the player
+                            player.giveBitcoins(mimicBTC); // Reward the player
                             updateBattleLog(
                                 `<span class="action">WHAT THE FUCK? That ` +
                                 `was a mimic?!</span> You obtained ` +
@@ -7893,16 +8079,86 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 maxPersuasionAttempts = player.hasEquippedRing('ringOfAmplifiedAudio') ? 3 : 2;
                 player.enteringCombat = true;
                 player.inCombat = true;
+                player.party.prepareForBattle();
             },
             leaveCombat: () => {
                 player.leavingCombat = true;
                 player.inCombat = false;
+                currentEnemy = null;
+                resumeExplorationMusic();
+                player.party.purgeDeadMembers();
             },
             heal: (hp) => {
                 player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
+                player.refreshStats();
             },
             damage: (hp) => {
                 player.hp = Math.max(player.hp - hp, 0);
+                player.refreshStats();
+            },
+            setHp: (hp) => {
+                player.hp = hp;
+                player.refreshStats();
+            },
+            getEffectiveStats: () => {
+                const equippedArmor = armor[player.armor];
+                const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
+                const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
+
+                function getRingEffect(stat) {
+                    return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
+                }
+
+                return {
+                    hp: player.hp,
+                    maxHp: player.maxHp + getRingEffect('maxHp'),
+                    defense:
+                        player.defense +
+                        (equippedArmor ? equippedArmor.defense : 0) +
+                        getRingEffect('defense'),
+                    strength: player.strength,
+                    persuasion: player.persuasion + getRingEffect('persuasion'),
+                    speed: player.speed + getRingEffect('speed'),
+                    luck: player.luck + getRingEffect('luck'),
+                    endurance: player.endurance,
+                    carryWeight: getCarryWeight(),
+                    carryWeightLimit: getCarryWeightLimit(),
+                };
+            },
+            refreshStats: () => {
+                const stats = player.getEffectiveStats();
+
+                const $hp = document.getElementById('statHp');
+                $hp.setAttribute('value', stats.hp);
+                $hp.setAttribute('max', stats.maxHp);
+
+                const $exp = document.getElementById('statExp');
+                $exp.setAttribute('value', player.exp);
+                $exp.setAttribute('max', player.getExpRequiredForLevelUp());
+
+                const $load = document.getElementById('statLoad');
+                $load.setAttribute('value', stats.carryWeight.toFixed(1));
+                $load.setAttribute('max', stats.carryWeightLimit.toFixed(1));
+
+                const $strength = document.getElementById('statStrength');
+                $strength.innerText = stats.strength;
+
+                const $defense = document.getElementById('statDefense');
+                $defense.innerText = stats.defense;
+
+                const $persuasion = document.getElementById('statPersuasion');
+                $persuasion.innerText = stats.persuasion;
+
+                const $endurance = document.getElementById('statEndurance');
+                $endurance.innerText = stats.endurance;
+
+                const $speed = document.getElementById('statSpeed');
+                $speed.innerText = stats.speed;
+
+                const $luck = document.getElementById('statLuck');
+                $luck.innerText = stats.luck;
+
+                player.party.refresh();
             },
             equipRing: (slotNumber, ringId) => {
                 if (![1, 2].includes(slotNumber)) {
@@ -7968,23 +8224,245 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.level++;
                 player.exp = rolledOverExp;
                 player.hp = getEffectiveStat('maxHp');
+                document.getElementById('playerLevel').innerText = player.level;
             },
             fallThroughFloorAndDie: () => {
-                stopAllMusic();
-                animTorchEnd();
-                window._inputBlocked = true;
-                document.getElementById('game').style =
-                    "transition: opacity 1.2s linear, transform 1.2s linear; " +
-                    "opacity: 0; transform: translateY(-400px);";
-                document.getElementById('viewport')
-                    .classList.add('playerFellIntoAPitAndDied');
-                updateBattleLog(
-                    '<span class="action">AUUUUUGH!</span> You scream out as ' +
-                    'the flimsy floor collapses beneath your feet and you ' +
-                    'plunge into a pit of spikes waiting beneath!'
-                );
-                playSFX('floorBreakScreamDie');
-                player.hp = 0;
+                setTimeout(() => {
+                    stopAllMusic();
+                    animTorchEnd();
+                    window._inputBlocked = true;
+                    document.getElementById('game').style =
+                        "transition: opacity 1.2s linear, transform 1.2s linear; " +
+                        "opacity: 0; transform: translateY(-400px);";
+                    document.getElementById('viewport')
+                        .classList.add('playerFellIntoAPitAndDied');
+                    updateBattleLog(
+                        '<span class="action">AUUUUUGH!</span> You scream out as ' +
+                        'the flimsy floor collapses beneath your feet and you ' +
+                        'plunge into a pit of spikes waiting beneath!'
+                    );
+                    playSFX('floorBreakScreamDie');
+                    player.damage(player.maxHp);
+                    setTimeout(() => render(), 2000);
+                }, 100);
+            },
+            giveBitcoins: (num) => {
+                player.bitcoins += num;
+                player.refreshBitcoins();
+            },
+            takeBitcoins: (num) => {
+                player.bitcoins -= num;
+                player.refreshBitcoins();
+            },
+            refreshBitcoins: () => {
+                const $playerBitcoins = document.getElementById('playerBitcoins');
+                $playerBitcoins.innerText = player.bitcoins.toLocaleString(undefined);
+            },
+
+            // Party members
+            party: {
+                maxMembers: 3,
+                seenMembers: 0,
+                members: [],
+                isFull: () => player.party.members.length >= player.party.maxMembers,
+                add: (enemyId, name, hp, maxHp) => {
+                    const partyMemberId = player.party.seenMembers;
+
+                    player.party.members.push({
+                        id: partyMemberId,
+                        enemyId,
+                        name,
+                        hp,
+                        maxHp,
+                        healedThisBattle: false,
+                    });
+
+                    const $partyMember = document.createElement('div');
+                    $partyMember.classList.add('party-member');
+                    $partyMember.setAttribute(
+                        'data-partyMemberId',
+                        partyMemberId
+                    );
+
+                    const $allyName = document.createElement('div');
+                    $allyName.classList.add('name');
+                    $allyName.innerText = name;
+                    $partyMember.appendChild($allyName);
+
+                    const $info = document.createElement('div');
+                    $info.classList.add('info');
+
+                    const $healthBar = document.createElement('progress-bar');
+                    $healthBar.classList.add('health-bar');
+                    $healthBar.setAttribute('height', 20);
+                    $healthBar.setAttribute('value', hp);
+                    $healthBar.setAttribute('max', maxHp);
+                    $healthBar.setAttribute('cautionBelowPercentage', 26);
+                    $healthBar.setAttribute('dangerBelowPercentage', 11);
+
+                    $info.appendChild($healthBar);
+
+                    const $talkButton = document.createElement('button');
+                    $talkButton.classList.add('talk');
+                    $talkButton.innerText = 'Talk';
+                    $talkButton.onclick = () => player.party.talk(partyMemberId);
+                    $info.appendChild($talkButton);
+
+                    const $releaseButton = document.createElement('button');
+                    $releaseButton.classList.add('release');
+                    $releaseButton.innerText = 'Release';
+                    $releaseButton.onclick = () => player.party.release(partyMemberId);
+                    $info.appendChild($releaseButton);
+
+                    $partyMember.appendChild($info);
+
+                    document.getElementById('partyMembers').appendChild($partyMember);
+
+                    player.party.seenMembers++;
+                },
+                refresh: () => {
+                    for (let i=0; i<player.party.members.length; i++) {
+                        const partyMember = player.party.members[i];
+                        const selector =
+                            `#partyMembers [data-partyMemberId="${partyMember.id}"]`;
+
+                        const $partyMember = document.querySelector(selector);
+                        if (!$partyMember) {
+                            console.error(
+                                "Could not find party member's element",
+                                { partyMember }
+                            );
+                            continue;
+                        }
+
+                        if (partyMember.hp <= 0) {
+                            $partyMember.querySelector('.name')
+                                .classList.add('strikethrough');
+                            player.party.disableButtons(partyMember.id);
+                        }
+
+                        const $healthBar = $partyMember
+                            .querySelector(`progress-bar.health-bar`);
+                        $healthBar.setAttribute('value', partyMember.hp);
+                    }
+                },
+                purgeDeadMembers: () => {
+                    const aliveMembers = [];
+                    for (let i=0; i<player.party.members.length; i++) {
+                        const partyMember = player.party.members[i];
+
+                        if (partyMember.hp > 0) {
+                            aliveMembers.push(partyMember);
+                            continue;
+                        }
+
+                        const id = partyMember.id;
+                        const selector =
+                            `#partyMembers [data-partyMemberId="${id}"]`;
+
+                        const $partyMember = document.querySelector(selector);
+                        $partyMember.classList.add('sweepItUp');
+
+                        $partyMember.addEventListener('transitionend', function onTransitionEnd(e) {
+                            if (e.propertyName === 'height') {
+                                $partyMember.removeEventListener('transitionend', onTransitionEnd);
+                                $partyMember.remove();
+                            }
+                        });
+                    }
+
+                    player.party.members = aliveMembers;
+                },
+                talk: (partyMemberId) => {
+                    const index = partyMemberId === undefined
+                        ? Math.floor(Math.random() * player.party.members.length)
+                        : player.party.members.findIndex((e) => e.id === partyMemberId);
+
+                    const responder = player.party.members[index];
+                    if (!responder) {
+                        console.warn("Party member not found", {
+                            partyMembers: player.party.members,
+                            partyMemberId,
+                            index
+                        });
+                        return;
+                    }
+
+                    if (responder.hp <= 0) {
+                        updateBattleLog(`${responder.name} is dead, bub`);
+                        return;
+                    }
+
+                    const enemyDefinition = enemies.find(e => e.id === responder.enemyId);
+                    const talkSlots = enemyDefinition?.talkSlots || [
+                        ["You", "I", "What", "Hey", "Listen here, you", "They", "He", "She"],
+                        ["are", "can't", "should", "will", "must", "need to", "need", "needs", "needed"],
+                        ["go", "find a", "smack a", "kill the", "eat a", "snack on a", "pick my", "pick your", "obey my", "obey your"],
+                        ["pot roast", "many pot roasts", "total dumbass", "gay", "friend", "sandwich", "nose", "orbital laser", "Burnout Revenge on the PS2", "one big dandruff"],
+                        ["?", "!", "!!!", "?!", "...", ".",]
+                    ];
+
+                    // Sentence assembly - also removes the space before the punctuation slot
+                    const chosen = talkSlots.map(slot => slot[Math.floor(Math.random() * slot.length)]);
+                    const sentence =
+                        chosen.length > 1
+                            ? chosen.slice(0, -1).join(" ") + chosen[chosen.length - 1]
+                            : chosen[0];
+
+                    updateBattleLog(
+                        `<span class="friendly">&lt;${responder.name}&gt;</span> ` +
+                        `<span class="player">--you pull out your translator--</span> ` +
+                        `"${sentence}"`
+                    );
+
+                    player.party.disableButtons();
+
+                    SpeechSynthesizer.speak(
+                        sentence,
+                        enemyDefinition.voice,
+                        () => player.party.enableButtons()
+                    );
+                },
+                disableButtons: (partyMemberId) => {
+                    const selector =
+                        (partyMemberId
+                            ? `#partyMembers [data-partyMemberId="${partyMemberId}"] `
+                            : ""
+                        ) + "button";
+
+                    document.querySelectorAll(selector).forEach(
+                        (button) => button.disabled = true
+                    );
+                },
+                enableButtons: () => {
+                    for (let i=0; i<player.party.members.length; i++) {
+                        const partyMember = player.party.members[i];
+                        if (partyMember.hp <= 0) {
+                            continue;
+                        }
+
+                        const selector =
+                            `#partyMembers [data-partyMemberId="${partyMember.id}"] button`;
+                        document.querySelectorAll(selector).forEach(
+                            (button) => button.disabled = false
+                        );
+                    }
+                },
+                release: (partyMemberId) => {
+                    // @TODO: Make a confirmation prompt before releasing
+                    const partyMember = player.party.members.find((e) => e.id === partyMemberId);
+                    if (!partyMember) {
+                        console.error("Party member not found", { partyMemberId });
+                        return;
+                    }
+
+                    updateBattleLog(`You boot ${partyMember.name} to the curb. SEE YA!`);
+                    player.party.members = player.party.members.filter((e) => e.id !== partyMemberId);
+                    document.querySelector(`#partyMembers [data-partyMemberId="${partyMemberId}"]`).remove();
+                },
+                get: () => player.party.members.filter((e) => e.hp > 0),
+                prepareForBattle: () => player.party.members
+                    .forEach(member => member.healedThisBattle = false),
             },
         };
 
@@ -7998,8 +8476,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 mouth: 163,
                 throat: 160,
             },
-            say: function(str) {
-                SpeechSynthesizer.speak(str, merchant.voice);
+            say: function(str, suppressSpeechSynthesis) {
+                if (!suppressSpeechSynthesis) {
+                    SpeechSynthesizer.speak(str, merchant.voice);
+                }
                 updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
             },
             isAt: function(x, y) {
@@ -8044,7 +8524,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return;
                 }
 
-                player.bitcoins -= merchandise.price;
+                player.takeBitcoins(merchandise.price);
                 playSFX('kaching');
                 // Disable equipment auto equip upon purchase
                 player.inventory[key] = (player.inventory?.[key] || 0) + 1;
@@ -8195,8 +8675,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 mouth: 162,
                 throat: 255,
             },
-            say: function(str) {
-                SpeechSynthesizer.speak(str, gambler.voice);
+            say: function(str, suppressSpeechSynthesis) {
+                if (!suppressSpeechSynthesis) {
+                    SpeechSynthesizer.speak(str, gambler.voice);
+                }
                 updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
             },
             isAt: function(x, y) {
@@ -8759,7 +9241,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 price: 50,
             },
             alaskaRaisins: {
-                article: '',
+                article: 'some',
                 name: "ALASKA RAISINS",
                 description: "Holy shit! It's the Alaska Raisins! +1.5 LOAD, +70 HP",
                 use: () => {
@@ -8985,7 +9467,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let currentMusic = null;
         let currentExplorationTrack = null;
         let currentEnemy = null;
-        let party = [];
         let gameOver = false;
         let awaitingPersuasionText = false;
         let persuasionAttempts = 0;
@@ -9062,6 +9543,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             spawnTreasureChests();
             spawnHealingTiles();
             spawnCrackedFloors();
+
+            document.getElementById('minimapHeader').innerText =
+                `Dungeon Floor ${floor}`;
         }
         function loadSettings() {
             const music = localStorage.getItem("musicEnabled");
@@ -9342,88 +9826,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             Minimap.draw();
             updateBreathingSFX();
 
-            const equippedArmor = armor[player.armor];
-            const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
-            const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
-
-            function getRingEffect(stat) {
-                return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
-            }
-
-            const displayMaxHp = player.maxHp + getRingEffect('maxHp');
-            const displayDefense = player.defense + (equippedArmor ? equippedArmor.defense : 0) + getRingEffect('defense');
-            const displayStrength = player.strength;
-            const displayPersuasion = player.persuasion + getRingEffect('persuasion');
-            const displaySpeed = player.speed + getRingEffect('speed');
-            const displayLuck = player.luck + getRingEffect('luck');
-            const displayEndurance = player.endurance;
-            const displayCarryWeight = Number(getCarryWeight()).toFixed(1);
-            const displayCarryLimit = Number(getCarryWeightLimit()).toFixed(1);
-            const percentLoad = getCarryWeight() / getCarryWeightLimit();
-            let loadClass = "load-normal";
-            if (percentLoad >= 0.8) {
-                loadClass = "load-danger";
-            } else if (percentLoad >= 0.5) {
-                loadClass = "load-caution";
-            }
-
-            // @TODO Finish placing stats in the new layout
-            const stats1Html = `
-                <div class="stats-container">
-                    <span>.-STATS-.</span>
-
-                    <span>|===<span class="HP">HP</span>===|</span>
-                    <span class="stats1-label">${player.hp}/${displayMaxHp}</span>
-
-                    <span>|==<span class="DEF">DEF</span>==|</span>
-                    <span class="stats1-label">${displayDefense}</span>
-
-                    <span>|==<span class="STR">STR</span>==|</span>
-                    <span class="stats1-label">${displayStrength}</span>
-
-                    <span>|==<span class="PRS">PRS</span>==|</span>
-                    <span class="stats1-label">${displayPersuasion}</span>
-
-                    <span>|==<span class="END">END</span>==|</span>
-                    <span class="stats1-label">${displayEndurance}</span>
-
-                    <span>|==<span class="SPD">SPD</span>==|</span>
-                    <span class="stats1-label">${displaySpeed}</span>
-
-                    <span>|==<span class="LUK">LUK</span>==|</span>
-                    <span class="stats1-label">${displayLuck}</span>
-
-                    <span>._ _ _ _.</span>
-                </div>`;
-            // document.getElementById('stats1').innerHTML = stats1Html;
-
-            const stats2Html = `
-                <div>.---<span class="action">FLOOR</span>---.</div>
-                <span class="stats2-label">${floor}</span>
-
-                <div><span>+====<span class="LV">LV</span>====+</div>
-                <span class="stats2-label">${player.level}</span>
-
-                <div><span>+====<span class="EXP">EXP</span>====+</div>
-                <span class="stats2-label">${player.exp}/${player.getExpRequiredForLevelUp()}</span>
-
-                <div><span>+====<span class="BTC">BTC</span>====+</div>
-                <span class="stats2-label">${player.bitcoins}</span>
-
-                <div><span>+===<span class="LOAD">LOAD</span>===+</div>
-                <span class="stats2-label"><span class="${loadClass}">${displayCarryWeight}<span class="load-normal">/${displayCarryLimit}</span></span></span>
-
-                <span center>._ _ _ _ _ _.</span>
-            `;
-            //document.getElementById('stats2').innerHTML = stats2Html;
-
-            let partyHTML = `<center><strong id="yourparty">.--------[=PARTY=]--------.</strong></center><br>`;
-            if (party.length > 0) {
-                party.forEach(member => {
-                    partyHTML += `<center><span class="friendly">${member.name}</span> <span class="HP">(HP: ${member.hp})</span></center><br>`;
-                });
-            }
-            document.getElementById("party").innerHTML = partyHTML;
+            // @TODO: Keep this out of render()
+            // Stat updates should update the appropriate sections on their own
+            player.refreshStats();
 
             let output = sceneRenderer.render(
                 player.x,
@@ -9439,12 +9844,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (player.inCombat) {
                 output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
                 if (!awaitingPersuasionText) {
-                    $controlsExploration.className = "hidden";
-                    $controlsCombat.className = "";
+                    $controlsExploration.classList.add("hidden");
+                    $controlsCombat.classList.remove("hidden");
                 }
             } else {
-                $controlsExploration.className = "";
-                $controlsCombat.className = "hidden";
+                $controlsExploration.classList.remove("hidden");
+                $controlsCombat.classList.add("hidden");
             }
 
             if (player.steppingOnHealingTile) {
@@ -9829,7 +10234,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
             player.enterCombat();
-            party.forEach(member => member.healedThisBattle = false);
             updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
             playRandomBattleMusic(); // <-- use this
         }
@@ -9863,7 +10267,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (currentEnemy.hp <= 0) {
                 if (currentEnemy.id === "mimic") {
                     updateBattleLog(`The <span class='enemy'>MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
-                    player.bitcoins += currentEnemy.bitcoins; // Award scaled BTC
+                    player.giveBitcoins(currentEnemy.bitcoins); // Award scaled BTC
                 } else {
                     const baseExp = 3;
                     const floorBoost = Math.floor(floor / 2);
@@ -9873,14 +10277,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const randomMsg = defeatMessages[Math.floor(Math.random() * defeatMessages.length)];
                     updateBattleLog(`${currentEnemy.name} ${randomMsg}`);
                     updateBattleLog(`You gained <span class="EXP">+${exp}</span> EXP and <span class="BTC">${bitcoinsEarned} BTC</span>`);
-                    player.bitcoins += bitcoinsEarned;
+                    player.giveBitcoins(bitcoinsEarned);
                     player.exp += exp;
                 }
 
                 player.leaveCombat();
-                currentEnemy = null;
-                resumeExplorationMusic();
-                party = party.filter(a => a.hp > 0);
 
                 setTorchOverlayVisibility();
 
@@ -9896,7 +10297,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function enemyAttack() {
-            const targetAllies = party.filter(a => a.hp > 0);
+            const targetAllies = player.party.get();
             if (targetAllies.length && Math.random() < 0.5) {
                 const target = targetAllies[Math.floor(Math.random() * targetAllies.length)];
 
@@ -9907,19 +10308,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const floorBoost = Math.floor(floor / 2);  // Floor scaling every 2 floors
                 baseDamage += floorBoost; // Increase base damage by the floorBoost
 
-
-
                 // Calculate damage based on player's defense
                 const playerArmor = armor[player.armor];
                 const totalDefense = getEffectiveStat('defense') + (playerArmor ? playerArmor.defense : 0);
 
                 let dmg = Math.max(1, Math.floor(baseDamage - totalDefense / 5));
 
-                target.hp -= dmg;
-                updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> deals <span class="enemy">${dmg} HP</span> to your <span class="friendly">${target.name}</span>`);
+                target.hp = Math.max(target.hp - dmg, 0);
+                updateBattleLog(
+                    `<span class="enemy">${currentEnemy.name}</span> deals ` +
+                    `<span class="enemy">${dmg} HP</span> to your ` +
+                    `<span class="friendly">${target.name}</span>`
+                );
 
                 if (target.hp <= 0) {
-                    updateBattleLog(`Your <span class="friendly">${target.name}</span> has been <span class="action">eviscerated</span>...`);
+                    updateBattleLog(
+                        `Your <span class="friendly">${target.name}</span> ` +
+                        `has been <span class="action">eviscerated</span>...`
+                    );
                 }
             } else {
                 // Same for the player, calculate the damage for the player
@@ -9953,8 +10359,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (Math.random() < 0.5) {
                 player.say("Gee willikers, I'm outta here!");
                 player.leaveCombat();
-                currentEnemy = null;
-                resumeExplorationMusic(); // <-- use this
             } else {
                 updateBattleLog("Couldn't escape!");
                 enemyAttack();
@@ -10027,21 +10431,32 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const totalChance = prsStat / 100; // Chances cap out at 100%. So a stat of 12 would be 12% chance at success, etc
 
                     if (Math.random() < totalChance) {
-                        if (party.length < 3) {
-                            const newAlly = {
-                                id: currentEnemy.id,
-                                name: currentEnemy.name,
-                                hp: Math.max(Math.floor(currentEnemy.hp / 2), 1),
-                                healedThisBattle: false
-                            };
-                            party.push(newAlly);
+                        if (!player.party.isFull()) {
+                            const enemy = enemies.find((e) => e.id === currentEnemy.id);
+                            if (!enemy) {
+                                console.error('Could not find enemy by id', {
+                                    currentEnemy,
+                                });
+                                return;
+                            }
+
+                            const enemyHp = Math.max(Math.floor(currentEnemy.hp / 2), 1);
+                            // Scale every two floors
+                            // @see startEncounter() for the origin of this logic
+                            const floorBoost = Math.floor(floor / 2);
+                            const maxEnemyHp = Math.min(enemyHp, Math.max(Math.floor((enemy.hp + (floorBoost * 7)) / 2), 1));
+
+                            player.party.add(
+                                currentEnemy.id,
+                                currentEnemy.name,
+                                enemyHp,
+                                maxEnemyHp
+                            );
                             updateBattleLog(`<span class="friendly">${currentEnemy.name}</span> is now following your trail of sweat.`);
                         } else {
                             updateBattleLog(`<span class="action">${currentEnemy.name}</span> was <span class="friendly">spared</span> and went back home...`);
                         }
                         player.leaveCombat();
-                        currentEnemy = null;
-                        resumeExplorationMusic();
                     } else {
                         updateBattleLog(`<span class="action">${currentEnemy.name}</span> really, quite genuinely, does not care...`);
                         enemyAttack();
@@ -10060,38 +10475,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     player.say(message);
                     speakingOutsideCombat = false;
 
-                    if (party.length > 0 && message.trim()) {
-                        const responder = party[Math.floor(Math.random() * party.length)];
-                        const enemyDef = enemies.find(e => e.name === responder.name);
-
-                        // Allow use of enemy specific talk slots
-                        let talkSlots = enemyDef?.talkSlots;
-                        if (!Array.isArray(talkSlots) || talkSlots.length === 0) {
-                            // Fallback to default talk slots if an enemy does not have a unique set
-                            talkSlots = [
-                                ["You", "I", "What", "Hey", "Listen here, you", "They", "He", "She"],
-                                ["are", "can't", "should", "will", "must", "need to", "need", "needs", "needed"],
-                                ["go", "find a", "smack a", "kill the", "eat a", "snack on a", "pick my", "pick your", "obey my", "obey your"],
-                                ["pot roast", "many pot roasts", "total dumbass", "gay", "friend", "sandwich", "nose", "orbital laser", "Burnout Revenge on the PS2", "one big dandruff"],
-                                ["?", "!", "!!!", "?!", "...", ".",]
-                            ];
-                        }
-
-                        // Sentence assembly - also removes the space before the punctuation slot
-                        const chosen = talkSlots.map(slot => slot[Math.floor(Math.random() * slot.length)]);
-                        const sentence =
-                            chosen.length > 1
-                                ? chosen.slice(0, -1).join(" ") + chosen[chosen.length - 1]
-                                : chosen[0];
-
-                        updateBattleLog(
-                            `<span class="friendly">&lt;${responder.name}&gt;</span> <span class="player">--you pull out your translator--</span> "${sentence}"`
-                        );
-
-                        SpeechSynthesizer.speak(
-                            sentence,
-                            enemies.find(e => e.id === responder.id)?.voice,
-                        );
+                    if (player.party.get().length > 0 && message.trim()) {
+                        player.party.talk();
                     }
 
                     render();
@@ -10145,6 +10530,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         gambler.isAlive = true;
                         gambler.isActiveOnFloor = true;
                         player.bitcoins = Math.max(player.bitcoins, gambler.playPrice);
+                        player.refreshBitcoins();
                         MAP[ny][nx] = new MapCell('gambler');
                         updateBattleLog('<span class="gambler">CHEAT: Gambler spawned</span>');
                         found = true;
@@ -10159,7 +10545,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (cmd.startsWith("/givebtc ")) {
                 const amount = parseInt(cmd.split(" ")[1], 10);
                 if (!isNaN(amount) && amount > 0) {
-                    player.bitcoins += amount;
+                    player.giveBitcoins(amount);
                     updateBattleLog(`<span class="BTC">CHEAT: Added ${amount} BTC to your worn out Kamen Rider wallet</span>`);
                 } else {
                     updateBattleLog(`<span class="action">Invalid BTC amount.</span>`);
@@ -10262,6 +10648,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.speed = yeahBoiii;
                 player.luck = yeahBoiii;
                 player.bitcoins = yeahBoiii;
+                player.refreshBitcoins();
 
                 let merchantSpawned = false;
                 for (let i = 0; i < 4; i++) {
@@ -10327,7 +10714,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function gamble() {
-            player.bitcoins -= gambler.playPrice;
+            player.takeBitcoins(gambler.playPrice);
             updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
 
             document.getElementById('menu').classList.add('hidden');
@@ -10375,7 +10762,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 switch (randomStat) {
                     case 'hp': {
                         const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5);
-                        player.hp += healthBoost;
+                        player.heal(healthBoost);
                         player.maxHp += healthBoost;
                         updateBattleLog(
                             `<span class="LV">You scored a health boost! ` +
@@ -10597,7 +10984,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 if (chestContents.type === 'BTC') {
                     let bonus = Math.floor(chestContents.amount * (getEffectiveStat('luck') * 0.02));
                     let total = chestContents.amount + bonus;
-                    player.bitcoins += total;
+                    player.giveBitcoins(total);
                     updateBattleLog(
                         `You found <span class="BTC">${total} BTC</span> in the chest!`
                     );
@@ -11218,7 +11605,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             return;
                         }
                         player.armor = selectedOptionId;
-                        updateBattleLog(`You are now wearing <span class="friendly">${armorPiece.name}</span>!`);
+                        updateBattleLog(
+                            `You are now wearing ${armorPiece.article} ` +
+                            `<span class="friendly">${armorPiece.name}</span>!`
+                        );
                         if (player.hp > getEffectiveStat('maxHp')) {
                             player.hp = getEffectiveStat('maxHp');
                         }
@@ -11626,7 +12016,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (player.inventory[itemId] > 0) {
                                 soldObject = weapons[itemId];
                                 value = merchant.getSalePrice('weapon', weapons[itemId].price);
-                                player.bitcoins += value;
+                                player.giveBitcoins(value);
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
                             } else {
@@ -11641,7 +12031,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (player.inventory[itemId] > 0) {
                                 soldObject = armor[itemId];
                                 value = merchant.getSalePrice('armor', armor[itemId].price);
-                                player.bitcoins += value;
+                                player.giveBitcoins(value);
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
                             } else {
@@ -11656,7 +12046,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (player.inventory[itemId] > 0) {
                                 soldObject = rings[itemId];
                                 value = merchant.getSalePrice('ring', rings[itemId].price);
-                                player.bitcoins += value;
+                                player.giveBitcoins(value);
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
                             } else {
@@ -11667,7 +12057,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (player.inventory[itemId] > 0) {
                                 soldObject = items[itemId];
                                 value = merchant.getSalePrice('item', items[itemId].price);
-                                player.bitcoins += value;
+                                player.giveBitcoins(value);
                                 player.inventory[itemId]--;
                                 if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
                             } else {
@@ -11845,7 +12235,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (isLevelUpAllocation) {
                                 isLevelUpAllocation = false;
                                 updateBattleLog("Stats increased! You consume an unsuspecting rat to restore your health. Poor feller...");
-                                player.levelUp();
                             } else {
                                 updateBattleLog("Stat allocation complete! You consume an unsuspecting rat to ensure you are in good health, and your adventure begins...");
                             }
@@ -11854,7 +12243,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (eatRatAnimationEnabled) animEatRat();
                         } else if (selectedOptionId === "reset") {
                             if (isLevelUpAllocation) {
-                                player.maxHp = levelUpAllocatedStats.base.maxHp;
+                                player.hp = player.maxHp = levelUpAllocatedStats.base.maxHp;
                                 player.defense = levelUpAllocatedStats.base.defense;
                                 player.strength = levelUpAllocatedStats.base.strength;
                                 player.persuasion = levelUpAllocatedStats.base.persuasion;
@@ -11962,6 +12351,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 speed: 0,
                 luck: 0
             };
+            player.levelUp();
             menu.open("statAllocation");
         }
 
