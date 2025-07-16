@@ -10444,7 +10444,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             // Scale every two floors
                             // @see startEncounter() for the origin of this logic
                             const floorBoost = Math.floor(floor / 2);
-                            const maxEnemyHp = Math.min(enemyHp, Math.max(Math.floor((enemy.hp + (floorBoost * 7)) / 2), 1));
+                            const maxEnemyHp = Math.max(Math.floor((enemy.hp + (floorBoost * 7)) / 2), 1);
 
                             player.party.add(
                                 currentEnemy.id,
