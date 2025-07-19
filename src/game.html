@@ -341,6 +341,61 @@
             transform: translate(0, 0);
         }
 
+        #viewport #mouseControl {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #mouseControl * {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        #mouseControl .turn-left {
+            clip-path: polygon(0 0, 25% 25%, 25% 75%, 0 75%);
+            cursor: url(assets/cursors/turn-left.cur), nw-resize;
+        }
+
+        #mouseControl .forward {
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 0 75%);
+            cursor: url(assets/cursors/up.cur), n-resize;
+        }
+
+        #mouseControl .turn-right {
+            clip-path: polygon(75% 25%, 100% 0, 100% 75%, 75% 75%);
+            cursor: url(assets/cursors/turn-right.cur), ne-resize;
+        }
+
+        #mouseControl .strafe-left {
+            clip-path: polygon(0 75%, 25% 75%, 25% 85%, 0 100%);
+            cursor: url(assets/cursors/left.cur), w-resize;
+        }
+
+        #mouseControl .backward {
+            clip-path: polygon(25% 85%, 25% 75%, 75% 75%, 75% 85%, 100% 100%, 0 100%);
+            cursor: url(assets/cursors/down.cur), s-resize;
+        }
+
+        #mouseControl .strafe-right {
+            clip-path: polygon(75% 75%, 100% 75%, 100% 100%, 75% 85%);
+            cursor: url(assets/cursors/right.cur), e-resize;
+        }
+
+        #mouseControl .touch {
+            clip-path: polygon(10% 15%, 90% 15%, 90% 85%, 10% 85%);
+            cursor: url(assets/cursors/touch.cur), grab;
+        }
+
+        #mouseControl .touch:active {
+            cursor: url(assets/cursors/grab.cur), grabbing;
+        }
+
+        #mouseControl .attack {
+            cursor: url(assets/cursors/attack.cur), crosshair;
+        }
+
         #menu:not(.hidden) {
             width: 100%;
             height: 100%;
@@ -1241,6 +1296,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 <div id="menuList"></div>
                 <div id="menuSelectionDescription"></div>
                 <div id="escapeMessage" class="alignRight">Press Escape to go back</div>
+            </div>
+            <div id="mouseControl">
+                <div class="navigation">
+                    <div class="forward" onclick="move('forward')"></div>
+                    <div class="backward" onclick="move('backward')"></div>
+                    <div class="turn-left" onclick="turnLeft()"></div>
+                    <div class="turn-right" onclick="turnRight()"></div>
+                    <div class="strafe-left" onclick="move('strafeLeft')"></div>
+                    <div class="strafe-right" onclick="move('strafeRight')"></div>
+                    <div class="touch" onclick="move('forward')"></div>
+                </div>
+                <div class="combat">
+                    <div class="attack" onclick="playerAttack()"></div>
+                </div>
             </div>
         </div>
         <div id="party">
@@ -7704,6 +7773,67 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             drawHealingLayer: () => '<div class="layer healing"></div>',
         };
 
+        const MouseControl = {
+            lastMode: null,
+            updateMode: () => {
+                const skipUpdate =
+                    ( MouseControl.lastMode === "navigation" && !player.inCombat ) ||
+                    ( MouseControl.lastMode === "combat" && player.inCombat );
+
+                if (skipUpdate) {
+                    return;
+                }
+
+                document.querySelector("#mouseControl .navigation").classList
+                    .toggle("hidden", player.inCombat);
+
+                document.querySelector("#mouseControl .combat").classList
+                    .toggle("hidden", !player.inCombat);
+
+                MouseControl.lastMode = player.inCombat ? "combat" : "navigation";
+            },
+            update: () => {
+                MouseControl.updateMode();
+
+                if (!player.inCombat) {
+                    const $mouseControl = document.getElementById("mouseControl");
+                    const frontX = player.x + DX[player.dir];
+                    const frontY = player.y + DY[player.dir];
+                    const cellInFrontOfPlayer = MAP[frontY]?.[frontX];
+                    const touchEnabled =
+                        typeof cellInFrontOfPlayer?.onTouch === "function";
+                    const moveForwardEnabled =
+                        !touchEnabled && cellInFrontOfPlayer?.isSolid === false;
+
+                    $mouseControl.querySelector(".touch")?.classList
+                        .toggle("hidden", !touchEnabled);
+                    $mouseControl.querySelector(".forward")?.classList
+                        .toggle("hidden", !moveForwardEnabled);
+
+                    const leftX = player.x + DX[(player.dir + 3) % 4];
+                    const leftY = player.y + DY[(player.dir + 3) % 4];
+                    const cellLeftOfPlayer = MAP[leftY]?.[leftX];
+                    const strafeLeftEnabled = cellLeftOfPlayer?.isSolid === false;
+                    $mouseControl.querySelector(".strafe-left")?.classList
+                        .toggle("hidden", !strafeLeftEnabled);
+
+                    const rightX = player.x + DX[(player.dir + 1) % 4];
+                    const rightY = player.y + DY[(player.dir + 1) % 4];
+                    const cellRightOfPlayer = MAP[rightY]?.[rightX];
+                    const strafeRightEnabled = cellRightOfPlayer?.isSolid === false;
+                    $mouseControl.querySelector(".strafe-right")?.classList
+                        .toggle("hidden", !strafeRightEnabled);
+
+                    const backX = player.x - DX[player.dir];
+                    const backY = player.y - DY[player.dir];
+                    const cellBehindPlayer = MAP[backY]?.[backX];
+                    const moveBackwardEnabled = cellBehindPlayer?.isSolid === false;
+                    $mouseControl.querySelector(".backward")?.classList
+                        .toggle("hidden", !moveBackwardEnabled);
+                }
+            },
+        };
+
         class MapCell {
             constructor(type = "floor", options = {}) {
                 const defaults = MapCell.defaultsByType(type);
@@ -8082,6 +8212,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.enteringCombat = true;
                 player.inCombat = true;
                 player.party.prepareForBattle();
+                MouseControl.update();
             },
             leaveCombat: () => {
                 player.leavingCombat = true;
@@ -8089,6 +8220,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 currentEnemy = null;
                 resumeExplorationMusic();
                 player.party.purgeDeadMembers();
+                MouseControl.update();
             },
             heal: (hp) => {
                 player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
@@ -10094,6 +10226,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 randomEncounterChance = 0.5; // When moving backward
                 shakeScreen();
             }
+
             const hasStinky = player.ring1 === "ringOfStinky" || player.ring2 === "ringOfStinky";
             if (hasStinky) {
                 randomEncounterChance *= 0.7; // If Ring of Stinky is equipped, reduce encounter chance by 30%
@@ -10116,6 +10249,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             } else if (typeof tile.onTouch === "function") {
                 tile.onTouch();
             }
+
+            MouseControl.update();
 
             // Set the movement delay range
             const maxDelay = 2000; // Max speed (movement delay) in milliseconds (2s)
@@ -10140,6 +10275,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             playSFX('turn');
             slideScreen('left');
             player.dir = (player.dir + 3) % 4;
+            MouseControl.update();
             render();
         }
 
@@ -10150,6 +10286,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             playSFX('turn');
             slideScreen('right');
             player.dir = (player.dir + 1) % 4;
+            MouseControl.update();
             render();
         }
 
@@ -12703,6 +12840,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         } else {
             showTitleScreen();
         }
+
+        MouseControl.update();
 
     </script>
 
