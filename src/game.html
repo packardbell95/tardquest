@@ -6606,6 +6606,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (!automask) {
                                 characterStyle += 'background-color: #000; ';
                             }
+                            if (
+                                ['treasureChest', 'healingTile', 'exit'].includes(entityName)
+                            ) {
+                                // Calculate brightness based on view distance (depth) for the chest, heatile, and exit
+                                const adjustedDepth = depth - (isCentered ? 1 : 0);
+                                const ratio = Math.max(0, Math.min(1, adjustedDepth / maxPlayerVisibilityDepth));
+                                // Exponential falloff, tweak as needed
+                                const brightness = 1 - ratio * 0.7;
+                                characterStyle += `filter: brightness(${brightness}); `;
+                            }
 
                             const styleHtml = characterStyle !== '' ? ` style="${characterStyle.trim()}"` : '';
                             scene[yPosition][xPosition] =
@@ -6955,10 +6965,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     merchant: {
                         displayName: "Merchant",
                         mapCharacter: "M",
-                        onEnter: () => {
-                            merchant.setWares();
-                            menu.open('merchant');
-                        },
+                        onEnter: () => menu.open('merchant'),
                         isVisible: () =>
                             merchant.isAlive &&
                             merchant.isActiveOnFloor,
@@ -7964,25 +7971,482 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             "got bored and jumped down a 'bottomless' hole. You heard a scream, and the sound was absolutely not faint."
         ];
 
-        let items = {};
-        fetch('data/items.json')
-            .then(response => response.json())
-            .then(data => { items = data; });
+        const items = {
+            canOfHamms: {
+                article: 'a',
+                name: "CAN OF HAMM'S",
+                description: "A warm can of beer. Delicious..? +1 LOAD, +5 HP",
+                use: () => {
+                    player.heal(5);
+                    updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
+                },
+                merchantStockChance: 0.9,
+                weight: 1,
+                price: 10,
+            },
+            cupOfLean: {
+                article: 'a',
+                name: "CUP OF LEAN",
+                description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
+                use: () => {
+                    player.heal(20);
+                    updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
+                },
+                merchantStockChance: 0.5,
+                weight: 1.2,
+                price: 30,
+            },
+            glassOfToiletWater: {
+                article: 'a',
+                name: "GLASS OF TOILET WATER",
+                description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied...  +1.2 LOAD, +50 HP",
+                use: () => {
+                    player.heal(50);
+                    updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
+                },
+                merchantStockChance: .4,
+                weight: 1.2,
+                price: 50,
+            },
+            alaskaRaisins: {
+                article: 'some',
+                name: "ALASKA RAISINS",
+                description: "Holy shit! It's the Alaska Raisins! +1.5 LOAD, +70 HP",
+                use: () => {
+                    player.heal(70);
+                    playSFX('raisins');
+                    updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
+                },
+                merchantStockChance: .35,
+                weight: 1.5,
+                price: 80,
+            },
+            dowsingRod: {
+                article: 'a',
+                name: "DOWSING ROD",
+                description: "A Y-shaped stick. Reveals the exit of the current floor. +1.7 LOAD",
+                use: () => {
+                    for (let y=0; y<MAP.length; y++) {
+                        for (let x=0; x<MAP[y].length; x++) {
+                            if (MAP[y][x]?.type === 'exit') {
+                                revealMapSpot(x, y, 1);
 
-        let weapons = {};
-        fetch('data/weapons.json')
-            .then(response => response.json())
-            .then(data => { weapons = data; });
+                                // Since there's only one exit per floor, we can render and exit early
+                                updateBattleLog("The exit has been revealed!");
+                                render();
+                                return;
+                            }
+                        }
+                    }
+                },
+                merchantStockChance: 0.8,
+                weight: 1.7,
+                price: 20,
+            },
+            torch: {
+                article: 'a',
+                name: "TORCH",
+                description: "An unlit torch. Using it will reveal the map of the current floor. +1.2 LOAD",
+                use: () => {
+                    if (player.isHoldingTorch) {
+                        updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
+                        return;
+                    }
+                    playSFX('torch');
+                    seenTiles = seenTiles.map((col) => col.map(() => true));
+                    updateBattleLog("Lo, the way has been made clear!");
+                    animTorchStart();
+                    render();
+                },
+                merchantStockChance: 0.8,
+                weight: 1.2,
+                price: 60,
+            },
+            brickOfC4: {
+                article: 'a',
+                name: "BRICK OF C-4",
+                description: "An incendiary plastic explosive. Great for turning anything into nothing real quick! +3 LOAD",
+                use: () => {
+                    setTimeout(() => playSFX('explosion'), 50);
+                    explosionAnimation(() => {
+                        if (player.inCombat) {
+                            const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
+                            currentEnemy.hp -= dmg;
+                            updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+                            if (currentEnemy.hp <= 0) {
+                                playSFX('scream');
+                                const nx = player.x + DX[player.dir];
+                                const ny = player.y + DY[player.dir];
+                                if (['floor', 'rubble1', 'rubble2'].includes(MAP[ny]?.[nx]?.type)) {
+                                    MAP[ny][nx] = new MapCell('bloodyCrater');
+                                }
+                            }
+                            endOfPlayerTurn();
+                        } else {
+                            let xMin = player.x, xMax = player.x,
+                                yMin = player.y, yMax = player.y;
 
-        let armor = {};
-        fetch('data/armor.json')
-            .then(response => response.json())
-            .then(data => { armor = data; });
+                            switch (DIRECTIONS[player.dir]) {
+                                case 'N':
+                                    xMin--;
+                                    xMax++;
+                                    yMin -= 3;
+                                    break;
+                                case 'E':
+                                    yMin--;
+                                    yMax++;
+                                    xMax += 3;
+                                    break;
+                                case 'S':
+                                    xMin--;
+                                    xMax++;
+                                    yMax += 3;
+                                    break;
+                                case 'W':
+                                    yMin--;
+                                    yMax++;
+                                    xMin -= 3;
+                                    break;
+                            }
 
-        let rings = {};
-        fetch('data/rings.json')
-            .then(response => response.json())
-            .then(data => { rings = data; });
+                            for (let y=yMin; y<=yMax; y++) {
+                                for (let x=xMin; x<=xMax; x++) {
+                                    if (MAP[y]?.[x]) {
+                                        const isVisible =
+                                            typeof MAP[y][x].isVisible !== 'function' ||
+                                            MAP[y][x].isVisible();
+
+                                        if (isVisible) {
+                                            MAP[y][x]?.onExplode?.(x, y);
+                                        }
+                                        seenTiles[y][x] = true;
+                                    }
+                                }
+                            }
+
+                            updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                            render();
+                        }
+                    });
+                },
+                merchantStockChance: 0.5,
+                weight: 3,
+                price: 300,
+            },
+            
+            tromBone: {
+                article: 'a',
+                name: "TROM-BONE",
+                description: "A trom-BONE. It sounds like a trombone, looks like a trombone, but is somehow... on the bonier side of things. +1.3 LOAD",
+                use: () => {
+                    playSFX('tromBone');
+                        updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
+                },
+                merchantStockChance: 1.0,
+                weight: 1.3,
+                price: 5,
+            },
+        };
+
+        const weapons = {
+            fingerNail: {
+                article: 'a',
+                name: "FINGERNAIL",
+                description: "Your very own fingernail! Careful not to break it!",
+                damage: { base: 1, randomMultiplier: 4 },
+                price: 0,
+                weight: 0, // No weight
+                requiredStr: 0, // No requirement
+            },
+            pointyStick: {
+                article: 'a',
+                name: "POINTY STICK",
+                description: "A stick that fell off of a tree somewhere",
+                damage: { base: 2, randomMultiplier: 5 },
+                price: 20,
+                weight: 5,
+                requiredStr: 7,
+            },
+            wiffleBallBat: {
+                article: 'a',
+                name: "WIFFLE BALL BAT",
+                description: "A hollow bat made of plastic",
+                damage: { base: 3, randomMultiplier: 6 },
+                price: 50,
+                weight: 6,
+                requiredStr: 13,
+            },
+            nunchucks: {
+                article: '',
+                name: "NUNCHUCKS",
+                description: "Two pieces of wood connected by a chain",
+                damage: { base: 6, randomMultiplier: 9 },
+                price: 100,
+                weight: 8,
+                requiredStr: 20,
+            },
+            atlatlSpear: {
+                article: 'an',
+                name: "ATLATL SPEAR",
+                description: "A spear with a throwing lever",
+                damage: { base: 10, randomMultiplier: 11 },
+                price: 400,
+                weight: 10,
+                requiredStr: 25,
+            },
+            bludgeoningMace: {
+                article: 'a',
+                name: "BLUDGEONING MACE",
+                description: "A stick with a spikey metal ball at the end",
+                damage: { base: 10, randomMultiplier: 14 },
+                price: 500,
+                weight: 11,
+                requiredStr: 25,
+            },
+            danceClub: {
+                article: 'a',
+                name: "DANCE CLUB",
+                description: "A club long enough to pole dance on... maybe it is one? You don't know. Legend has it, an obscure forum user once wielded one...",
+                damage: { base: 13, randomMultiplier: 15 },
+                price: 800,
+                weight: 12,
+                requiredStr: 28,
+            },
+            cathodeRayTubeMonitor: {
+                article: 'a',
+                name: "CATHODE RAY TUBE MONITOR",
+                description: "A CRT monitor. Heavy as piss.",
+                damage: { base: 15, randomMultiplier: 17 },
+                price: 1000,
+                weight: 15,
+                requiredStr: 33,
+            },
+            magicPencil: {
+                article: 'a',
+                name: "MAGIC PENCIL",
+                description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
+                damage: { base: 17, randomMultiplier: 18 },
+                price: 1400,
+                weight: 5,
+                requiredStr: 38,
+            },
+            goldenWang: {
+                article: 'a',
+                name: "GOLDEN WANG",
+                description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
+                damage: { base: 69, randomMultiplier: 69 },
+                price: 6900,
+                weight: 69,
+                requiredStr: 69,
+            },
+        };
+
+        const armor = {
+            pectoralMass: {
+                article: 'a',
+                name: "PECTORAL MASS",
+                description: "Your totally big, meaty pectorals! You're not fat at all...'",
+                defense: 1,
+                price: 0,
+                weight: 0,
+                requiredEnd: 0,
+            },
+            graphicTee: {
+                article: 'a',
+                name: "GRAPHIC TEE",
+                description: "A t-shirt that says 'Normal people scare me'",
+                defense: 2,
+                price: 20,
+                weight: 3,
+                requiredEnd: 8,
+            },
+            barrelWithSuspenders: {
+                article: 'a',
+                name: "BARREL (with suspenders)",
+                description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
+                defense: 3,
+                price: 100,
+                weight: 5,
+                requiredEnd: 11,
+            },
+            leatherArmor: {
+                article: '',
+                name: "LEATHER ARMOR",
+                description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
+                defense: 6,
+                price: 200,
+                weight: 6,
+                requiredEnd: 15,
+            },
+            milaneseArmor: {
+                article: '',
+                name: "MILANESE ARMOR",
+                description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
+                defense: 12,
+                price: 500,
+                weight: 9,
+                requiredEnd: 18,
+            },
+            blackPlateArmor: {
+                article: '',
+                name: "BLACK PLATE ARMOR",
+                description: "Literally a giant black dinner plate. Deceptively protective.",
+                defense: 16,
+                price: 1000,
+                weight: 13,
+                requiredEnd: 25,
+            },
+            nokiaMail: {
+                article: '',
+                name: "NOKIA MAIL",
+                description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
+                defense: 21,
+                price: 2000,
+                weight: 18,
+                requiredEnd: 34,
+            },
+        };
+
+        const rings = {
+        // PRS Boosters
+            ringOfSexyUnderwear: {
+                article: 'a',
+                name: "RING OF SEXY UNDERWEAR",
+                description: "A ring with an engraving of a pair of strangely attractive undergarments. +3 PRS",
+                effects: { persuasion: 3 },
+                price: 60,
+                merchantStockChance: 0.5,
+                chestChance: 0.1,
+                weight: 1,
+            },
+
+            ringOfFrenchAccent: {
+                article: 'a',
+                name: "FRENCHLY ACCENTED RING",
+                description: "A ring that somehow magically forces you to speak in a French accent. VERY sexy! +5 PRS",
+                effects: { persuasion: 5 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
+                weight: 1,
+            },
+
+        // HP Boosters
+            ringValentines: {
+                article: 'a',
+                name: "VALENTINE'S DAY RING",
+                description: "A ring that was given to somebody by their Valentine... and dumped down a hole. You see 'Amy' engraved onto a heart. How sad. +5 HP",
+                effects: { maxHp: 5 },
+                price: 60,
+                merchantStockChance: 0.5,
+                chestChance: 0.07,
+                weight: 1,
+            },
+            ringBloodstream: {
+                article: 'a',
+                name: "BLOODSTREAM NOSERING",
+                description: "A nosering that injects blood into your veins. Sounds painful... +8 HP",
+                effects: { maxHp: 8 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
+                weight: 1,
+            },
+        //DEF Boosters
+            ringOfHardening: {
+                article: 'a',
+                name: "COCKRING OF HARDENING",
+                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +2 DEF",
+                effects: { defense: 2 },
+                price: 60,
+                merchantStockChance: 0.4,
+                chestChance: 0.07,
+                weight: 1,
+            },
+            ringPectoralPiercing: {
+                article: 'a',
+                name: "PECTORAL PIERCING",
+                description: "A piercing that can fit anywhere on your big, juicy pectorals. +5 DEF",
+                effects: { defense: 5 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
+                weight: 1,
+            },
+        // SPD Boosters
+            ringPinkyToe: {
+                article: 'a',
+                name: "PINKY TOE RING",
+                description: "A ring for your pinky toe. The only way for this to work is by putting it directly through the toenail... kinda like that SpongeBob episode! +1 SPD",
+                effects: { speed: 1 },
+                price: 60,
+                merchantStockChance: 0.4,
+                chestChance: 0.07,
+                weight: 1,
+            },
+            ringCrack: {
+                article: 'a',
+                name: "CRACK INFUSED RING",
+                description: "A ring infused with crack cocaine. +2 SPD",
+                effects: { speed: 2 },
+                price: 100,
+                merchantStockChance: 0.3,
+                chestChance: 0.04,
+                weight: 1,
+            },
+        // LUK Boosters
+            ringGamble: {
+                article: 'the',
+                name: "GAMBLER'S RING",
+                description: "A cheap looking ring with a 240p image of a slot machine on it. +2 LUK",
+                effects: { luck: 2 },
+                price: 150,
+                merchantStockChance: 0.1,
+                chestChance: 0.05,
+                weight: 1,
+            },
+            ringEscobar: {
+                article: '',
+                name: "PABLO ESCOBAR'S GOLDEN RING",
+                description: "A golden ring that once belonged to Pablo Escobar. It smells rather illegal, but who give a shit? +4 LUK",
+                effects: { luck: 4 },
+                price: 200,
+                merchantStockChance: 0.07,
+                chestChance: 0.02,
+                weight: 1,
+            },
+        // Special
+            ringOfSightliness: {
+                article: 'a',
+                name: "RING OF SIGHTLINESS",
+                description: "A ring with an eyeball so realistic looking, it could actually be real. Allows you to see better in the Tardspire",
+                effects: {},
+                price: 180,
+                merchantStockChance: 0.2,
+                chestChance: 0.0,
+                weight: 2,
+            },
+            ringOfStinky: {
+                article: 'a',
+                name: "RING OF STINKY",
+                description: "A ring so stinky, SO putrid, that even monsters will reconsider confronting you. Reduces encounter rate by 30%",
+                effects: {},
+                price: 200,
+                merchantStockChance: 0.2,
+                chestChance: 0.0,
+                weight: 2,
+            },
+            ringOfAmplifiedAudio: {
+                article: 'a',
+                name: "RING OF AMPLIFIED AUDIO",
+                description: "A ring with a tiny, yet deceptively loud megaphone. Miniphone? idk. +2 PRS and a PRS attempt",
+                effects: { persuasion: 2 },
+                price: 130,
+                merchantStockChance: 0.2,
+                chestChance: 0.00,
+                weight: 2,
+            },
+        };
 
         function getEffectiveStat(stat) {
                 if (stat === 'speed') {
