@@ -1,0 +1,65 @@
+{
+  "pectoralMass": {
+    "article": "a",
+    "name": "PECTORAL MASS",
+    "description": "Your totally big, meaty pectorals! You're not fat at all...'",
+    "defense": 1,
+    "price": 0,
+    "weight": 0,
+    "requiredEnd": 0
+  },
+  "graphicTee": {
+    "article": "a",
+    "name": "GRAPHIC TEE",
+    "description": "A t-shirt that says 'Normal people scare me'",
+    "defense": 2,
+    "price": 20,
+    "weight": 3,
+    "requiredEnd": 8
+  },
+  "barrelWithSuspenders": {
+    "article": "a",
+    "name": "BARREL (with suspenders)",
+    "description": "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
+    "defense": 3,
+    "price": 100,
+    "weight": 5,
+    "requiredEnd": 11
+  },
+  "leatherArmor": {
+    "article": "",
+    "name": "LEATHER ARMOR",
+    "description": "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
+    "defense": 6,
+    "price": 200,
+    "weight": 6,
+    "requiredEnd": 15
+  },
+  "milaneseArmor": {
+    "article": "",
+    "name": "MILANESE ARMOR",
+    "description": "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
+    "defense": 12,
+    "price": 500,
+    "weight": 9,
+    "requiredEnd": 18
+  },
+  "blackPlateArmor": {
+    "article": "",
+    "name": "BLACK PLATE ARMOR",
+    "description": "Literally a giant black dinner plate. Deceptively protective.",
+    "defense": 16,
+    "price": 1000,
+    "weight": 13,
+    "requiredEnd": 25
+  },
+  "nokiaMail": {
+    "article": "",
+    "name": "NOKIA MAIL",
+    "description": "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
+    "defense": 21,
+    "price": 2000,
+    "weight": 18,
+    "requiredEnd": 34
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "fingerNail": {
+    "article": "a",
+    "name": "FINGERNAIL",
+    "description": "Your very own fingernail! Careful not to break it!",
+    "damage": { "base": 1, "randomMultiplier": 4 },
+    "price": 0,
+    "weight": 0,
+    "requiredStr": 0
+  },
+  "pointyStick": {
+    "article": "a",
+    "name": "POINTY STICK",
+    "description": "A stick that fell off of a tree somewhere",
+    "damage": { "base": 2, "randomMultiplier": 5 },
+    "price": 20,
+    "weight": 5,
+    "requiredStr": 7
+  },
+  "wiffleBallBat": {
+    "article": "a",
+    "name": "WIFFLE BALL BAT",
+    "description": "A hollow bat made of plastic",
+    "damage": { "base": 3, "randomMultiplier": 6 },
+    "price": 50,
+    "weight": 6,
+    "requiredStr": 13
+  },
+  "nunchucks": {
+    "article": "",
+    "name": "NUNCHUCKS",
+    "description": "Two pieces of wood connected by a chain",
+    "damage": { "base": 6, "randomMultiplier": 9 },
+    "price": 100,
+    "weight": 8,
+    "requiredStr": 20
+  },
+  "atlatlSpear": {
+    "article": "an",
+    "name": "ATLATL SPEAR",
+    "description": "A spear with a throwing lever",
+    "damage": { "base": 10, "randomMultiplier": 11 },
+    "price": 400,
+    "weight": 10,
+    "requiredStr": 25
+  },
+  "bludgeoningMace": {
+    "article": "a",
+    "name": "BLUDGEONING MACE",
+    "description": "A stick with a spikey metal ball at the end",
+    "damage": { "base": 10, "randomMultiplier": 14 },
+    "price": 500,
+    "weight": 11,
+    "requiredStr": 25
+  },
+  "danceClub": {
+    "article": "a",
+    "name": "DANCE CLUB",
+    "description": "A club long enough to pole dance on... maybe it is one? You don't know. Legend has it, an obscure forum user once wielded one...",
+    "damage": { "base": 13, "randomMultiplier": 15 },
+    "price": 800,
+    "weight": 12,
+    "requiredStr": 28
+  },
+  "cathodeRayTubeMonitor": {
+    "article": "a",
+    "name": "CATHODE RAY TUBE MONITOR",
+    "description": "A CRT monitor. Heavy as piss.",
+    "damage": { "base": 15, "randomMultiplier": 17 },
+    "price": 1000,
+    "weight": 15,
+    "requiredStr": 33
+  },
+  "magicPencil": {
+    "article": "a",
+    "name": "MAGIC PENCIL",
+    "description": "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
+    "damage": { "base": 17, "randomMultiplier": 18 },
+    "price": 1400,
+    "weight": 5,
+    "requiredStr": 38
+  },
+  "goldenWang": {
+    "article": "a",
+    "name": "GOLDEN WANG",
+    "description": "With the power of the Golden Wang, the Discordian parasite shall perish!",
+    "damage": { "base": 69, "randomMultiplier": 69 },
+    "price": 6900,
+    "weight": 69,
+    "requiredStr": 69
+  }
+}
