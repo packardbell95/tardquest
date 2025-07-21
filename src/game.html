@@ -7077,7 +7077,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             persuasion: 15,
             endurance: 0,
             speed: 12,
-            luck: 2,
+            luck: 17,
         };
         const player = {
             x: 1,
@@ -9924,9 +9924,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             document.getElementById('menu').classList.add('hidden');
 
             // LUK affects chance to roll a 12
-            // Base chance to roll a 12 is 1/36 (~2.78%)
-            let luckBonus = getEffectiveStat('luck') * 0.03; // +3% chance to roll a 12
-            let roll12 = Math.random() < (1/36 + luckBonus);
+            // LUK now works like PRS: 0-100% chance to win (roll a 12)
+            const lukStat = Math.min(getEffectiveStat('luck'), 100);
+            const winChance = lukStat / 100; // example; 32 LUK = 32% chance at success
+
+            let roll12 = Math.random() < winChance;
 
             let dice;
             if (roll12) {
@@ -9966,8 +9968,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 switch (randomStat) {
                     case 'hp': {
                         const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5);
-                        player.heal(healthBoost);
                         player.maxHp += healthBoost;
+                        player.heal(healthBoost);
                         updateBattleLog(
                             `<span class="LV">You scored a health boost! ` +
                             `+${healthBoost} HP!</span>`
@@ -10001,6 +10003,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
 
             gambler.isActiveOnFloor = false;
+            gambler.say('Ah, whatever. Fucker. You win this time...');
             updateBattleLog('The gambler escapes into the shadows');
             render();
 
