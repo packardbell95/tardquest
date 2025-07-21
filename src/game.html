@@ -9968,8 +9968,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 switch (randomStat) {
                     case 'hp': {
                         const healthBoost = 5 + (Math.floor((Math.random() * 2)) * 5);
-                        player.heal(healthBoost);
                         player.maxHp += healthBoost;
+                        player.heal(healthBoost);
                         updateBattleLog(
                             `<span class="LV">You scored a health boost! ` +
                             `+${healthBoost} HP!</span>`
