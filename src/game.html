@@ -102,6 +102,7 @@
         }
 
         #titleScreen {
+            cursor: pointer;
             position: fixed;
             left: 0;
             top: 0;
@@ -410,6 +411,8 @@
         }
 
         #menuList {
+            display: flex;
+            flex-direction: column;
             margin-bottom: auto;
             padding-left: 1em;
             min-height: 150px;
@@ -436,6 +439,14 @@
         #menuSelectionDescription::before {
             display: block;
             text-align: center;
+        }
+
+        #menuList .cursor {
+            color: #fff;
+        }
+
+        #menuList .option {
+            cursor: pointer;
         }
 
         #menuLanding {
@@ -1109,7 +1120,7 @@
 <body>
 
 <!-- Title screen -->
-    <div id="titleScreen">
+    <div id="titleScreen" onclick="hideTitleScreen()">
         <div id="content">
             <pre class="logo">
                                                          ▄▄
@@ -6093,6 +6104,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             display: (e) => {
                 const trigger = e.target;
                 const tooltip = trigger.querySelector("[role=tooltip]");
+                if (!tooltip) {
+                    console.warn(
+                        "Cannot display tooltip: no tooltip found",
+                        { e }
+                    );
+                    return;
+                }
+
                 const { x, y, width, height } = trigger.getBoundingClientRect();
 
                 tooltip.style.left = `${Math.floor(x)}px`;
@@ -6101,104 +6120,50 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
             hide: (e) => {
                 const tooltip = e.target.querySelector("[role=tooltip]");
+                if (!tooltip) {
+                    console.warn(
+                        "Cannot hide tooltip: no tooltip found",
+                        { e }
+                    );
+                    return;
+                }
                 tooltip.classList.remove("active");
             },
-            refresh: () => {
-                document.querySelectorAll("[data-tooltipHtml]").forEach((trigger) => {
-                    let tooltip = document.createElement("div");
-
-                    tooltip.setAttribute("role", "tooltip");
-                    tooltip.setAttribute("inert", true);
-                    if (trigger.dataset?.tooltipposition) {
-                        tooltip.classList.add(trigger.dataset.tooltipposition);
-                    }
-                    tooltip.innerHTML = trigger.dataset.tooltiphtml;
-
-                    trigger.appendChild(tooltip);
-
-                    trigger.addEventListener("mouseenter", (e) => {
-                        clearTimeout(Tooltip.timer);
-
-                        Tooltip.timer = setTimeout(() => {
-                            Tooltip.display(e);
-                        }, Tooltip.delayTimeMs);
-                    });
-
-                    trigger.addEventListener("mouseleave", (e) => {
-                        clearTimeout(Tooltip.timer);
-                        Tooltip.hide(e);
-                    });
-                });
-            },
-        };
-
-        const Minimap = {
-            hide: () => document.getElementById('minimapContainer').classList.add('hidden'),
-            show: () => document.getElementById('minimapContainer').classList.remove('hidden'),
-            draw: () => {
-                const $minimap = document.getElementById('minimap');
-                $minimap.replaceChildren();
-
-                for (let y = 0; y < HEIGHT; y++) {
-                    for (let x = 0; x < WIDTH; x++) {
-                        let tile = '';
-                        let tileClass = '';
-                        if (x === player.x && y === player.y) {
-                            const arrow = ['↑', '→', '↓', '←'][player.dir];
-                            tile = arrow;
-                            tileClass = 'player';
-                        } else if (!seenTiles[y][x]) {
-                            tile = '?';
-                            tileClass = 'unexplored';
-                        } else {
-                            // Use a visibility function if one is available
-                            // Otherwise, assume that the tile is visible
-                            const isVisible = typeof MAP[y][x]?.isVisible !== 'function' || MAP[y][x].isVisible();
-
-                            if (isVisible) {
-                                tile = MAP[y][x]?.mapCharacter || '?';
-                                tileClass = MAP[y][x]?.type || 'unknown';
-                                tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
-                            } else {
-                                const emptyCell = new MapCell();
-                                tile = emptyCell.mapCharacter;
-                                tileClass = emptyCell.type;
-                            }
-                        }
-
-                        const displayName =
-                            (x === player.x && y === player.y)
-                                ? 'You ヽ(°٢° )ノ'
-                                : (seenTiles[y][x]
-                                    ? MAP[y][x].displayName
-                                    : "Unexplored"
-                                );
-
-                        const $cell = document.createElement('span');
-                        $cell.classList.add(tileClass);
-                        $cell.setAttribute(
-                            'data-tooltipHtml',
-                            `<div class="mapCellDetails">
-                                <div class="enlargedTile ${tileClass}">${tile}</div>
-                                <div class="details">
-                                    <div class="name">${displayName}</div>
-                                    <div class="coordinates">(${x}, ${y})</div>
-                                </div>
-                            </div>`
-                        );
-
-                        $cell.setAttribute('data-tooltipPosition', 'right');
-                        $cell.innerText = tile;
-                        $minimap.append($cell);
-                    }
-
-                    if (y < HEIGHT - 1) {
-                        $minimap.append(document.createElement('br'));
-                    }
+            refresh: ($element) => {
+                if (!$element.dataset.tooltiphtml) {
+                    console.warn("No tooltip data to refresh", { $element });
+                    return;
                 }
 
-                Tooltip.refresh();
-            }
+                if ($element.querySelector('div[role="tooltip"]')) {
+                    console.warn("Element already has a tooltip", { $element });
+                    return;
+                }
+
+                let tooltip = document.createElement("div");
+
+                tooltip.setAttribute("role", "tooltip");
+                tooltip.setAttribute("inert", true);
+                if ($element.dataset?.tooltipposition) {
+                    tooltip.classList.add($element.dataset.tooltipposition);
+                }
+                tooltip.innerHTML = $element.dataset.tooltiphtml;
+
+                $element.appendChild(tooltip);
+
+                $element.addEventListener("mouseenter", (e) => {
+                    clearTimeout(Tooltip.timer);
+
+                    Tooltip.timer = setTimeout(() => {
+                        Tooltip.display(e);
+                    }, Tooltip.delayTimeMs);
+                });
+
+                $element.addEventListener("mouseleave", (e) => {
+                    clearTimeout(Tooltip.timer);
+                    Tooltip.hide(e);
+                });
+            },
         };
 
         const Portrait = {
@@ -6207,7 +6172,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             hide: () => {
                 clearTimeout(Portrait.timer);
                 document.getElementById('portraitArtOverlay').classList.add('hidden');
-                Minimap.show();
+                document.getElementById('minimapContainer').classList.remove('hidden');
             },
             show: (portraitName) => {
                 const $overlay = document.getElementById('portraitArtOverlay');
@@ -6224,7 +6189,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return;
                 }
 
-                Minimap.hide();
+                document.getElementById('minimapContainer').classList.add('hidden');
 
                 clearTimeout(Portrait.timer);
                 Portrait.activeFrame = 0;
@@ -6418,7 +6383,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 let xPosition = entry.drawAt.x + (drawOptions.flippedX ? longestLine : 0);
                 let yPosition = entry.drawAt.y;
 
-                for (character of art) {
+                for (const character of art) {
                     if (character === "\n") {
                         xPosition = entry.drawAt.x + (drawOptions.flippedX ? longestLine : 0);
                         yPosition++;
@@ -6621,8 +6586,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         class MapCell {
+            static getCellId(x, y) {
+                return `map_cell_${x}_${y}`;
+            }
+
             constructor(type = "floor", options = {}) {
                 const defaults = MapCell.defaultsByType(type);
+                this.$element = options?.$element || null;
+                this.x = typeof(options?.x === "number") ? options.x : null;
+                this.y = typeof(options?.y === "number") ? options.y : null;
                 this.type = type;
                 this.displayName = options?.displayName || defaults.displayName;
                 this.mapCharacter = options?.mapCharacter || defaults.mapCharacter;
@@ -6630,7 +6602,96 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 this.onEnter = options?.onEnter || defaults.onEnter;
                 this.onTouch = options?.onTouch || defaults.onTouch;
                 this.onExplode = options?.onExplode || defaults.onExplode;
+                this.isExplored = options?.isExplores || defaults.isExplored;
                 this.isVisible = options?.isVisible || defaults.isVisible;
+                if (this.x && this.y && !this.$element) {
+                    const cellId = this.constructor.getCellId(this.x, this.y);
+                    this.$element = document.getElementById(cellId);
+                }
+
+                if (this.$element) {
+                    this.refreshElement();
+                }
+
+                const handler = {
+                    set: (target, prop, value) => {
+                        const oldVal = target[prop];
+                        if (oldVal !== value) {
+                            target[prop] = value;
+                            this.refreshElement();
+                        }
+                        return true;
+                    }
+                };
+
+                return new Proxy(this, handler);
+            }
+
+            refreshElement() {
+                if (!this.$element) {
+                    console.warn("MapCell has no element to refresh");
+                    return;
+                }
+
+                let tile = '';
+                let tileClass = '';
+                if (!this.isExplored) {
+                    tile = '?';
+                    tileClass = 'unexplored';
+                } else {
+                    // Use a visibility function if one is available
+                    // Otherwise, assume that the tile is visible
+                    const isVisible = typeof this.isVisible !== 'function' || this.isVisible();
+
+                    if (isVisible) {
+                        tile = this.mapCharacter || '?';
+                        tileClass = this.type || 'unknown';
+                        tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
+                    } else {
+                        const emptyCell = new MapCell();
+                        tile = emptyCell.mapCharacter;
+                        tileClass = emptyCell.type;
+                    }
+                }
+                /*
+                const displayName =
+                    (x === player.x && y === player.y)
+                        ? 'You ヽ(°٢° )ノ'
+                        : (MAP[y][x]?.isExplored
+                            ? MAP[y][x].displayName
+                            : "Unexplored"
+                        );
+                */
+                const displayName = this.isExplored
+                    ? this.displayName
+                    : "Unexplored";
+
+                this.$element.className = tileClass;
+
+                const hasCoordinates =
+                    typeof this.x === "number" &&
+                    typeof this.y === "number";
+
+                if (hasCoordinates) {
+                    this.$element.setAttribute(
+                        'data-tooltipHtml',
+                        `<div class="mapCellDetails">
+                            <div class="enlargedTile ${tileClass}">${tile}</div>
+                            <div class="details">
+                                <div class="name">${displayName}</div>
+                                <div class="coordinates">(${this.x}, ${this.y})</div>
+                            </div>
+                        </div>`
+                    );
+
+                    this.$element.setAttribute('data-tooltipPosition', 'right');
+                } else {
+                    this.$element.removeAttribute('data-tooltipHtml');
+                    this.$element.removeAttribute('data-tooltipPosition');
+                }
+
+                this.$element.innerText = tile;
+                Tooltip.refresh(this.$element);
             }
 
             static defaultsByType(type) {
@@ -6662,6 +6723,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                  *   with a brick of C4. Always called with its own x, y
                  *   coordinates
                  *
+                 * isExplored
+                 *   When false, the cell appears as "Unexplored" on the minimap
+                 *
                  * isVisible
                  *   A function that determines if the tile is visible. If it
                  *   returns false, the tile appears as a generic floor instead
@@ -6673,6 +6737,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     onEnter: null,
                     onTouch: null,
                     onExplode: null,
+                    isExplored: true,
                     isVisible: null,
                 };
 
@@ -6684,7 +6749,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     healingTile: {
                         displayName: "Healing Tile",
                         mapCharacter: "H",
-                        onEnter: (x, y) => {
+                        onEnter: function (x, y) {
                             player.steppingOnHealingTile = true;
 
                             // Heal 30% of effective max HP
@@ -6697,31 +6762,35 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `</span></span>`
                             );
 
-                            MAP[y][x] = new MapCell();
+                            MAP[y][x] = new MapCell("floor", { x, y });
                         },
                     },
                     wall: {
                         displayName: "Wall",
                         mapCharacter: "#",
                         isSolid: true,
-                        onExplode: (x, y) =>
+                        onExplode: function (x, y) {
                             MAP[y][x] = new MapCell(
-                                Math.random() < 0.5 ? 'rubble1' : 'rubble2'
-                            ),
+                                Math.random() < 0.5 ? 'rubble1' : 'rubble2',
+                                { x, y, $element: this.$element }
+                            );
+                        },
                     },
                     iceWall: {
                         displayName: "Wall",
                         mapCharacter: '#',
                         isSolid: true,
-                        onExplode: (x, y) =>
+                        onExplode: function (x, y) {
                             MAP[y][x] = new MapCell(
-                                Math.random() < 0.5 ? 'rubble1' : 'rubble2'
-                            ),
+                                Math.random() < 0.5 ? 'rubble1' : 'rubble2',
+                                { x, y, $element: this.$element }
+                            );
+                        },
                     },
                     crackedFloorSlight: {
                         displayName: "Slightly-Cracked Floor",
                         mapCharacter: '✕',
-                        onEnter: (x, y) => {
+                        onEnter: function (x, y) {
                             const key = `${x},${y}`;
                             // Determine step threshold based on carry weight
                             const percent = getCarryWeight() / getCarryWeightLimit();
@@ -6734,7 +6803,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (crackedFloorSteps[key] < threshold) {
                                 // Not yet breaking, but upgrade to severe if not already
                                 if (MAP[y][x].type !== 'crackedFloorSevere') {
-                                    MAP[y][x] = new MapCell('crackedFloorSevere');
+                                    MAP[y][x] = new MapCell(
+                                        'crackedFloorSevere',
+                                        { x, y, $element: this.$element }
+                                    );
                                     updateBattleLog(
                                         '<span class="action">The floor cracks under ' +
                                         'your feet!</span>'
@@ -6749,7 +6821,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     crackedFloorSevere: {
                         displayName: "Severely-Cracked Floor",
                         mapCharacter: '✖',
-                        onEnter: (x, y) => {
+                        onEnter: function (x, y) {
                             const key = `${x},${y}`;
                             // Determine step threshold based on carry weight
                             const percent = getCarryWeight() / getCarryWeightLimit();
@@ -6773,34 +6845,52 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     rubble1: {
                         displayName: "Floor",
                         mapCharacter: ".",
-                        onExplode: (x, y) => MAP[y][x] = new MapCell('rubble2'),
+                        onExplode: function (x, y) {
+                            MAP[y][x] = new MapCell(
+                                'rubble2',
+                                { x, y, $element: this.$element }
+                            );
+                        },
                     },
                     rubble2: {
                         displayName: "Floor",
                         mapCharacter: ".",
-                        onExplode: (x, y) => MAP[y][x] = new MapCell('rubble1'),
+                        onExplode: function (x, y) {
+                            MAP[y][x] = new MapCell(
+                                'rubble1',
+                                { x, y, $element: this.$element },
+                            );
+                        },
                     },
                     gloryWall: {
                         displayName: "Wall",
                         mapCharacter: "#",
                         isSolid: true,
-                        onTouch: () => player.say("Uh, no thanks. I'm not THAT brave"),
-                        onExplode: (x, y) =>
+                        onTouch: function() {
+                            player.say("Uh, no thanks. I'm not THAT brave");
+                        },
+                        onExplode: function (x, y) {
                             MAP[y][x] = new MapCell(
-                                Math.random() < 0.5 ? 'rubble1' : 'rubble2'
-                            ),
+                                Math.random() < 0.5 ? 'rubble1' : 'rubble2',
+                                { x, y, $element: this.$element }
+                            );
+                        },
                     },
                     noboWall: {
                         displayName: "Wall",
                         mapCharacter: "#",
                         isSolid: true,
-                        onTouch: () => player.say(
-                            "Who's that? ... Just some nobody, I guess"
-                        ),
-                        onExplode: (x, y) =>
+                        onTouch: function () {
+                            player.say(
+                                "Who's that? ... Just some nobody, I guess"
+                            );
+                        },
+                        onExplode: function (x, y) {
                             MAP[y][x] = new MapCell(
-                                Math.random() < 0.5 ? 'rubble1' : 'rubble2'
-                            ),
+                                Math.random() < 0.5 ? 'rubble1' : 'rubble2',
+                                { x, y, $element: this.$element }
+                            );
+                        },
                     },
                     crater: {
                         displayName: "Floor",
@@ -6813,19 +6903,29 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     exit: {
                         displayName: "Exit",
                         mapCharacter: "E",
-                        onEnter: () => descend(),
+                        onEnter: function() {
+                            descend();
+                        }
                     },
                     merchant: {
                         displayName: "Merchant",
                         mapCharacter: "M",
-                        onEnter: () => menu.open('merchant'),
-                        isVisible: () =>
-                            merchant.isAlive &&
-                            merchant.isActiveOnFloor,
-                        onExplode: (x, y) => {
+                        onEnter: function() {
+                            menu.open('merchant');
+                        },
+                        isVisible: function() {
+                            return (
+                                merchant.isAlive &&
+                                merchant.isActiveOnFloor
+                            );
+                        },
+                        onExplode: function (x, y) {
                             merchant.isAlive = false;
                             merchant.isActiveOnFloor = false;
-                            MAP[y][x] = new MapCell('bloodyCrater');
+                            MAP[y][x] = new MapCell(
+                                'bloodyCrater',
+                                { x, y, $element: this.$element }
+                            );
                             playSFX('scream');
                             merchant.say('AIEEEEEEEEEEEEEE!', true);
                             updateBattleLog(
@@ -6839,15 +6939,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     gambler: {
                         displayName: "Gambler",
                         mapCharacter: "G",
-                        onEnter: () => menu.open('gambler'),
-                        isVisible: () =>
-                            gambler.isAlive &&
-                            gambler.isActiveOnFloor &&
-                            player.bitcoins >= gambler.playPrice,
-                        onExplode: (x, y) => {
+                        onEnter: function() {
+                            menu.open('gambler');
+                        },
+                        isVisible: function () {
+                            return (
+                                gambler.isAlive &&
+                                gambler.isActiveOnFloor &&
+                                player.bitcoins >= gambler.playPrice
+                            );
+                        },
+                        onExplode: function (x, y) {
                             gambler.isAlive = false;
                             gambler.isActiveOnFloor = false;
-                            MAP[y][x] = new MapCell('bloodyCrater');
+                            MAP[y][x] = new MapCell(
+                                'bloodyCrater',
+                                { x, y, $element: this.$element }
+                            );
 
                             // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
                             const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
@@ -6866,15 +6974,30 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     tardspireBanner: {
                         displayName: "Floor",
                         mapCharacter: ".",
-                        onEnter: (x, y) => MAP[y][x] = new MapCell(),
-                        onExplode: (x, y) => MAP[y][x] = new MapCell(),
+                        onEnter: function (x, y) {
+                            MAP[y][x] = new MapCell(
+                                "floor",
+                                { x, y, $element: this.$element }
+                            );
+                        },
+                        onExplode: function (x, y) {
+                            MAP[y][x] = new MapCell(
+                                "floor",
+                                { x, y, $element: this.$element }
+                            );
+                        },
                     },
                     treasureChest: {
                         displayName: "Treasure Chest",
                         mapCharacter: "T",
-                        onEnter: () => menu.open("chest"),
-                        onExplode: (x, y) => {
-                            MAP[y][x] = new MapCell('crater');
+                        onEnter: function() {
+                            menu.open("chest");
+                        },
+                        onExplode: function (x, y) {
+                            MAP[y][x] = new MapCell(
+                                'crater',
+                                { x, y, $element: this.$element }
+                            );
                             updateBattleLog(
                                 '<span class="action">Gee willikers, you ' +
                                 'just destroyed a perfectly good treasure ' +
@@ -6885,9 +7008,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     mimic: {
                         displayName: "Treasure Chest",
                         mapCharacter: "T",
-                        onEnter: () => menu.open("chest"),
-                        onExplode: (x, y) => {
-                            MAP[y][x] = new MapCell('bloodyCrater');
+                        onEnter: function () {
+                            menu.open("chest");
+                        },
+                        onExplode: function (x, y) {
+                            MAP[y][x] = new MapCell(
+                                'bloodyCrater',
+                                { x, y, $element: this.$element }
+                            );
 
                             // Calculate scaled BTC reward
                             const baseMimic = enemies.find(e => e.id === "mimic");
@@ -6918,9 +7046,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         const DIRECTIONS = ['N', 'E', 'S', 'W'];
         const DX = [0, 1, 0, -1];
         const DY = [-1, 0, 1, 0];
-        let seenTiles = Array.from({
-            length: HEIGHT
-        }, () => Array(WIDTH).fill(false));
         let lastFloorBoostNotice = 0;
 
         const baseStats = {
@@ -7530,7 +7655,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         (y !== player.y && x !== player.x);
 
                     if (isEmptySpace) {
-                        MAP[y][x] = new MapCell('merchant');
+                        MAP[y][x] = new MapCell('merchant', { x, y });
                         return;
                     }
                 } while (attempts++ < 1000);
@@ -7641,7 +7766,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         !isMerchantSpace;
 
                     if (isEmptySpace) {
-                        MAP[y][x] = new MapCell('gambler');
+                        MAP[y][x] = new MapCell('gambler', { x, y });
                         return;
                     }
                 } while (attempts++ < 1000);
@@ -7906,7 +8031,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         return;
                     }
                     playSFX('torch');
-                    seenTiles = seenTiles.map((col) => col.map(() => true));
+                    MAP.forEach((mapY) => columns.forEach((mapY) => cell.isExplored = true));
                     updateBattleLog("Lo, the way has been made clear!");
                     animTorchStart();
                     render();
@@ -7931,7 +8056,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 const nx = player.x + DX[player.dir];
                                 const ny = player.y + DY[player.dir];
                                 if (['floor', 'rubble1', 'rubble2'].includes(MAP[ny]?.[nx]?.type)) {
-                                    MAP[ny][nx] = new MapCell('bloodyCrater');
+                                    MAP[ny][nx] = new MapCell(
+                                        'bloodyCrater',
+                                        { x: nx, y: ny }
+                                    );
                                 }
                             }
                             endOfPlayerTurn();
@@ -7972,7 +8100,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                         if (isVisible) {
                                             MAP[y][x]?.onExplode?.(x, y);
                                         }
-                                        seenTiles[y][x] = true;
+                                        MAP[y][x].isExplored = true;
                                     }
                                 }
                             }
@@ -8321,8 +8449,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         function revealMapSpot(x, y, radius) {
             for (let py=y-radius; py<=y+radius; py++) {
                 for (let px=x-radius; px<=x+radius; px++) {
-                    if (typeof MAP[py]?.[px] !== 'undefined') {
-                        seenTiles[py][px] = true;
+                    if (typeof MAP[py]?.[px] !== "undefined") {
+                        MAP[py][px].isExplored = true;
                     }
                 }
             }
@@ -8449,8 +8577,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             for (let y = 0; y < HEIGHT; y++) {
                 MAP[y] = [];
                 for (let x = 0; x < WIDTH; x++) {
-                    MAP[y][x] = new MapCell('wall');
-                    seenTiles[y][x] = false;
+                    MAP[y][x] = new MapCell(
+                        'wall',
+                        { x, y, isExplored: false }
+                    );
                 }
             }
 
@@ -8462,15 +8592,26 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             } while (stack === null);
 
             for (let i in stack) {
-                MAP[stack[i].y][stack[i].x] = new MapCell();
+                MAP[stack[i].y][stack[i].x] = new MapCell(
+                    'floor',
+                    { x: stack[i].x, y: stack[i].y, isExplored: false }
+                );
             }
 
             for (let i = 0; i < 10; i++) {
                 dissolveMap();
             }
 
-            MAP[player.y][player.x] = new MapCell();
-            MAP[exit.y][exit.x] = new MapCell('exit');
+            MAP[player.y][player.x] = new MapCell('floor', {
+                x: player.x,
+                y: player.y,
+            });
+
+            MAP[exit.y][exit.x] = new MapCell('exit', {
+                x: exit.x,
+                y: exit.y,
+                isExplored: false,
+            });
 
             // 100% chance to spawn merchant on floor 1
             if (floor === 1) {
@@ -8496,6 +8637,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             spawnTreasureChests();
             spawnHealingTiles();
             spawnCrackedFloors();
+
+            // Generate minimap
+            const $minimap = document.getElementById('minimap');
+            $minimap.replaceChildren();
+
+            for (let y = 0; y < HEIGHT; y++) {
+                for (let x = 0; x < WIDTH; x++) {
+                    const $cell = document.createElement('span');
+                    $cell.id = MapCell.getCellId(x, y);
+                    $minimap.append($cell);
+                    // Track the minimap element in the MAP
+                    MAP[y][x].$element = $cell;
+                }
+
+                $minimap.append(document.createElement('br'));
+            }
 
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
@@ -8526,19 +8683,31 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         function placeWelcomeBanner() {
             if (MAP[player.y - 1][player.x]?.type === 'floor') {
                 // North of player
-                MAP[player.y - 1][player.x] = new MapCell('tardspireBanner');
+                MAP[player.y - 1][player.x] = new MapCell(
+                    'tardspireBanner',
+                    { x: player.x, y: player.y - 1 },
+                );
                 player.dir = DIRECTIONS.indexOf('N');
             } else if (MAP[player.y + 1][player.x]?.type === 'floor') {
                 // South of player
-                MAP[player.y + 1][player.x] = new MapCell('tardspireBanner');
+                MAP[player.y + 1][player.x] = new MapCell(
+                    'tardspireBanner',
+                    { x: player.x, y: player.y + 1 }
+                );
                 player.dir = DIRECTIONS.indexOf('S');
             } else if (MAP[player.y][player.x - 1]?.type === 'floor') {
                 // West of player
-                MAP[player.y][player.x - 1] = new MapCell('tardspireBanner');
+                MAP[player.y][player.x - 1] = new MapCell(
+                    'tardspireBanner',
+                    { x: player.x - 1, y: player.y }
+                );
                 player.dir = DIRECTIONS.indexOf('W');
             } else if (MAP[player.y][player.x + 1]?.type === 'floor') {
                 // East of player
-                MAP[player.y][player.x + 1] = new MapCell('tardspireBanner');
+                MAP[player.y][player.x + 1] = new MapCell(
+                    'tardspireBanner',
+                    { x: player.x + 1, y: player.y }
+                );
                 player.dir = DIRECTIONS.indexOf('E');
             }
 
@@ -8547,7 +8716,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const gy = player.y - DY[player.dir];
 
             if (MAP[gy][gx]?.type === 'wall') {
-                MAP[gy][gx] = new MapCell('gloryWall');
+                MAP[gy][gx] = new MapCell('gloryWall', { x: gx, y: gy });
             }
         }
 
@@ -8555,7 +8724,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const dissolvePoints = getMapDissolvePoints();
             const index = Math.floor(Math.random() * dissolvePoints.length);
             const dissolvePoint = dissolvePoints[index];
-            MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell('noboWall');
+            MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell(
+                'noboWall',
+                { x: dissolvePoint.x, y: dissolvePoint.y }
+            );
         }
 
         function spawnTreasureChests() {
@@ -8573,7 +8745,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     if (isEmptySpace) {
                         const isMimic = Math.random() < 0.2; // 20% chance for mimic
-                        MAP[y][x] = new MapCell(isMimic ? 'mimic' : 'treasureChest');
+                        MAP[y][x] = new MapCell(
+                            isMimic ? 'mimic' : 'treasureChest',
+                            { x, y }
+                        );
                         break;
                     }
                 }
@@ -8594,7 +8769,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         (y !== player.y || x !== player.x);
 
                     if (isEmptySpace) {
-                        MAP[y][x] = new MapCell('healingTile'); // Place a healing tile
+                        MAP[y][x] = new MapCell(
+                            'healingTile',
+                            { x, y }
+                        );
                         break;
                     }
                 }
@@ -8615,7 +8793,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         (y !== player.y || x !== player.x);
 
                     if (isEmptySpace) {
-                        MAP[y][x] = new MapCell('crackedFloorSlight');
+                        MAP[y][x] = new MapCell(
+                            'crackedFloorSlight',
+                            { x, y }
+                        );
                         break;
                     }
                 }
@@ -8735,7 +8916,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             for (let i = 0; i < totalPointsToDissolve; i++) {
                 const index = Math.floor(Math.random() * dissolvePoints.length);
                 const dissolvePoint = dissolvePoints[index];
-                MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell();
+                MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell(
+                    'floor',
+                    { x: dissolvePoint.x, y: dissolvePoint.y }
+                );
                 dissolvePoints = dissolvePoints.splice(index, 1);
             }
         }
@@ -8776,7 +8960,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function render() {
             updateSeenTiles();
-            Minimap.draw();
             updateBreathingSFX();
 
             // @TODO: Keep this out of render()
@@ -8908,8 +9091,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const $titleScreen = document.getElementById('titleScreen');
             if (
                 window._inputBlocked &&
-                $titleScreen &&
-                $titleScreen.style.display !== 'none' &&
+                $titleScreen?.style?.display !== 'none' &&
                 (e.key === 'Enter' || e.key === ' ')
             ) {
                 return;
@@ -8924,7 +9106,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function setTorchOverlayVisibility() {
             // Hide torch in combat, resume after battle
-            $torch = document.getElementById('animTorch');
+            const $torch = document.getElementById('animTorch');
             player.isHoldingTorch && !player.inCombat
                 ? $torch.classList.add('onscreen')
                 : $torch.classList.remove('onscreen');
@@ -9456,96 +9638,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 updateBattleLog("You don't have that item!");
                 return;
             }
-            // Item effects + battle log msgs based on item name found in data/items.json
-            switch (itemName) {
-                case "canOfHamms":
-                    player.heal(5);
-                    updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
-                    break;
-                case "cupOfLean":
-                    player.heal(20);
-                    updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
-                    break;
-                case "glassOfToiletWater":
-                    player.heal(50);
-                    updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
-                    break;
-                case "alaskaRaisins":
-                    player.heal(70);
-                    playSFX('raisins');
-                    updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
-                    break;
-                case "dowsingRod":
-                    for (let y = 0; y < MAP.length; y++) {
-                        for (let x = 0; x < MAP[y].length; x++) {
-                            if (MAP[y][x]?.type === 'exit') {
-                                revealMapSpot(x, y, 1);
-                                updateBattleLog("The exit has been revealed!");
-                                render();
-                                return;
-                            }
-                        }
-                    }
-                    break;
-                case "torch":
-                    if (player.isHoldingTorch) {
-                        updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
-                        return;
-                    }
-                    playSFX('torch');
-                    seenTiles = seenTiles.map((col) => col.map(() => true));
-                    updateBattleLog("Lo, the way has been made clear!");
-                    animTorchStart();
-                    render();
-                    break;
-                case "brickOfC4":
-                    setTimeout(() => playSFX('explosion'), 50);
-                    explosionAnimation(() => {
-                        if (player.inCombat) {
-                            const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
-                            currentEnemy.hp -= dmg;
-                            updateBattleLog(`You exploded the shit out of <span class="action">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
-                            if (currentEnemy.hp <= 0) {
-                                playSFX('scream');
-                                const nx = player.x + DX[player.dir];
-                                const ny = player.y + DY[player.dir];
-                                if (['floor', 'rubble1', 'rubble2'].includes(MAP[ny]?.[nx]?.type)) {
-                                    MAP[ny][nx] = new MapCell('bloodyCrater');
-                                }
-                            }
-                            endOfPlayerTurn();
-                        } else {
-                            let xMin = player.x, xMax = player.x,
-                                yMin = player.y, yMax = player.y;
-                            switch (DIRECTIONS[player.dir]) {
-                                case 'N': xMin--; xMax++; yMin -= 3; break;
-                                case 'E': yMin--; yMax++; xMax += 3; break;
-                                case 'S': xMin--; xMax++; yMax += 3; break;
-                                case 'W': yMin--; yMax++; xMin -= 3; break;
-                            }
-                            for (let y = yMin; y <= yMax; y++) {
-                                for (let x = xMin; x <= xMax; x++) {
-                                    if (MAP[y]?.[x]) {
-                                        const isVisible = typeof MAP[y][x].isVisible !== 'function' || MAP[y][x].isVisible();
-                                        if (isVisible) {
-                                            MAP[y][x]?.onExplode?.(x, y);
-                                        }
-                                        seenTiles[y][x] = true;
-                                    }
-                                }
-                            }
-                            updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
-                            render();
-                        }
-                    });
-                    break;
-                case "tromBone":
-                    playSFX('tromBone');
-                    updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
-                    break;
-                default:
-                    updateBattleLog("You used the item, but nothing happened.");
-            }
+
+            typeof items[itemName]?.use === "function"
+                ? items[itemName].use()
+                : updateBattleLog("You used the item, but nothing happened.");
         
             player.inventory[itemName]--;
             if (player.inventory[itemName] <= 0) {
@@ -9563,7 +9659,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (coordsInBounds(nx, ny) && MAP[ny][nx]?.type === 'floor') {
                         merchant.isAlive = true;
                         merchant.isActiveOnFloor = true;
-                        MAP[ny][nx] = new MapCell('merchant');
+                        MAP[ny][nx] = new MapCell('merchant', { x: nx, y: ny });
                         merchant.set();
                         updateBattleLog('<span class="merchant">CHEAT: Merchant spawned</span>');
                         found = true;
@@ -9585,7 +9681,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         gambler.isActiveOnFloor = true;
                         player.bitcoins = Math.max(player.bitcoins, gambler.playPrice);
                         player.refreshBitcoins();
-                        MAP[ny][nx] = new MapCell('gambler');
+                        MAP[ny][nx] = new MapCell('gambler', { x: nx, y: ny });
                         updateBattleLog('<span class="gambler">CHEAT: Gambler spawned</span>');
                         found = true;
                         break;
@@ -9712,7 +9808,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         merchant.isAlive = true;
                         merchant.isActiveOnFloor = true;
                         merchant.setWares(true);
-                        MAP[ny][nx] = new MapCell('merchant');
+                        MAP[ny][nx] = new MapCell('merchant', { x: nx, y: ny });
                         merchantSpawned = true;
                         break;
                     }
@@ -9737,7 +9833,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         ) {
                             gambler.isAlive = true;
                             gambler.isActiveOnFloor = true;
-                            MAP[gy][gx] = new MapCell('gambler');
+                            MAP[gy][gx] = new MapCell(
+                                'gambler',
+                                { x: gx, y: gy }
+                            );
                             gamblerSpawned = true;
                             break;
                         }
@@ -10007,7 +10106,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (MAP[player.y][player.x]?.type === 'mimic') {
                 // Mimic detected, start a battle
                 playSFX('scream');
-                MAP[player.y][player.x] = new MapCell(); // Remove the mimic from the map
+
+                // Remove the mimic from the map
+                MAP[player.y][player.x] = new MapCell(
+                    "floor",
+                    { x: player.y, y: player.y }
+                );
 
                 // Spawn mimic and apply scaling
                 const baseMimic = enemies.find(e => e.id === "mimic");
@@ -10055,7 +10159,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     updateBattleLog(`You found <span class="friendly">${rings[ringId].name}</span> in the chest!`);
                 }
 
-                MAP[player.y][player.x] = new MapCell(); // Remove the chest from the map
+                // Remove the chest from the map
+                MAP[player.y][player.x] = new MapCell(
+                    "floor",
+                    { x: player.x, y: player.y }
+                );
             }
 
             render();
@@ -10187,7 +10295,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         generateMap();
         updateSeenTiles();
-        Minimap.draw();
         playRandomExplorationMusic();
         render();
 
@@ -10242,6 +10349,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 document.getElementById('menu').classList.add('hidden');
                 document.getElementById('game').classList.remove('hidden');
             },
+            highlightOption: (index) => {
+                menu.selectionIndex = index;
+            },
             render: () => {
                 let menuHtml = "";
                 const activeMenu = menu.getActiveMenu();
@@ -10274,7 +10384,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 paginatedOptions.forEach((option, index) => {
                     const isSelectedLine = index === menu.selectionIndex;
                     const cursor = isSelectedLine ? "▶ " : "  ";
-                    const spanHtml = option.className ? `<span class="${option.className}">` : '<span>';
+                    const spanHtml = "<span " +
+                        `class="option${option.className ? ` ${option.className}` : ""}"` +
+                        `onmouseover="menu.highlightOption(${index}); menu.render();" ` +
+                        `onclick="menu.select(${index});"` +
+                    ">";
                     const trailText = option.trailText ? `${option.trailText}` : '';
 
                     const maxLineLength = 56; // Max "." trail width
@@ -10282,8 +10396,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
                         : '';
 
-                    menuHtml += `${cursor}${spanHtml}${option.displayText}${dots}${trailText}</span>\n`;
-
+                    menuHtml +=
+                        `${spanHtml}<span class="cursor">${cursor}</span>` +
+                        `${option.displayText}${dots}${trailText}</span>`;
 
                     if (isSelectedLine) {
                         document.getElementById('menuSelectionDescription').textContent = option.description;
@@ -10299,11 +10414,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     $escapeMessage.classList.remove("hidden");
                 }
             },
+            getNumberOfItemsPerPage: () =>
+                menu.breadcrumbs.at(-1)?.menuName === "statAllocation" ? 12 : 8,
             handleInput: (key) => {
                 if (animationActive) return;
                 const activeMenu = menu.getActiveMenu();
                 const options = activeMenu.getOptions();
-                const itemsPerPage = menu.breadcrumbs.at(-1)?.menuName === "statAllocation" ? 12 : 8; // Number of items per page
+                const itemsPerPage = menu.getNumberOfItemsPerPage();
                 const totalPages = Math.ceil(options.length / itemsPerPage);
                 const itemsOnCurrentPage = (menu.currentPage + 1) >= totalPages
                     ? ((options.length % itemsPerPage) || itemsPerPage)
@@ -10311,12 +10428,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 switch (key) {
                     case 'escape':
-                        if (activeMenu.escapeDisabled) {
-                            break;
-                        }
-
-                        menu.close();
-                        playSFX('uiCancel');
+                        menu.goToPreviousMenu();
                         break;
                     case 'w':
                     case 'arrowup':
@@ -10351,22 +10463,36 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     case ' ':
                     case 'e':
                     case 'enter': {
-                        const selectedOptionId = options[menu.currentPage * itemsPerPage + menu.selectionIndex]?.id;
-                        if (selectedOptionId === '_back') {
-                            menu.close();
-                            playSFX('uiCancel');
-                        } else if (selectedOptionId === '_exitAll') {
-                            menu.closeAll();
-                            playSFX('uiCancel');
-                        } else {
-                            activeMenu.select(selectedOptionId);
-                            playSFX('uiSelect');
-                        }
+                        menu.select(menu.selectionIndex);
                         break;
                     }
                 }
 
                 menu.render();
+            },
+            goToPreviousMenu: () => {
+                if (menu.getActiveMenu()?.escapeDisabled) {
+                    return;
+                }
+
+                menu.close();
+                playSFX('uiCancel');
+            },
+            select: (index) => {
+                const activeMenu = menu.getActiveMenu();
+                const selectedOptionId =
+                    activeMenu.getOptions()?.
+                        [menu.currentPage * menu.getNumberOfItemsPerPage() + index]?.id;
+                if (selectedOptionId === '_back') {
+                    menu.close();
+                    playSFX('uiCancel');
+                } else if (selectedOptionId === '_exitAll') {
+                    menu.closeAll();
+                    playSFX('uiCancel');
+                } else {
+                    activeMenu?.select(selectedOptionId);
+                    playSFX('uiSelect');
+                }
             },
             menus: {
                 gameSettings: {
@@ -11140,7 +11266,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         gambler.isActiveOnFloor = false;
                         const gamblerPosition = gambler.location();
                         if (gamblerPosition) {
-                            MAP[gamblerPosition.y][gamblerPosition.x] = new MapCell();
+                            MAP[gamblerPosition.y][gamblerPosition.x] =
+                                new MapCell(
+                                    "floor",
+                                    { x: gamblerPosition.x, y: gamblerPosition.y }
+                                );
                         }
                         Portrait.hide();
                     },
