@@ -25,14 +25,20 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 # CREDITS
 ### PROGRAMMING + GRAPHICS
-[Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/)
+[Xx_TheMilkMan69_xX](https://milklounge.wang/)
 
 [MySpace Tom](https://forum.agoraroad.com/index.php?members/3460/)
 
 ### MUSIC + SOUND DESIGN
-[Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/)
+[Xx_TheMilkMan69_xX](https://milklounge.wang/)
 
 [endless_self](https://forum.agoraroad.com/index.php?members/endless_self.6570/)
+
+### LEADERBOARD API HOSTING
+[VocaPepper](https://vocapepper.com/)
+
+### LEADERBOARD STYLING
+[Xx_TheMilkMan69_xX](https://milklounge.wang/)
 
 ### LIBRARIES USED
 - Synthesized voices are powered by [Imrane03/better-sam (SAM Software Automatic Mouth)](https://github.com/Imrane03/better-sam)
