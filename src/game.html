@@ -606,6 +606,7 @@
         }
 
         #minimap .crackedFloorSlight,
+        #minimap .crackedFloor,
         #minimap .crackedFloorSevere {
             color: #f00;
         }
@@ -945,6 +946,7 @@
         }
 
         .scene_character_crackedFloorSlight,
+        .scene_character_crackedFloor,
         .scene_character_crackedFloorSevere {
             color: #000;
         }
@@ -4526,6 +4528,250 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         automaskBlockCharacters: true,
                         transparentCharacter: '%',
                         data: `
+                            %%▀▀█▀▀▄%%▄▄
+                            ▀▀▀▀%%%%%%%%%%%%▀▄
+                            %%%%%%%%%%%%%%%%%%▀▀
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄
+                            %%%%%%%%%▀▀█▀▀▄
+                            %%%%%%%▀▀▀▀%%%%%%%%%%%%%%▀▀▄
+                            %%%%%%%%%%%%%%%%%%%%%%%%%%%%▀▀
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            ▘%▗▄▖
+                            %▀▘%%▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%▄%%%%%▖
+                            %%%▀▀▀%%%%%%▝▄
+                        `
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%▄▄%%%%▗▄▖
+                            %▀▀▀%%%%%%%%▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%▄%%%▗▄▖
+                            %%%▀▀▀%%%%%▝▄
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %░░%░%%%░░%%░
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %░░%░░%%░
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %▔%%▔
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            ╶╴
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%▒░▒▒░▒
+                        `,
+                    },
+                ],
+            },
+
+            crackedFloor: {
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -19, y: 24 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 24 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -12, y: 20 },
+                    },
+                    p1_1: {
+                        artIndex: 1,
+                        drawAt: { x: 8, y: 20 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 38, y: 20 },
+                    },
+                    p2_0: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 18 },
+                    },
+                    p2_1: {
+                        artIndex: 3,
+                        drawAt: { x: 3, y: 17 },
+                    },
+                    p2_2: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 17 },
+                    },
+                    p2_3: {
+                        artIndex: 5,
+                        drawAt: { x: 32, y: 17 },
+                    },
+                    p2_4: {
+                        artIndex: 2,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 42, y: 18 },
+                    },
+                    p3_0: {
+                        artIndex: 10,
+                        drawAt: { x: -9, y: 15 },
+                    },
+                    p3_1: {
+                        artIndex: 10,
+                        drawAt: { x: -3, y: 16 },
+                    },
+                    p3_2: {
+                        artIndex: 10,
+                        drawAt: { x: 8, y: 16 },
+                    },
+                    p3_3: {
+                        artIndex: 7,
+                        drawAt: { x: 20, y: 16 },
+                    },
+                    p3_4: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 29, y: 16 },
+                    },
+                    p3_5: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 36, y: 16 },
+                    },
+                    p3_6: {
+                        artIndex: 10,
+                        drawOptions: { flippedX: true },
+                        drawAt: { x: 46, y: 15 },
+                    },
+                    p4_0: {
+                        artIndex: 8,
+                        drawAt: { x: 2, y: 15 },
+                    },
+                    p4_1: {
+                        artIndex: 8,
+                        drawAt: { x: 7, y: 15 },
+                    },
+                    p4_2: {
+                        artIndex: 8,
+                        drawAt: { x: 12, y: 15 },
+                    },
+                    p4_3: {
+                        artIndex: 8,
+                        drawAt: { x: 17, y: 15 },
+                    },
+                    p4_4: {
+                        artIndex: 8,
+                        drawAt: { x: 22, y: 15 },
+                    },
+                    p4_5: {
+                        artIndex: 8,
+                        drawAt: { x: 27, y: 15 },
+                    },
+                    p4_6: {
+                        artIndex: 8,
+                        drawAt: { x: 32, y: 15 },
+                    },
+                    p4_7: {
+                        artIndex: 8,
+                        drawAt: { x: 37, y: 15 },
+                    },
+                    p4_8: {
+                        artIndex: 8,
+                        drawAt: { x: 42, y: 15 },
+                    },
+                    p5_0: {
+                        artIndex: 9,
+                        drawAt: { x: 14, y: 14 },
+                    },
+                    p5_1: {
+                        artIndex: 9,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p5_2: {
+                        artIndex: 9,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p5_3: {
+                        artIndex: 9,
+                        drawAt: { x: 20, y: 14 },
+                    },
+                    p5_4: {
+                        artIndex: 9,
+                        drawAt: { x: 22, y: 14 },
+                    },
+                    p5_5: {
+                        artIndex: 9,
+                        drawAt: { x: 24, y: 14 },
+                    },
+                    p5_6: {
+                        artIndex: 9,
+                        drawAt: { x: 26, y: 14 },
+                    },
+                    p5_7: {
+                        artIndex: 9,
+                        drawAt: { x: 28, y: 14 },
+                    },
+                    p5_8: {
+                        artIndex: 9,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p5_9: {
+                        artIndex: 9,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p5_10: {
+                        artIndex: 9,
+                        drawAt: { x: 34, y: 14 },
+                    },
+                },
+                art: [
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
                             %%▀▀█▀▀▄▄▄▄▄%%▄▀
                             ▀▀▀▀%%%%%%▄▄▄▀▀▀▀▄
                             %%%%%%%%%%%%%%%%%%▀▀
@@ -6684,8 +6930,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     speed: player.speed + getRingEffect('speed'),
                     luck: player.luck + getRingEffect('luck'),
                     endurance: player.endurance,
-                    carryWeight: getCarryWeight(),
-                    carryWeightLimit: getCarryWeightLimit(),
+                    carryWeight: player.getCarryWeight(),
+                    carryWeightLimit: player.getCarryWeightLimit(),
                 };
             },
             refreshStats: () => {
@@ -6788,6 +7034,66 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.exp = rolledOverExp;
                 player.hp = getEffectiveStat('maxHp');
                 document.getElementById('playerLevel').innerText = player.level;
+            },
+            getCarryWeight: () => {
+                let total = 0;
+
+                // 1. Consumables
+                for (const itemId in player.inventory) {
+                    if (weapons[itemId] || armor[itemId] || rings[itemId]) {
+                        continue;
+                    }
+
+                    const item = items[itemId];
+                    if (typeof item?.weight === "number") {
+                        total += item.weight * player.inventory[itemId];
+                    }
+                }
+
+                // 2. Weapons
+                for (const weaponId in weapons) {
+                    let count = player.inventory[weaponId] || 0;
+                    if (player.weapon === weaponId && count === 0) {
+                        count = 1;
+                    }
+                    total += weapons[weaponId].weight * count;
+                }
+
+                // 3. Armor
+                for (const armorId in armor) {
+                    let count = player.inventory[armorId] || 0;
+                    if (player.armor === armorId && count === 0) {
+                        count = 1;
+                    }
+                    total += armor[armorId].weight * count;
+                }
+
+                // 4. Rings
+                for (const ringId in rings) {
+                    let count = player.inventory[ringId] || 0;
+                    if (player.ring1 === ringId && count === 0) {
+                        count += 1;
+                    }
+                    if (player.ring2 === ringId && count === 0 && player.ring1 !== ringId) {
+                        count += 1;
+                    }
+                    total += rings[ringId].weight * count;
+                }
+
+                return total;
+            },
+            getCarryWeightLimit: () => {
+                // Example: 35 base + 0.6 per END point
+                return 35 + (player.endurance * 0.4);
+            },
+            // Returns "normal", "warning", or "danger" depending on load
+            getWeightLevel: () => {
+                const percentage =
+                    player.getCarryWeight() / player.getCarryWeightLimit();
+
+                return percentage < 0.5
+                    ? "normal"
+                    : (percentage < 0.8 ? "warning" : "danger");
             },
             fallThroughFloorAndDie: () => {
                 setTimeout(() => {
@@ -7934,16 +8240,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         function getEffectiveStat(stat) {
-                if (stat === 'speed') {
-                    const baseSpd = player.speed;
-                    const carryWeight = getCarryWeight();
-                    const carryLimit = getCarryWeightLimit();
-                    if (carryWeight <= 0) return baseSpd;
-                    const percent = carryWeight / carryLimit;
-                    if (percent <= 0.5) return baseSpd; // Debuff: 5% at 50%, up to 100% at 100%
-                    const debuff = Math.min(1, (percent - 0.5) * 2) * 0.95 + 0.05; // Linear from 5% to 100%
-                    return Math.max(0, Math.floor(baseSpd * (1 - debuff)));
+            if (stat === 'speed') {
+                const baseSpd = player.speed;
+                const carryWeight = player.getCarryWeight();
+                const carryLimit = player.getCarryWeightLimit();
+                if (carryWeight <= 0) {
+                    return baseSpd;
                 }
+                const percent = carryWeight / carryLimit;
+                if (percent <= 0.5) {
+                    return baseSpd; // Debuff: 5% at 50%, up to 100% at 100%
+                }
+                const debuff = Math.min(1, (percent - 0.5) * 2) * 0.95 + 0.05; // Linear from 5% to 100%
+                return Math.max(0, Math.floor(baseSpd * (1 - debuff)));
+            }
+
             const ringsEquipped = [player.ring1, player.ring2]
                 .map(ringId => ringId ? rings[ringId] : null)
                 .filter(Boolean);
@@ -8099,31 +8410,43 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayName: "Slightly-Cracked Floor",
                 mapCharacter: '✕',
                 onEnter: function (x, y) {
-                    const key = `${x},${y}`;
-                    // Determine step threshold based on carry weight
-                    const percent = getCarryWeight() / getCarryWeightLimit();
-                    let threshold = 3;
-                    if (percent >= 0.8) threshold = 1;
-                    else if (percent >= 0.5) threshold = 2;
+                    const weightLevel = player.getWeightLevel();
 
-                    crackedFloorSteps[key] = (crackedFloorSteps[key] || 0) + 1;
+                    if (weightLevel === "normal") {
+                        MAP.setCell(x, y, "crackedFloor");
+                        playSFX("floorCrackSlight");
+                        updateBattleLog(
+                            '<span class="action">The floor cracks under ' +
+                            'your feet!</span>'
+                        );
+                    } else if (weightLevel === "warning") {
+                        MAP.setCell(x, y, "crackedFloorSevere");
+                        playSFX("floorCrackSlight");
+                        updateBattleLog(
+                            '<span class="action">The floor trembles under ' +
+                            'your feet!</span> You might want to lighten ' +
+                            'your load and avoid stepping here again!'
+                        );
+                    } else if (weightLevel === "danger") {
+                        player.fallThroughFloorAndDie();
+                    }
+                },
+            },
+            crackedFloor: {
+                displayName: "Cracked Floor",
+                mapCharacter: '✕',
+                onEnter: function (x, y) {
+                    const weightLevel = player.getWeightLevel();
 
-                    if (crackedFloorSteps[key] < threshold) {
-                        // Not yet breaking, but upgrade to severe if not already
-                        /*
-                        if (MAP[y][x].type !== 'crackedFloorSevere') {
-                            MAP[y][x] = new MapCell(
-                                'crackedFloorSevere',
-                                { x, y, $element: this.$element }
-                            );
-                            updateBattleLog(
-                                '<span class="action">The floor cracks under ' +
-                                'your feet!</span>'
-                            );
-                            playSFX('floorCrackSlight');
-                        }
-                        */
-                    } else {
+                    if (weightLevel === "normal") {
+                        MAP.setCell(x, y, "crackedFloorSevere");
+                        playSFX("floorCrackSlight");
+                        updateBattleLog(
+                            '<span class="action">The floor cracks under ' +
+                            'your feet!</span> It would be a good idea to ' +
+                            'avoid stepping here again'
+                        );
+                    } else if (["warning", "danger"].includes(weightLevel)) {
                         player.fallThroughFloorAndDie();
                     }
                 },
@@ -8132,24 +8455,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayName: "Severely-Cracked Floor",
                 mapCharacter: '✖',
                 onEnter: function (x, y) {
-                    const key = `${x},${y}`;
-                    // Determine step threshold based on carry weight
-                    const percent = getCarryWeight() / getCarryWeightLimit();
-                    let threshold = 3;
-                    if (percent >= 0.8) threshold = 1;
-                    else if (percent >= 0.5) threshold = 2;
-
-                    crackedFloorSteps[key] = (crackedFloorSteps[key] || 0) + 1;
-
-                    if (crackedFloorSteps[key] < threshold) {
-                        // Still not breaking, but warn
-                        updateBattleLog(
-                            '<span class="action">The floor cracks even more under your feet!</span> One more step and you\'re done for!'
-                        );
-                        playSFX('floorCrackSlight');
-                    } else {
-                        player.fallThroughFloorAndDie();
-                    }
+                    player.fallThroughFloorAndDie();
                 },
             },
             rubble1: {
@@ -8855,48 +9161,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             render();
         }
 
-        function getCarryWeight() {
-            let total = 0;
-
-            // 1. Consumables
-            for (const itemId in player.inventory) {
-                if (weapons[itemId] || armor[itemId] || rings[itemId]) continue;
-                const item = items[itemId];
-                if (item && typeof item.weight === "number") {
-                    total += item.weight * player.inventory[itemId];
-                }
-            }
-
-            // 2. Weapons
-            for (const weaponId in weapons) {
-                let count = player.inventory[weaponId] || 0;
-                if (player.weapon === weaponId && count === 0) count = 1;
-                total += weapons[weaponId].weight * count;
-            }
-
-            // 3. Armor
-            for (const armorId in armor) {
-                let count = player.inventory[armorId] || 0;
-                if (player.armor === armorId && count === 0) count = 1;
-                total += armor[armorId].weight * count;
-            }
-
-            // 4. Rings
-            for (const ringId in rings) {
-                let count = player.inventory[ringId] || 0;
-                if (player.ring1 === ringId && count === 0) count += 1;
-                if (player.ring2 === ringId && count === 0 && player.ring1 !== ringId) count += 1;
-                total += rings[ringId].weight * count;
-            }
-
-            return total;
-        }
-
-        function getCarryWeightLimit() {
-            // Example: 35 base + 0.6 per END point
-            return 35 + player.endurance * 0.4;
-        }
-
         function updateBreathingSFX() {
             // Pause breathing SFX if in battle or killed
             if (player.inCombat || player.hp <= 0) {
@@ -8908,10 +9172,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return;
             }
 
-            const percentLoad = getCarryWeight() / getCarryWeightLimit();
+            const weightLevel = player.getWeightLevel();
 
             // Stop all breathing sounds if below 50%
-            if (percentLoad < 0.5) {
+            if (weightLevel === "normal") {
                 if (currentBreathing) {
                     sfx[currentBreathing].pause();
                     sfx[currentBreathing].currentTime = 0;
@@ -8920,23 +9184,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return;
             }
 
-            // 80%+: Only breathe2, looped
-            if (percentLoad >= 0.8) {
-                if (currentBreathing !== "breathe2") {
-                    if (currentBreathing) {
-                        sfx[currentBreathing].pause();
-                        sfx[currentBreathing].currentTime = 0;
-                    }
-                    sfx.breathe2.loop = true;
-                    sfx.breathe2.currentTime = 0;
-                    sfx.breathe2.play();
-                    currentBreathing = "breathe2";
-                }
-                return;
-            }
-
             // 50%-80%: Only breathe1, looped
-            if (percentLoad >= 0.5) {
+            if (weightLevel === "warning") {
                 if (currentBreathing !== "breathe1") {
                     if (currentBreathing) {
                         sfx[currentBreathing].pause();
@@ -8946,6 +9195,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     sfx.breathe1.currentTime = 0;
                     sfx.breathe1.play();
                     currentBreathing = "breathe1";
+                }
+                return;
+            }
+
+            // 80%+: Only breathe2, looped
+            if (weightLevel === "danger") {
+                if (currentBreathing !== "breathe2") {
+                    if (currentBreathing) {
+                        sfx[currentBreathing].pause();
+                        sfx[currentBreathing].currentTime = 0;
+                    }
+                    sfx.breathe2.loop = true;
+                    sfx.breathe2.currentTime = 0;
+                    sfx.breathe2.play();
+                    currentBreathing = "breathe2";
                 }
                 return;
             }
