@@ -10046,7 +10046,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (awaitingPersuasionText) return;
 
             if (menu.isOpen()) {
-                menu.handleInput(key);
+                if (! animationActive) {
+                    menu.handleInput(key);
+                }
             } else if (key === 'escape' && !awaitingPersuasionText) {
                 menu.open('gameSettings');
             } else if (key === 'i') {

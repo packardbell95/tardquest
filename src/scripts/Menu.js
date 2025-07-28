@@ -313,9 +313,6 @@ class Menu {
     }
 
     handleInput(key) {
-        // @TODO Handle elsewhere
-        // if (animationActive) return;
-
         const activeMenu = this.getActiveMenu();
         const options = activeMenu.getOptions();
         const itemsPerPage = this.getItemsPerPage();
