@@ -13,9 +13,11 @@ class Menu {
     #currentPage = 0; // Track the current page for paginated menus
     #defaultItemsPerPage = 10;
 
+    #onOpen = null;
     #onHighlight = null;
     #onSelect = null;
     #onCancel = null;
+    #onClose = null;
 
     constructor($menu, menus) {
         if ($menu) {
@@ -59,6 +61,15 @@ class Menu {
         this.#defaultItemsPerPage = itemsPerPage;
     }
 
+    setOnOpen(onOpen) {
+        if (typeof onOpen !== "function") {
+            console.error("onOpen must be a function", { onOpen });
+            return;
+        }
+
+        this.#onOpen = onOpen;
+    }
+
     setOnHighlight(onHighlight) {
         if (typeof onHighlight !== "function") {
             console.error("onHighlight must be a function", { onHighlight });
@@ -84,6 +95,15 @@ class Menu {
         }
 
         this.#onCancel = onCancel;
+    }
+
+    setOnClose(onClose) {
+        if (typeof onClose !== "function") {
+            console.error("onClose must be a function", { onClose });
+            return;
+        }
+
+        this.#onClose = onClose;
     }
 
     initializeMenu($menu) {
@@ -127,6 +147,10 @@ class Menu {
 
         const activeMenu = this.#menus[menuName];
 
+        if (this.#breadcrumbs.length === 0) {
+            this.#onOpen?.();
+        }
+
         this.#breadcrumbs.push({
             menuName,
             selectionIndex: this.#selectionIndex,
@@ -155,6 +179,8 @@ class Menu {
         if (this.#breadcrumbs.length === 0) {
             this.#elements.$menu.classList.add('hidden');
             document.getElementById('game').classList.remove('hidden');
+
+            this.#onClose?.();
         }
 
         this.#onCancel?.();
@@ -168,6 +194,7 @@ class Menu {
         this.#elements.$menu.classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
 
+        this.#onClose?.();
         this.#onCancel?.();
     }
 
