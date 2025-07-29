@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  
+  <title>Leaderboard</title>
+  <style>
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #fff #000;
+        }
+
+        *::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #000;
+            border-radius: 0px;
+            border: 0px solid #fff;
+        }
+
+        @font-face {
+            font-family: 'DejaVuSansMono';
+            src: url('fonts/DejaVuSansMono.woff') format('woff');
+        }
+
+        * {
+            font-family: "DejaVuSansMono", monospace;
+        }
+
+    body {
+        background: #000;
+        color: #fff;
+        font-size: 10px;
+        padding: 0px;
+    }
+
+    th {
+        background: #000000;
+        color: #ffffff;
+        padding: 8px;
+        text-align: left;
+        border-bottom: 4px solid #ffffff;
+        font-size: 12px;
+    }
+    tr {
+        background: #000000;
+        color: #ffffff;
+        padding: 2px;
+        font-size: 12px;
+        border-style: solid;
+        border-width: 2px;
+        border-color: #ffffff;
+        text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <center><h1>TARDBOARD</h1></center>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>Floor</th>
+        <th>Level</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard-body">
+      <!-- Data will be inserted here -->
+    </tbody>
+  </table>
+  <script>
+    fetch('https://vocapepper.com:9601/api/leaderboard')
+      .then(response => response.json())
+      .then(data => {
+        // Sort by highest floor first, then by highest level
+        data.sort((a, b) => {
+          if (b.floor !== a.floor) return b.floor - a.floor;
+          return b.level - a.level;
+        });
+        const tbody = document.getElementById('leaderboard-body');
+        data.forEach(entry => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${entry.name}</td><td>${entry.floor}</td><td>${entry.level}</td>`;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => {
+        document.body.innerHTML += '<p>Error loading leaderboard. Your connection is probably retarded or something.</p>';
+        console.error(err);
+      });
+  </script>
+
+</body></html>
