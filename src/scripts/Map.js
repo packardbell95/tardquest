@@ -421,7 +421,6 @@ class Map {
         return exit;
     }
 
-    // This is fucking bugged, bro
     carvePath(mapSizeX, mapSizeY, exitPosition, stack) {
         const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
         const step = Math.random() < 0.5 ? -1 : 1;
@@ -524,77 +523,6 @@ class Map {
         }
 
         return dissolvePoints;
-    }
-
-    // Spawns treasure chests and mimics on the map (hey, mimics are chests too)
-    spawnTreasureChests(playerStartX, playerStartY) {
-        const chestCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 chests
-        let attempts = 0;
-
-        for (let i = 0; i < chestCount; i++) {
-            while (attempts++ < 1000) {
-                const x = Math.floor(Math.random() * this.#cells[0].length);
-                const y = Math.floor(Math.random() * this.#cells.length);
-
-                const isEmptySpace =
-                    this.#cells[y][x]?.type === 'floor' &&
-                    (y !== playerStartY || x !== playerStartX);
-
-                if (isEmptySpace) {
-                    const isMimic = Math.random() < 0.2; // 20% chance for mimic
-                    this.#cells[y][x] = this.generateCell(
-                        isMimic ? 'mimic' : 'treasureChest',
-                        { x, y }
-                    );
-                    break;
-                }
-            }
-        }
-    }
-
-    // Spawns healing tiles on the map
-    spawnHealingTiles(playerStartX, playerStartY) {
-        const healingTileCount = Math.floor(Math.random() * 6) + 1; // 1 to 6 healing tiles
-        let attempts = 0;
-
-        for (let i = 0; i < healingTileCount; i++) {
-            while (attempts++ < 1000) {
-                const x = Math.floor(Math.random() * this.#cells[0].length);
-                const y = Math.floor(Math.random() * this.#cells.length);
-
-                const isEmptySpace =
-                    this.#cells[y][x]?.type === 'floor' &&
-                    (y !== playerStartY || x !== playerStartX);
-
-                if (isEmptySpace) {
-                    this.#cells[y][x] =
-                        this.generateCell('healingTile', { x, y });
-                    break;
-                }
-            }
-        }
-    }
-
-    // Spawns cracked floors on the map
-    spawnCrackedFloors(playerStartX, playerStartY) {
-        const crackedFloorCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 cracked floors
-        let attempts = 0;
-
-        for (let i = 0; i < crackedFloorCount; i++) {
-            while (attempts++ < 1000) {
-                const x = Math.floor(Math.random() * this.#cells[0].length);
-                const y = Math.floor(Math.random() * this.#cells.length);
-
-                const isEmptySpace =
-                    this.getCell(x, y)?.type === 'floor' &&
-                    (y !== playerStartY || x !== playerStartX);
-
-                if (isEmptySpace) {
-                    this.setCell(x, y, "crackedFloorSlight", { x, y });
-                    break;
-                }
-            }
-        }
     }
 
     // Sets up the minimap element if the element has been defined
