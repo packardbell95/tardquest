@@ -460,6 +460,8 @@
         #menu .escapeMessage {
             position: absolute;
             bottom: 0;
+            width: 100%;
+            text-align: end;
         }
         /** End of Menu Styles **/
 
@@ -3890,13 +3892,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             ████░█
                             █████░
                             ██████
-                            ██░███
-                            ░░░███
-                            ░░░███
-                            ░░░███
-                            ░░░███
-                            ░░░███
-                            ░░██▀
+                            ██████
+                            ██████
+                            ████░█
+                            ██░░░█
+                            ░░░░░█
+                            ░░░░░█
+                            ░░░█▀
                             ░█▀
                             ▀
                         `,
@@ -7469,27 +7471,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             setPosition: function() {
-                let attempts = 0;
+                const points =
+                    shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
 
-                do {
-                    const x = Math.floor(Math.random() * WIDTH);
-                    const y = Math.floor(Math.random() * HEIGHT);
-
-                    const isEmptySpace =
-                        MAP.getCell(x, y)?.type === 'floor' &&
-                        (y !== player.y && x !== player.x);
-
-                    if (isEmptySpace) {
-                        MAP.setCell(x, y, "merchant");
-                        return;
-                    }
-                } while (attempts++ < 1000);
-
-                console.warn(
-                    `Unable to place the merchant after ${attempts} ` +
-                    `attempts. The merchant will be deactivated for this floor`
-                );
-                merchant.isActiveOnFloor = false;
+                if (points) {
+                    MAP.setCell(points.x, points.y, "merchant");
+                }
             },
 
             getSalePrice: function(itemType, price) {
@@ -7568,32 +7555,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return MAP.locate("gambler");
             },
             set: function() {
-                let attempts = 0;
+                const points =
+                    shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
 
-                do {
-                    const x = Math.floor(Math.random() * WIDTH);
-                    const y = Math.floor(Math.random() * HEIGHT);
-
-                    const isMerchantSpace =
-                        merchant.isActiveOnFloor &&
-                        MAP.getCell(x, y)?.type === 'merchant';
-
-                    const isEmptySpace =
-                        MAP.getCell(x, y)?.type === 'floor' &&
-                        (y !== player.y && x !== player.x) &&
-                        !isMerchantSpace;
-
-                    if (isEmptySpace) {
-                        MAP.setCell(x, y, "gambler");
-                        return;
-                    }
-                } while (attempts++ < 1000);
-
-                console.warn(
-                    `Unable to place the gambler after ${attempts} attempts. ` +
-                    `The gambler will be deactivated for this floor`
-                );
-                gambler.isActiveOnFloor = false;
+                if (points) {
+                    MAP.setCell(points.x, points.y, "gambler");
+                }
             }
         };
 
@@ -8629,20 +8596,34 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
 
+        // Taken from https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+        function shuffle(array) {
+            if (!Array.isArray(array)) {
+                console.error(
+                    "Cannot shuffle something that isn't an array",
+                    { array }
+                );
+
+                return array;
+            }
+
+            for (let i = array.length - 1; i >= 1; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
         function generateMap() {
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
 
-            /**
-             * @TODO: Finish reorganizing map generation functionality so that
-             *        these can be re-enabled
-             *
-            // 100% chance to spawn merchant on floor 1
             if (floor === 1) {
-                merchant.isActiveOnFloor = merchant.isAlive;
                 placeWelcomeBanner();
-            } else {
-                merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.35;
             }
+
+            merchant.isActiveOnFloor =
+                merchant.isAlive &&
+                (floor === 1 || Math.random() < 0.35);
 
             if (floor === 40) {
                 placeNoboWall();
@@ -8656,31 +8637,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (gambler.isActiveOnFloor) {
                 gambler.set();
             }
-            Object.keys(crackedFloorSteps).forEach(k => delete crackedFloorSteps[k]);
+
             spawnTreasureChests();
             spawnHealingTiles();
             spawnCrackedFloors();
 
-            // Generate minimap
-            const $minimap = document.getElementById('minimap');
-            $minimap.replaceChildren();
-
-            for (let y = 0; y < HEIGHT; y++) {
-                for (let x = 0; x < WIDTH; x++) {
-                    const $cell = document.createElement('span');
-                    $cell.id = MapCell.getCellId(x, y);
-                    $minimap.append($cell);
-                    // Track the minimap element in the MAP
-                    MAP[y][x].$element = $cell;
-                }
-
-                $minimap.append(document.createElement('br'));
-            }
-            */
-
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
         }
+
         function loadSettings() {
             const music = localStorage.getItem("musicEnabled");
             if (music !== null) musicEnabled = music === "true";
@@ -8705,33 +8670,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         loadSettings();
 
         function placeWelcomeBanner() {
-            if (MAP[player.y - 1][player.x]?.type === 'floor') {
+            if (MAP.getCell(player.x, player.y - 1)?.type === 'floor') {
                 // North of player
-                MAP[player.y - 1][player.x] = new MapCell(
-                    'tardspireBanner',
-                    { x: player.x, y: player.y - 1 },
-                );
+                MAP.setCell(player.x, player.y - 1, 'tardspireBanner');
                 player.dir = DIRECTIONS.indexOf('N');
-            } else if (MAP[player.y + 1][player.x]?.type === 'floor') {
+            } else if (MAP.getCell(player.x, player.y + 1)?.type === 'floor') {
                 // South of player
-                MAP[player.y + 1][player.x] = new MapCell(
-                    'tardspireBanner',
-                    { x: player.x, y: player.y + 1 }
-                );
+                MAP.setCell(player.x, player.y + 1, 'tardspireBanner');
                 player.dir = DIRECTIONS.indexOf('S');
-            } else if (MAP[player.y][player.x - 1]?.type === 'floor') {
+            } else if (MAP.getCell(player.x - 1, player.y)?.type === 'floor') {
                 // West of player
-                MAP[player.y][player.x - 1] = new MapCell(
-                    'tardspireBanner',
-                    { x: player.x - 1, y: player.y }
-                );
+                MAP.setCell(player.x - 1, player.y, 'tardspireBanner');
                 player.dir = DIRECTIONS.indexOf('W');
-            } else if (MAP[player.y][player.x + 1]?.type === 'floor') {
+            } else if (MAP.getCell(player.x + 1, player.y)?.type === 'floor') {
                 // East of player
-                MAP[player.y][player.x + 1] = new MapCell(
-                    'tardspireBanner',
-                    { x: player.x + 1, y: player.y }
-                );
+                MAP.setCell(player.x + 1, player.y, 'tardspireBanner');
                 player.dir = DIRECTIONS.indexOf('E');
             }
 
@@ -8739,92 +8692,47 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const gx = player.x - DX[player.dir];
             const gy = player.y - DY[player.dir];
 
-            if (MAP[gy][gx]?.type === 'wall') {
-                MAP[gy][gx] = new MapCell('gloryWall', { x: gx, y: gy });
+            if (MAP.getCell(gx, gy)?.type === 'wall') {
+                MAP.setCell(gx, gy, 'gloryWall');
             }
         }
 
         function placeNoboWall() {
-            const dissolvePoints = getMapDissolvePoints();
-            const index = Math.floor(Math.random() * dissolvePoints.length);
-            const dissolvePoint = dissolvePoints[index];
-            MAP[dissolvePoint.y][dissolvePoint.x] = new MapCell(
-                'noboWall',
-                { x: dissolvePoint.x, y: dissolvePoint.y }
-            );
+            const points = shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
+            if (points) {
+                MAP.setCell(points.x, points.y, "noboWall");
+            }
         }
 
         function spawnTreasureChests() {
-            const chestCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 chests
-            let attempts = 0;
+            // 1 to 4 chests
+            const chestCount = Math.floor(Math.random() * 4) + 1;
 
-            for (let i = 0; i < chestCount; i++) {
-                while (attempts++ < 1000) {
-                    const x = Math.floor(Math.random() * WIDTH);
-                    const y = Math.floor(Math.random() * HEIGHT);
-
-                    const isEmptySpace =
-                        MAP[y][x]?.type === 'floor' &&
-                        (y !== player.y || x !== player.x);
-
-                    if (isEmptySpace) {
-                        const isMimic = Math.random() < 0.2; // 20% chance for mimic
-                        MAP[y][x] = new MapCell(
-                            isMimic ? 'mimic' : 'treasureChest',
-                            { x, y }
-                        );
-                        break;
-                    }
-                }
-            }
+            shuffle(MAP.getEmptyCellCoordinates())
+                .slice(0, chestCount)
+                .forEach((c) => {
+                    // 20% chance for mimic
+                    const isMimic = Math.random() < 0.2;
+                    MAP.setCell(c.x, c.y, isMimic ? 'mimic' : 'treasureChest');
+                });
         }
 
         function spawnHealingTiles() {
-            const healingTileCount = Math.floor(Math.random() * 6) + 1; // 1 to 6 healing tiles
-            let attempts = 0;
+            // 1 to 6 healing tiles
+            const healingTileCount = Math.floor(Math.random() * 6) + 1;
 
-            for (let i = 0; i < healingTileCount; i++) {
-                while (attempts++ < 1000) {
-                    const x = Math.floor(Math.random() * WIDTH);
-                    const y = Math.floor(Math.random() * HEIGHT);
-
-                    const isEmptySpace =
-                        MAP[y][x]?.type === 'floor' &&
-                        (y !== player.y || x !== player.x);
-
-                    if (isEmptySpace) {
-                        MAP[y][x] = new MapCell(
-                            'healingTile',
-                            { x, y }
-                        );
-                        break;
-                    }
-                }
-            }
+            shuffle(MAP.getEmptyCellCoordinates())
+                .slice(0, healingTileCount)
+                .forEach((c) => MAP.setCell(c.x, c.y, "healingTile"));
         }
 
         function spawnCrackedFloors() {
-            const crackedFloorCount = Math.floor(Math.random() * 4) + 1; // 1 to 4 cracked floors
-            let attempts = 0;
+            // 1 to 4 cracked floors
+            const crackedFloorCount = Math.floor(Math.random() * 4) + 1;
 
-            for (let i = 0; i < crackedFloorCount; i++) {
-                while (attempts++ < 1000) {
-                    const x = Math.floor(Math.random() * WIDTH);
-                    const y = Math.floor(Math.random() * HEIGHT);
-
-                    const isEmptySpace =
-                        MAP[y][x]?.type === 'floor' &&
-                        (y !== player.y || x !== player.x);
-
-                    if (isEmptySpace) {
-                        MAP[y][x] = new MapCell(
-                            'crackedFloorSlight',
-                            { x, y }
-                        );
-                        break;
-                    }
-                }
-            }
+            shuffle(MAP.getEmptyCellCoordinates())
+                .slice(0, crackedFloorCount)
+                .forEach((c) => MAP.setCell(c.x, c.y, "crackedFloorSlight"));
         }
 
         function getRandomMerchantItem() {

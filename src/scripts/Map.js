@@ -55,9 +55,11 @@ class MapCell {
 
         let tile = '';
         let tileClass = '';
+        let displayName = '';
         if (!cellProperties.isExplored) {
             tile = '?';
             tileClass = 'unexplored';
+            displayName = "Unexplored";
         } else {
             // Use a visibility function if one is available
             // Otherwise, assume that the tile is visible
@@ -69,16 +71,13 @@ class MapCell {
                 tile = cellProperties.mapCharacter || '?';
                 tileClass = cellProperties.type || 'unknown';
                 tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
+                displayName = cellProperties.displayName;
             } else {
-                const emptyCell = this.generateCell();
-                tile = emptyCell.mapCharacter;
-                tileClass = emptyCell.type;
+                tile = ".";
+                tileClass = "floor";
+                displayName = "Floor";
             }
         }
-
-        const displayName = cellProperties.isExplored
-            ? cellProperties.displayName
-            : "Unexplored";
 
         this.$element.className = tileClass;
 
@@ -226,6 +225,9 @@ class Map {
         this.#cells[y][x] = this.generateCell(type, {
             // Preserve the existing element for this space
             $element: this.#cells[y][x].$element,
+            isExplored: typeof this.#cells[y][x].isExplored === "boolean"
+                ? this.#cells[y][x].isExplored
+                : true,
             x,
             y,
             ...options
@@ -254,6 +256,26 @@ class Map {
         }
 
         return null;
+    }
+
+    cellIsOccupied(x, y) {
+        return Boolean(Object.entries(this.#entities).find(
+            ([id, entity]) => entity.x === x && entity.y === y
+        ) || this.getCell(x, y)?.type !== "floor");
+    }
+
+    getEmptyCellCoordinates() {
+        const coordinates = [];
+
+        for (let y=0; y<this.#cells.length; y++) {
+            for (let x=0; x<this.#cells[y].length; x++) {
+                if (!this.cellIsOccupied(x, y)) {
+                    coordinates.push({ x, y });
+                }
+            }
+        }
+
+        return coordinates;
     }
 
     // Sets details for entities, such as the player or any wandering NPCs
@@ -366,39 +388,6 @@ class Map {
                 isExplored: false,
             }
         );
-
-        // BADNESS BELOW!!!
-
-        /*
-        // 100% chance to spawn merchant on floor 1
-        if (floor === 1) {
-            merchant.isActiveOnFloor = merchant.isAlive;
-            placeWelcomeBanner();
-        } else {
-            merchant.isActiveOnFloor = merchant.isAlive && Math.random() < 0.35;
-        }
-
-        if (floor === 40) {
-            placeNoboWall();
-        }
-
-        if (merchant.isActiveOnFloor) {
-            merchant.set();
-        }
-
-        gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
-        if (gambler.isActiveOnFloor) {
-            gambler.set();
-        }
-        Object.keys(crackedFloorSteps).forEach(k => delete crackedFloorSteps[k]);
-        */
-        /*
-        this.spawnTreasureChests(playerStartX, playerStartY);
-        this.spawnHealingTiles(playerStartX, playerStartY);
-        this.spawnCrackedFloors(playerStartX, playerStartY);
-        */
-
-        // BADNESS ABOVE!!! (PRESUMABLY!!!)
 
         this.initializeMinimap();
     }

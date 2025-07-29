@@ -181,9 +181,9 @@ class Menu {
             document.getElementById('game').classList.remove('hidden');
 
             this.#onClose?.();
+        } else {
+            this.#onCancel?.();
         }
-
-        this.#onCancel?.();
     }
 
     closeAll() {
@@ -195,7 +195,6 @@ class Menu {
         document.getElementById('game').classList.remove('hidden');
 
         this.#onClose?.();
-        this.#onCancel?.();
     }
 
     highlightOption(index) {
