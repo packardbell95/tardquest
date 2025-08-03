@@ -605,4 +605,22 @@ class Map {
             }
         }
     }
+
+    revealFOV(px, py, radius) {
+        // Reveal the player's own tile
+        this.revealSpot(px, py, 0);
+
+        for (let angle = 0; angle < 360; angle += 5) {
+            const rad = angle * Math.PI / 180;
+            let blocked = false;
+            for (let r = 1; r <= radius; r++) {
+                const tx = Math.round(px + Math.cos(rad) * r);
+                const ty = Math.round(py + Math.sin(rad) * r);
+                const cell = this.getCell(tx, ty);
+                if (!cell) break;
+                this.revealSpot(tx, ty, 0);
+                if (cell.isSolid) break;
+            }
+        }
+    }
 }
