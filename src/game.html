@@ -8743,9 +8743,32 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function updateSeenTiles() {
-             // Default reveal radius 1, 2 if Ring of Sightliness equipped
+            // Default reveal radius 1, 2 if Ring of Sightliness equipped
             const radius = player.hasEquippedRing('ringOfSightliness') ? 2 : 1;
-            MAP.revealSpot(player.x, player.y, radius);
+
+            if (player.hasEquippedRing('ringOfSightliness')) {
+                revealFOV(player.x, player.y, radius);
+            } else {
+                MAP.revealSpot(player.x, player.y, radius);
+            }
+        }
+
+        function revealFOV(px, py, radius) {
+            // Reveal the player's own tile
+            MAP.revealSpot(px, py, 0);
+
+            for (let angle = 0; angle < 360; angle += 5) {
+                const rad = angle * Math.PI / 180;
+                let blocked = false;
+                for (let r = 1; r <= radius; r++) {
+                    const tx = Math.round(px + Math.cos(rad) * r);
+                    const ty = Math.round(py + Math.sin(rad) * r);
+                    const cell = MAP.getCell(tx, ty);
+                    if (!cell) break;
+                    MAP.revealSpot(tx, ty, 0);
+                    if (cell.isSolid) break;
+                }
+            }
         }
 
         function updateBattleLog(entry) {
@@ -10202,6 +10225,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         id: "inventoryEquipment",
                         displayText: "Equipment",
                         description: "View and change your equipped weapon and armor.",
+                        className: player.inCombat ? "tooExpensive" : undefined,
+                        disabled: player.inCombat,
                     },
                     {
                         id: "_back",
@@ -10210,6 +10235,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 ],
                 select: (selectedOptionId) => {
+                    // When in battle, disable equipment submenu(s)
+                    if (selectedOptionId === "inventoryEquipment" && player.inCombat) {
+                        updateBattleLog("Your foe's deathly stare prevents you from wanting to strip down into a new set of equipment!");
+                        return;
+                    }
                     menu.open(selectedOptionId);
                 },
                 onOpen: () => {
