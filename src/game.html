@@ -8922,7 +8922,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 mapCharacter: "#",
                 isSolid: true,
                 onExplode: function (x, y) {
-                    MAP.setCell(x, y, randomEntry("rubble1", "rubble2"));
+                    MAP.setCell(x, y, randomEntry(["rubble1", "rubble2"]));
                 },
             },
             iceWall: {
@@ -8930,7 +8930,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 mapCharacter: '#',
                 isSolid: true,
                 onExplode: function (x, y) {
-                    MAP.setCell(x, y, randomEntry("rubble1", "rubble2"));
+                    MAP.setCell(x, y, randomEntry(["rubble1", "rubble2"]));
                 },
             },
             crackedFloorSlight: {
@@ -9007,7 +9007,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     player.say("Uh, no thanks. I'm not THAT brave");
                 },
                 onExplode: function (x, y) {
-                    MAP.setCell(x, y, randomEntry("rubble1", "rubble2"));
+                    MAP.setCell(x, y, randomEntry(["rubble1", "rubble2"]));
                 },
             },
             noboWall: {
@@ -9020,7 +9020,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     );
                 },
                 onExplode: function (x, y) {
-                    MAP.setCell(x, y, randomEntry("rubble1", "rubble2"));
+                    MAP.setCell(x, y, randomEntry(["rubble1", "rubble2"]));
                 },
             },
             crater: {
