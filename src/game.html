@@ -7120,6 +7120,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     ? "menu"
                     : (player.inCombat ? "combat" : "navigation");
 
+                // Update the displayed buttons based on the mode
                 document.querySelectorAll(`
                     #playerInput .section.navigation,
                     #mouseControl .navigation
@@ -7148,10 +7149,35 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         GameControl.mode !== "menu"
                     );
                 });
+
+                // Update the keyboard control display based on the mode
+                const $controlsExploration =
+                    document.getElementById("controlsExploration");
+                const $controlsCombat =
+                    document.getElementById("controlsCombat");
+                const $controlsMenu =
+                    document.getElementById("controlsMenu");
+
+                if (GameControl.mode === "menu") {
+                    $controlsMenu.classList.remove("hidden");
+                    $controlsExploration.classList.add("hidden");
+                    $controlsCombat.classList.add("hidden");
+                } else if (GameControl.mode === "combat") {
+                    if (!GameControl.awaitingPersuasionText) {
+                        $controlsCombat.classList.remove("hidden");
+                        $controlsExploration.classList.add("hidden");
+                        $controlsMenu.classList.add("hidden");
+                    }
+                } else {
+                    $controlsExploration.classList.remove("hidden");
+                    $controlsCombat.classList.add("hidden");
+                    $controlsMenu.classList.add("hidden");
+                }
             },
 
             update: () => {
                 GameControl.updateMode();
+
                 switch (GameControl.mode) {
                     case "navigation":
                         GameControl.updateNavigationControls();
@@ -9357,25 +9383,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.getMaxBrightness()
             );
 
-            const $controlsExploration = document.getElementById("controlsExploration");
-            const $controlsCombat = document.getElementById("controlsCombat");
-            const $controlsMenu = document.getElementById("controlsMenu");
-
-            if (menu.isOpen()) {
-                $controlsMenu.classList.remove("hidden");
-                $controlsExploration.classList.add("hidden");
-                $controlsCombat.classList.add("hidden");
-            } else if (player.inCombat) {
+            if (player.inCombat) {
                 output += sceneRenderer.drawEnemyLayer(currentEnemy.id) || '';
-                if (!GameControl.awaitingPersuasionText) {
-                    $controlsCombat.classList.remove("hidden");
-                    $controlsExploration.classList.add("hidden");
-                    $controlsMenu.classList.add("hidden");
-                }
-            } else {
-                $controlsExploration.classList.remove("hidden");
-                $controlsCombat.classList.add("hidden");
-                $controlsMenu.classList.add("hidden");
             }
 
             if (player.steppingOnHealingTile) {
@@ -10645,8 +10654,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         menu.setOnOpen(() => GameControl.update());
         menu.setOnPageChange(() => GameControl.update());
         menu.setOnHighlight(() => playSFX("uiOption"));
-        menu.setOnSelect(() => playSFX("uiSelect"));
-        menu.setOnCancel(() => playSFX("uiCancel"));
+        menu.setOnSelect(() => { playSFX("uiSelect"); GameControl.update(); });
+        menu.setOnCancel(() => { playSFX("uiCancel"); GameControl.update(); });
         menu.setOnClose(() => GameControl.update());
 
         menu.setMenus({
@@ -10795,9 +10804,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 ],
                 select: (selectedOptionId) => {
-                    // When in battle, disable equipment submenu(s)
+                    // When in battle, disable equipment submenus
                     if (selectedOptionId === "inventoryEquipment" && player.inCombat) {
-                        updateBattleLog("Your foe's deathly stare prevents you from wanting to strip down into a new set of equipment!");
+                        updateBattleLog(
+                            `Your foe's <span class="action">deathly ` +
+                            `stare</span> prevents you from wanting to strip ` +
+                            `down into a new set of equipment!`
+                        );
                         return;
                     }
                     menu.open(selectedOptionId);
