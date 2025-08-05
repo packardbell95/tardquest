@@ -10,10 +10,12 @@ class Menu {
     #menus = {};
     #breadcrumbs = [];
     #selectionIndex = 0;
-    #currentPage = 0; // Track the current page for paginated menus
+    #currentPage = 0;
     #defaultItemsPerPage = 10;
+    #isOpen = false;
 
     #onOpen = null;
+    #onPageChange = null;
     #onHighlight = null;
     #onSelect = null;
     #onCancel = null;
@@ -68,6 +70,15 @@ class Menu {
         }
 
         this.#onOpen = onOpen;
+    }
+
+    setOnPageChange(onPageChange) {
+        if (typeof onPageChange !== "function") {
+            console.error("onPageChange must be a function", { onPageChange });
+            return;
+        }
+
+        this.#onPageChange = onPageChange;
     }
 
     setOnHighlight(onHighlight) {
@@ -136,7 +147,7 @@ class Menu {
     }
 
     isOpen() {
-        return this.#breadcrumbs.length > 0;
+        return this.#isOpen;
     }
 
     open(menuName) {
@@ -145,11 +156,8 @@ class Menu {
             return;
         }
 
+        this.#isOpen = true;
         const activeMenu = this.#menus[menuName];
-
-        if (this.#breadcrumbs.length === 0) {
-            this.#onOpen?.();
-        }
 
         this.#breadcrumbs.push({
             menuName,
@@ -160,10 +168,12 @@ class Menu {
         this.#selectionIndex = 0; // Reset selection index
         this.#currentPage = 0; // Reset to the first page
 
+        // @TODO Adjust selectors
         document.getElementById('game').classList.add('hidden');
         this.#elements.$menu.classList.remove('hidden');
         this.#elements.$selectionDescription.textContent = '';
 
+        this.#onOpen?.();
         activeMenu.onOpen?.();
         this.render();
     }
@@ -179,6 +189,7 @@ class Menu {
         if (this.#breadcrumbs.length === 0) {
             this.#elements.$menu.classList.add('hidden');
             document.getElementById('game').classList.remove('hidden');
+            this.#isOpen = false;
 
             this.#onClose?.();
         } else {
@@ -194,6 +205,7 @@ class Menu {
         this.#elements.$menu.classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
 
+        this.#isOpen = false;
         this.#onClose?.();
     }
 
@@ -210,6 +222,30 @@ class Menu {
             : this.#defaultItemsPerPage;
     }
 
+    getTotalPages() {
+        const optionsLength = this.getActiveMenu()?.getOptions()?.length || 0;
+        return Math.ceil(optionsLength / this.getItemsPerPage());
+    }
+
+    getPagination() {
+        const options = this.getActiveMenu()?.getOptions();
+        const itemsPerPage = this.getItemsPerPage();
+        const totalPages = this.getTotalPages();
+        const itemsOnCurrentPage = (this.#currentPage + 1) >= totalPages
+            ? ((options.length % itemsPerPage) || itemsPerPage)
+            : itemsPerPage;
+
+        return {
+            itemsPerPage,
+            itemsOnCurrentPage,
+            currentPage: this.#currentPage,
+            totalPages,
+            index: this.#currentPage * itemsPerPage,
+            hasNextPage: this.#currentPage < totalPages - 1,
+            hasPreviousPage: this.#currentPage > 0,
+        };
+    }
+
     render() {
         const activeMenu = this.getActiveMenu();
         if (typeof activeMenu === 'undefined') {
@@ -219,7 +255,7 @@ class Menu {
         const options = activeMenu.getOptions();
 
         const itemsPerPage = this.getItemsPerPage();
-        const totalPages = Math.ceil(options.length / itemsPerPage); // Calculate total pages
+        const totalPages = this.getTotalPages();
         const startIndex = this.#currentPage * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedOptions = options.slice(startIndex, endIndex);
@@ -311,58 +347,67 @@ class Menu {
         };
     }
 
-    handleInput(key) {
-        const activeMenu = this.getActiveMenu();
-        const options = activeMenu.getOptions();
-        const itemsPerPage = this.getItemsPerPage();
-        const totalPages = Math.ceil(options.length / itemsPerPage);
-        const itemsOnCurrentPage = (this.#currentPage + 1) >= totalPages
-            ? ((options.length % itemsPerPage) || itemsPerPage)
-            : itemsPerPage;
+    selectPreviousItem() {
+        this.setSelection(
+            this.#selectionIndex <= 0
+                ? this.getPagination().itemsOnCurrentPage - 1
+                : this.#selectionIndex - 1
+        );
+    }
 
+    selectNextItem() {
+        this.setSelection(
+            this.#selectionIndex >= this.getPagination().itemsOnCurrentPage - 1
+                ? 0
+                : this.#selectionIndex + 1
+        );
+    }
+
+    previousPage() {
+        if (this.#currentPage > 0) {
+            this.#currentPage--;
+            this.#selectionIndex = 0; // Reset selection index on page change
+            this.render();
+            this.#onPageChange?.();
+            this.#onHighlight?.();
+        }
+    }
+
+    nextPage() {
+        if (this.#currentPage < this.getPagination().totalPages - 1) {
+            this.#currentPage++;
+            this.#selectionIndex = 0; // Reset selection index on page change
+            this.render();
+            this.#onPageChange?.();
+            this.#onHighlight?.();
+        }
+    }
+
+    handleInput(key) {
         switch (key) {
             case 'escape':
                 this.goToPreviousMenu();
                 break;
             case 'w':
             case 'arrowup':
-                this.setSelection(
-                    this.#selectionIndex <= 0
-                        ? itemsOnCurrentPage - 1
-                        : this.#selectionIndex - 1
-                );
+                this.selectPreviousItem();
                 break;
             case 's':
             case 'arrowdown':
-                this.setSelection(
-                    this.#selectionIndex >= itemsOnCurrentPage - 1
-                        ? 0
-                        : this.#selectionIndex + 1
-                );
+                this.selectNextItem();
                 break;
             case 'a':
             case 'arrowleft':
-                if (this.#currentPage > 0) {
-                    this.#currentPage--;
-                    this.#selectionIndex = 0; // Reset selection index on page change
-                    this.render();
-                    this.#onHighlight?.();
-                }
+                this.previousPage();
                 break;
             case 'd':
             case 'arrowright':
-                if (this.#currentPage < totalPages - 1) {
-                    this.#currentPage++;
-                    this.#selectionIndex = 0; // Reset selection index on page change
-                    this.render();
-                    this.#onHighlight?.();
-                }
+                this.nextPage();
                 break;
             case ' ':
             case 'e':
             case 'enter': {
-                this.select(this.#selectionIndex);
-                this.render();
+                this.select();
                 break;
             }
         }
@@ -384,8 +429,11 @@ class Menu {
     }
 
     select(index) {
+        const selectedIndex = typeof index === "undefined"
+            ? this.#selectionIndex
+            : parseInt(index, 10);
         const activeMenu = this.getActiveMenu();
-        const key = this.#currentPage * this.getItemsPerPage() + index;
+        const key = this.#currentPage * this.getItemsPerPage() + selectedIndex;
         const selectedOptionId = activeMenu.getOptions()?.[key]?.id;
         if (selectedOptionId === '_back') {
             this.close();
