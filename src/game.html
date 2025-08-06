@@ -623,17 +623,6 @@
             filter: brightness(.6) saturate(.6);
         }
 
-        @keyframes textReveal {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-        #battleLog > div.revealing {
-            overflow: hidden;
-            white-space: nowrap;
-            width: 0;
-            animation: textReveal var(--reveal-duration, 1s) steps(var(--char-count, 50), end) forwards;
-        }
-
         #minimap,
         #portraitArtOverlay {
             padding: 2px;
@@ -9420,39 +9409,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             document.getElementById("battleLog").prepend(line);
         }
 
-        let textRevealSpeed = 30; // milliseconds per character (adjustable)
-        let isRevealingText = false;
-
-        function updateBattleLogWithReveal(entry, callback) {
-            if (!player.inCombat) {
-                // No combat = display text immediately
-                updateBattleLog(entry);
-                if (callback) callback();
-                return;
-            }
-
-            isRevealingText = true;
-            const line = document.createElement('div');
-            line.innerHTML = entry;
-            const textContent = line.textContent || line.innerText || '';
-            const charCount = textContent.length;
-            const duration = (charCount * textRevealSpeed) / 1000; // Convert to seconds
-
-            line.style.setProperty('--char-count', charCount);
-            line.style.setProperty('--reveal-duration', `${duration}s`);
-            line.classList.add('revealing');
-            
-            document.getElementById("battleLog").prepend(line);
-            
-            setTimeout(() => {
-                line.classList.remove('revealing');
-                line.style.removeProperty('--char-count');
-                line.style.removeProperty('--reveal-duration');
-                isRevealingText = false;
-                if (callback) callback();
-            }, duration * 1000);
-        }
-
         function playSFX(name) {
             if (!sfxEnabled) return;
             if (!sfx[name]) {
@@ -9864,38 +9820,36 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
 
         function playerAttack() {
-            if (!player.inCombat || GameControl.awaitingPersuasionText || isRevealingText) {
+            if (!player.inCombat || GameControl.awaitingPersuasionText) {
                 return;
             }
 
             playSFX('attack');
             const playerWeapon = weapons[player.weapon];
             let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
+
             dmg += player.strength;
 
-            const critChance = getEffectiveStat('luck') * 0.01;
+            // Crit attacks based off LUK stat
+            const critChance = getEffectiveStat('luck') * 0.01; // +0.1% chance per point
             let isCrit = Math.random() < critChance;
-            
-            let attackMessage;
             if (isCrit) {
                 dmg = Math.floor(dmg * 1.2);
-                attackMessage = 
+                updateBattleLog(
                     `<span class="LUK">CRITICAL HIT!</span> ` +
                     `<span class="friendly">You</span> dealt ` +
                     `<span class="action">${dmg} HP</span> ` +
-                    `to <span class="enemy">${currentEnemy.name}</span>`;
+                    `to <span class="enemy">${currentEnemy.name}</span>`
+                );
             } else {
-                attackMessage = 
+                updateBattleLog(
                     `<span class="friendly">You</span> deal ` +
                     `<span class="action">${dmg} HP</span> ` +
-                    `to <span class="enemy">${currentEnemy.name}</span>`;
+                    `to <span class="enemy">${currentEnemy.name}</span>`
+                );
             }
-            
             currentEnemy.hp -= dmg;
-            // Text reveal effect
-            updateBattleLogWithReveal(attackMessage, () => {
-                setTimeout(() => endOfPlayerTurn(), 300); // Small delay after text finishes
-            });
+            endOfPlayerTurn();
         }
 
         function endOfPlayerTurn() {
@@ -10001,28 +9955,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
 
         function tryRun() {
-            if (!player.inCombat || GameControl.awaitingPersuasionText || isRevealingText) {
+            if (!player.inCombat || GameControl.awaitingPersuasionText) {
                 return;
             }
 
             playSFX('run');
             if (Math.random() < 0.5) {
-                const runMessage = "Gee willikers, I'm outta here!";
-                updateBattleLogWithReveal(`<span class="player">&lt;YOU&gt;</span> "${runMessage}"`, () => {
-                    player.leaveCombat();
-                    render();
-                });
+                player.say("Gee willikers, I'm outta here!");
+                player.leaveCombat();
             } else {
-                updateBattleLogWithReveal("Couldn't escape!", () => {
-                    setTimeout(() => enemyAttack(), 300);
-                });
+                updateBattleLog("Couldn't escape!");
+                enemyAttack();
             }
+            render();
         }
 
         function tryPersuade(e) {
-            if (isRevealingText) {
-                return;
-            }
             e?.preventDefault();
             playSFX('persuade');
             GameControl.openPersuasionInputBox();
@@ -10062,9 +10010,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 // Check limit FIRST
                 if (persuasionAttempts > maxPersuasionAttempts) {
-                    updateBattleLogWithReveal(`Your words are no longer being heard... <span class="action">you have run out of persuasion attempts.</span>`, () => {
-                        setTimeout(() => enemyAttack(), 300);
-                    });
+                    updateBattleLog(`Your words are no longer being heard... <span class="action">you have run out of persuasion attempts.</span>`);
+                    enemyAttack();
                     render();
                     return;
                 }
@@ -10073,61 +10020,60 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     "You're about as ugly as homemade soup!",
                     "Don't you DARE take the name of Texas in vain",
                     "You may be stupid, but you're also dumb",
-                    "Join me, and together we can rule the TardSpire as father and son!",
+                    "Join me, and together we can rule the TardSpire as " +
+                        "father and son!",
                     "Cake or death?!",
-                    "Your mother was a hamster and your father smelt of elderberries!",
+                    "Your mother was a hamster and your father smelt of " +
+                        "elderberries!",
                 ]);
 
-                const playerSpeakMessage = `<span class="player">&lt;YOU&gt;</span> "${playerMessage}"`;
-                
-                updateBattleLogWithReveal(playerSpeakMessage, () => {
-                    const prsStat = Math.min(getEffectiveStat('persuasion'), 100);
-                    const totalChance = prsStat / 100;
+                player.say(playerMessage);
 
-                    if (Math.random() < totalChance) {
-                        let successMessage;
-                        if (!player.party.isFull()) {
-                            const enemy = enemies.find((e) => e.id === currentEnemy.id);
-                            if (!enemy) {
-                                console.error('Could not find enemy by id', { currentEnemy });
-                                return;
-                            }
+                const prsStat = Math.min(getEffectiveStat('persuasion'), 100);
+                const totalChance = prsStat / 100; // Chances cap out at 100%. So a stat of 12 would be 12% chance at success, etc
 
-                            const enemyHp = Math.max(Math.floor(currentEnemy.hp / 2), 1);
-                            const floorBoost = Math.floor(floor / 2);
-                            const maxEnemyHp = Math.max(Math.floor((enemy.hp + (floorBoost * 7)) / 2), 1);
-
-                            player.party.add(currentEnemy.id, currentEnemy.name, enemyHp, maxEnemyHp);
-                            successMessage = `<span class="friendly">${currentEnemy.name}</span> is now following your trail of sweat.`;
-                        } else {
-                            successMessage = `<span class="enemy">${currentEnemy.name}</span> was <span class="friendly">spared</span> and went back home...`;
+                if (Math.random() < totalChance) {
+                    if (!player.party.isFull()) {
+                        const enemy = enemies.find((e) => e.id === currentEnemy.id);
+                        if (!enemy) {
+                            console.error('Could not find enemy by id', {
+                                currentEnemy,
+                            });
+                            return;
                         }
-                        
-                        updateBattleLogWithReveal(successMessage, () => {
-                            player.leaveCombat();
-                            render();
-                        });
+
+                        const enemyHp = Math.max(Math.floor(currentEnemy.hp / 2), 1);
+                        // Scale every two floors
+                        // @see startEncounter() for the origin of this logic
+                        const floorBoost = Math.floor(floor / 2);
+                        const maxEnemyHp = Math.max(Math.floor((enemy.hp + (floorBoost * 7)) / 2), 1);
+
+                        player.party.add(
+                            currentEnemy.id,
+                            currentEnemy.name,
+                            enemyHp,
+                            maxEnemyHp
+                        );
+                        updateBattleLog(`<span class="friendly">${currentEnemy.name}</span> is now following your trail of sweat.`);
                     } else {
-                        let failMessage = `<span class="enemy">${currentEnemy.name}</span> really, quite genuinely, does not care...`;
-                        
-                        // If this was the last attempt, show a message
-                        if (persuasionAttempts >= maxPersuasionAttempts) {
-                            failMessage += `\n<span class="action">You've used your last persuasion attempt for this fight..</span>`;
-                        }
-                        
-                        updateBattleLogWithReveal(failMessage, () => {
-                            setTimeout(() => enemyAttack(), 300);
-                        });
+                        updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> was <span class="friendly">spared</span> and went back home...`);
                     }
-                    render();
-                });
+                    player.leaveCombat();
+                } else {
+                    updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> really, quite genuinely, does not care...`);
+                    // If this was the last attempt, show a message
+                    if (persuasionAttempts >= maxPersuasionAttempts) {
+                        updateBattleLog(`<span class="action">You've used your last persuasion attempt for this fight..</span>`);
+                    }
+                    enemyAttack();
+                }
+                render();
                 return;
             }
 
             // ======== Speaking Outside Combat ========
             if (speakingOutsideCombat) {
-                const speakMessage = `<span class="player">&lt;YOU&gt;</span> "${message}"`;
-                updateBattleLog(speakMessage); // Keep this as regular log since it's outside combat
+                player.say(message);
                 speakingOutsideCombat = false;
 
                 if (player.party.get().length > 0 && message.trim()) {
