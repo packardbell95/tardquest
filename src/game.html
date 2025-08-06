@@ -8864,17 +8864,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         const music = {
             titleTrack: 
-                new Audio("audio/title.wav"), // Title screen
+                new Audio("audio/title.wav"), // Title screen (Title - Xx_TheMilkMan69_xX)
             explorationTracks: [
-                new Audio("audio/explore.mp3"),
+                new Audio("audio/explore.mp3"), // Into the Tardspire - Xx_TheMilkMan69_xX
                 new Audio("audio/metalspoons.mp3"), // Metal Spoons - endless_self
                 new Audio("audio/tardedwarrior.mp3"), // Tarded Warrior - endless_self
             ],
             battleTracks: [
-                new Audio("audio/battle1.mp3"), // battle1
-                new Audio("audio/battle2.mp3"), // battle2
-                new Audio("audio/battle3.mp3"), // battle3
+                new Audio("audio/battle1.mp3"), // battle1 (Tardus Membrane - Xx_TheMilkMan69_xX)
+                new Audio("audio/battle2.mp3"), // battle2 (A Dangerous Game of Tag - Xx_TheMilkMan69_xX)
+                new Audio("audio/battle3.mp3"), // battle3 (Eek! A Cunt! - Xx_TheMilkMan69_xX)
             ],
+            merchantTrack: 
+                new Audio("audio/merchant.mp3"), // Merchant (Welcome to SlobMart! - Xx_TheMilkMan69_xX)
         };
 
         music.explorationTracks.forEach(track => track.loop = true);
@@ -8929,6 +8931,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
+        }
+
+        function playMerchantMusic() {
+            stopAllMusic();
+            if (!musicEnabled) return;
+            currentMusic = music.merchantTrack;
+            currentMusic.loop = true;
+            currentMusic.play();
+        }
+
+        function stopMerchantMusic() {
+            if (currentMusic === music.merchantTrack) {
+                currentMusic.pause();
+                currentMusic.currentTime = 0;
+                currentMusic = null;
+            }
         }
 
         let currentMusic = null;
@@ -9107,6 +9125,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayName: "Merchant",
                 mapCharacter: "M",
                 onEnter: function() {
+                    playMerchantMusic();
                     menu.open('merchant');
                 },
                 isVisible: function() {
@@ -11192,6 +11211,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onClose: () => {
                     merchant.say('Thank you. Come again!');
                     Portrait.hide();
+                    stopMerchantMusic();
+                    if (musicEnabled) {
+                        currentExplorationTrack
+                            ? resumeExplorationMusic()
+                            : playRandomExplorationMusic();
+                    }
                 },
                 landingHtml: () => {
                     return player.bitcoins > 0
