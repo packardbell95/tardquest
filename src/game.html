@@ -305,6 +305,26 @@
             color: #fff;
         }
 
+        .layer.enemy {
+            position: absolute !important;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .layer.enemy pre {
+            margin: 0;
+            line-height: 1;
+            display: inline-block;
+            white-space: pre;
+            font-size: 12px;
+            transform: scale(0.5);
+            transform-origin: center center;
+            color: #fff;
+        }
+
         @keyframes layerHealingAnimation {
             from { transform: translateY(0); }
             to { transform: translateY(-100%) };
@@ -332,9 +352,9 @@
 
         #game .layer,
         #game span {
-            display: inline-block !important;
-            font-size: 12px !important;
-            line-height: 12px !important;
+            display: inline-block;
+            font-size: 12px;
+            line-height: 12px;
         }
 
         #animTorch {
@@ -350,6 +370,23 @@
 
         #animTorch.onscreen {
             transform: translate(0, 0);
+        }
+
+        #animTrombone {
+            position: absolute;
+            background-repeat: no-repeat;
+            width: 300px;
+            height: 300px;
+            image-rendering: pixelated;
+            left: 0;
+            bottom: 0;
+            background-image: url(assets/fp-anim/fp-trombone.gif);
+            transform: translate(250px, 356px);
+            transition: transform .5s steps(8, jump-end);
+        }
+
+        #animTrombone.onscreen {
+            transform: translate(200px, 100px);
         }
 
         #viewport #mouseControl {
@@ -429,9 +466,7 @@
         }
 
         #menu .title {
-            margin: 0 auto 1em;
-            text-transform: uppercase;
-            letter-spacing: 1ch;
+            display: none !important;
         }
 
         #menu .list {
@@ -1583,6 +1618,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             <div id="game" class="render"></div>
             <div id="animation" class="hidden"></div>
             <div id="animTorch" class="offscreen"></div>
+            <div id="animTrombone" class="offscreen"></div>
             <div id="menu"></div>
             <div id="mouseControl">
                 <div class="navigation">
@@ -7042,8 +7078,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 // Trim any whitespace from the template literal
                 const formattedArt = art.data.replace(/^ *\n|\n *$/g, '');
                 const lines = formattedArt.split("\n");
-                const shortestLeadingWhitespace = Math.min(...lines.map((line) => line.match(/^ +/)[0].length));
-                const trimmedArt = lines.map((line) => line.substr(shortestLeadingWhitespace)).join("\n");
+                // Safely handle lines with no leading spaces
+                const shortestLeadingWhitespace = Math.min(
+                    ...lines
+                        .filter(line => line.trim().length > 0)
+                        .map(line => {
+                            const match = line.match(/^ +/);
+                            return match ? match[0].length : 0;
+                        })
+                );
+                const trimmedArt = lines.map(line => line.substr(shortestLeadingWhitespace)).join("\n");
 
                 return (
                     typeof art.spaceBoundaryCharacter !== 'undefined'
@@ -7059,31 +7103,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return null;
                 }
 
-                const art = sceneRenderer.formatArt(indexedArt);
-                let xPosition = indexedArt.drawAt.x;
-                let yPosition = indexedArt.drawAt.y;
+                let art = sceneRenderer.formatArt(indexedArt);
 
-                let enemyLayer = Array.from({ length: sceneRenderer.displayHeight }, () =>
-                    Array.from({ length: sceneRenderer.displayWidth }, () => ' ')
-                );
-
-                for (character of art) {
-                    if (character === "\n") {
-                        xPosition = indexedArt.drawAt.x;
-                        yPosition++;
-                        continue;
-                    }
-
-                    // Draw only if in bounds
-                    if (typeof enemyLayer[yPosition]?.[xPosition] !== 'undefined') {
-                        enemyLayer[yPosition][xPosition] = `<span>${character}</span>`;
-                    }
-
-                    xPosition++;
+                // Apply horizontal offset if specified
+                if (indexedArt.offsetX) {
+                    art = art
+                        .split('\n')
+                        .map(line => ' '.repeat(indexedArt.offsetX) + line)
+                        .join('\n');
                 }
 
-                const joinedArt = enemyLayer.map(row => row.join('')).join('\n');
-                return `<div class="layer enemy">${joinedArt}</div>`;
+                // Apply vertical offset if specified
+                if (indexedArt.offsetY) {
+                    art = '\n'.repeat(indexedArt.offsetY) + art;
+                }
+
+                return `<div class="layer enemy">
+                    <pre>${art}</pre>
+                </div>`;
             },
 
             drawHealingLayer: () => '<div class="layer healing"></div>',
@@ -8449,8 +8486,25 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 name: "TROM-BONE",
                 description: "A trom-BONE. It sounds like a trombone, looks like a trombone, but is somehow... on the bonier side of things. +1.3 LOAD",
                 use: () => {
-                    playSFX('tromBone');
-                        updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
+                    stopAllMusic();
+                    tromboneIsPlaying = true;
+                    tromboneResumeType = player.inCombat ? "battle" : "exploration";
+                    animTromboneStart();
+                    sfx.tromBone.currentTime = 0;
+                    sfx.tromBone.play();
+                    sfx.tromBone.onended = () => {
+                        tromboneIsPlaying = false;
+                        animTromboneEnd();
+                        if (musicEnabled) {
+                            if (player.inCombat && tromboneResumeType === "battle") {
+                                playRandomBattleMusic();
+                            } else {
+                                resumeExplorationMusic();
+                            }
+                        }
+                        tromboneResumeType = null;
+                    };
+                    updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
                 },
                 merchantStockChance: 1.0,
                 weight: 1.3,
@@ -8854,7 +8908,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!musicEnabled) {
                 return;
             }
-
             currentExplorationTrack = randomEntry(music.explorationTracks);
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
@@ -8865,7 +8918,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!musicEnabled) {
                 return;
             }
-
             currentMusic = randomEntry(music.battleTracks);
             currentMusic.play();
         }
@@ -8875,7 +8927,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!musicEnabled || !currentExplorationTrack) {
                 return;
             }
-
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
         }
@@ -8904,15 +8955,29 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onEnter: function (x, y) {
                     player.steppingOnHealingTile = true;
 
-                    // Heal 30% of effective max HP
+                    // Heal player
                     const healAmount = Math.ceil(getEffectiveStat('maxHp') * 0.3);
                     player.heal(healAmount);
-                    updateBattleLog(
+
+                    // Heal party
+                    let healedAllies = [];
+                    player.party.members.forEach(member => {
+                        if (member.hp > 0) {
+                            const allyHeal = Math.ceil(member.maxHp * 0.1);
+                            member.hp = Math.min(member.maxHp, member.hp + allyHeal);
+                            healedAllies.push(`<span class="friendly">${member.name}</span> <span class="healingTile">+${allyHeal} HP</span>`);
+                        }
+                    });
+
+                    let logMsg =
                         `An oddly colored, perfectly square floor ` +
                         `tile <span class="friendly">heals you for ` +
-                        `<span class="healingTile">${healAmount} HP ` +
-                        `</span></span>`
-                    );
+                        `<span class="healingTile">${healAmount} HP</span></span>`;
+                    if (healedAllies.length) {
+                        logMsg += `<br>Some of that magic was also shared with your party: ${healedAllies.join(', ')}`;
+                    }
+
+                    updateBattleLog(logMsg);
 
                     MAP.setCell(x, y);
                 },
@@ -9354,6 +9419,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             sfx[name].play();
         }
 
+        function updateViewportHeader() {
+            const $viewportHeader = document.querySelector('#viewport .ui-header');
+            if (!$viewportHeader) return;
+
+            if (menu.isOpen()) {
+                const currentMenuData = menu.getCurrentMenuData();
+                const menuTitle = typeof currentMenuData?.title === 'function' 
+                    ? currentMenuData.title() 
+                    : currentMenuData?.title || 'MENU';
+                $viewportHeader.innerHTML = `<span class="space-between">${menuTitle}</span>`;
+            } else {
+                $viewportHeader.innerHTML = '<span class="space-between">Viewport</span>';
+            }
+        }
+
         function render() {
             MAP.setEntities({
                 player: {
@@ -9515,6 +9595,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             player.isHoldingTorch = false;
             setTorchOverlayVisibility();
             document.getElementById('game').classList.remove('torch');
+        }
+
+        function animTromboneStart() {
+            const $trombone = document.getElementById('animTrombone');
+            $trombone.classList.add('onscreen');
+        }
+
+        function animTromboneEnd() {
+            const $trombone = document.getElementById('animTrombone');
+            $trombone.classList.remove('onscreen');
         }
 
         function shakeScreen() {
@@ -10651,12 +10741,26 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         const menu = new Menu();
         menu.setMenuElement(document.getElementById("menu"));
         menu.setDefaultItemsPerPage(8);
-        menu.setOnOpen(() => GameControl.update());
+        menu.setOnOpen(() => {
+            GameControl.update();
+            updateViewportHeader();
+        });
         menu.setOnPageChange(() => GameControl.update());
         menu.setOnHighlight(() => playSFX("uiOption"));
-        menu.setOnSelect(() => { playSFX("uiSelect"); GameControl.update(); });
-        menu.setOnCancel(() => { playSFX("uiCancel"); GameControl.update(); });
-        menu.setOnClose(() => GameControl.update());
+        menu.setOnSelect(() => { 
+            playSFX("uiSelect"); 
+            GameControl.update(); 
+            updateViewportHeader();
+        });
+        menu.setOnCancel(() => { 
+            playSFX("uiCancel"); 
+            GameControl.update(); 
+            updateViewportHeader();
+        });
+        menu.setOnClose(() => {
+            GameControl.update(); 
+            updateViewportHeader();
+        });
 
         menu.setMenus({
             gameSettings: {
@@ -10823,7 +10927,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             inventoryItems: {
-                title: "ITEMS",
+                title: "INVENTORY > ITEMS",
                 landingHtml: () => {
                     return isEmpty(player.inventory)
                         ? 'You own nothing. Klaus Schwab would be proud'
@@ -10857,7 +10961,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             inventoryEquipment: {
-                title: "EQUIPMENT",
+                title: "INVENTORY > EQUIPMENT",
                 getOptions: () => {
                     const weapon = weapons[player.weapon];
                     const armorPiece = armor[player.armor];
@@ -10891,12 +10995,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             equipHand: {
-                title: "EQUIP WEAPON",
+                title: "INVENTORY > EQUIPMENT > EQUIP WEAPON",
                 getOptions: () => {
                     const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
                     return ownedWeapons.map((weaponId) => {
                         const req = weapons[weaponId].requiredStr || 0;
                         const meetsReq = player.strength >= req;
+                        const reqStrHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">STR ${req}</span>`;
                         return {
                             id: weaponId,
                             displayText: weapons[weaponId].name + (player.weapon === weaponId ? " (Equipped)" : ""),
@@ -10905,7 +11010,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                 `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
                                 `LOAD: ${weapons[weaponId].weight}\n` +
-                                `Requires STR: ${req}`,
+                                `Stat Requirement: ${reqStrHtml}`,
                             className: !meetsReq ? "tooExpensive" : (player.weapon === weaponId ? "friendly" : undefined),
                             disabled: !meetsReq,
                         };
@@ -10931,12 +11036,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             equipBody: {
-                title: "EQUIP ARMOR",
+                title: "INVENTORY > EQUIPMENT > EQUIP ARMOR",
                 getOptions: () => {
                     const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
                     return ownedArmor.map((armorId) => {
                         const req = armor[armorId].requiredEnd || 0;
                         const meetsReq = player.endurance >= req;
+                        const reqEndHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">END ${req}</span>`;
                         return {
                             id: armorId,
                             displayText: armor[armorId].name + (player.armor === armorId ? " (Equipped)" : ""),
@@ -10944,7 +11050,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `${armor[armorId].description}\n` +
                                 `Defense: ${armor[armorId].defense}\n` +
                                 `LOAD: ${armor[armorId].weight}\n` +
-                                `Requires END: ${req}`,
+                                `Stat Requirement: ${reqEndHtml}`,
                             className: !meetsReq ? "tooExpensive" : (player.armor === armorId ? "friendly" : undefined),
                             disabled: !meetsReq,
                         };
@@ -10975,20 +11081,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             equipRings: {
-                title: "EQUIP RINGS",
+                title: "INVENTORY > EQUIPMENT > EQUIP RINGS",
                 getOptions: () => {
                     return [
                         {
                             id: "ring1",
                             displayText: `Slot 1: ${player.ring1 ? rings[player.ring1].name + " (Equipped)" : "None"}`,
                             description: "Equip a ring to Slot 1.",
-                            className: "friendly"
                         },
                         {
                             id: "ring2",
                             displayText: `Slot 2: ${player.ring2 ? rings[player.ring2].name + " (Equipped)" : "None"}`,
                             description: "Equip a ring to Slot 2.",
-                            className: "friendly"
                         },
                         {
                             id: "_back",
@@ -11012,7 +11116,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             ring1Select: {
-                title: "EQUIP RING 1",
+                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > SLOT 1",
                 getOptions: () => {
                     const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
                     const options = ownedRings.map((ringId) => ({
@@ -11046,7 +11150,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             ring2Select: {
-                title: "EQUIP RING 2",
+                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > SLOT 2",
                 getOptions: () => {
                     const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
                     const options = ownedRings.map((ringId) => ({
@@ -11133,7 +11237,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             merchantItems: {
-                title: "MERCHANT",
+                title: "MERCHANT > ITEMS",
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
@@ -11162,7 +11266,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             merchantWeapons: {
-                title: "MERCHANT",
+                title: "MERCHANT > WEAPONS",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
                         ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
@@ -11182,6 +11286,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const tooExpensive = weapons[weaponId].price > player.bitcoins;
                         const alreadyOwned = player.inventory[weaponId] > 0 || player.weapon === weaponId;
                         const reqStr = weapons[weaponId].requiredStr || 0;
+                        const meetsReq = player.strength >= reqStr;
+                        const reqStrHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">STR ${reqStr}</span>`;
                         return {
                             id: weaponId,
                             displayText: weapons[weaponId].name,
@@ -11190,7 +11296,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `Base Damage: ${weapons[weaponId].damage.base}, ` +
                                 `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
                                 `LOAD: ${weapons[weaponId].weight}\n` +
-                                `Stat Requirement: STR ${reqStr}`,
+                                `Stat Requirement: ${reqStrHtml}`,
                             trailText: `${weapons[weaponId].price} BTC`,
                             disabled: tooExpensive || alreadyOwned,
                             className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
@@ -11210,7 +11316,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             merchantArmor: {
-                title: "MERCHANT",
+                title: "MERCHANT > ARMOR",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
                         ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
@@ -11230,6 +11336,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const tooExpensive = armor[armorId].price > player.bitcoins;
                         const alreadyOwned = player.inventory[armorId] > 0 || player.armor === armorId;
                         const reqEnd = armor[armorId].requiredEnd || 0;
+                        const meetsReq = player.endurance >= reqEnd;
+                        const reqEndHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">END ${reqEnd}</span>`;
                         return {
                             id: armorId,
                             displayText: armor[armorId].name,
@@ -11237,7 +11345,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `${armor[armorId].description}\n` +
                                 `Defense: ${armor[armorId].defense}\n` +
                                 `LOAD: ${armor[armorId].weight}\n` +
-                                `Stat Requirement: END ${reqEnd}`,
+                                `Stat Requirement: ${reqEndHtml}`,
                             trailText: `${armor[armorId].price} BTC`,
                             disabled: tooExpensive || alreadyOwned,
                             className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
@@ -11257,7 +11365,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
             },
             merchantRings: {
-                title: "RINGS",
+                title: "MERCHANT > RINGS",
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
@@ -11294,7 +11402,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             merchantSell: {
-                title: "SELL",
+                title: "MERCHANT > SELL",
                 landingHtml: () => {
                     return `Sell your unwanted inventory for a small sum.\n\nYou have <span class="BTC">${player.bitcoins} BTC</span> in your wallet.`;
                 },
@@ -11304,7 +11412,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         .map(weaponId => ({
                             id: `sell_weapon_${weaponId}`,
                             displayText: `[W] ${weapons[weaponId].name}`,
-                            description: `Sell for ${Math.max(1, Math.floor(weapons[weaponId].price / 10))} BTC`,
+                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(weapons[weaponId].price / 10))}</span>`,
                             trailText: `${player.inventory[weaponId]}`,
                             disabled: player.weapon === weaponId,
                             className: player.weapon === weaponId ? "muted" : undefined,
@@ -11314,7 +11422,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         .map(armorId => ({
                             id: `sell_armor_${armorId}`,
                             displayText: `[A] ${armor[armorId].name}`,
-                            description: `Sell for ${Math.max(1, Math.floor(armor[armorId].price / 10))} BTC`,
+                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(armor[armorId].price / 10))}</span>`,
                             trailText: `${player.inventory[armorId]}`,
                             disabled: player.armor === armorId,
                             className: player.armor === armorId ? "muted" : undefined,
@@ -11324,7 +11432,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         .map(itemId => ({
                             id: `sell_item_${itemId}`,
                             displayText: `[I] ${items[itemId].name}`,
-                            description: `Sell for ${Math.max(1, Math.floor(items[itemId].price / 5))} BTC`,
+                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(items[itemId].price / 5))}</span>`,
                             trailText: `${player.inventory[itemId]}`,
                             disabled: false,
                             className: undefined,
@@ -11334,7 +11442,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         .map(ringId => ({
                             id: `sell_ring_${ringId}`,
                             displayText: `[R] ${rings[ringId].name}`,
-                            description: `Sell for ${Math.max(1, Math.floor(rings[ringId].price / 5))} BTC`,
+                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(rings[ringId].price / 5))}</span>`,
                             trailText: `${player.inventory[ringId]}`,
                             disabled: player.ring1 === ringId || player.ring2 === ringId,
                             className: (player.ring1 === ringId || player.ring2 === ringId) ? "muted" : undefined,

@@ -142,6 +142,15 @@ class Menu {
         );
     }
 
+    getCurrentMenuId() {
+        return this.#breadcrumbs.at(-1)?.menuName || null;
+    }
+
+    getCurrentMenuData() {
+        const currentMenuId = this.getCurrentMenuId();
+        return currentMenuId ? this.#menus[currentMenuId] : null;
+    }
+
     getActiveMenu() {
         return this.#menus[this.#breadcrumbs.at(-1)?.menuName] || undefined;
     }
@@ -311,7 +320,7 @@ class Menu {
             $list.appendChild($option);
 
             if (isSelectedLine) {
-                this.#elements.$selectionDescription.textContent = option.description;
+                this.#elements.$selectionDescription.innerHTML = option.description;
             }
         });
 
@@ -339,7 +348,7 @@ class Menu {
             if (parseInt($el.dataset.index, 10) === this.#selectionIndex) {
                 $el.classList.add("selected");
                 const options = this.getActiveMenu().getOptions();
-                this.#elements.$selectionDescription.textContent =
+                this.#elements.$selectionDescription.innerHTML =
                     options[this.getItemIndex()].description;
             } else if ($el.classList.contains("selected")) {
                 $el.classList.remove("selected");
