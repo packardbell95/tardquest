@@ -318,7 +318,6 @@
             margin: 0;
             line-height: 1;
             display: inline-block;
-            white-space: pre;
             font-size: 12px;
             transform: scale(0.5);
             transform-origin: center center;
@@ -1415,6 +1414,52 @@
             display: inline-block;
             animation: letsGo .8s linear infinite;
         }
+
+        .layer.enemy.damaged {
+            animation: enemyDamaged 0.168s; /* VOCAP: 168ms is how long attack.wav is. */
+        }
+
+        .layer.enemy.damaged pre {
+        color: red !important;
+        }
+
+        @keyframes enemyDamaged {
+            0%   { transform: translate(0,0) skewX(0deg) rotate(0deg); }
+            20%  { transform: translate(-4px,0) skewX(-6deg) rotate(-2deg); }
+            40%  { transform: translate(4px,0) skewX(6deg) rotate(2deg); }
+            60%  { transform: translate(-4px,0) skewX(-8deg) rotate(-3deg); }
+            80%  { transform: translate(4px,0) skewX(8deg) rotate(3deg); }
+            100% { transform: translate(0,0) skewX(0deg) rotate(0deg); }
+        }
+
+        @keyframes PlayerDamaged {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 0); }
+            40% { transform: translate(6px, 0); }
+            60% { transform: translate(-4px, 0); }
+            80% { transform: translate(4px, 0); }
+            100% { transform: translate(0, 0); }
+        }
+        
+        #interface.shake {
+            animation: PlayerDamaged 0.168s;
+        }
+
+        #animDamageTaken {
+            position: absolute;
+            width: 692px;
+            height: 611px;
+            padding: -4px;
+            background: rgba(255,0,0,0.33) !important;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 69420;
+            transition: opacity 0.168s;
+        }
+        #animDamageTaken.active {
+            opacity: 1;
+            animation: PlayerDamaged 0.168s;
+        }
     </style>
 </head>
 <body>
@@ -1503,6 +1548,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
 <!-- In-game -->
     <div id="interface">
+        <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
         <div id="topLeft">
             <div id="minimapContainer">
@@ -7495,6 +7541,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.hp = Math.max(player.hp - hp, 0);
                 player.refreshStats();
                 player.checkForDeath();
+                animPlayerDamaged();
             },
             setHp: (hp) => {
                 player.hp = hp;
@@ -8860,20 +8907,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             floorBreakScreamDie: new Audio('audio/floorBreakScreamDie.mp3'),
             healTile: new Audio('audio/healTile.mp3'),
             tromBone: new Audio('audio/tromBONE.mp3'),
+            attacked: new Audio('audio/attacked.wav'),
         };
 
         const music = {
             titleTrack: 
                 new Audio("audio/title.wav"), // Title screen (Title - Xx_TheMilkMan69_xX)
             explorationTracks: [
-                new Audio("audio/explore.mp3"), // Into the Tardspire - Xx_TheMilkMan69_xX
-                new Audio("audio/metalspoons.mp3"), // Metal Spoons - endless_self
-                new Audio("audio/tardedwarrior.mp3"), // Tarded Warrior - endless_self
+                new Audio("audio/explore1.mp3"), // Into the Tardspire - Xx_TheMilkMan69_xX
+                new Audio("audio/explore2.mp3"), // Metal Spoons - endless_self
+                new Audio("audio/explore3.mp3"), // Tarded Warrior - endless_self
+                new Audio("audio/explore4.mp3"), // Mucal Parasite - Xx_TheMilkMan69_xX
             ],
             battleTracks: [
                 new Audio("audio/battle1.mp3"), // battle1 (Tardus Membrane - Xx_TheMilkMan69_xX)
                 new Audio("audio/battle2.mp3"), // battle2 (A Dangerous Game of Tag - Xx_TheMilkMan69_xX)
                 new Audio("audio/battle3.mp3"), // battle3 (Eek! A Cunt! - Xx_TheMilkMan69_xX)
+                new Audio("audio/battle4.mp3"), // battle4 (The Cumdown - Xx_TheMilkMan69_xX)
             ],
             merchantTrack: 
                 new Audio("audio/merchant.mp3"), // Merchant (Welcome to SlobMart! - Xx_TheMilkMan69_xX)
@@ -9576,6 +9626,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             overlay.style.display = 'flex';
         }
 
+        function animPlayerDamaged() {
+            const $interface = document.getElementById('interface');
+            if ($interface) {
+                $interface.classList.add('shake');
+                setTimeout(() => $interface.classList.remove('shake'), 168); // VOCAP: match the damage animation duration
+            }
+
+            const $flash = document.getElementById('animDamageTaken');
+            if ($flash) {
+                $flash.classList.add('active');
+                setTimeout(() => $flash.classList.remove('active'), 168); // VOCAP: match the damage animation duration
+            }
+        }
+
         const origKeydown = document.onkeydown;
         document.addEventListener('keydown', function(e) {
             const $titleScreen = document.getElementById('titleScreen');
@@ -9837,13 +9901,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             playRandomBattleMusic(); // <-- use this
         }
 
+        let playerAttackCooldown = false;
 
         function playerAttack() {
-            if (!player.inCombat || GameControl.awaitingPersuasionText) {
+            if (
+                !player.inCombat ||
+                GameControl.awaitingPersuasionText ||
+                playerAttackCooldown
+            ) {
                 return;
             }
 
+            playerAttackCooldown = true; // VOCAP: Prevent spamming attacks, such as holding down the attack key.
+
             playSFX('attack');
+            animateEnemyDamaged();
             const playerWeapon = weapons[player.weapon];
             let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
 
@@ -9868,7 +9940,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
             }
             currentEnemy.hp -= dmg;
+            // VOCAP: leave time for attack animation. very crude, but it works?
+            setTimeout(() => {
             endOfPlayerTurn();
+                playerAttackCooldown = false;
+            }, 420); // VOCAP: blaze it lmao
         }
 
         function endOfPlayerTurn() {
@@ -9928,6 +10004,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function enemyAttack() {
+            playSFX('attacked');
             // Base damage + boost damage, boost damage scaled every 2 floors
             const damage = numberBetween(1, 5) + Math.floor(floor / 2);
 
@@ -9970,6 +10047,30 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
             }
         }
+
+
+        function animateEnemyDamaged() {
+            const $enemyLayer = document.querySelector('.layer.enemy');
+            if ($enemyLayer) {
+                $enemyLayer.classList.add('damaged');
+                setTimeout(() => $enemyLayer.classList.remove('damaged'), 168); // VOCAP: match the attack animation duration
+            }
+        }
+
+        function animPlayerDamaged() {
+            const $interface = document.getElementById('interface');
+            if ($interface) {
+                $interface.classList.add('shake');
+                setTimeout(() => $interface.classList.remove('shake'), 168); // VOCAP: match the damage animation duration
+            }
+
+            const $flash = document.getElementById('animDamageTaken');
+            if ($flash) {
+                $flash.classList.add('active');
+                setTimeout(() => $flash.classList.remove('active'), 168); // VOCAP: match the damage animation duration
+            }
+        }
+
 
 
 
