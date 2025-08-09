@@ -8914,16 +8914,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             titleTrack: 
                 new Audio("audio/title.wav"), // Title screen (Title - Xx_TheMilkMan69_xX)
             explorationTracks: [
-                new Audio("audio/explore1.mp3"), // Into the Tardspire - Xx_TheMilkMan69_xX
-                new Audio("audio/explore2.mp3"), // Metal Spoons - endless_self
-                new Audio("audio/explore3.mp3"), // Tarded Warrior - endless_self
-                new Audio("audio/explore4.mp3"), // Mucal Parasite - Xx_TheMilkMan69_xX
+                Object.assign(new Audio("audio/explore1.mp3"), { trackName: "Into the Tardspire - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/explore2.mp3"), { trackName: "Metal Spoons - endless_self" }),
+                Object.assign(new Audio("audio/explore3.mp3"), { trackName: "Tarded Warrior - endless_self" }),
+                Object.assign(new Audio("audio/explore4.mp3"), { trackName: "Mucal Parasite - Xx_TheMilkMan69_xX" }),
             ],
             battleTracks: [
-                new Audio("audio/battle1.mp3"), // battle1 (Tardus Membrane - Xx_TheMilkMan69_xX)
-                new Audio("audio/battle2.mp3"), // battle2 (A Dangerous Game of Tag - Xx_TheMilkMan69_xX)
-                new Audio("audio/battle3.mp3"), // battle3 (Eek! A Cunt! - Xx_TheMilkMan69_xX)
-                new Audio("audio/battle4.mp3"), // battle4 (The Cumdown - Xx_TheMilkMan69_xX)
+                Object.assign(new Audio("audio/battle1.mp3"), { trackName: "Tardus Membrane - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/battle2.mp3"), { trackName: "A Dangerous Game of Tag - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/battle3.mp3"), { trackName: "Eek! A Cunt! - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/battle4.mp3"), { trackName: "The Cumdown - Xx_TheMilkMan69_xX" }),
             ],
             merchantTrack: 
                 new Audio("audio/merchant.mp3"), // Merchant (Welcome to SlobMart! - Xx_TheMilkMan69_xX)
@@ -8960,17 +8960,67 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!musicEnabled) {
                 return;
             }
-            currentExplorationTrack = randomEntry(music.explorationTracks);
+
+            const availableTracks = music.explorationTracks.filter((_, index) => enabledExplorationTracks[index]);
+            
+            if (availableTracks.length === 0) {
+                console.log("No exploration tracks enabled, playing silence");
+                currentExplorationTrack = null;
+                currentMusic = null;
+                return;
+            }
+            
+            currentExplorationTrack = randomEntry(availableTracks);
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
         }
+
+        function getExplorationTrackNames() {
+            return music.explorationTracks.map((track, index) => 
+                track.trackName || `Exploration Track ${index + 1}`
+            );
+        }
+
+        function getBattleTrackNames() {
+            return music.battleTracks.map((track, index) => 
+                track.trackName || `Battle Track ${index + 1}`
+            );
+        }
+
+        function initializeMusicSettings() {
+            if (enabledExplorationTracks.length === 0) {
+                enabledExplorationTracks = new Array(music.explorationTracks.length).fill(true);
+            }
+            if (enabledBattleTracks.length === 0) {
+                enabledBattleTracks = new Array(music.battleTracks.length).fill(true);
+            }
+            while (enabledExplorationTracks.length < music.explorationTracks.length) {
+                enabledExplorationTracks.push(true);
+            }
+            while (enabledBattleTracks.length < music.battleTracks.length) {
+                enabledBattleTracks.push(true);
+            }
+            enabledExplorationTracks = enabledExplorationTracks.slice(0, music.explorationTracks.length);
+            enabledBattleTracks = enabledBattleTracks.slice(0, music.battleTracks.length);
+        }
+        const explorationTrackNames = getExplorationTrackNames();
+        const battleTrackNames = getBattleTrackNames();
 
         function playRandomBattleMusic() {
             stopAllMusic();
             if (!musicEnabled) {
                 return;
             }
-            currentMusic = randomEntry(music.battleTracks);
+
+            const availableTracks = music.battleTracks.filter((_, index) => enabledBattleTracks[index]);
+            
+            if (availableTracks.length === 0) {
+                console.log("No battle tracks enabled, playing silence");
+                currentMusic = null;
+                return;
+            }
+            
+            currentMusic = randomEntry(availableTracks);
             currentMusic.play();
         }
 
@@ -9287,6 +9337,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let speechEnabled = true;
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
+        let enabledExplorationTracks = [];
+        let enabledBattleTracks = [];
 
         // Taken from https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
         function shuffle(array) {
@@ -9386,6 +9438,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (speech !== null) speechEnabled = speech === "true";
             const skipTitle = localStorage.getItem("skipTitleScreen");
             if (skipTitle !== null) skipTitleScreen = skipTitle === "true";
+
+            const explorationTracks = localStorage.getItem("enabledExplorationTracks");
+            if (explorationTracks !== null) {
+                enabledExplorationTracks = JSON.parse(explorationTracks);
+            }
+            const battleTracks = localStorage.getItem("enabledBattleTracks");
+            if (battleTracks !== null) {
+                enabledBattleTracks = JSON.parse(battleTracks);
+            }
         }
 
         function saveSettings() {
@@ -9394,6 +9455,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             localStorage.setItem("sfxEnabled", sfxEnabled);
             localStorage.setItem("speechEnabled", speechEnabled);
             localStorage.setItem("skipTitleScreen", skipTitleScreen);
+            localStorage.setItem("enabledExplorationTracks", JSON.stringify(enabledExplorationTracks));
+            localStorage.setItem("enabledBattleTracks", JSON.stringify(enabledBattleTracks));
         }
 
         loadSettings();
@@ -10907,6 +10970,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             : "Turn on the in game music",
                     },
                     {
+                        id: "musicSettings",
+                        displayText: "Music selection",
+                        description: "Choose which music tracks are able to play at random",
+                    },
+                    {
                         id: "toggleSFX",
                         displayText: sfxEnabled ? "Disable SFX" : "Enable SFX",
                         description: sfxEnabled
@@ -10959,6 +11027,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                     );
                             }
                             break;
+                        case "musicSettings":
+                            menu.open("musicSettings");
+                            break;
                         case "toggleSFX":
                             sfxEnabled = !sfxEnabled;
                             saveSettings();
@@ -10981,6 +11052,94 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 },
             },
+            
+            musicSettings: {
+                title: "GAME SETTINGS > MUSIC SETTINGS",
+                getOptions: () => [
+                    {
+                        id: "explorationMusic",
+                        displayText: "Exploration music",
+                        description: "Pick which songs play during exploration",
+                    },
+                    {
+                        id: "battleMusic", 
+                        displayText: "Battle music",
+                        description: "Pick which songs play during battle",
+                    },
+                    {
+                        id: "_back",
+                        displayText: "[Back]",
+                        description: "Return to game settings",
+                    },
+                ],
+                select: (selectedOptionId) => {
+                    if (selectedOptionId === "explorationMusic") {
+                        menu.open("explorationMusicSettings");
+                    } else if (selectedOptionId === "battleMusic") {
+                        menu.open("battleMusicSettings");
+                    }
+                },
+            },
+            
+            explorationMusicSettings: {
+                title: "GAME SETTINGS > MUSIC SETTINGS > EXPLORATION MUSIC",
+                landingHtml: () => "Select which exploration tracks to include in rotation (CHANGES MAY REQUIRE A RESTART)",
+                getOptions: () => {
+                    const options = explorationTrackNames.map((name, index) => ({
+                        id: `exploration_${index}`,
+                        displayText: name,
+                        description: enabledExplorationTracks[index] ? "Click to disable this track" : "Click to enable this track",
+                        className: enabledExplorationTracks[index] ? undefined : "muted",
+                    }));
+                    
+                    options.push({
+                        id: "_back",
+                        displayText: "[Back]",
+                        description: "Return to music settings",
+                    });
+                    
+                    return options;
+                },
+                select: (selectedOptionId) => {
+                    if (selectedOptionId.startsWith("exploration_")) {
+                        const index = parseInt(selectedOptionId.split("_")[1]);
+                        enabledExplorationTracks[index] = !enabledExplorationTracks[index];
+                        saveSettings();
+                        menu.render();
+                    }
+                },
+            },
+            
+            battleMusicSettings: {
+                title: "GAME SETTINGS > MUSIC SETTINGS > BATTLE MUSIC", 
+                landingHtml: () => "Select which battle tracks to include in rotation (CHANGES MAY REQUIRE A RESTART)",
+                getOptions: () => {
+                    const options = battleTrackNames.map((name, index) => ({
+                        id: `battle_${index}`,
+                        displayText: name,
+                        description: enabledBattleTracks[index] ? "Click to disable this track" : "Click to enable this track", 
+                        className: enabledBattleTracks[index] ? undefined : "muted",
+                    }));
+                    
+                    options.push({
+                        id: "_back",
+                        displayText: "[Back]",
+                        description: "Return to music settings",
+                    });
+                    
+                    return options;
+                },
+                select: (selectedOptionId) => {
+                    if (selectedOptionId.startsWith("battle_")) {
+                        const index = parseInt(selectedOptionId.split("_")[1]);
+                        enabledBattleTracks[index] = !enabledBattleTracks[index];
+                        saveSettings();
+                        menu.render();
+                    }
+                },
+            },
+
+
             resetGameConfirmation: {
                 title: "RESET GAME",
                 landingHtml: () =>
