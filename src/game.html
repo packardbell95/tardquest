@@ -7757,7 +7757,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         'plunge into a pit of spikes waiting beneath!'
                     );
                     playSFX('floorBreakScreamDie');
-                    player.damage(player.maxHp);
+                    player.damage(getEffectiveStat('maxHp'));
                     setTimeout(() => render(), 2000);
                 }, 100);
             },
