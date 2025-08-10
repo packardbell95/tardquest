@@ -55,12 +55,12 @@
             height: 20px;
         }
 
-        button:hover {
+        button:not(:disabled):hover {
             background-color: #fff;
             color: #000;
         }
 
-        button.release:hover {
+        button.release:not(:disabled):hover {
             background-color: #f00;
             color: #fff;
         }
@@ -483,6 +483,10 @@
             cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
+        }
+
+        #menu .option.selected {
+            background-color: #003;
         }
 
         #menu .option:not(.selected)::before {
@@ -1745,6 +1749,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <script src="https://vocapepper.com/tardquest/mods/tardboard.js"></script>
     <script src="scripts/no-arrow-key-scroll.js"></script>
     <script src="scripts/progress-bar.js"></script>
+    <script src="scripts/Inventory.js"></script>
     <script src="scripts/Map.js"></script>
     <script src="scripts/Menu.js"></script>
     <script src="scripts/sam.js"></script>
@@ -7393,6 +7398,563 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
         };
 
+        // Definitions for all inventory items in the game, categorized
+        const InventoryObjectDefinitions = Object.freeze({
+            // Inventory object category: Consumable Items
+            items: Object.freeze({
+                canOfHamms: {
+                    article: 'a',
+                    name: "CAN OF HAMM'S",
+                    description: "A warm can of beer. Delicious..? +1 LOAD, +5 HP",
+                    use: () => {
+                        player.heal(5);
+                        updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
+                    },
+                    merchantStockChance: 0.9,
+                    weight: 1,
+                    price: 10,
+                },
+                cupOfLean: {
+                    article: 'a',
+                    name: "CUP OF LEAN",
+                    description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
+                    use: () => {
+                        player.heal(20);
+                        updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
+                    },
+                    merchantStockChance: 0.5,
+                    weight: 1.2,
+                    price: 30,
+                },
+                glassOfToiletWater: {
+                    article: 'a',
+                    name: "GLASS OF TOILET WATER",
+                    description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied...  +1.2 LOAD, +50 HP",
+                    use: () => {
+                        player.heal(50);
+                        updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
+                    },
+                    merchantStockChance: .4,
+                    weight: 1.2,
+                    price: 50,
+                },
+                alaskaRaisins: {
+                    article: 'some',
+                    name: "ALASKA RAISINS",
+                    description: "Holy shit! It's the Alaska Raisins! +1.5 LOAD, +70 HP",
+                    use: () => {
+                        player.heal(70);
+                        playSFX('raisins');
+                        updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
+                    },
+                    merchantStockChance: .35,
+                    weight: 1.5,
+                    price: 80,
+                },
+                dowsingRod: {
+                    article: 'a',
+                    name: "DOWSING ROD",
+                    description: "A Y-shaped stick. Reveals the exit of the current floor. +1.7 LOAD",
+                    use: () => {
+                        const location = MAP.locate("exit");
+                        if (!location) {
+                            console.error("No exit exists on this map!");
+                            return;
+                        }
+
+                        MAP.revealSpot(location.x, location.y, 1);
+                        updateBattleLog("The exit has been revealed!");
+                    },
+                    merchantStockChance: 0.8,
+                    weight: 1.7,
+                    price: 20,
+                },
+                torch: {
+                    article: 'a',
+                    name: "TORCH",
+                    description: "An unlit torch. Using it will reveal the map of the current floor. +1.2 LOAD",
+                    use: () => {
+                        if (player.isHoldingTorch) {
+                            updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
+                            return;
+                        }
+                        playSFX('torch');
+                        MAP.reveal();
+                        updateBattleLog("Lo, the way has been made clear!");
+                        animTorchStart();
+                        render();
+                    },
+                    merchantStockChance: 0.8,
+                    weight: 1.2,
+                    price: 60,
+                },
+                brickOfC4: {
+                    article: 'a',
+                    name: "BRICK OF C-4",
+                    description: "An incendiary plastic explosive. Great for turning anything into nothing real quick! +3 LOAD",
+                    use: () => {
+                        setTimeout(() => playSFX('explosion'), 50);
+                        explosionAnimation(() => {
+                            if (player.inCombat) {
+                                const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
+                                currentEnemy.hp -= dmg;
+                                updateBattleLog(`You exploded the shit out of <span class="enemy">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+                                if (currentEnemy.hp <= 0) {
+                                    playSFX('scream');
+                                    const nx = player.x + DX[player.dir];
+                                    const ny = player.y + DY[player.dir];
+                                    if (['floor', 'rubble1', 'rubble2'].includes(MAP.getCell(nx, ny)?.type)) {
+                                        MAP.setCell(nx, ny, "bloodyCrater");
+                                    }
+                                }
+                                endOfPlayerTurn();
+                            } else {
+                                let xMin = player.x, xMax = player.x,
+                                    yMin = player.y, yMax = player.y;
+
+                                switch (DIRECTIONS[player.dir]) {
+                                    case 'N':
+                                        xMin--;
+                                        xMax++;
+                                        yMin -= 3;
+                                        break;
+                                    case 'E':
+                                        yMin--;
+                                        yMax++;
+                                        xMax += 3;
+                                        break;
+                                    case 'S':
+                                        xMin--;
+                                        xMax++;
+                                        yMax += 3;
+                                        break;
+                                    case 'W':
+                                        yMin--;
+                                        yMax++;
+                                        xMin -= 3;
+                                        break;
+                                }
+
+                                for (let y=yMin; y<=yMax; y++) {
+                                    for (let x=xMin; x<=xMax; x++) {
+                                        const cell = MAP.getCell(x, y);
+                                        const isVisible =
+                                            typeof cell.isVisible !== 'function' ||
+                                            cell.isVisible();
+
+                                        if (isVisible) {
+                                            cell?.onExplode?.(x, y);
+                                        }
+                                        cell.isExplored = true;
+                                    }
+                                }
+
+                                updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                                render();
+                            }
+                        });
+                    },
+                    merchantStockChance: 0.5,
+                    weight: 3,
+                    price: 300,
+                },
+
+                tromBone: {
+                    article: 'a',
+                    name: "TROM-BONE",
+                    description: "A trom-BONE. It sounds like a trombone, looks like a trombone, but is somehow... on the bonier side of things. +1.3 LOAD",
+                    use: () => {
+                        stopAllMusic();
+                        tromboneIsPlaying = true;
+                        tromboneResumeType = player.inCombat ? "battle" : "exploration";
+                        animTromboneStart();
+                        sfx.tromBone.currentTime = 0;
+                        sfx.tromBone.play();
+                        sfx.tromBone.onended = () => {
+                            tromboneIsPlaying = false;
+                            animTromboneEnd();
+                            if (musicEnabled) {
+                                if (player.inCombat && tromboneResumeType === "battle") {
+                                    playRandomBattleMusic();
+                                } else {
+                                    resumeExplorationMusic();
+                                }
+                            }
+                            tromboneResumeType = null;
+                        };
+                        updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
+                    },
+                    merchantStockChance: 1.0,
+                    weight: 1.3,
+                    price: 5,
+                },
+            }),
+
+            // Inventory object category: Weapons
+            weapons: Object.freeze({
+                fingerNail: {
+                    article: 'a',
+                    name: "FINGERNAIL",
+                    description:
+                        "Your very own fingernail! Careful not to break it!",
+                    damage: { base: 1, randomMultiplier: 4 },
+                    price: 0,
+                    weight: 0,
+                    requiredStr: 0,
+                },
+                pointyStick: {
+                    article: 'a',
+                    name: "POINTY STICK",
+                    description:
+                        "A stick that fell off of a tree somewhere",
+                    damage: { base: 2, randomMultiplier: 5 },
+                    price: 20,
+                    weight: 5,
+                    requiredStr: 7,
+                },
+                wiffleBallBat: {
+                    article: 'a',
+                    name: "WIFFLE BALL BAT",
+                    description:
+                        "A hollow bat made of plastic",
+                    damage: { base: 3, randomMultiplier: 6 },
+                    price: 50,
+                    weight: 6,
+                    requiredStr: 13,
+                },
+                nunchucks: {
+                    article: '',
+                    name: "NUNCHUCKS",
+                    description:
+                        "Two pieces of wood connected by a chain",
+                    damage: { base: 6, randomMultiplier: 9 },
+                    price: 100,
+                    weight: 8,
+                    requiredStr: 20,
+                },
+                atlatlSpear: {
+                    article: 'an',
+                    name: "ATLATL SPEAR",
+                    description:
+                        "A spear with a throwing lever",
+                    damage: { base: 10, randomMultiplier: 11 },
+                    price: 400,
+                    weight: 10,
+                    requiredStr: 25,
+                },
+                bludgeoningMace: {
+                    article: 'a',
+                    name:
+                        "BLUDGEONING MACE",
+                    description: "A stick with a spikey metal ball at the end",
+                    damage: { base: 10, randomMultiplier: 14 },
+                    price: 500,
+                    weight: 11,
+                    requiredStr: 25,
+                },
+                danceClub: {
+                    article: 'a',
+                    name: "DANCE CLUB",
+                    description:
+                        "A club long enough to pole dance on... maybe it is " +
+                        "one? You don't know. Legend has it, an obscure " +
+                        "forum user once wielded one...",
+                    damage: { base: 13, randomMultiplier: 15 },
+                    price: 800,
+                    weight: 12,
+                    requiredStr: 28,
+                },
+                cathodeRayTubeMonitor: {
+                    article: 'a',
+                    name: "CATHODE RAY TUBE MONITOR",
+                    description:
+                        "A CRT monitor. Heavy as piss.",
+                    damage: { base: 15, randomMultiplier: 17 },
+                    price: 1000,
+                    weight: 15,
+                    requiredStr: 33,
+                },
+                magicPencil: {
+                    article: 'a',
+                    name: "MAGIC PENCIL",
+                    description:
+                        "SpongeBob SquarePants - Season 2, Episode 14B - " +
+                        "Frankendoodle",
+                    damage: { base: 17, randomMultiplier: 18 },
+                    price: 1400,
+                    weight: 5,
+                    requiredStr: 38,
+                },
+                goldenWang: {
+                    article: 'a',
+                    name: "GOLDEN WANG",
+                    description:
+                        "With the power of the Golden Wang, the Discordian " +
+                        "parasite shall perish!",
+                    damage: { base: 69, randomMultiplier: 69 },
+                    price: 6900,
+                    weight: 69,
+                    requiredStr: 69,
+                },
+            }),
+
+            // Inventory object category: Armor
+            armor: Object.freeze({
+                pectoralMass: {
+                    article: 'a',
+                    name: "PECTORAL MASS",
+                    description:
+                        "Your totally big, meaty pectorals! You're not fat " +
+                        "at all...'",
+                    defense: 1,
+                    price: 0,
+                    weight: 0,
+                    requiredEnd: 0,
+                },
+                graphicTee: {
+                    article: 'a',
+                    name: "GRAPHIC TEE",
+                    description:
+                        "A t-shirt that says 'Normal people scare me'",
+                    defense: 2,
+                    price: 20,
+                    weight: 3,
+                    requiredEnd: 8,
+                },
+                barrelWithSuspenders: {
+                    article: 'a',
+                    name: "BARREL (with suspenders)",
+                    description:
+                        "An empty barrel that sort of covers your torso and " +
+                        "legs. Smells like whisky too!",
+                    defense: 3,
+                    price: 100,
+                    weight: 5,
+                    requiredEnd: 11,
+                },
+                leatherArmor: {
+                    article: '',
+                    name: "LEATHER ARMOR",
+                    description:
+                        "The finest in leather, fitted with a tight top, " +
+                        "codpiece, cat o' nine tails... (uh, are you sure " +
+                        "this is actually armor?)",
+                    defense: 6,
+                    price: 200,
+                    weight: 6,
+                    requiredEnd: 15,
+                },
+                milaneseArmor: {
+                    article: '',
+                    name: "MILANESE ARMOR",
+                    description:
+                        "A classic suit of armor. Looks kind of like a " +
+                        "Renaissance-era Robocop if you squint hard enough",
+                    defense: 12,
+                    price: 500,
+                    weight: 9,
+                    requiredEnd: 18,
+                },
+                blackPlateArmor: {
+                    article: '',
+                    name: "BLACK PLATE ARMOR",
+                    description:
+                        "Literally a giant black dinner plate. " +
+                        "Deceptively protective.",
+                    defense: 16,
+                    price: 1000,
+                    weight: 13,
+                    requiredEnd: 25,
+                },
+                nokiaMail: {
+                    article: '',
+                    name: "NOKIA MAIL",
+                    description:
+                        "A Nokia branded mail. No, not like an email... " +
+                        "more like a chainmail. But Nokia.",
+                    defense: 21,
+                    price: 2000,
+                    weight: 18,
+                    requiredEnd: 34,
+                },
+            }),
+
+            // Inventory object category: Rings
+            rings: Object.freeze({
+                // Persuasion boosters
+                ringOfSexyUnderwear: {
+                    article: 'a',
+                    name: "RING OF SEXY UNDERWEAR",
+                    description:
+                        "A ring with an engraving of a pair of strangely " +
+                        "attractive undergarments. +3 PRS",
+                    effects: { persuasion: 3 },
+                    price: 60,
+                    merchantStockChance: 0.5,
+                    chestChance: 0.1,
+                    weight: 1,
+                },
+
+                ringOfFrenchAccent: {
+                    article: 'a',
+                    name: "FRENCHLY ACCENTED RING",
+                    description:
+                        "A ring that somehow magically forces you to speak " +
+                        "in a French accent. VERY sexy! +5 PRS",
+                    effects: { persuasion: 5 },
+                    price: 100,
+                    merchantStockChance: 0.3,
+                    chestChance: 0.04,
+                    weight: 1,
+                },
+
+                // HP boosters
+                ringValentines: {
+                    article: 'a',
+                    name: "VALENTINE'S DAY RING",
+                    description:
+                        "A ring that was given to somebody by their " +
+                        "Valentine... and dumped down a hole. You see 'Amy' " +
+                        "engraved onto a heart. How sad. +5 HP",
+                    effects: { maxHp: 5 },
+                    price: 60,
+                    merchantStockChance: 0.5,
+                    chestChance: 0.07,
+                    weight: 1,
+                },
+                ringBloodstream: {
+                    article: 'a',
+                    name: "BLOODSTREAM NOSERING",
+                    description:
+                        "A nosering that injects blood into your veins. " +
+                        "Sounds painful... +8 HP",
+                    effects: { maxHp: 8 },
+                    price: 100,
+                    merchantStockChance: 0.3,
+                    chestChance: 0.04,
+                    weight: 1,
+                },
+
+                // Defense boosters
+                ringOfHardening: {
+                    article: 'a',
+                    name: "COCKRING OF HARDENING",
+                    description:
+                        "A piercing for your cock that doubles as a sort of " +
+                        "penis pill. One size fits all! +2 DEF",
+                    effects: { defense: 2 },
+                    price: 60,
+                    merchantStockChance: 0.4,
+                    chestChance: 0.07,
+                    weight: 1,
+                },
+                ringPectoralPiercing: {
+                    article: 'a',
+                    name: "PECTORAL PIERCING",
+                    description:
+                        "A piercing that can fit anywhere on your big, " +
+                        "juicy pectorals. +5 DEF",
+                    effects: { defense: 5 },
+                    price: 100,
+                    merchantStockChance: 0.3,
+                    chestChance: 0.04,
+                    weight: 1,
+                },
+
+                // Speed boosters
+                ringPinkyToe: {
+                    article: 'a',
+                    name: "PINKY TOE RING",
+                    description:
+                        "A ring for your pinky toe. The only way for this " +
+                        "to work is by putting it directly through the " +
+                        "toenail... kinda like that SpongeBob episode! +1 SPD",
+                    effects: { speed: 1 },
+                    price: 60,
+                    merchantStockChance: 0.4,
+                    chestChance: 0.07,
+                    weight: 1,
+                },
+                ringCrack: {
+                    article: 'a',
+                    name: "CRACK INFUSED RING",
+                    description:
+                        "A ring infused with crack cocaine. +2 SPD",
+                    effects: { speed: 2 },
+                    price: 100,
+                    merchantStockChance: 0.3,
+                    chestChance: 0.04,
+                    weight: 1,
+                },
+
+                // Luck boosters
+                ringGamble: {
+                    article: 'the',
+                    name: "GAMBLER'S RING",
+                    description:
+                        "A cheap looking ring with a 240p image of a slot " +
+                        "machine on it. +2 LUK",
+                    effects: { luck: 2 },
+                    price: 150,
+                    merchantStockChance: 0.1,
+                    chestChance: 0.05,
+                    weight: 1,
+                },
+                ringEscobar: {
+                    article: '',
+                    name: "PABLO ESCOBAR'S GOLDEN RING",
+                    description:
+                        "A golden ring that once belonged to Pablo Escobar. " +
+                        "It smells rather illegal, but who give a shit? +4 LUK",
+                    effects: { luck: 4 },
+                    price: 200,
+                    merchantStockChance: 0.07,
+                    chestChance: 0.02,
+                    weight: 1,
+                },
+
+                // Special ability rings
+                ringOfSightliness: {
+                    article: 'a',
+                    name: "RING OF SIGHTLINESS",
+                    description:
+                        "A ring with an eyeball so realistic looking, it " +
+                        "could actually be real. Allows you to see better " +
+                        "in the Tardspire",
+                    effects: {},
+                    price: 180,
+                    merchantStockChance: 0.2,
+                    chestChance: 0.0,
+                    weight: 2,
+                },
+                ringOfStinky: {
+                    article: 'a',
+                    name: "RING OF STINKY",
+                    description:
+                        "A ring so stinky, SO putrid, that even monsters " +
+                        "will reconsider confronting you. Reduces encounter " +
+                        "rate by 30%",
+                    effects: {},
+                    price: 200,
+                    merchantStockChance: 0.2,
+                    chestChance: 0.0,
+                    weight: 2,
+                },
+                ringOfAmplifiedAudio: {
+                    article: 'a',
+                    name: "RING OF AMPLIFIED AUDIO",
+                    description:
+                        "A ring with a tiny, yet deceptively loud megaphone. " +
+                        "Miniphone? idk. +2 PRS and a PRS attempt",
+                    effects: { persuasion: 2 },
+                    price: 130,
+                    merchantStockChance: 0.2,
+                    chestChance: 0.00,
+                    weight: 2,
+                },
+            }),
+        });
+
         const
             WIDTH = 30,
             HEIGHT = 11;
@@ -7411,6 +7973,47 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             luck: 17,
         };
         const player = {
+            inventory: new Inventory(
+                // Definitions
+                InventoryObjectDefinitions,
+
+                // Starting inventory
+                {
+                    items: {
+                        canOfHamms: 2,
+                        cupOfLean: 2,
+                        torch: 2,
+                        brickOfC4: 2,
+                        dowsingRod: 2,
+                    },
+                    weapons: {
+                        fingerNail: 1,
+                    },
+                    armor: {
+                        pectoralMass: 1,
+                    },
+                },
+
+                // Equipped gear
+                {
+                    weapon: "fingerNail",
+                    armor: "pectoralMass",
+                },
+
+                // Inventory event handlers
+                {
+                    onEquip: () => {
+                        if (player.hp > getEffectiveStat('maxHp')) {
+                            player.hp = getEffectiveStat('maxHp');
+                        }
+
+                        const $game = document.getElementById('game');
+                        player.inventory.hasEquippedRing('ringOfSightliness')
+                            ? $game.classList.add('sightliness')
+                            : $game.classList.remove('sightliness');
+                    },
+                },
+            ),
             x: 1,
             y: 1,
             bitcoins: 0,
@@ -7430,30 +8033,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             enteringCombat: false,
             leavingCombat: false,
             steppingOnHealingTile: false,
-            inventory: {
-                canOfHamms: 2,
-                cupOfLean: 2,
-                torch: 2,
-                brickOfC4: 2,
-                dowsingRod: 2,
-                fingerNail: 1, //Start game with this in inventory
-                pectoralMass: 1, //Start game with this in inventory
-            },
-            weapon: 'fingerNail', //Start game with this equipped
-            armor: 'pectoralMass', //Start game with this equipped
-            ring1: null,
-            ring2: null,
             movementDisabled: false,
             getDisplayCharacter: () => ["↑", "→", "↓", "←"][player.dir] || "?",
             say: function(str) {
                 const message = str.trim();
                 if (message) {
-                    updateBattleLog(`<span class="player">&lt;YOU&gt;</span> "${message}"`);
+                    updateBattleLog(
+                        `<span class="player">&lt;YOU&gt;</span> "${message}"`
+                    );
                     return;
                 }
 
                 if (Math.random() < 0.25) {
-                    player.say("DUHHH BUH BUH DURRRR I AM A BIG FAT DUMB MORON BUUUUHHHHH");
+                    player.say(
+                        "DUHHH BUH BUH DURRRR I AM A BIG FAT DUMB MORON " +
+                        "BUUUUHHHHH"
+                    );
                     return;
                 }
 
@@ -7464,7 +8059,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     "This message was intentionally left blank",
                 ]));
             },
-            // Resets event flags that are used during rendering. Called after every render
+            // Resets event flags that are used during rendering
+            // Invoked after every call to render()
             resetEventFlags: () => {
                 player.enteringCombat = false;
                 player.leavingCombat = false;
@@ -7472,7 +8068,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
             enterCombat: () => {
                 persuasionAttempts = 0;
-                maxPersuasionAttempts = player.hasEquippedRing('ringOfAmplifiedAudio') ? 3 : 2;
+                maxPersuasionAttempts = getEffectiveStat("persuasionAttempts");
                 player.enteringCombat = true;
                 player.inCombat = true;
                 player.party.prepareForBattle();
@@ -7508,12 +8104,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }
             },
             getEffectiveStats: () => {
-                const equippedArmor = armor[player.armor];
-                const equippedRing1 = player.ring1 ? rings[player.ring1] : null;
-                const equippedRing2 = player.ring2 ? rings[player.ring2] : null;
+                const equippedArmor = player.inventory.getEquippedArmor();
+                const equippedRings = player.inventory.getEquippedRings();
 
                 function getRingEffect(stat) {
-                    return (equippedRing1?.effects?.[stat] || 0) + (equippedRing2?.effects?.[stat] || 0);
+                    return (
+                        (equippedRings?.leftHand?.effects?.[stat] || 0) +
+                        (equippedRings?.rightHand?.effects?.[stat] || 0)
+                    );
                 }
 
                 return {
@@ -7521,14 +8119,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     maxHp: player.maxHp + getRingEffect('maxHp'),
                     defense:
                         player.defense +
-                        (equippedArmor ? equippedArmor.defense : 0) +
+                        (equippedArmor?.defense || 0) +
                         getRingEffect('defense'),
                     strength: player.strength,
                     persuasion: getEffectiveStat('persuasion'),
+                    maxPersuasionAttempts:
+                        getEffectiveStat("persuasionAttempts"),
                     speed: player.speed + getRingEffect('speed'),
                     luck: player.luck + getRingEffect('luck'),
                     endurance: player.endurance,
-                    carryWeight: player.getCarryWeight(),
+                    carryWeight: player.inventory.getWeight(),
                     carryWeightLimit: player.getCarryWeightLimit(),
                 };
             },
@@ -7567,51 +8167,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 player.party.refresh();
             },
-            equipRing: (slotNumber, ringId) => {
-                if (![1, 2].includes(slotNumber)) {
-                    console.error("Ring slot number is out of range", { slotNumber });
-                    return false;
-                }
-
-                // Prevent equipping the same ring in both slots
-                const ringIsAlreadyEquippedOnOppositeHand =
-                    ringId && (
-                        (slotNumber === 1 && ringId === player.ring2) ||
-                        (slotNumber === 2 && ringId === player.ring1)
-                    );
-
-                if (ringIsAlreadyEquippedOnOppositeHand) {
-                    updateBattleLog("You can't equip the same ring in both slots!");
-                    return false;
-                }
-
-                if (slotNumber === 1) {
-                    player.ring1 = ringId || null;
-                } else if (slotNumber === 2) {
-                    player.ring2 = ringId || null;
-                }
-
-                const ringDisplayName = rings[ringId]?.name || "no ring";
-                updateBattleLog(
-                    `You equipped <span class="friendly">${ringDisplayName}` +
-                    `</span> in Ring ${slotNumber} slot.`
-                );
-                if (player.hp > getEffectiveStat('maxHp')) {
-                    player.hp = getEffectiveStat('maxHp');
-                }
-
-                const $game = document.getElementById('game');
-                if (player.hasEquippedRing('ringOfSightliness')) {
-                    $game.classList.add('sightliness');
-                } else {
-                    $game.classList.remove('sightliness');
-                }
-
-                return true;
-            },
-            hasEquippedRing: (ringId) => [player.ring1, player.ring2].includes(ringId),
             getViewDepth: () => {
-                if (player.hasEquippedRing('ringOfSightliness')) {
+                if (player.inventory.hasEquippedRing("ringOfSightliness")) {
                     return 5;
                 }
 
@@ -7622,7 +8179,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return 2;
             },
             getMaxBrightness: () =>
-                player.hasEquippedRing('ringOfSightliness') || player.isHoldingTorch
+                player.inventory.hasEquippedRing('ringOfSightliness') ||
+                player.isHoldingTorch
                     ? 255
                     : 192,
             getExpRequiredForLevelUp: () => player.level * 10,
@@ -7633,53 +8191,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.hp = getEffectiveStat('maxHp');
                 document.getElementById('playerLevel').innerText = player.level;
             },
-            getCarryWeight: () => {
-                let total = 0;
-
-                // 1. Consumables
-                for (const itemId in player.inventory) {
-                    if (weapons[itemId] || armor[itemId] || rings[itemId]) {
-                        continue;
-                    }
-
-                    const item = items[itemId];
-                    if (typeof item?.weight === "number") {
-                        total += item.weight * player.inventory[itemId];
-                    }
-                }
-
-                // 2. Weapons
-                for (const weaponId in weapons) {
-                    let count = player.inventory[weaponId] || 0;
-                    if (player.weapon === weaponId && count === 0) {
-                        count = 1;
-                    }
-                    total += weapons[weaponId].weight * count;
-                }
-
-                // 3. Armor
-                for (const armorId in armor) {
-                    let count = player.inventory[armorId] || 0;
-                    if (player.armor === armorId && count === 0) {
-                        count = 1;
-                    }
-                    total += armor[armorId].weight * count;
-                }
-
-                // 4. Rings
-                for (const ringId in rings) {
-                    let count = player.inventory[ringId] || 0;
-                    if (player.ring1 === ringId && count === 0) {
-                        count += 1;
-                    }
-                    if (player.ring2 === ringId && count === 0 && player.ring1 !== ringId) {
-                        count += 1;
-                    }
-                    total += rings[ringId].weight * count;
-                }
-
-                return total;
-            },
             getCarryWeightLimit: () => {
                 // Example: 35 base + 0.6 per END point
                 return 35 + (player.endurance * 0.4);
@@ -7687,7 +8198,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             // Returns "normal", "warning", or "danger" depending on load
             getWeightLevel: () => {
                 const percentage =
-                    player.getCarryWeight() / player.getCarryWeightLimit();
+                    player.inventory.getWeight() / player.getCarryWeightLimit();
 
                 return percentage < 0.5
                     ? "normal"
@@ -7964,7 +8475,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 if (!suppressSpeechSynthesis) {
                     SpeechSynthesizer.speak(str, merchant.voice);
                 }
-                updateBattleLog(`<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`);
+                updateBattleLog(
+                    `<span class="merchant">&lt;MERCHANT&gt;</span> "${str}"`
+                );
             },
             isAt: function(x, y) {
                 return (
@@ -7978,31 +8491,61 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     ? MAP.locate("merchant")
                     : null;
             },
-            buy: function(type, key) {
-                const merchandise = merchant.getMerchandiseCollection(type)?.[key];
+            buy: function(category, id) {
+                if (!Object.hasOwn(InventoryObjectDefinitions, category)) {
+                    console.error(
+                        "Inventory object category doesn't exist",
+                        { category }
+                    );
+                    return;
+                }
+
+                const merchandise = InventoryObjectDefinitions[category]?.[id];
                 if (!merchandise) {
-                    console.error(`${key} doesn't exist!`);
+                    console.error(
+                        "Inventory entry doesn't exist",
+                        { category, id }
+                    );
                     return;
                 }
 
                 if (player.bitcoins < merchandise.price) {
-                    merchant.say('Too bad, kid. Come back when you get some coin!');
+                    merchant.say(
+                        "Too bad, kid. Come back when you get some coin!"
+                    );
                     return;
                 }
 
                 // Prevent buying equipment you already own
-                const alreadyOwnedEquipment = type !== 'item' && (player.inventory[key] > 0 || player[type] === key);
-                const alreadyOwnedRing = type === 'ring' && player.hasEquippedRing(key);
-                const alreadyOwned = alreadyOwnedEquipment || alreadyOwnedRing;
-                if (alreadyOwned) {
+                const alreadyOwnedEquippable =
+                    category !== "items" &&
+                    (player.inventory.hasEntry(category, id));
+                if (alreadyOwnedEquippable) {
                     merchant.say("You already own that, stupid!");
                     return;
                 }
 
                 player.takeBitcoins(merchandise.price);
                 playSFX('kaching');
+
                 // Disable equipment auto equip upon purchase
-                player.inventory[key] = (player.inventory?.[key] || 0) + 1;
+                switch(category) {
+                    case "items":
+                        player.inventory.addItem(id);
+                        break;
+                    case "weapons":
+                        player.inventory.addWeapon(id);
+                        break;
+                    case "armor":
+                        player.inventory.addArmor(id);
+                        break;
+                    case "rings":
+                        player.inventory.addRing(id);
+                        break;
+                    default:
+                        console.error("Unknown item category", { category });
+                        break;
+                }
 
                 merchant.say(randomEntry([
                     "HAHA! You won't regret it!",
@@ -8010,27 +8553,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     "You won't find a better deal than this!",
                 ]));
 
-                merchant.printTransactionMessage('bought', merchandise, merchandise.price);
+                merchant.printTransactionMessage(
+                    "bought",
+                    merchandise,
+                    merchandise.price
+                );
+
                 render();
-            },
-            getMerchandiseCollection: function(category) {
-                switch (category) {
-                    case 'item': return items;
-                    case 'weapon': return weapons;
-                    case 'armor': return armor;
-                    case 'ring': return rings;
-                    default:
-                        console.error("Unknown merchanidse category", { category });
-                        return {};
-                }
             },
             set: function () {
                 merchant.setWares();
                 merchant.setPosition();
             },
             setWares: function(hasEverythingInStock = false) {
-                const itemKeys = Object.keys(items);
-                const ringKeys = Object.keys(rings);
+                const itemKeys = Object.keys(InventoryObjectDefinitions.items);
+                const ringKeys = Object.keys(InventoryObjectDefinitions.rings);
 
                 if (itemKeys.length === 0) {
                     console.error("No items available in the items object!");
@@ -8048,13 +8585,29 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     merchant.rings = [];
 
                     itemKeys.forEach((key) => {
-                        if (hasEverythingInStock || Math.random() < (items[key].merchantStockChance || 0)) {
+                        const stockChance =
+                            InventoryObjectDefinitions
+                                .items[key]
+                                .merchantStockChance || 0;
+
+                        const merchantHasItem =
+                            hasEverythingInStock || Math.random() < stockChance;
+
+                        if (merchantHasItem) {
                             merchant.items.push(key);
                         }
                     });
 
                     ringKeys.forEach((key) => {
-                        if (hasEverythingInStock || Math.random() < (rings[key].merchantStockChance || 0)) {
+                        const stockChance =
+                            InventoryObjectDefinitions
+                                .rings[key]
+                                .merchantStockChance || 0;
+
+                        const merchantHasRing =
+                            hasEverythingInStock || Math.random() < stockChance;
+
+                        if (merchantHasRing) {
                             merchant.rings.push(key);
                         }
                     });
@@ -8062,12 +8615,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     attempts++;
                     if (attempts > 100) {
                         console.error(
-                            `Failed to generate merchant items after ` +
-                            `${attempts} attempts!`
+                            `Failed to generate merchant items`,
+                            { attempts }
                         );
                         break;
                     }
-                } while (merchant.items.length === 0 || merchant.rings.length === 0);
+                } while (
+                    merchant.items.length === 0 ||
+                    merchant.rings.length === 0
+                );
             },
 
             setPosition: function() {
@@ -8090,14 +8646,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     item: 5,
                     ring: 5,
                 };
-                const factor = factors[itemType] || 10; // Default to 10% of the original price
+
+                // Default to 10% of the original price
+                const factor = factors[itemType] || 10;
                 if (!Object.hasOwn(factors, itemType)) {
                     console.error("Unknown item type", { itemType });
                 }
                 return Math.max(1, Math.floor(price / factor));
             },
 
-            printTransactionMessage: function(transactionType, merchandise, priceBtc) {
+            printTransactionMessage: function(
+                transactionType,
+                merchandise,
+                priceBtc
+            ) {
                 if (!['bought', 'sold'].includes(transactionType)) {
                     console.error(
                         'Unknown transaction type', {
@@ -8116,7 +8678,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const message =
                     `You ${transactionType} ${article}` +
                     `<span class="friendly">${merchandise.name}</span> for ` +
-                    `<span class="BTC">${priceBtc} BTC</span>.`;
+                    `<span class="BTC">${priceBtc.toLocaleString(undefined)} ` +
+                    `BTC</span>.`;
                 updateBattleLog(message);
             },
         };
@@ -8137,7 +8700,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 if (!suppressSpeechSynthesis) {
                     SpeechSynthesizer.speak(str, gambler.voice);
                 }
-                updateBattleLog(`<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`);
+                updateBattleLog(
+                    `<span class="gambler">&lt;GAMBLER&gt;</span> "${str}"`
+                );
             },
             isAt: function(x, y) {
                 return (
@@ -8148,11 +8713,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
             },
             location: function() {
-                if (!gambler.isAlive || !gambler.isActiveOnFloor || player.bitcoins < gambler.playPrice) {
-                    return null;
-                }
+                const gamblerExists =
+                    gambler.isAlive &&
+                    gambler.isActiveOnFloor &&
+                    player.bitcoins < gambler.playPrice;
 
-                return MAP.locate("gambler");
+                return gamblerExists
+                    ? MAP.locate("gambler")
+                    : null;
             },
             set: function() {
                 const points =
@@ -8323,503 +8891,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
         ];
 
-        const items = {
-            canOfHamms: {
-                article: 'a',
-                name: "CAN OF HAMM'S",
-                description: "A warm can of beer. Delicious..? +1 LOAD, +5 HP",
-                use: () => {
-                    player.heal(5);
-                    updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
-                },
-                merchantStockChance: 0.9,
-                weight: 1,
-                price: 10,
-            },
-            cupOfLean: {
-                article: 'a',
-                name: "CUP OF LEAN",
-                description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
-                use: () => {
-                    player.heal(20);
-                    updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
-                },
-                merchantStockChance: 0.5,
-                weight: 1.2,
-                price: 30,
-            },
-            glassOfToiletWater: {
-                article: 'a',
-                name: "GLASS OF TOILET WATER",
-                description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied...  +1.2 LOAD, +50 HP",
-                use: () => {
-                    player.heal(50);
-                    updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
-                },
-                merchantStockChance: .4,
-                weight: 1.2,
-                price: 50,
-            },
-            alaskaRaisins: {
-                article: 'some',
-                name: "ALASKA RAISINS",
-                description: "Holy shit! It's the Alaska Raisins! +1.5 LOAD, +70 HP",
-                use: () => {
-                    player.heal(70);
-                    playSFX('raisins');
-                    updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
-                },
-                merchantStockChance: .35,
-                weight: 1.5,
-                price: 80,
-            },
-            dowsingRod: {
-                article: 'a',
-                name: "DOWSING ROD",
-                description: "A Y-shaped stick. Reveals the exit of the current floor. +1.7 LOAD",
-                use: () => {
-                    const location = MAP.locate("exit");
-                    if (!location) {
-                        console.error("No exit exists on this map!");
-                        return;
-                    }
-
-                    MAP.revealSpot(location.x, location.y, 1);
-                    updateBattleLog("The exit has been revealed!");
-                },
-                merchantStockChance: 0.8,
-                weight: 1.7,
-                price: 20,
-            },
-            torch: {
-                article: 'a',
-                name: "TORCH",
-                description: "An unlit torch. Using it will reveal the map of the current floor. +1.2 LOAD",
-                use: () => {
-                    if (player.isHoldingTorch) {
-                        updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
-                        return;
-                    }
-                    playSFX('torch');
-                    MAP.reveal();
-                    updateBattleLog("Lo, the way has been made clear!");
-                    animTorchStart();
-                    render();
-                },
-                merchantStockChance: 0.8,
-                weight: 1.2,
-                price: 60,
-            },
-            brickOfC4: {
-                article: 'a',
-                name: "BRICK OF C-4",
-                description: "An incendiary plastic explosive. Great for turning anything into nothing real quick! +3 LOAD",
-                use: () => {
-                    setTimeout(() => playSFX('explosion'), 50);
-                    explosionAnimation(() => {
-                        if (player.inCombat) {
-                            const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
-                            currentEnemy.hp -= dmg;
-                            updateBattleLog(`You exploded the shit out of <span class="enemy">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
-                            if (currentEnemy.hp <= 0) {
-                                playSFX('scream');
-                                const nx = player.x + DX[player.dir];
-                                const ny = player.y + DY[player.dir];
-                                if (['floor', 'rubble1', 'rubble2'].includes(MAP.getCell(nx, ny)?.type)) {
-                                    MAP.setCell(nx, ny, "bloodyCrater");
-                                }
-                            }
-                            endOfPlayerTurn();
-                        } else {
-                            let xMin = player.x, xMax = player.x,
-                                yMin = player.y, yMax = player.y;
-
-                            switch (DIRECTIONS[player.dir]) {
-                                case 'N':
-                                    xMin--;
-                                    xMax++;
-                                    yMin -= 3;
-                                    break;
-                                case 'E':
-                                    yMin--;
-                                    yMax++;
-                                    xMax += 3;
-                                    break;
-                                case 'S':
-                                    xMin--;
-                                    xMax++;
-                                    yMax += 3;
-                                    break;
-                                case 'W':
-                                    yMin--;
-                                    yMax++;
-                                    xMin -= 3;
-                                    break;
-                            }
-
-                            for (let y=yMin; y<=yMax; y++) {
-                                for (let x=xMin; x<=xMax; x++) {
-                                    const cell = MAP.getCell(x, y);
-                                    const isVisible =
-                                        typeof cell.isVisible !== 'function' ||
-                                        cell.isVisible();
-
-                                    if (isVisible) {
-                                        cell?.onExplode?.(x, y);
-                                    }
-                                    cell.isExplored = true;
-                                }
-                            }
-
-                            updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
-                            render();
-                        }
-                    });
-                },
-                merchantStockChance: 0.5,
-                weight: 3,
-                price: 300,
-            },
-            
-            tromBone: {
-                article: 'a',
-                name: "TROM-BONE",
-                description: "A trom-BONE. It sounds like a trombone, looks like a trombone, but is somehow... on the bonier side of things. +1.3 LOAD",
-                use: () => {
-                    stopAllMusic();
-                    tromboneIsPlaying = true;
-                    tromboneResumeType = player.inCombat ? "battle" : "exploration";
-                    animTromboneStart();
-                    sfx.tromBone.currentTime = 0;
-                    sfx.tromBone.play();
-                    sfx.tromBone.onended = () => {
-                        tromboneIsPlaying = false;
-                        animTromboneEnd();
-                        if (musicEnabled) {
-                            if (player.inCombat && tromboneResumeType === "battle") {
-                                playRandomBattleMusic();
-                            } else {
-                                resumeExplorationMusic();
-                            }
-                        }
-                        tromboneResumeType = null;
-                    };
-                    updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
-                },
-                merchantStockChance: 1.0,
-                weight: 1.3,
-                price: 5,
-            },
-        };
-
-        const weapons = {
-            fingerNail: {
-                article: 'a',
-                name: "FINGERNAIL",
-                description: "Your very own fingernail! Careful not to break it!",
-                damage: { base: 1, randomMultiplier: 4 },
-                price: 0,
-                weight: 0, // No weight
-                requiredStr: 0, // No requirement
-            },
-            pointyStick: {
-                article: 'a',
-                name: "POINTY STICK",
-                description: "A stick that fell off of a tree somewhere",
-                damage: { base: 2, randomMultiplier: 5 },
-                price: 20,
-                weight: 5,
-                requiredStr: 7,
-            },
-            wiffleBallBat: {
-                article: 'a',
-                name: "WIFFLE BALL BAT",
-                description: "A hollow bat made of plastic",
-                damage: { base: 3, randomMultiplier: 6 },
-                price: 50,
-                weight: 6,
-                requiredStr: 13,
-            },
-            nunchucks: {
-                article: '',
-                name: "NUNCHUCKS",
-                description: "Two pieces of wood connected by a chain",
-                damage: { base: 6, randomMultiplier: 9 },
-                price: 100,
-                weight: 8,
-                requiredStr: 20,
-            },
-            atlatlSpear: {
-                article: 'an',
-                name: "ATLATL SPEAR",
-                description: "A spear with a throwing lever",
-                damage: { base: 10, randomMultiplier: 11 },
-                price: 400,
-                weight: 10,
-                requiredStr: 25,
-            },
-            bludgeoningMace: {
-                article: 'a',
-                name: "BLUDGEONING MACE",
-                description: "A stick with a spikey metal ball at the end",
-                damage: { base: 10, randomMultiplier: 14 },
-                price: 500,
-                weight: 11,
-                requiredStr: 25,
-            },
-            danceClub: {
-                article: 'a',
-                name: "DANCE CLUB",
-                description: "A club long enough to pole dance on... maybe it is one? You don't know. Legend has it, an obscure forum user once wielded one...",
-                damage: { base: 13, randomMultiplier: 15 },
-                price: 800,
-                weight: 12,
-                requiredStr: 28,
-            },
-            cathodeRayTubeMonitor: {
-                article: 'a',
-                name: "CATHODE RAY TUBE MONITOR",
-                description: "A CRT monitor. Heavy as piss.",
-                damage: { base: 15, randomMultiplier: 17 },
-                price: 1000,
-                weight: 15,
-                requiredStr: 33,
-            },
-            magicPencil: {
-                article: 'a',
-                name: "MAGIC PENCIL",
-                description: "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle",
-                damage: { base: 17, randomMultiplier: 18 },
-                price: 1400,
-                weight: 5,
-                requiredStr: 38,
-            },
-            goldenWang: {
-                article: 'a',
-                name: "GOLDEN WANG",
-                description: "With the power of the Golden Wang, the Discordian parasite shall perish!",
-                damage: { base: 69, randomMultiplier: 69 },
-                price: 6900,
-                weight: 69,
-                requiredStr: 69,
-            },
-        };
-
-        const armor = {
-            pectoralMass: {
-                article: 'a',
-                name: "PECTORAL MASS",
-                description: "Your totally big, meaty pectorals! You're not fat at all...'",
-                defense: 1,
-                price: 0,
-                weight: 0,
-                requiredEnd: 0,
-            },
-            graphicTee: {
-                article: 'a',
-                name: "GRAPHIC TEE",
-                description: "A t-shirt that says 'Normal people scare me'",
-                defense: 2,
-                price: 20,
-                weight: 3,
-                requiredEnd: 8,
-            },
-            barrelWithSuspenders: {
-                article: 'a',
-                name: "BARREL (with suspenders)",
-                description: "An empty barrel that sort of covers your torso and legs. Smells like whisky too!",
-                defense: 3,
-                price: 100,
-                weight: 5,
-                requiredEnd: 11,
-            },
-            leatherArmor: {
-                article: '',
-                name: "LEATHER ARMOR",
-                description: "The finest in leather, fitted with a tight top, codpiece, cat o' nine tails... (uh, are you sure this is actually armor?)",
-                defense: 6,
-                price: 200,
-                weight: 6,
-                requiredEnd: 15,
-            },
-            milaneseArmor: {
-                article: '',
-                name: "MILANESE ARMOR",
-                description: "A classic suit of armor. Looks kind of like a Renaissance-era Robocop",
-                defense: 12,
-                price: 500,
-                weight: 9,
-                requiredEnd: 18,
-            },
-            blackPlateArmor: {
-                article: '',
-                name: "BLACK PLATE ARMOR",
-                description: "Literally a giant black dinner plate. Deceptively protective.",
-                defense: 16,
-                price: 1000,
-                weight: 13,
-                requiredEnd: 25,
-            },
-            nokiaMail: {
-                article: '',
-                name: "NOKIA MAIL",
-                description: "A Nokia branded mail. No, not like an email... more like a chainmail. But Nokia.",
-                defense: 21,
-                price: 2000,
-                weight: 18,
-                requiredEnd: 34,
-            },
-        };
-
-        const rings = {
-        // PRS Boosters
-            ringOfSexyUnderwear: {
-                article: 'a',
-                name: "RING OF SEXY UNDERWEAR",
-                description: "A ring with an engraving of a pair of strangely attractive undergarments. +3 PRS",
-                effects: { persuasion: 3 },
-                price: 60,
-                merchantStockChance: 0.5,
-                chestChance: 0.1,
-                weight: 1,
-            },
-
-            ringOfFrenchAccent: {
-                article: 'a',
-                name: "FRENCHLY ACCENTED RING",
-                description: "A ring that somehow magically forces you to speak in a French accent. VERY sexy! +5 PRS",
-                effects: { persuasion: 5 },
-                price: 100,
-                merchantStockChance: 0.3,
-                chestChance: 0.04,
-                weight: 1,
-            },
-
-        // HP Boosters
-            ringValentines: {
-                article: 'a',
-                name: "VALENTINE'S DAY RING",
-                description: "A ring that was given to somebody by their Valentine... and dumped down a hole. You see 'Amy' engraved onto a heart. How sad. +5 HP",
-                effects: { maxHp: 5 },
-                price: 60,
-                merchantStockChance: 0.5,
-                chestChance: 0.07,
-                weight: 1,
-            },
-            ringBloodstream: {
-                article: 'a',
-                name: "BLOODSTREAM NOSERING",
-                description: "A nosering that injects blood into your veins. Sounds painful... +8 HP",
-                effects: { maxHp: 8 },
-                price: 100,
-                merchantStockChance: 0.3,
-                chestChance: 0.04,
-                weight: 1,
-            },
-        //DEF Boosters
-            ringOfHardening: {
-                article: 'a',
-                name: "COCKRING OF HARDENING",
-                description: "A piercing for your cock that doubles as a sort of penis pill. One size fits all! +2 DEF",
-                effects: { defense: 2 },
-                price: 60,
-                merchantStockChance: 0.4,
-                chestChance: 0.07,
-                weight: 1,
-            },
-            ringPectoralPiercing: {
-                article: 'a',
-                name: "PECTORAL PIERCING",
-                description: "A piercing that can fit anywhere on your big, juicy pectorals. +5 DEF",
-                effects: { defense: 5 },
-                price: 100,
-                merchantStockChance: 0.3,
-                chestChance: 0.04,
-                weight: 1,
-            },
-        // SPD Boosters
-            ringPinkyToe: {
-                article: 'a',
-                name: "PINKY TOE RING",
-                description: "A ring for your pinky toe. The only way for this to work is by putting it directly through the toenail... kinda like that SpongeBob episode! +1 SPD",
-                effects: { speed: 1 },
-                price: 60,
-                merchantStockChance: 0.4,
-                chestChance: 0.07,
-                weight: 1,
-            },
-            ringCrack: {
-                article: 'a',
-                name: "CRACK INFUSED RING",
-                description: "A ring infused with crack cocaine. +2 SPD",
-                effects: { speed: 2 },
-                price: 100,
-                merchantStockChance: 0.3,
-                chestChance: 0.04,
-                weight: 1,
-            },
-        // LUK Boosters
-            ringGamble: {
-                article: 'the',
-                name: "GAMBLER'S RING",
-                description: "A cheap looking ring with a 240p image of a slot machine on it. +2 LUK",
-                effects: { luck: 2 },
-                price: 150,
-                merchantStockChance: 0.1,
-                chestChance: 0.05,
-                weight: 1,
-            },
-            ringEscobar: {
-                article: '',
-                name: "PABLO ESCOBAR'S GOLDEN RING",
-                description: "A golden ring that once belonged to Pablo Escobar. It smells rather illegal, but who give a shit? +4 LUK",
-                effects: { luck: 4 },
-                price: 200,
-                merchantStockChance: 0.07,
-                chestChance: 0.02,
-                weight: 1,
-            },
-        // Special
-            ringOfSightliness: {
-                article: 'a',
-                name: "RING OF SIGHTLINESS",
-                description: "A ring with an eyeball so realistic looking, it could actually be real. Allows you to see better in the Tardspire",
-                effects: {},
-                price: 180,
-                merchantStockChance: 0.2,
-                chestChance: 0.0,
-                weight: 2,
-            },
-            ringOfStinky: {
-                article: 'a',
-                name: "RING OF STINKY",
-                description: "A ring so stinky, SO putrid, that even monsters will reconsider confronting you. Reduces encounter rate by 30%",
-                effects: {},
-                price: 200,
-                merchantStockChance: 0.2,
-                chestChance: 0.0,
-                weight: 2,
-            },
-            ringOfAmplifiedAudio: {
-                article: 'a',
-                name: "RING OF AMPLIFIED AUDIO",
-                description: "A ring with a tiny, yet deceptively loud megaphone. Miniphone? idk. +2 PRS and a PRS attempt",
-                effects: { persuasion: 2 },
-                price: 130,
-                merchantStockChance: 0.2,
-                chestChance: 0.00,
-                weight: 2,
-            },
-        };
-
         function getEffectiveStat(stat) {
             if (stat === "persuasionAttempts") {
-                return player.hasEquippedRing('ringOfAmplifiedAudio') ? 3 : 2;
+                return player.inventory.hasEquippedRing("ringOfAmplifiedAudio")
+                    ? 3 : 2;
             }
 
             if (stat === 'speed') {
                 const baseSpd = player.speed;
-                const carryWeight = player.getCarryWeight();
+                const carryWeight = player.inventory.getWeight();
                 const carryLimit = player.getCarryWeightLimit();
                 if (carryWeight <= 0) {
                     return baseSpd;
@@ -8828,13 +8908,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 if (percent <= 0.5) {
                     return baseSpd; // Debuff: 5% at 50%, up to 100% at 100%
                 }
-                const debuff = Math.min(1, (percent - 0.5) * 2) * 0.95 + 0.05; // Linear from 5% to 100%
+
+                // Linear from 5% to 100%
+                const debuff = Math.min(1, (percent - 0.5) * 2) * 0.95 + 0.05;
                 return Math.max(0, Math.floor(baseSpd * (1 - debuff)));
             }
 
-            const ringsEquipped = [player.ring1, player.ring2]
-                .map(ringId => ringId ? rings[ringId] : null)
-                .filter(Boolean);
+            const ringsEquipped = Object.values(
+                player.inventory.getEquippedRings()
+            ).filter(Boolean);
+
             return player[stat] + ringsEquipped.reduce((sum, ring) => sum + (ring.effects?.[stat] || 0), 0);
         }
 
@@ -9411,13 +9494,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 .forEach((c) => MAP.setCell(c.x, c.y, "crackedFloorSlight"));
         }
 
-        function getRandomMerchantItem() {
-            const availableItems = Object.keys(items).filter(itemId => items[itemId].merchantStockChance > 0);
-            return randomEntry(availableItems);
+        function getRandomItem() {
+            const items = InventoryObjectDefinitions.items;
+            return randomEntry(
+                Object
+                    .keys(items)
+                    .filter(itemId => items[itemId] .merchantStockChance > 0)
+            );
         }
 
         function updateSeenTiles() {
-            player.hasEquippedRing('ringOfSightliness')
+            player.inventory.hasEquippedRing('ringOfSightliness')
                 ? MAP.revealFOV(player.x, player.y, 2)
                 : MAP.revealSpot(player.x, player.y, 1);
         }
@@ -9697,9 +9784,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 shakeScreen();
             }
 
-            const hasStinky = player.ring1 === "ringOfStinky" || player.ring2 === "ringOfStinky";
-            if (hasStinky) {
-                randomEncounterChance *= 0.7; // If Ring of Stinky is equipped, reduce encounter chance by 30%
+            // If Ring of Stinky is equipped, reduce encounter chance by 30%
+            if (player.inventory.hasEquippedRing("ringOfStinky")) {
+                randomEncounterChance *= 0.7;
             }
 
             const tile = MAP.getCell(nx, ny);
@@ -9843,31 +9930,38 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return;
             }
 
+            // +0.1% critical chance per point of luck
+            const critChance = getEffectiveStat('luck') * 0.01;
+            const isCriticalHit = Math.random() < critChance;
+            const damageMultiplier = isCriticalHit ? 1.2 : 1;
+
             playSFX('attack');
-            const playerWeapon = weapons[player.weapon];
-            let dmg = Math.floor(Math.random() * playerWeapon.damage.randomMultiplier) + playerWeapon.damage.base;
+            const weaponDamage =
+                player.inventory.getEquippedWeapon()?.damage ||
+                { base: 1, randomMultiplier: 4 };
 
-            dmg += player.strength;
+            const damagePoints =
+                player.strength + (
+                    Math.floor(Math.random() * weaponDamage.randomMultiplier) +
+                    weaponDamage.base
+                ) * damageMultiplier;
 
-            // Crit attacks based off LUK stat
-            const critChance = getEffectiveStat('luck') * 0.01; // +0.1% chance per point
-            let isCrit = Math.random() < critChance;
-            if (isCrit) {
-                dmg = Math.floor(dmg * 1.2);
+            if (isCriticalHit) {
                 updateBattleLog(
                     `<span class="LUK">CRITICAL HIT!</span> ` +
                     `<span class="friendly">You</span> dealt ` +
-                    `<span class="action">${dmg} HP</span> ` +
+                    `<span class="action">${damagePoints} HP</span> ` +
                     `to <span class="enemy">${currentEnemy.name}</span>`
                 );
             } else {
                 updateBattleLog(
                     `<span class="friendly">You</span> deal ` +
-                    `<span class="action">${dmg} HP</span> ` +
+                    `<span class="action">${damagePoints} HP</span> ` +
                     `to <span class="enemy">${currentEnemy.name}</span>`
                 );
             }
-            currentEnemy.hp -= dmg;
+
+            currentEnemy.hp -= damagePoints;
             endOfPlayerTurn();
         }
 
@@ -9932,10 +10026,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const damage = numberBetween(1, 5) + Math.floor(floor / 2);
 
             // Calculate damage based on player's defense
-            const defense =
-                getEffectiveStat('defense') +
-                (armor[player.armor]?.defense || 0);
-
+            const defense = getEffectiveStat('defense');
             const totalDamage = Math.max(1, Math.floor(damage - defense / 5));
             const ally = randomEntry(player.party.get());
             const target = ally && Math.random() < 0.5 ? "ally" : "player";
@@ -10029,7 +10120,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 // Check limit FIRST
                 if (persuasionAttempts > maxPersuasionAttempts) {
-                    updateBattleLog(`Your words are no longer being heard... <span class="action">you have run out of persuasion attempts.</span>`);
+                    updateBattleLog(
+                        `Your words are no longer being heard... ` +
+                        `<span class="action">you have run out of persuasion ` +
+                        `attempts.</span>`
+                    );
                     enemyAttack();
                     render();
                     return;
@@ -10048,8 +10143,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 player.say(playerMessage);
 
-                const prsStat = Math.min(getEffectiveStat('persuasion'), 100);
-                const totalChance = prsStat / 100; // Chances cap out at 100%. So a stat of 12 would be 12% chance at success, etc
+                // Chances cap out at 100%. So a stat of 12 would be a 12%
+                // chance of success, etc
+                const totalChance = getEffectiveStat('persuasion') / 100;
 
                 if (Math.random() < totalChance) {
                     if (!player.party.isFull()) {
@@ -10101,23 +10197,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 render();
             }
-        }
-
-        function useItem(itemName) {
-            if (!player.inventory[itemName] || player.inventory[itemName] <= 0) {
-                updateBattleLog("You don't have that item!");
-                return;
-            }
-
-            typeof items[itemName]?.use === "function"
-                ? items[itemName].use()
-                : updateBattleLog("You used the item, but nothing happened.");
-        
-            player.inventory[itemName]--;
-            if (player.inventory[itemName] <= 0) {
-                delete player.inventory[itemName];
-            }
-            render();
         }
 
         function handleCheatCommand(cmd) {
@@ -10340,8 +10419,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             // LUK affects chance to roll a 12
             // LUK now works like PRS: 0-100% chance to win (roll a 12)
-            const lukStat = Math.min(getEffectiveStat('luck'), 100);
-            const winChance = lukStat / 100; // example; 32 LUK = 32% chance at success
+            // example; 32 LUK = 32% chance at success
+            const winChance = getEffectiveStat('luck') / 100;
 
             let roll12 = Math.random() < winChance;
 
@@ -10568,7 +10647,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
 
         function openChest() {
-            if (MAP.getCell(player.x, player.y)?.type === 'mimic') {
+            const cellType = MAP.getCell(player.x, player.y)?.type;
+
+            if (cellType === 'mimic') {
                 // Mimic detected, start a battle
                 playSFX('scream');
 
@@ -10579,20 +10660,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const baseMimic = enemies.find(e => e.id === "mimic");
                 currentEnemy = scaleMimicStats(baseMimic);
 
-                updateBattleLog("Holy shit! It was actually a <span class='enemy'>MIMIC</span>!!!");
+                updateBattleLog(
+                    `Holy shit! It was actually a ` +
+                    `<span class="enemy">MIMIC</span>!!!`
+                );
                 player.enterCombat();
                 playRandomBattleMusic();
-            } else if (MAP.getCell(player.x, player.y)?.type === 'treasureChest') {
+            } else if (cellType === 'treasureChest') {
                 // Normal chest, provide loot
                 const lootTypeRoll = Math.random();
                 let chestContents;
                 if (lootTypeRoll < 0.4) {
                     chestContents = { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 };
                 } else if (lootTypeRoll < 0.7) {
-                    chestContents = { type: 'item', item: getRandomMerchantItem() };
+                    chestContents = { type: 'item', item: getRandomItem() };
                 } else {
                     // Try to spawn a ring based on chestChance
-                    const possibleRings = Object.keys(rings).filter(ringId =>
+                    const rings = InventoryObjectDefinitions.rings;
+                    const ownedRings = Object.keys(player.inventory.getRings());
+                    const unonwedRings =
+                        Object.keys(rings).filter(r => !ownedRings.includes(r));
+                    const possibleRings = unonwedRings.filter(ringId =>
                         Math.random() < (rings[ringId].chestChance || 0)
                     );
                     if (possibleRings.length > 0) {
@@ -10612,13 +10700,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         `You found <span class="BTC">${total} BTC</span> in the chest!`
                     );
                 } else if (chestContents.type === 'item') {
-                    const itemName = chestContents.item;
-                    player.inventory[itemName] = (player.inventory[itemName] || 0) + 1;
-                    updateBattleLog(`You found <span class="friendly">${items[itemName].name}</span> in the chest!`);
+                    const key = chestContents.item;
+                    player.inventory.addItem(key);
+                    const itemName = InventoryObjectDefinitions.items[key].name;
+                    updateBattleLog(
+                        `You found <span class="friendly">${itemName}</span> ` +
+                        `in the chest!`
+                    );
                 } else if (chestContents.type === 'ring') {
-                    const ringId = chestContents.ring;
-                    player.inventory[ringId] = (player.inventory[ringId] || 0) + 1;
-                    updateBattleLog(`You found <span class="friendly">${rings[ringId].name}</span> in the chest!`);
+                    const key = chestContents.ring;
+                    player.inventory.addRing(key);
+                    const ringName = InventoryObjectDefinitions.rings[key].name;
+                    updateBattleLog(
+                        `You found <span class="friendly">${ringName}</span> ` +
+                        `in the chest!`
+                    );
                 }
 
                 // Remove the chest from the map
@@ -10903,7 +10999,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             inventory: {
                 title: "INVENTORY",
                 landingHtml: () => {
-                    return isEmpty(player.inventory)
+                    return player.inventory.isEmpty()
                         ? 'You own nothing. Klaus Schwab would be proud'
                         : null;
                 },
@@ -10916,9 +11012,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     {
                         id: "inventoryEquipment",
                         displayText: "Equipment",
-                        description: "View and change your equipped weapon and armor.",
+                        description:
+                            "View and change your equipped weapon and armor.",
                         className: player.inCombat ? "tooExpensive" : undefined,
-                        disabled: player.inCombat,
                     },
                     {
                         id: "_back",
@@ -10928,7 +11024,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ],
                 select: (selectedOptionId) => {
                     // When in battle, disable equipment submenus
-                    if (selectedOptionId === "inventoryEquipment" && player.inCombat) {
+                    const submenuDisabled =
+                        selectedOptionId === "inventoryEquipment" &&
+                        player.inCombat;
+
+                    if (submenuDisabled) {
                         updateBattleLog(
                             `Your foe's <span class="action">deathly ` +
                             `stare</span> prevents you from wanting to strip ` +
@@ -10948,18 +11048,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             inventoryItems: {
                 title: "INVENTORY > ITEMS",
                 landingHtml: () => {
-                    return isEmpty(player.inventory)
+                    return !player.inventory.hasItems()
                         ? 'You own nothing. Klaus Schwab would be proud'
                         : null;
                 },
                 getOptions: () => {
-                    const options = Object.keys(player.inventory)
-                        .filter(itemId => items[itemId])
-                        .map((itemId) => ({
-                            id: itemId,
-                            displayText: items[itemId].name,
-                            description: items[itemId].description,
-                            trailText: `${player.inventory[itemId]}`,
+                    const items = Object.values(player.inventory.getItems());
+                    const options =
+                        items.map((item) => ({
+                            id: item.id,
+                            displayText: item.name,
+                            description: item.description,
+                            trailText: item.count,
                         }));
 
                     options.push({
@@ -10971,7 +11071,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    useItem(selectedOptionId);
+                    const itemUsed = player.inventory.useItem(selectedOptionId);
+                    if (!itemUsed) {
+                        console.error(
+                            "Tried to use an item that the player doesn't have",
+                            { selectedOptionId }
+                        );
+                    }
+
                     menu.closeAll(); // Close all menus after using an item
                     if (currentEnemy && currentEnemy.hp > 0) {
                         enemyAttack();
@@ -10982,24 +11089,28 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             inventoryEquipment: {
                 title: "INVENTORY > EQUIPMENT",
                 getOptions: () => {
-                    const weapon = weapons[player.weapon];
-                    const armorPiece = armor[player.armor];
-                    const ring1 = player.ring1 ? rings[player.ring1]?.name : "None";
-                    const ring2 = player.ring2 ? rings[player.ring2]?.name : "None";
+                    const weapon = player.inventory.getEquippedWeapon();
+                    const armor = player.inventory.getEquippedArmor();
+                    const rings = player.inventory.getEquippedRings();
+
                     return [
                         {
                             id: "equipHand",
-                            displayText: `Hand: ${weapon?.name || "None"}`,
+                            displayText: `Hand:   ${weapon?.name || "None"}`,
                             description: "View and equip your weapons.",
                         },
                         {
                             id: "equipBody",
-                            displayText: `Body: ${armorPiece?.name || "None"}`,
+                            displayText: `Body:   ${armor?.name || "None"}`,
                             description: "View and equip your armor.",
                         },
                         {
                             id: "equipRings",
-                            displayText: `Rings: ${ring1}\n         ${ring2}`,
+                            // The second line is deliberately offset because
+                            // the cursor adds two spaces to the first line
+                            displayText:
+                                `Rings:  ${rings.leftHand?.name || "None"}\n` +
+                                `          ${rings.rightHand?.name || "None"}`,
                             description: "View and equip your rings.",
                         },
                         {
@@ -11016,22 +11127,36 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             equipHand: {
                 title: "INVENTORY > EQUIPMENT > EQUIP WEAPON",
                 getOptions: () => {
-                    const ownedWeapons = Object.keys(weapons).filter(w => player.inventory[w] > 0 || player.weapon === w);
-                    return ownedWeapons.map((weaponId) => {
-                        const req = weapons[weaponId].requiredStr || 0;
-                        const meetsReq = player.strength >= req;
-                        const reqStrHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">STR ${req}</span>`;
+                    const equippedWeaponId =
+                        player.inventory.getEquippedWeapon()?.id || null;
+                    const ownedWeapons =
+                        Object.values(player.inventory.getWeapons());
+
+                    return ownedWeapons.map((weapon) => {
+                        const isEquipped = weapon.id === equippedWeaponId;
+                        const requiredStrength = weapon.requiredStr || 0;
+                        const playerMeetsReqirements =
+                            player.strength >= requiredStrength;
+                        const requirementClass =
+                            playerMeetsReqirements ? "friendly" : "enemy";
+                        const requiredStrengthHtml =
+                            `<span class="${requirementClass}">` +
+                            `STR ${requiredStrength}</span>`;
+
                         return {
-                            id: weaponId,
-                            displayText: weapons[weaponId].name + (player.weapon === weaponId ? " (Equipped)" : ""),
+                            id: weapon.id,
+                            displayText:
+                                weapon.name + (isEquipped ? " (Equipped)" : ""),
                             description:
-                                `${weapons[weaponId].description}\n` +
-                                `Base Damage: ${weapons[weaponId].damage.base}, ` +
-                                `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
-                                `LOAD: ${weapons[weaponId].weight}\n` +
-                                `Stat Requirement: ${reqStrHtml}`,
-                            className: !meetsReq ? "tooExpensive" : (player.weapon === weaponId ? "friendly" : undefined),
-                            disabled: !meetsReq,
+                                `${weapon.description}\n` +
+                                `Base Damage: ${weapon.damage.base}, ` +
+                                `Random Multiplier: ` +
+                                    `${weapon.damage.randomMultiplier}\n` +
+                                `LOAD: ${weapon.weight}\n` +
+                                `Stat Requirement: ${requiredStrengthHtml}`,
+                            className: playerMeetsReqirements
+                                ? (isEquipped ? "friendly" : undefined)
+                                : "tooExpensive",
                         };
                     }).concat([{
                         id: "_back",
@@ -11040,15 +11165,37 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }]);
                 },
                 select: (selectedOptionId) => {
-                    const weapon = weapons[selectedOptionId];
-                    if (!weapon) return;
-                    const req = weapon.requiredStr || 0;
-                    if (player.strength < req) {
-                        updateBattleLog(`You require <span class="STR">${req} STR</span> to handle this weapon!`);
+                    const weapon =
+                        InventoryObjectDefinitions.weapons[selectedOptionId];
+                    if (!weapon) {
+                        console.error(
+                            "Selected an inventory weapon that does not exist",
+                            { selectedOptionId }
+                        );
                         return;
                     }
-                    player.weapon = selectedOptionId;
-                    updateBattleLog(`You now wield a mighty <span class="friendly">${weapon.name}</span>!`);
+
+                    const requiredStrength = weapon.requiredStr || 0;
+                    if (player.strength < requiredStrength) {
+                        updateBattleLog(
+                            `You require <span class="STR">` +
+                            `${requiredStrength} STR</span> to handle this ` +
+                            `weapon!`
+                        );
+                        return;
+                    }
+
+                    if (player.inventory.equipWeapon(selectedOptionId)) {
+                        updateBattleLog(
+                            `You now wield a mighty <span class="friendly">` +
+                            `${weapon.name}</span>!`
+                        );
+                    } else {
+                        console.error(
+                            "Could not equip weapon",
+                            { selectedOptionId }
+                        );
+                    }
                     menu.close();
                     render();
                 },
@@ -11057,21 +11204,34 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             equipBody: {
                 title: "INVENTORY > EQUIPMENT > EQUIP ARMOR",
                 getOptions: () => {
-                    const ownedArmor = Object.keys(armor).filter(a => player.inventory[a] > 0 || player.armor === a);
-                    return ownedArmor.map((armorId) => {
-                        const req = armor[armorId].requiredEnd || 0;
-                        const meetsReq = player.endurance >= req;
-                        const reqEndHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">END ${req}</span>`;
+                    const equippedArmorId =
+                        player.inventory.getEquippedArmor()?.id || null;
+                    const ownedArmor =
+                        Object.values(player.inventory.getArmor());
+
+                    return ownedArmor.map((armor) => {
+                        const isEquipped = armor.id === equippedArmorId;
+                        const requiredEndurance = armor.requiredEnd || 0;
+                        const meetsRequirements =
+                            player.endurance >= requiredEndurance;
+                        const requirementClass = meetsRequirements
+                            ? "friendly" : "enemy";
+                        const requiredEnduranceHtml =
+                            `<span class="${requirementClass}">END ` +
+                            `${requiredEndurance}</span>`;
                         return {
-                            id: armorId,
-                            displayText: armor[armorId].name + (player.armor === armorId ? " (Equipped)" : ""),
+                            id: armor.id,
+                            displayText:
+                                armor.name +
+                                (isEquipped ? " (Equipped)" : ""),
                             description:
-                                `${armor[armorId].description}\n` +
-                                `Defense: ${armor[armorId].defense}\n` +
-                                `LOAD: ${armor[armorId].weight}\n` +
-                                `Stat Requirement: ${reqEndHtml}`,
-                            className: !meetsReq ? "tooExpensive" : (player.armor === armorId ? "friendly" : undefined),
-                            disabled: !meetsReq,
+                                `${armor.description}\n` +
+                                `Defense: ${armor.defense}\n` +
+                                `LOAD: ${armor.weight}\n` +
+                                `Stat Requirement: ${requiredEnduranceHtml}`,
+                            className: !meetsRequirements
+                                ? "tooExpensive"
+                                : (isEquipped ? "friendly" : undefined),
                         };
                     }).concat([{
                         id: "_back",
@@ -11080,38 +11240,72 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }]);
                 },
                 select: (selectedOptionId) => {
-                    const armorPiece = armor[selectedOptionId];
-                    if (!armorPiece) return;
-                    const req = armorPiece.requiredEnd || 0;
-                    if (player.endurance < req) {
-                        updateBattleLog(`You need <span class="END">${req} END</span> to wear this garment!`);
+                    const armor =
+                        InventoryObjectDefinitions.armor[selectedOptionId];
+                    if (!armor) {
+                        console.error(
+                            "Selected inventory armor that does not exist",
+                            { selectedOptionId }
+                        );
                         return;
                     }
-                    player.armor = selectedOptionId;
-                    updateBattleLog(
-                        `You are now wearing ${armorPiece.article} ` +
-                        `<span class="friendly">${armorPiece.name}</span>!`
-                    );
-                    if (player.hp > getEffectiveStat('maxHp')) {
-                        player.hp = getEffectiveStat('maxHp');
+
+                    const requiredEndurance = armor.requiredEnd || 0;
+                    if (player.endurance < requiredEndurance) {
+                        updateBattleLog(
+                            `You need <span class="END">${requiredEndurance} ` +
+                            `END</span> to wear this garment!`
+                        );
+                        return;
+                    }
+
+                    if (player.inventory.equipArmor(selectedOptionId)) {
+                        const articleText = armor.article
+                            ? `${armor.article} `
+                            : "";
+
+                        updateBattleLog(
+                            `You are now wearing ${articleText}` +
+                            `<span class="friendly">${armor.name}</span>!`
+                        );
+
+                        if (player.hp > getEffectiveStat('maxHp')) {
+                            player.hp = getEffectiveStat('maxHp');
+                        }
+                    } else {
+                        console.error(
+                            "Could not equip armor",
+                            { selectedOptionId }
+                        );
                     }
                     menu.close();
                     render();
                 },
             },
+
             equipRings: {
                 title: "INVENTORY > EQUIPMENT > EQUIP RINGS",
                 getOptions: () => {
+                    const rings = player.inventory.getEquippedRings();
+                    const leftHandText = "Left Hand:  " + (rings.leftHand
+                        ? rings.leftHand.name
+                        : "None"
+                    );
+                    const rightHandText = "Right Hand: " + (rings.rightHand
+                        ? rings.rightHand.name
+                        : "None"
+                    );
+
                     return [
                         {
-                            id: "ring1",
-                            displayText: `Slot 1: ${player.ring1 ? rings[player.ring1].name + " (Equipped)" : "None"}`,
-                            description: "Equip a ring to Slot 1.",
+                            id: "ringLeftHand",
+                            displayText: leftHandText,
+                            description: "Equip a ring on your left hand",
                         },
                         {
-                            id: "ring2",
-                            displayText: `Slot 2: ${player.ring2 ? rings[player.ring2].name + " (Equipped)" : "None"}`,
-                            description: "Equip a ring to Slot 2.",
+                            id: "ringRightHand",
+                            displayText: rightHandText,
+                            description: "Equip a ring on your right hand",
                         },
                         {
                             id: "_back",
@@ -11121,10 +11315,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     ];
                 },
                 select: (selectedOptionId) => {
-                    if (selectedOptionId === "ring1") {
-                        menu.open("ring1Select");
-                    } else if (selectedOptionId === "ring2") {
-                        menu.open("ring2Select");
+                    if (selectedOptionId === "ringLeftHand") {
+                        menu.open("ringLeftHandSelect");
+                    } else if (selectedOptionId === "ringRightHand") {
+                        menu.open("ringRightHandSelect");
                     } else {
                         if (player.hp > getEffectiveStat('maxHp')) {
                             player.hp = getEffectiveStat('maxHp');
@@ -11134,71 +11328,220 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 },
             },
-            ring1Select: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > SLOT 1",
+
+            ringLeftHandSelect: {
+                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > LEFT HAND",
                 getOptions: () => {
-                    const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
-                    const options = ownedRings.map((ringId) => ({
-                        id: ringId,
-                        displayText: rings[ringId].name + (player.ring1 === ringId ? " (Equipped)" : ""),
-                        description: rings[ringId].description,
-                        className: player.ring1 === ringId
-                            ? "friendly"
-                            : player.ring2 === ringId
-                                ? "muted"
-                                : undefined,
-                    }));
+                    const ownedRings =
+                        Object.values(player.inventory.getRings());
+                    const options = ownedRings.map((ring) => {
+                        const isEquipped =
+                            player.inventory.hasEquippedRing(ring.id);
+                        const displayText =
+                            ring.name + (isEquipped ? " (Equipped)" : "");
+                        const className = isEquipped
+                            ? (isEquipped ? "friendly" : "muted")
+                            : undefined;
+
+                        return {
+                            id: ring.id,
+                            displayText,
+                            description: ring.description,
+                            className,
+                        };
+                    });
+
                     options.unshift({
                         id: null,
                         displayText: "None",
-                        description: "Unequip this ring slot.",
+                        description: "Unequip this ring slot",
                     });
+
                     options.push({
                         id: "_back",
                         displayText: "[Back]",
                         description: "Return to rings menu",
                     });
+
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    if (player.equipRing(1, selectedOptionId)) {
+                    const handId = "leftHand";
+
+                    if (!selectedOptionId) {
+                        // Only update if a ring has been equipped
+                        if (!player.inventory.hasEquippedRing(null, handId)) {
+                            player.inventory.unequipRing(handId);
+                            updateBattleLog(
+                                `You pull the ring off your ` +
+                                `<span class="friendly">left hand</span>. ` +
+                                `The dungeon air caresses the pale circle ` +
+                                `that it left behind. You feel exposed... wuss.`
+                            );
+                        }
+
                         menu.close();
                         render();
+                        return;
                     }
+
+                    const ring =
+                        InventoryObjectDefinitions.rings[selectedOptionId];
+                    if (!ring) {
+                        console.error(
+                            "Selected an inventory ring that does not exist",
+                            { selectedOptionId }
+                        );
+                        return;
+                    }
+
+                    const ringIsAlreadyEquippedOnOppositeHand =
+                        player.inventory.hasEquippedRing(
+                            selectedOptionId,
+                            "rightHand"
+                        );
+                    if (ringIsAlreadyEquippedOnOppositeHand) {
+                        const articleText = ring.article ? "the " : "";
+                        updateBattleLog(
+                            `You are <span class="action">already wearing` +
+                            `</span> ${articleText}<span class="friendly">` +
+                            `${ring.name}</span> on your right hand, fool!`
+                        );
+                        return;
+                    }
+
+                    const hasRingEquipped = player.inventory.equipRing(
+                        handId,
+                        selectedOptionId
+                    );
+
+                    if (hasRingEquipped) {
+                        const articleText = ring.article
+                            ? `${ring.article} `
+                            : "";
+
+                        updateBattleLog(
+                            `You are now wearing ${articleText}` +
+                            `<span class="friendly">${ring.name}</span> on ` +
+                            `your <span class="friendly">left hand</span>!`
+                        );
+                    } else {
+                        console.error(
+                            "Could not equip ring on the player's left hand",
+                            { selectedOptionId }
+                        );
+                    }
+
+                    menu.close();
+                    render();
                 },
             },
 
-            ring2Select: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > SLOT 2",
+            ringRightHandSelect: {
+                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > RIGHT HAND",
                 getOptions: () => {
-                    const ownedRings = Object.keys(rings).filter(r => player.inventory[r] > 0 || player.ring1 === r || player.ring2 === r);
-                    const options = ownedRings.map((ringId) => ({
-                        id: ringId,
-                        displayText: rings[ringId].name + (player.ring2 === ringId ? " (Equipped)" : ""),
-                        description: rings[ringId].description,
-                        className: player.ring2 === ringId
-                            ? "friendly"
-                            : player.ring1 === ringId
-                                ? "muted"
-                                : undefined,
-                    }));
+                    const ownedRings =
+                        Object.values(player.inventory.getRings());
+                    const options = ownedRings.map((ring) => {
+                        const isEquipped =
+                            player.inventory.hasEquippedRing(ring.id);
+                        const displayText =
+                            ring.name + (isEquipped ? " (Equipped)" : "");
+                        const className = isEquipped
+                            ? (isEquipped ? "friendly" : "muted")
+                            : undefined;
+
+                        return {
+                            id: ring.id,
+                            displayText,
+                            description: ring.description,
+                            className,
+                        };
+                    });
+
                     options.unshift({
                         id: null,
                         displayText: "None",
-                        description: "Unequip this ring slot.",
+                        description: "Unequip this ring slot",
                     });
+
                     options.push({
                         id: "_back",
                         displayText: "[Back]",
                         description: "Return to rings menu",
                     });
+
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    if (player.equipRing(2, selectedOptionId)) {
+                    const handId = "rightHand";
+
+                    if (!selectedOptionId) {
+                        // Only update if a ring has been equipped
+                        if (!player.inventory.hasEquippedRing(null, handId)) {
+                            player.inventory.unequipRing(handId);
+                            updateBattleLog(
+                                `You pull the ring off your ` +
+                                `<span class="friendly">right hand</span>. ` +
+                                `How unfashionable of you.`
+                            );
+                        }
+
                         menu.close();
                         render();
+                        return;
                     }
+
+                    const ring =
+                        InventoryObjectDefinitions.rings[selectedOptionId];
+                    if (!ring) {
+                        console.error(
+                            "Selected an inventory ring that does not exist",
+                            { selectedOptionId }
+                        );
+                        return;
+                    }
+
+                    const ringIsAlreadyEquippedOnOppositeHand =
+                        player.inventory.hasEquippedRing(
+                            selectedOptionId,
+                            "leftHand"
+                        );
+                    if (ringIsAlreadyEquippedOnOppositeHand) {
+                        const articleText = ring.article ? "the " : "";
+                        updateBattleLog(
+                            `You are <span class="action">already wearing` +
+                            `</span> ${articleText}<span class="friendly">` +
+                            `${ring.name}</span> on your left hand. DUH!`
+                        );
+
+                        return;
+                    }
+
+                    const hasRingEquipped = player.inventory.equipRing(
+                        handId,
+                        selectedOptionId
+                    );
+
+                    if (hasRingEquipped) {
+                        const articleText = ring.article
+                            ? `${ring.article} `
+                            : "";
+
+                        updateBattleLog(
+                            `You are now wearing ${articleText}` +
+                            `<span class="friendly">${ring.name}</span> on ` +
+                            `your <span class="friendly">right hand</span>!`
+                        );
+                    } else {
+                        console.error(
+                            "Could not equip ring on the player's right hand",
+                            { selectedOptionId }
+                        );
+                    }
+
+                    menu.close();
+                    render();
                 },
             },
 
@@ -11220,43 +11563,52 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 landingHtml: () => {
                     return player.bitcoins > 0
-                        ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
-                        : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                        ?
+                            `You have <span class="BTC">` +
+                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `</span> in your wallet`
+                        :
+                            "Your wallet is emptier than a lughead's skull. " +
+                            "But you can still look around";
                 },
-                getOptions: () => {
-                    return [
-                        {
-                            id: "merchantItems",
-                            displayText: "Items",
-                            description: "See what consumable items are for sale",
-                        },
-                        {
-                            id: "merchantWeapons",
-                            displayText: "Weapons",
-                            description: "Look at some weapon upgrades",
-                        },
-                        {
-                            id: "merchantArmor",
-                            displayText: "Armor",
-                            description: "Get some thicker skin",
-                        },
-                        {
-                            id: "merchantRings",
-                            displayText: "Rings",
-                            description: "Jewelry that will probably turn you gay",
-                        },
-                        {
-                            id: "merchantSell",
-                            displayText: "Sell",
-                            description: "Sell your items, filthy garb, and dangerous arms",
-                        },
-                        {
-                            id: "_back",
-                            displayText: "Leave",
-                            description: "Get back to spelunking",
-                        },
-                    ];
-                },
+                getOptions: () => [
+                    {
+                        id: "merchantItems",
+                        displayText: "Items",
+                        description:
+                            "See what consumable items are for sale",
+                    },
+                    {
+                        id: "merchantWeapons",
+                        displayText: "Weapons",
+                        description:
+                            "Look at some weapon upgrades",
+                    },
+                    {
+                        id: "merchantArmor",
+                        displayText: "Armor",
+                        description:
+                            "Get some thicker skin",
+                    },
+                    {
+                        id: "merchantRings",
+                        displayText: "Rings",
+                        description:
+                            "Jewelry that will probably turn you gay",
+                    },
+                    {
+                        id: "merchantSell",
+                        displayText: "Sell",
+                        description:
+                            "Sell your items, filthy garb, and dangerous arms",
+                    },
+                    {
+                        id: "_back",
+                        displayText: "Leave",
+                        description:
+                            "Get back to spelunking",
+                    },
+                ],
                 select: (selectedOptionId) => {
                     menu.open(selectedOptionId);
                 },
@@ -11265,17 +11617,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "MERCHANT > ITEMS",
                 landingHtml: () => {
                     return player.bitcoins > 0
-                        ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
-                        : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                        ?
+                            `You have <span class="BTC">` +
+                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `</span> in your wallet`
+                        :
+                            "Your wallet is emptier than a lughead's skull. " +
+                            "But you can still look around";
                 },
                 getOptions: () => {
+                    const items = InventoryObjectDefinitions.items;
                     const options = merchant.items.map((itemId) => ({
                         id: itemId,
                         displayText: items[itemId].name,
                         description: items[itemId].description,
                         trailText: `${items[itemId].price} BTC`,
-                        disabled: items[itemId].price > player.bitcoins,
-                        className: items[itemId].price > player.bitcoins ? 'tooExpensive' : undefined,
+                        className: items[itemId].price > player.bitcoins
+                            ? 'tooExpensive'
+                            : undefined,
                     }));
 
                     options.push({
@@ -11287,44 +11646,63 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    merchant.buy('item', selectedOptionId);
+                    merchant.buy("items", selectedOptionId);
                 },
             },
             merchantWeapons: {
                 title: "MERCHANT > WEAPONS",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
-                        ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
-                        : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                        ?
+                            `You have <span class="BTC">` +
+                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `</span> in your wallet`
+                        :
+                            "Your wallet is emptier than a lughead's skull. " +
+                            "But you can still look around";
 
-                    const currentWeapon = weapons[player.weapon];
-                    const article =
-                        currentWeapon?.article ? `${currentWeapon.article} ` : '';
+                    const currentWeapon = player.inventory.getEquippedWeapon();
+                    const article = currentWeapon?.article
+                        ? `${currentWeapon.article} `
+                        : '';
                     const currentWeaponDisplay = article + currentWeapon.name;
-                    const wieldingMessage = `You are currently wielding ${currentWeaponDisplay}`;
+                    const wieldingMessage =
+                        `You are currently wielding ${currentWeaponDisplay}`;
 
                     return `${message}\n\n${wieldingMessage}`;
                 },
                 getOptions: () => {
+                    const weapons = InventoryObjectDefinitions.weapons;
                     const weaponKeys = Object.keys(weapons);
                     const options = weaponKeys.map((weaponId) => {
-                        const tooExpensive = weapons[weaponId].price > player.bitcoins;
-                        const alreadyOwned = player.inventory[weaponId] > 0 || player.weapon === weaponId;
-                        const reqStr = weapons[weaponId].requiredStr || 0;
-                        const meetsReq = player.strength >= reqStr;
-                        const reqStrHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">STR ${reqStr}</span>`;
+                        const weapon = weapons[weaponId];
+                        const tooExpensive = weapon.price > player.bitcoins;
+                        const alreadyOwned =
+                            player.inventory.hasWeapon(weaponId);
+                        const requiredStrength = weapon.requiredStr || 0;
+                        const requirementClass =
+                            player.strength >= requiredStrength
+                                ? "friendly"
+                                : "enemy";
+                        const requiredStrengthHtml =
+                            `<span class="${requirementClass}">STR ` +
+                            `${requiredStrength}</span>`;
+
                         return {
                             id: weaponId,
-                            displayText: weapons[weaponId].name,
+                            displayText: weapon.name,
                             description:
-                                `${weapons[weaponId].description}\n` +
-                                `Base Damage: ${weapons[weaponId].damage.base}, ` +
-                                `Random Multiplier: ${weapons[weaponId].damage.randomMultiplier}\n` +
-                                `LOAD: ${weapons[weaponId].weight}\n` +
-                                `Stat Requirement: ${reqStrHtml}`,
-                            trailText: `${weapons[weaponId].price} BTC`,
-                            disabled: tooExpensive || alreadyOwned,
-                            className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                                `${weapon.description}\n` +
+                                `Base Damage: ${weapon.damage.base}, ` +
+                                `Random Multiplier: ` +
+                                    `${weapon.damage.randomMultiplier}\n` +
+                                `LOAD: ${weapon.weight}\n` +
+                                `Stat Requirement: ${requiredStrengthHtml}`,
+                            trailText:
+                                `${weapon.price.toLocaleString(undefined)} BTC`,
+                            className: alreadyOwned
+                                ? 'muted'
+                                : (tooExpensive ? 'tooExpensive' : undefined),
                         };
                     });
 
@@ -11337,43 +11715,58 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    merchant.buy('weapon', selectedOptionId);
+                    merchant.buy("weapons", selectedOptionId);
                 },
             },
             merchantArmor: {
                 title: "MERCHANT > ARMOR",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
-                        ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
-                        : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                        ?
+                            `You have <span class="BTC">` +
+                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `</span> in your wallet`
+                        :
+                            "Your wallet is emptier than a lughead's skull. " +
+                            "But you can still look around";
 
-                    const currentArmor = armor[player.armor];
+                    const currentArmor = player.inventory.getEquippedArmor();
                     const article =
                         currentArmor?.article ? `${currentArmor.article} ` : '';
-                    const currentArmorDisplay = article + currentArmor.name;
-                    const wearingMessage = `You are currently wearing ${currentArmorDisplay}`;
+                    const armorName =
+                        currentArmor?.name || "NOTHING. Have you no shame?";
+                    const currentArmorDisplay = article + armorName;
+                    const wearingMessage =
+                        `You are currently wearing ${currentArmorDisplay}`;
 
                     return `${message}\n\n${wearingMessage}`;
                 },
                 getOptions: () => {
-                    const armorKeys = Object.keys(armor);
-                    const options = armorKeys.map((armorId) => {
-                        const tooExpensive = armor[armorId].price > player.bitcoins;
-                        const alreadyOwned = player.inventory[armorId] > 0 || player.armor === armorId;
-                        const reqEnd = armor[armorId].requiredEnd || 0;
-                        const meetsReq = player.endurance >= reqEnd;
-                        const reqEndHtml = `<span class="${meetsReq ? 'friendly' : 'enemy'}">END ${reqEnd}</span>`;
+                    const armor = InventoryObjectDefinitions.armor;
+                    const options = Object.keys(armor).map((armorId) => {
+                        const armor = InventoryObjectDefinitions.armor[armorId];
+                        const tooExpensive = armor.price > player.bitcoins;
+                        const alreadyOwned = player.inventory.hasArmor(armorId);
+                        const requiredEndurance = armor.requiredEnd || 0;
+                        const requirementClass =
+                            player.endurance >= requiredEndurance
+                                ? "friendly"
+                                : "enemy";
+                        const requiredEnduranceHtml =
+                            `<span class="${requirementClass}">END ` +
+                            `${requiredEndurance}</span>`;
                         return {
                             id: armorId,
-                            displayText: armor[armorId].name,
+                            displayText: armor.name,
                             description:
-                                `${armor[armorId].description}\n` +
-                                `Defense: ${armor[armorId].defense}\n` +
-                                `LOAD: ${armor[armorId].weight}\n` +
-                                `Stat Requirement: ${reqEndHtml}`,
-                            trailText: `${armor[armorId].price} BTC`,
-                            disabled: tooExpensive || alreadyOwned,
-                            className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                                `${armor.description}\n` +
+                                `Defense: ${armor.defense}\n` +
+                                `LOAD: ${armor.weight}\n` +
+                                `Stat Requirement: ${requiredEnduranceHtml}`,
+                            trailText: `${armor.price} BTC`,
+                            className: alreadyOwned
+                                ? 'muted'
+                                : (tooExpensive ? 'tooExpensive' : undefined),
                         };
                     });
 
@@ -11386,27 +11779,34 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    merchant.buy('armor', selectedOptionId);
+                    merchant.buy("armor", selectedOptionId);
                 },
             },
             merchantRings: {
                 title: "MERCHANT > RINGS",
                 landingHtml: () => {
                     return player.bitcoins > 0
-                        ? `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
-                        : "Your wallet is emptier than a lughead's skull. But you can still look around";
+                        ? `You have <span class="BTC">` +
+                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `</span> in your wallet`
+                        : "Your wallet is emptier than a lughead's skull. " +
+                            "But you can still look around";
                 },
                 getOptions: () => {
                     const options = (merchant.rings || []).map((ringId) => {
-                        const tooExpensive = rings[ringId].price > player.bitcoins;
-                        const alreadyOwned = player.inventory[ringId] > 0 || player.ring1 === ringId || player.ring2 === ringId;
+                        const ring = InventoryObjectDefinitions.rings[ringId];
+                        const tooExpensive = ring.price > player.bitcoins;
+                        const alreadyOwned = player.inventory.hasRing(ringId);
+
                         return {
                             id: ringId,
-                            displayText: rings[ringId].name,
-                            description: rings[ringId].description,
-                            trailText: `${rings[ringId].price} BTC`,
-                            disabled: tooExpensive || alreadyOwned,
-                            className: alreadyOwned ? 'muted' : (tooExpensive ? 'tooExpensive' : undefined),
+                            displayText: ring.name,
+                            description: ring.description,
+                            trailText:
+                                `${ring.price.toLocaleString(undefined)} BTC`,
+                            className: alreadyOwned
+                                ? 'muted'
+                                : (tooExpensive ? 'tooExpensive' : undefined),
                         };
                     });
 
@@ -11419,142 +11819,238 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return options;
                 },
                 select: (selectedOptionId) => {
-                    // Buy logic for rings
-                    merchant.buy('ring', selectedOptionId);
-                    render();
-                    menu.render();
+                    merchant.buy("rings", selectedOptionId);
                 },
             },
 
             merchantSell: {
                 title: "MERCHANT > SELL",
-                landingHtml: () => {
-                    return `Sell your unwanted inventory for a small sum.\n\nYou have <span class="BTC">${player.bitcoins} BTC</span> in your wallet.`;
-                },
+                landingHtml: () =>
+                    `Sell your unwanted inventory for a small sum.\n\n` +
+                    `You have <span class="BTC">` +
+                    `${player.bitcoins.toLocaleString(undefined)} BTC</span> ` +
+                    `in your wallet.`,
                 getOptions: () => {
-                    const weaponOptions = Object.keys(weapons)
-                        .filter(w => player.inventory[w] > 0)
-                        .map(weaponId => ({
-                            id: `sell_weapon_${weaponId}`,
-                            displayText: `[W] ${weapons[weaponId].name}`,
-                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(weapons[weaponId].price / 10))}</span>`,
-                            trailText: `${player.inventory[weaponId]}`,
-                            disabled: player.weapon === weaponId,
-                            className: player.weapon === weaponId ? "muted" : undefined,
-                        }));
-                    const armorOptions = Object.keys(armor)
-                        .filter(a => player.inventory[a] > 0)
-                        .map(armorId => ({
-                            id: `sell_armor_${armorId}`,
-                            displayText: `[A] ${armor[armorId].name}`,
-                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(armor[armorId].price / 10))}</span>`,
-                            trailText: `${player.inventory[armorId]}`,
-                            disabled: player.armor === armorId,
-                            className: player.armor === armorId ? "muted" : undefined,
-                        }));
-                    const itemOptions = Object.keys(items)
-                        .filter(itemId => player.inventory[itemId] > 0)
-                        .map(itemId => ({
-                            id: `sell_item_${itemId}`,
-                            displayText: `[I] ${items[itemId].name}`,
-                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(items[itemId].price / 5))}</span>`,
-                            trailText: `${player.inventory[itemId]}`,
-                            disabled: false,
-                            className: undefined,
-                        }));
-                    const ringOptions = Object.keys(rings)
-                        .filter(ringId => player.inventory[ringId] > 0)
-                        .map(ringId => ({
-                            id: `sell_ring_${ringId}`,
-                            displayText: `[R] ${rings[ringId].name}`,
-                            description: `Sell for <span class="BTC">₿${Math.max(1, Math.floor(rings[ringId].price / 5))}</span>`,
-                            trailText: `${player.inventory[ringId]}`,
-                            disabled: player.ring1 === ringId || player.ring2 === ringId,
-                            className: (player.ring1 === ringId || player.ring2 === ringId) ? "muted" : undefined,
-                        }));
+                    const itemOptions = Object
+                        .values(player.inventory.getItems())
+                        .map(item => {
+                            const sellPrice = Math
+                                .max(1, Math.floor(item.price / 5))
+                                .toLocaleString(undefined);
 
-                    const options = [...weaponOptions, ...armorOptions, ...ringOptions, ...itemOptions];
-                    if (options.length === 0) {
-                        options.push({
-                            id: "_none",
-                            displayText: "Nothing to sell",
-                            description: "You have no weapons, armor, or items to sell.",
-                            disabled: true,
-                            className: "muted",
+                            return {
+                                id: `sell_item_${item.id}`,
+                                displayText: `[I] ${item.name}`,
+                                description:
+                                    `Sell for <span class="BTC">₿${sellPrice}` +
+                                    `</span>`,
+                                trailText:
+                                    item.count.toLocaleString(undefined),
+                            };
                         });
-                    }
-                    options.push({
-                        id: "_back",
-                        displayText: "[Back]",
-                        description: "Return to the merchant menu",
-                    });
-                    return options;
+
+                    const weaponOptions = Object
+                        .values(player.inventory.getWeapons())
+                        .map(weapon => {
+                            const sellPrice = Math
+                                .max(1, Math.floor(weapon.price / 10))
+                                .toLocaleString(undefined);
+                            const isEquipped =
+                                player.inventory.hasEquippedWeapon(weapon.id);
+
+                            return {
+                                id: `sell_weapon_${weapon.id}`,
+                                displayText: `[W] ${weapon.name}`,
+                                description:
+                                    `Sell for ` +
+                                    `<span class="BTC">₿${sellPrice}</span>`,
+                                trailText:
+                                    weapon.count.toLocaleString(undefined),
+                                className: isEquipped ? "muted" : undefined,
+                            };
+                        });
+
+                    const armorOptions = Object
+                        .values(player.inventory.getArmor())
+                        .map(armor => {
+                            const sellPrice = Math
+                                .max(1, Math.floor(armor.price / 10))
+                                .toLocaleString(undefined);
+                            const isEquipped =
+                                player.inventory.hasEquippedArmor(armor.id);
+
+                            return {
+                                id: `sell_armor_${armor.id}`,
+                                displayText: `[A] ${armor.name}`,
+                                description:
+                                    `Sell for ` +
+                                    `<span class="BTC">₿${sellPrice}</span>`,
+                                trailText:
+                                    armor.count.toLocaleString(undefined),
+                                className: isEquipped ? "muted" : undefined,
+                            };
+                        });
+
+                    const ringOptions = Object
+                        .values(player.inventory.getRings())
+                        .map(ring => {
+                            const sellPrice = Math
+                                .max(1, Math.floor(ring.price / 5))
+                                .toLocaleString(undefined);
+                            const isEquipped =
+                                player.inventory.hasEquippedRing(ring.id);
+
+                            return {
+                                id: `sell_ring_${ring.id}`,
+                                displayText: `[R] ${ring.name}`,
+                                description:
+                                    `Sell for <span class="BTC">₿${sellPrice}` +
+                                    `</span>`,
+                                trailText: ring.count.toLocaleString(undefined),
+                                className: isEquipped ? "muted" : undefined,
+                            }
+                        });
+
+                    return [
+                        ...weaponOptions,
+                        ...armorOptions,
+                        ...ringOptions,
+                        ...itemOptions,
+                        {
+                            id: "_back",
+                            displayText: "[Back]",
+                            description: "Return to the merchant menu",
+                        }
+                    ];
                 },
                 select: (selectedOptionId) => {
-                    if (selectedOptionId === "_back" || selectedOptionId === "_none") {
-                        menu.close();
-                        return;
-                    }
+                    const { items, weapons, armor, rings } =
+                        InventoryObjectDefinitions;
 
-                    const [_, type, itemId] = selectedOptionId.split("_");
+                    const [_, type, id] = selectedOptionId.split("_");
                     let soldObject, value = 0;
 
                     if (type === "weapon") {
-                        if (player.weapon === itemId) {
-                            merchant.say("You sure you wanna point that thing at me? I've got a 12 gauge hidden under my sleeve, you know...");
+                        if (player.inventory.hasEquippedWeapon(id)) {
+                            merchant.say(
+                                "You sure you wanna point that thing at me? " +
+                                "I've got a 12 gauge hidden under my sleeve, " +
+                                "you know..."
+                            );
                             return;
                         }
-                        if (player.inventory[itemId] > 0) {
-                            soldObject = weapons[itemId];
-                            value = merchant.getSalePrice('weapon', weapons[itemId].price);
-                            player.giveBitcoins(value);
-                            player.inventory[itemId]--;
-                            if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+
+                        if (player.inventory.hasWeapon(id)) {
+                            soldObject = weapons[id];
+                            value = merchant.getSalePrice(
+                                'weapon',
+                                weapons[id].price
+                            );
+
+                            player.inventory.deductWeapon(id)
+                                ? player.giveBitcoins(value)
+                                : console.error(
+                                    "Could not deduct weapon during sale",
+                                    { id }
+                                );
                         } else {
-                            console.error("Tried to sell an item that the player does not have", { itemId });
+                            console.error(
+                                "Tried to sell an item that the player does " +
+                                "not have",
+                                { id }
+                            );
                             return;
                         }
                     } else if (type === "armor") {
-                        if (player.armor === itemId) {
-                            merchant.say("What are you, a Lughead? You gotta strip down before you go selling that!");
+                        if (player.inventory.hasEquippedArmor(id)) {
+                            merchant.say(
+                                "What are you, a Lughead? You gotta strip " +
+                                "down before you go selling that!"
+                            );
                             return;
                         }
-                        if (player.inventory[itemId] > 0) {
-                            soldObject = armor[itemId];
-                            value = merchant.getSalePrice('armor', armor[itemId].price);
-                            player.giveBitcoins(value);
-                            player.inventory[itemId]--;
-                            if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+
+                        if (player.inventory.hasArmor(id)) {
+                            soldObject = armor[id];
+                            value = merchant.getSalePrice(
+                                'armor',
+                                armor[id].price
+                            );
+
+                            player.inventory.deductArmor(id)
+                                ? player.giveBitcoins(value)
+                                : console.error(
+                                    "Could not deduct armor during sale",
+                                    { id }
+                                );
                         } else {
-                            console.error("Tried to sell armor that the player does not have", { itemId });
+                            console.error(
+                                "Tried to sell armor that the player does " +
+                                "not have",
+                                { id }
+                            );
                             return;
                         }
                     } else if (type === "ring") {
-                        if (player.hasEquippedRing(itemId)) {
-                            merchant.say("I don't swing that way, kid, but if you really wanna propose you gotta take the damn ring off.");
+                        if (player.inventory.hasEquippedRing(id)) {
+                            merchant.say(
+                                "I don't swing that way, kid, but if you " +
+                                "really wanna propose you gotta take the " +
+                                "damn ring off."
+                            );
                             return;
                         }
-                        if (player.inventory[itemId] > 0) {
-                            soldObject = rings[itemId];
-                            value = merchant.getSalePrice('ring', rings[itemId].price);
-                            player.giveBitcoins(value);
-                            player.inventory[itemId]--;
-                            if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+
+                        if (player.inventory.hasRing(id)) {
+                            soldObject = rings[id];
+                            value = merchant.getSalePrice(
+                                'ring',
+                                rings[id].price
+                            );
+
+                            player.inventory.deductRing(id)
+                                ? player.giveBitcoins(value)
+                                : console.error(
+                                    "Could not deduct armor during sale",
+                                    { id }
+                                );
                         } else {
-                            console.error("Tried to sell a ring that the player does not have", { itemId });
+                            console.error(
+                                "Tried to sell a ring that the player does " +
+                                "not have",
+                                { id }
+                            );
                             return;
                         }
                     } else if (type === "item") {
-                        if (player.inventory[itemId] > 0) {
-                            soldObject = items[itemId];
-                            value = merchant.getSalePrice('item', items[itemId].price);
-                            player.giveBitcoins(value);
-                            player.inventory[itemId]--;
-                            if (player.inventory[itemId] <= 0) delete player.inventory[itemId];
+                        if (player.inventory.hasItem(id)) {
+                            const items = InventoryObjectDefinitions.items;
+                            soldObject = items[id];
+                            value = merchant.getSalePrice(
+                                'item',
+                                items[id].price
+                            );
+
+                            player.inventory.deductItem(id)
+                                ? player.giveBitcoins(value)
+                                : console.error(
+                                    "Could not deduct item during sale",
+                                    { id }
+                                );
                         } else {
-                            console.error("Tried to sell an item that the player does not have", { itemId });
+                            console.error(
+                                "Tried to sell an item that the player does " +
+                                "not have",
+                                { id }
+                            );
                             return;
                         }
+                    } else {
+                        console.error(
+                            "Could not sell: unknown type",
+                            { type, selectedOptionId }
+                        );
+                        return;
                     }
 
                     playSFX('kaching');
@@ -11583,7 +12079,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
                         `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
                         `Just <span class="tooExpensive">${gambler.playPrice}</span> to play!"\n\n` +
-                        `You have <span class="BTC">${player.bitcoins} BTC</span> in your wallet`
+                        `You have <span class="BTC">${player.bitcoins.toLocaleString(undefined)} BTC</span> in your wallet`
                     );
                 },
                 getOptions: () => {
