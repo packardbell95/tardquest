@@ -11098,7 +11098,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             
             explorationMusicSettings: {
                 title: "GAME SETTINGS > MUSIC SETTINGS > EXPLORATION MUSIC",
-                landingHtml: () => "Select which exploration tracks to include in rotation (CHANGES MAY REQUIRE A RESTART)",
+                landingHtml: () => "Select which exploration tracks to include in rotation",
                 getOptions: () => {
                     const options = explorationTrackNames.map((name, index) => ({
                         id: `exploration_${index}`,
@@ -11120,14 +11120,34 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const index = parseInt(selectedOptionId.split("_")[1]);
                         enabledExplorationTracks[index] = !enabledExplorationTracks[index];
                         saveSettings();
+
+                        if (!player.inCombat && currentMusic && music.explorationTracks.includes(currentMusic)) {
+                            if (!enabledExplorationTracks[index] && currentMusic === music.explorationTracks[index]) {
+                                const availableTracks = music.explorationTracks.filter((_, idx) => enabledExplorationTracks[idx]);
+                                if (availableTracks.length > 0) {
+                                    const newTrack = randomEntry(availableTracks);
+                                    stopAllMusic();
+                                    currentExplorationTrack = newTrack;
+                                    currentMusic = newTrack;
+                                    if (musicEnabled) {
+                                        newTrack.play();
+                                    }
+                                } else {
+                                    stopAllMusic();
+                                    currentExplorationTrack = null;
+                                    currentMusic = null;
+                                }
+                            }
+                        }
+                        
                         menu.render();
                     }
                 },
             },
-            
+
             battleMusicSettings: {
                 title: "GAME SETTINGS > MUSIC SETTINGS > BATTLE MUSIC", 
-                landingHtml: () => "Select which battle tracks to include in rotation (CHANGES MAY REQUIRE A RESTART)",
+                landingHtml: () => "Select which battle tracks to include in rotation",
                 getOptions: () => {
                     const options = battleTrackNames.map((name, index) => ({
                         id: `battle_${index}`,
@@ -11149,6 +11169,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const index = parseInt(selectedOptionId.split("_")[1]);
                         enabledBattleTracks[index] = !enabledBattleTracks[index];
                         saveSettings();
+
+                        if (player.inCombat && currentMusic && music.battleTracks.includes(currentMusic)) {
+                            if (!enabledBattleTracks[index] && currentMusic === music.battleTracks[index]) {
+                                const availableTracks = music.battleTracks.filter((_, idx) => enabledBattleTracks[idx]);
+                                if (availableTracks.length > 0) {
+                                    const newTrack = randomEntry(availableTracks);
+                                    stopAllMusic();
+                                    currentMusic = newTrack;
+                                    if (musicEnabled) {
+                                        newTrack.play();
+                                    }
+                                } else {
+                                    stopAllMusic();
+                                    currentMusic = null;
+                                }
+                            }
+                        }
+                        
                         menu.render();
                     }
                 },
