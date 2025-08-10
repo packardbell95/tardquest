@@ -7259,6 +7259,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             update: () => {
+                if (gameOver) {
+                    const $mouseControl = document.getElementById('mouseControl');
+                    if ($mouseControl) {
+                        $mouseControl.style.display = 'none';
+                    }
+                    return;
+                } else {
+                    const $mouseControl = document.getElementById('mouseControl');
+                    if ($mouseControl) {
+                        $mouseControl.style.display = 'block';
+                    }
+                }
+                
                 GameControl.updateMode();
 
                 switch (GameControl.mode) {
