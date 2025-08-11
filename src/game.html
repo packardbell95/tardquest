@@ -6521,13 +6521,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             expandAcronyms: (text) => {
+                // VOCAP: use known acronyms to avoid expanding common ones, such as "HAHA" (whoops).
+                const knownAcronyms = [
+                    "HP", "EXP", "BTC", "FAQ", "JPEG", "GIF", "DEF", "STR", "PRS", "END", "SPD", "LUK", "LV"
+                ];
                 return text.replace(/\b([A-Z]{2,6})\b/g, (m, w) => {
+                    if (!knownAcronyms.includes(w)) return w;
                     const lower = w.toLowerCase();
-                    // Skip if we have an explicit override (handled later) OR looks like a number mix
                     if (Object.hasOwn(SpeechSynthesizer.pronunciationOverrides, lower)) return w;
-                    // Skip if next to apostrophes (possessives) – rare but safety
                     if (/'/.test(w)) return w;
-                    // Split into spaced letters (SAM will spell them out)
                     return w.split('').join(' ');
                 });
             },
