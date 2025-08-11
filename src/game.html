@@ -356,6 +356,30 @@
             line-height: 12px;
         }
 
+        #animBattleTransition {
+            position: absolute;
+            background-repeat: no-repeat;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            left: 0;
+            top: 0;
+            background-image: url(assets/transitions/battle-transition.gif);
+            background-size: cover;
+            background-position: bottom;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 15;
+        }
+
+        #animBattleTransition.active {
+            transform: translateY(0);
+        }
+
+        #animBattleTransition.reveal {
+            transform: translateY(-100%);
+        }
+
         #animTorch {
             width: 110px;
             height: 256px;
@@ -1665,6 +1689,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             <div id="animation" class="hidden"></div>
             <div id="animTorch" class="offscreen"></div>
             <div id="animTrombone" class="offscreen"></div>
+            <div id="animBattleTransition" class="offscreen"></div>
             <div id="menu"></div>
             <div id="mouseControl">
                 <div class="navigation">
@@ -8921,6 +8946,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             healTile: new Audio('audio/healTile.mp3'),
             tromBone: new Audio('audio/tromBONE.mp3'),
             attacked: new Audio('audio/attacked.wav'),
+            battleStart: new Audio('audio/battleStart.mp3'),
+            battleEnd: new Audio('audio/battleEnd.mp3'),
         };
 
         const music = {
@@ -9351,6 +9378,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let speechEnabled = true;
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
+        let battleTransitionAnimationsEnabled = true;
         let enabledExplorationTracks = [];
         let enabledBattleTracks = [];
 
@@ -9452,6 +9480,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (speech !== null) speechEnabled = speech === "true";
             const skipTitle = localStorage.getItem("skipTitleScreen");
             if (skipTitle !== null) skipTitleScreen = skipTitle === "true";
+            const battleTransitions = localStorage.getItem("battleTransitionAnimationsEnabled");
+            if (battleTransitions !== null) battleTransitionAnimationsEnabled = battleTransitions === "true";
 
             const explorationTracks = localStorage.getItem("enabledExplorationTracks");
             if (explorationTracks !== null) {
@@ -9469,6 +9499,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             localStorage.setItem("sfxEnabled", sfxEnabled);
             localStorage.setItem("speechEnabled", speechEnabled);
             localStorage.setItem("skipTitleScreen", skipTitleScreen);
+            localStorage.setItem("battleTransitionAnimationsEnabled", battleTransitionAnimationsEnabled);
             localStorage.setItem("enabledExplorationTracks", JSON.stringify(enabledExplorationTracks));
             localStorage.setItem("enabledBattleTracks", JSON.stringify(enabledBattleTracks));
         }
@@ -9639,6 +9670,44 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return false;
             }
             return true;
+        }
+
+        function animBattleTransitionStart(callback, playBattleStartSFX = false, playBattleEndSFX = false) {
+            const $battleTransition = document.getElementById('animBattleTransition');
+            
+            // Block input during transition
+            window._inputBlocked = true;
+
+            // Only called when a battle begins
+            if (playBattleStartSFX) {
+                playSFX('battleStart');
+            }
+            // Only called when a battle ends
+            if (playBattleEndSFX) {
+                playSFX('battleEnd');
+            }
+            $battleTransition.classList.remove('offscreen');
+            $battleTransition.classList.add('active');
+            setTimeout(() => {
+                // Wait 2 seconds at the bottom before starting reveal
+                setTimeout(() => {
+                    $battleTransition.classList.remove('active');
+                    $battleTransition.classList.add('reveal');
+                    
+                    // Start battle music and show enemy when curtain begins to roll up
+                    playRandomBattleMusic();
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                    
+                    // After the reveal animation completes, hide the element and unblock input
+                    setTimeout(() => {
+                        $battleTransition.classList.remove('reveal');
+                        $battleTransition.classList.add('offscreen');
+                        window._inputBlocked = false;
+                    }, 300); // Match duration of curtain rolling down (0.3s)
+                }, 1000); // Wait 1s at the bottom
+            }, 300); // Match duration of curtain rolling up (0.3s)
         }
 
         function animEatRat(callback) {
@@ -9974,9 +10043,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ];
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
-            player.enterCombat();
-            updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
-            playRandomBattleMusic(); // <-- use this
+            
+            if (battleTransitionAnimationsEnabled) {
+                animBattleTransitionStart(() => {
+                    player.enterCombat();
+                    updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
+                    render();
+                }, true, false); // battleStart: true, battleEnd: false
+            } else {
+                // No animation, start battle immediately
+                playSFX('battleStart');
+                playRandomBattleMusic();
+                player.enterCombat();
+                updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
+                render();
+            }
         }
 
         let playerAttackCooldown = false;
@@ -10066,19 +10147,33 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     player.exp += exp;
                 }
 
-                player.leaveCombat();
+                const willLevelUp = player.exp >= player.getExpRequiredForLevelUp();
 
-                setTorchOverlayVisibility();
-
-                if (player.exp >= player.getExpRequiredForLevelUp()) {
+                if (willLevelUp) {
+                    // If leveling up, exit combat immediately without battle transition
+                    player.leaveCombat();
+                    setTorchOverlayVisibility();
                     startLevelUpAllocation();
+                } else {
+                    if (battleTransitionAnimationsEnabled) {
+                        animBattleTransitionStart(() => {
+                            player.leaveCombat();
+                            setTorchOverlayVisibility();
+                            render();
+                        }, false, true); // battleStart: false, battleEnd: true
+                    } else {
+                        // No animation, end battle immediately
+                        playSFX('battleEnd');
+                        player.leaveCombat();
+                        setTorchOverlayVisibility();
+                        render();
+                    }
                 }
             } else {
                 enemyAttack();
+                render();
+                setTorchOverlayVisibility();
             }
-
-            render();
-            setTorchOverlayVisibility();
         }
 
         function enemyAttack() {
@@ -10938,7 +11033,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         const menu = new Menu();
         menu.setMenuElement(document.getElementById("menu"));
-        menu.setDefaultItemsPerPage(8);
+        menu.setDefaultItemsPerPage(15);
         menu.setOnOpen(() => {
             GameControl.update();
             updateViewportHeader();
@@ -11020,6 +11115,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             : "Enable rat consumption animation on level up",
                     },
                     {
+                        id: "toggleBattleTransitionAnimations",
+                        displayText: battleTransitionAnimationsEnabled
+                            ? "Disable battle transitions"
+                            : "Enable battle transitions",
+                        description: battleTransitionAnimationsEnabled
+                            ? "Disable the curtain animation when entering/leaving battles"
+                            : "Enable the curtain animation when entering/leaving battles",
+                    },
+                    {
                         id: "resetGame",
                         displayText: "Reset the game",
                         description:
@@ -11059,6 +11163,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             break;
                         case "toggleEatRatAnimation":
                             eatRatAnimationEnabled = !eatRatAnimationEnabled;
+                            saveSettings();
+                            break;
+                        case "toggleBattleTransitionAnimations":
+                            battleTransitionAnimationsEnabled = !battleTransitionAnimationsEnabled;
                             saveSettings();
                             break;
                         case "resetGame":
