@@ -6451,23 +6451,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             isSpeaking: false,
             pronunciationOverrides: {
                 "gauge": "gayge",
-                "colonel": "kernel",
-                "queue": "cue",
-                "yacht": "yot",
-                "epitome": "eh pit oh mee",
-                "faq": "eff ay cue",
-                "jpeg": "jay peg",
-                "gif": "gif", // pronunciation debate
-                "regex": "rej ex",
-                "cache": "cash",
-                "gaol": "jail",
-                "ache": "ake",
-                "subtle": "suttle",
-                "victuals": "vittles",
-                "often": "offen",
-                "solder": "sodder",
-                "suite": "sweet",
-                "gouge": "gowj",
             },
 
             speak: (sentence, voiceOptions, onEnded) => {
@@ -6523,7 +6506,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             expandAcronyms: (text) => {
                 // VOCAP: use known acronyms to avoid expanding common ones, such as "HAHA" (whoops).
                 const knownAcronyms = [
-                    "HP", "EXP", "BTC", "FAQ", "JPEG", "GIF", "DEF", "STR", "PRS", "END", "SPD", "LUK", "LV"
+                    "HP", "EXP", "BTC" // VOCAP: not currently much use for this feature but maybe in the future?
                 ];
                 return text.replace(/\b([A-Z]{2,6})\b/g, (m, w) => {
                     if (!knownAcronyms.includes(w)) return w;
