@@ -34,6 +34,8 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 [endless_self](https://forum.agoraroad.com/index.php?members/endless_self.6570/)
 
+[Packard Bell 95](https://packardbell95.com/)
+
 ### LEADERBOARD API HOSTING
 [VocaPepper](https://vocapepper.com/)
 

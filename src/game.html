@@ -8422,7 +8422,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         const music = {
-            titleTrack: 
+            titleTrack:
                 new Audio("audio/title.wav"), // Title screen
             explorationTracks: [
                 new Audio("audio/explore.mp3"),
@@ -8434,14 +8434,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 new Audio("audio/battle2.mp3"), // battle2
                 new Audio("audio/battle3.mp3"), // battle3
             ],
+            gamblersTheme:
+                new Audio("audio/gamblers-theme.mp3"), // Gambler's Theme - Packard Bell 95
         };
 
         music.explorationTracks.forEach(track => track.loop = true);
         music.battleTracks.forEach(track => track.loop = true);
         music.titleTrack.loop = true;
+        music.gamblersTheme.loop = true;
 
         function stopAllMusic() {
-            [...music.explorationTracks, ...music.battleTracks].forEach(track => {
+            [
+                ...music.explorationTracks,
+                ...music.battleTracks,
+                music.gamblersTheme,
+            ].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
             });
@@ -8484,6 +8491,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!musicEnabled || !currentExplorationTrack) return;
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
+        }
+
+        function playGamblersTheme() {
+            stopAllMusic();
+            if (!musicEnabled) {
+                return;
+            }
+            currentMusic = music.gamblersTheme;
+            currentMusic.play();
         }
 
         let currentMusic = null;
@@ -11007,6 +11023,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onOpen: () => {
                     Portrait.show('gambler');
                     gambler.say('Place yer bets!');
+                    playGamblersTheme();
                 },
                 onClose: () => {
                     gambler.isActiveOnFloor = false;
@@ -11014,6 +11031,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (gamblerPosition) {
                         MAP.setCell(gamblerPosition.x, gamblerPosition.y);
                     }
+                    resumeExplorationMusic();
                     Portrait.hide();
                 },
                 landingHtml: () => {
