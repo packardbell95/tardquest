@@ -44,8 +44,29 @@ class Inventory {
      * Event handlers
      */
     #handlers = {
+        // Item use
+        // Fires after an item has been consumed
+        onItemConsumed: null,
+
+        // Equipment changes
         // Fires whenever any equipped objects change
         onEquip: null,
+        // Fires whenever the active weapon changes
+        onWeaponEquip: null,
+        // Fires whenever the active armor changes
+        onArmorEquip: null,
+        // Fires whenever the active rings change
+        onRingEquip: null,
+
+        // Inventory count changes
+        // Fires when the item count changes
+        onItemCountChange: null,
+        // Fires when the weapon count changes
+        onWeaponCountChange: null,
+        // Fires when the armor count changes
+        onArmorCountChange: null,
+        // Fires when the ring count changes
+        onRingCountChange: null,
     };
 
     /**
@@ -100,6 +121,50 @@ class Inventory {
             })
         });
 
+        // Set any callback handlers before equipping starting gear
+        this.setHandlers(handlers);
+        this.#equipStartingGear(equipped);
+    }
+
+    setHandlers(handlers) {
+        if (typeof handlers?.onItemConsumed === "function") {
+            this.#handlers.onItemConsumed = handlers.onItemConsumed;
+        }
+
+        if (typeof handlers?.onEquip === "function") {
+            this.#handlers.onEquip = handlers.onEquip;
+        }
+
+        if (typeof handlers?.onWeaponEquip === "function") {
+            this.#handlers.onWeaponEquip = handlers.onWeaponEquip;
+        }
+
+        if (typeof handlers?.onArmorEquip === "function") {
+            this.#handlers.onArmorEquip = handlers.onArmorEquip;
+        }
+
+        if (typeof handlers?.onRingEquip === "function") {
+            this.#handlers.onRingEquip = handlers.onRingEquip;
+        }
+
+        if (typeof handlers?.onItemCountChange === "function") {
+            this.#handlers.onItemCountChange = handlers.onItemCountChange;
+        }
+
+        if (typeof handlers?.onWeaponCountChange === "function") {
+            this.#handlers.onWeaponCountChange = handlers.onWeaponCountChange;
+        }
+
+        if (typeof handlers?.onArmorCountChange === "function") {
+            this.#handlers.onArmorCountChange = handlers.onArmorCountChange;
+        }
+
+        if (typeof handlers?.onRingCountChange === "function") {
+            this.#handlers.onRingCountChange = handlers.onRingCountChange;
+        }
+    }
+
+    #equipStartingGear(equipped) {
         if (equipped.weapon) {
             this.equipWeapon(equipped.weapon);
         }
@@ -114,10 +179,6 @@ class Inventory {
 
         if (equipped.ring?.rightHand) {
             this.equipRing("rightHand", equipped.ring.rightHand);
-        }
-
-        if (typeof handlers?.onEquip === "function") {
-            this.#handlers.onEquip = handlers.onEquip;
         }
     }
 
@@ -260,6 +321,10 @@ class Inventory {
      */
     addItem(itemId, amount = 1) {
         this.#contents.items[itemId] = this.getItemCount(itemId) + amount;
+
+        if (amount > 0) {
+            this.#handlers.onItemCountChange?.(this.getItem(itemId));
+        }
     }
 
     /**
@@ -290,6 +355,14 @@ class Inventory {
             delete this.#contents.items[itemId];
         }
 
+        if (typeof this.#handlers?.onItemConsumed === "function") {
+            this.#handlers.onItemConsumed(this.getItem(itemId));
+        }
+
+        if (amount > 0) {
+            this.#handlers.onItemCountChange?.(this.getItem(itemId));
+        }
+
         return true;
     }
 
@@ -297,14 +370,20 @@ class Inventory {
      * Consumes an item and calls its use() function if the item is present
      */
     useItem(itemId) {
-        if (!this.deductItem(itemId)) {
+        if (!this.hasItem(itemId)) {
             return false;
         }
 
         const item = this.#objectDefinitions.items[itemId];
         if (item && typeof item.use === "function") {
-            item.use();
+            // Deduct an item only if its use() function returned true
+            // use() may return false if something prevented its use, such as
+            // trying to burn a torch when one is already lit
+            if (item.use()) {
+                this.deductItem(itemId);
+            }
         } else {
+            this.deductItem(itemId);
             console.warn(
                 "Used an item, but it has no functionality",
                 { itemId, item }
@@ -330,6 +409,13 @@ class Inventory {
         return this.#equipped.weapon
             ? this.getWeapon(this.#equipped.weapon)
             : null;
+    }
+
+    /**
+     * Returns the ID of the currently-equipped weapon
+     */
+    getEquippedWeaponId() {
+        return this.#equipped.weapon;
     }
 
     /**
@@ -359,6 +445,10 @@ class Inventory {
     addWeapon(weaponId, amount = 1) {
         this.#contents.weapons[weaponId] =
             this.getWeaponCount(weaponId) + amount;
+
+        if (amount > 0) {
+            this.#handlers.onWeaponCountChange?.(this.getWeapon(weaponId));
+        }
     }
 
     /**
@@ -389,6 +479,10 @@ class Inventory {
             delete this.#contents.weapons[weaponId];
         }
 
+        if (amount > 0) {
+            this.#handlers.onWeaponCountChange?.(this.getWeapon(weaponId));
+        }
+
         return true;
     }
 
@@ -402,7 +496,8 @@ class Inventory {
 
         if (this.#equipped.weapon !== weaponId) {
             this.#equipped.weapon = weaponId;
-            this.#handlers.onEquip?.();
+            this.#handlers.onWeaponEquip?.(this.getWeapon(weaponId));
+            this.#handlers.onEquip?.(this.getWeapon(weaponId));
         }
 
         return true;
@@ -414,7 +509,8 @@ class Inventory {
     unequipWeapon() {
         if (this.#equipped.weapon) {
             this.#equipped.weapon = null;
-            this.#handlers.onEquip?.();
+            this.#handlers.onWeaponEquip?.(this.getWeapon(weaponId));
+            this.#handlers.onEquip?.(this.getWeapon(weaponId));
         }
     }
 
@@ -437,6 +533,13 @@ class Inventory {
     }
 
     /**
+     * Returns the ID of the currently-equipped armor
+     */
+    getEquippedArmorId() {
+        return this.#equipped.armor;
+    }
+
+    /**
      * Returns the requested armor if it is present in the inventory
      */
     getArmor(id) {
@@ -448,6 +551,10 @@ class Inventory {
      */
     addArmor(armorId, amount = 1) {
         this.#contents.armor[armorId] = this.getArmorCount(armorId) + amount;
+
+        if (amount > 0) {
+            this.#handlers.onArmorCountChange?.(this.getArmor(armorId));
+        }
     }
 
     /**
@@ -480,6 +587,10 @@ class Inventory {
             delete this.#contents.armor[armorId];
         }
 
+        if (amount > 0) {
+            this.#handlers.onArmorCountChange?.(this.getArmor(armorId));
+        }
+
         return true;
     }
 
@@ -494,7 +605,8 @@ class Inventory {
 
         if (this.#equipped.armor !== armorId) {
             this.#equipped.armor = armorId;
-            this.#handlers.onEquip?.();
+            this.#handlers.onArmorEquip?.(this.getArmor(armorId));
+            this.#handlers.onEquip?.(this.getArmor(armorId));
         }
 
         return true;
@@ -506,7 +618,8 @@ class Inventory {
     unequipArmor() {
         if (this.#equipped.armor) {
             this.#equipped.armor = null;
-            this.#handlers.onEquip?.();
+            this.#handlers.onArmorEquip?.(this.getArmor(armorId));
+            this.#handlers.onEquip?.(this.getArmor(armorId));
         }
     }
 
@@ -549,6 +662,13 @@ class Inventory {
     }
 
     /**
+     * Returns the currently equipped ring IDs, keyed by hand
+     */
+    getEquippedRingIds() {
+        return this.#equipped.ring;
+    }
+
+    /**
      * Returns a given ring if it is present in the inventory
      */
     getRing(id) {
@@ -574,6 +694,10 @@ class Inventory {
      */
     addRing(ringId, amount = 1) {
         this.#contents.rings[ringId] = this.getRingCount(ringId) + amount;
+
+        if (amount > 0) {
+            this.#handlers.onRingCountChange?.(this.getRing(ringId));
+        }
     }
 
     /**
@@ -604,6 +728,10 @@ class Inventory {
             delete this.#contents.rings[ringId];
         }
 
+        if (amount > 0) {
+            this.#handlers.onRingCountChange?.(this.getRing(ringId));
+        }
+
         return true;
     }
 
@@ -627,7 +755,8 @@ class Inventory {
 
         if (this.#equipped.ring[hand] !== ringId) {
             this.#equipped.ring[hand] = ringId;
-            this.#handlers.onEquip?.();
+            this.#handlers.onRingEquip?.(hand, this.getRing(ringId));
+            this.#handlers.onEquip?.(this.getRing(ringId));
         }
 
         return true;
@@ -645,7 +774,8 @@ class Inventory {
 
         if (this.#equipped.ring[hand]) {
             this.#equipped.ring[hand] = null;
-            this.#handlers.onEquip?.();
+            this.#handlers.onRingEquip?.(hand, this.getRing(ringId));
+            this.#handlers.onEquip?.(this.getRing(ringId));
         }
     }
 }

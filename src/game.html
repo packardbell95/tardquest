@@ -1074,6 +1074,284 @@
             background-image: url(assets/interface/ui/next.png);
         }
 
+        #inventorySidebarCloseButton {
+            width: 100%;
+
+            &:hover {
+                color: #fff;
+                background-color: #f00;
+                border-color: #f99 #c00 #c00 #f99;
+            }
+
+            &:not(:disabled):active {
+                background-position: calc(50% + 2px) calc(50% + 2px);
+                &::after {
+                    top: 1px;
+                    left: 1px;
+                }
+            }
+
+            &::after {
+                content: "Close";
+                position: relative;
+            }
+        }
+
+        #inventory > [name] {
+            display: flex;
+            flex-direction: column;
+            height: 313px;
+            overflow-y: scroll;
+        }
+
+        #inventory > [name="main"] {
+            height: 333px;
+        }
+
+        #inventory > [name] button {
+            background-image:
+                url(assets/interface/ui/item-border-small-top-left.png),
+                url(assets/interface/ui/item-border-small-top-right.png),
+                url(assets/interface/ui/item-border-small-bottom-right.png),
+                url(assets/interface/ui/item-border-small-bottom-left.png);
+            background-repeat: no-repeat;
+            background-position:
+                top left,
+                top right,
+                bottom right,
+                bottom left;
+            background-size: 32px;
+            width: 100%;
+            height: 105px;
+            flex: 0 0 auto;
+            position: relative;
+            display: flex;
+
+            /** Main Inventory Sidebar Menu **/
+            &.items .icon {
+                background-image: url(assets/interface/ui/items.png);
+            }
+            &.weapons .icon {
+                background-image: url(assets/interface/ui/weapons.png);
+            }
+            &.armor .icon {
+                background-image: url(assets/interface/ui/armor.png);
+            }
+            &.rings .icon {
+                background-image: url(assets/interface/ui/rings.png);
+            }
+
+            /** Items Section **/
+            &.items-canOfHamms .icon {
+                background-image: url(assets/interface/items/hamms.png);
+            }
+            &.items-cupOfLean .icon {
+                background-image: url(assets/interface/items/lean.png);
+            }
+            &.items-glassOfToiletWater .icon {
+                background-image: url(assets/interface/items/toilet-water.png);
+            }
+            &.items-alaskaRaisins .icon {
+                background-image: url(assets/interface/items/raisins.png);
+            }
+            &.items-dowsingRod .icon {
+                background-image: url(assets/interface/items/dowsing-rod.png);
+            }
+            &.items-torch .icon {
+                background-image: url(assets/interface/items/torch.png);
+            }
+            &.items-brickOfC4 .icon {
+                background-image: url(assets/interface/items/c4.png);
+            }
+            &.items-tromBone .icon {
+                background-image: url(assets/interface/items/trombone.png);
+            }
+
+            /** Weapons Section **/
+            &.weapons-fingerNail .icon {
+                background-image: url(assets/interface/weapons/fingernail.png);
+            }
+            &.weapons-pointyStick .icon {
+                background-image: url(assets/interface/weapons/pointy-stick.png);
+            }
+            &.weapons-wiffleBallBat .icon {
+                background-image: url(assets/interface/weapons/wiffle-ball-bat.png);
+            }
+            &.weapons-nunchucks .icon {
+                background-image: url(assets/interface/weapons/nunchucks.png);
+            }
+            &.weapons-atlatlSpear .icon {
+                background-image: url(assets/interface/weapons/atlatl-spear.png);
+            }
+            &.weapons-bludgeoningMace .icon {
+                background-image: url(assets/interface/weapons/bludgeon-mace.png);
+            }
+            &.weapons-danceClub .icon {
+                background-image: url(assets/interface/weapons/dance-club.png);
+            }
+            &.weapons-cathodeRayTubeMonitor .icon {
+                background-image: url(assets/interface/weapons/crt.png);
+            }
+            &.weapons-magicPencil .icon {
+                background-image: url(assets/interface/weapons/magic-pencil.gif);
+            }
+            &.weapons-goldenWang .icon {
+                background-image: url(assets/interface/weapons/golden-wang.gif);
+            }
+
+            /** Armor Section **/
+            &.armor-pectoralMass .icon {
+                background-image: url(assets/interface/armor/pectoral-mass.png);
+            }
+            &.armor-graphicTee .icon {
+                background-image: url(assets/interface/armor/graphic-tee.png);
+            }
+            &.armor-barrelWithSuspenders .icon {
+                background-image: url(assets/interface/armor/barrel.png);
+            }
+            &.armor-leatherArmor .icon {
+                background-image: url(assets/interface/armor/leather-armor.png);
+            }
+            &.armor-milaneseArmor .icon {
+                background-image: url(assets/interface/armor/milanese-armor.png);
+            }
+            &.armor-blackPlateArmor .icon {
+                background-image: url(assets/interface/armor/black-plate-armor.png);
+            }
+            &.armor-nokiaMail .icon {
+                background-image: url(assets/interface/armor/nokia-mail.png);
+            }
+
+            /** Rings Section **/
+            &.rings-ringOfSexyUnderwear .icon {
+                background-image: url(assets/interface/rings/underwear.png);
+            }
+            &.rings-ringOfFrenchAccent .icon {
+                background-image: url(assets/interface/rings/french.png);
+            }
+            &.rings-ringValentines .icon {
+                background-image: url(assets/interface/rings/valentine.png);
+            }
+            &.rings-ringBloodstream .icon {
+                background-image: url(assets/interface/rings/bloodstream-nosering.png);
+            }
+            &.rings-ringOfHardening .icon {
+                background-image: url(assets/interface/rings/cockring.png);
+            }
+            &.rings-ringPectoralPiercing .icon {
+                background-image: url(assets/interface/rings/pectoral-piercing.png);
+            }
+            &.rings-ringPinkyToe .icon {
+                background-image: url(assets/interface/rings/pinkytoe.png);
+            }
+            &.rings-ringCrack .icon {
+                background-image: url(assets/interface/rings/crack.png);
+            }
+            &.rings-ringGamble .icon {
+                background-image: url(assets/interface/rings/gambler.png);
+            }
+            &.rings-ringEscobar .icon {
+                background-image: url(assets/interface/rings/escobar.png);
+            }
+            &.rings-ringOfSightliness .icon {
+                background-image: url(assets/interface/rings/sightliness.png);
+            }
+            &.rings-ringOfStinky .icon {
+                background-image: url(assets/interface/rings/stinky.png);
+            }
+            &.rings-ringOfAmplifiedAudio .icon {
+                background-image: url(assets/interface/rings/amp-audio.png);
+            }
+        }
+
+        #inventory > [name="main"] button {
+            height: 83px;
+        }
+
+        #inventory > [name] button .container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #inventory > [name] button .icon {
+            width: 86px;
+            height: 81px;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            top: 10px;
+        }
+
+        #inventory > [name="items"] button .icon {
+            top: 4px;
+        }
+
+        #inventory > [name="rings"] button .icon {
+            top: 12px;
+        }
+
+        #inventory > [name="main"] button .icon {
+            top: 4px;
+            width: 58px;
+            height: 58px;
+        }
+
+        #inventory > [name] button .label {
+            margin-left: auto;
+            margin-right: 1ch;
+            position: relative;
+            top: -8px;
+            color: #fff;
+            background-color: #0009;
+        }
+
+        #inventory > [name="main"] button .label {
+            margin-right: auto;
+        }
+
+        #inventory > [name] button.equipped {
+            background-color: #009;
+            border-color: #33a #003 #003 #33a;
+        }
+
+        #inventory > [name] button:not(:disabled):hover {
+            background-color: #00f;
+            border-color: #99f #00c #00c #99f;
+
+            & .label {
+                background-color: transparent;
+            }
+
+            & .icon {
+                filter: invert();
+            }
+        }
+
+        #inventory > [name] button:not(:disabled):active {
+            background-position:
+                top 2px left 2px,
+                top 2px right -2px,
+                bottom -2px right -2px,
+                bottom -2px left 2px;
+
+            & .container {
+                top: 2px;
+                left: 2px;
+
+                & .label {
+                   background-color: transparent;
+                }
+
+                & .icon {
+                    filter: invert();
+                }
+            }
+        }
+
         .party-member {
             gap: 2px;
             display: flex;
@@ -1647,7 +1925,54 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             <div id="partyMembers"></div>
         </div>
         <div id="inventory">
-            <!--div class="ui-header space-around">Inventory</div-->
+            <div id="inventorySidebarTitle" class="ui-header">Inventory</div>
+            <button
+                id="inventorySidebarCloseButton"
+                class="hidden"
+                onclick="InventorySidebar.open('main')"
+            ></button>
+            <div name="main">
+                <button
+                    class="items"
+                    onclick="InventorySidebar.open('items')"
+                >
+                    <div class="container">
+                        <div class="icon"></div>
+                        <div class="label">Items</div>
+                    </div>
+                </button>
+                <button
+                    class="weapons"
+                    onclick="InventorySidebar.open('weapons')"
+                >
+                    <div class="container">
+                        <div class="icon"></div>
+                        <div class="label">Weapons</div>
+                    </div>
+                </button>
+                <button
+                    class="armor"
+                    onclick="InventorySidebar.open('armor')"
+                >
+                    <div class="container">
+                        <div class="icon"></div>
+                        <div class="label">Armor</div>
+                    </div>
+                </button>
+                <button
+                    class="rings"
+                    onclick="InventorySidebar.open('rings')"
+                >
+                    <div class="container">
+                        <div class="icon"></div>
+                        <div class="label">Rings</div>
+                    </div>
+                </button>
+            </div>
+            <div name="items" class="hidden"></div>
+            <div name="weapons" class="hidden"></div>
+            <div name="armor" class="hidden"></div>
+            <div name="rings" class="hidden"></div>
         </div>
         <div id="playerInput">
             <div class="section navigation hidden">
@@ -7408,7 +7733,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     description: "A warm can of beer. Delicious..? +1 LOAD, +5 HP",
                     use: () => {
                         player.heal(5);
-                        updateBattleLog("You chug the can, filling your mouth with the flavor of boiled socks. +5 HP");
+                        updateBattleLog(
+                            `You <span class="action">chug the can,</span> ` +
+                            `filling your mouth with the flavor of ` +
+                            `<span class="END">boiled socks. ` +
+                            `<span class="HP">+5 HP</span>`
+                        );
+                        return true;
                     },
                     merchantStockChance: 0.9,
                     weight: 1,
@@ -7420,7 +7751,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
                     use: () => {
                         player.heal(20);
-                        updateBattleLog("Your stomach feels nauseous, but your head feels great! +20 HP");
+                        updateBattleLog(
+                            `Your stomach feels nauseous, but your head ` +
+                            `feels great! <span class="HP">+20 HP</span>`
+                        );
+                        return true;
                     },
                     merchantStockChance: 0.5,
                     weight: 1.2,
@@ -7432,7 +7767,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     description: "A glass filled to the rim with toilet water, extracted from the toilet bowl belonging to a Keeper. The glass has a rather badass sticker of a skeleton riding a motorcycle neatly applied...  +1.2 LOAD, +50 HP",
                     use: () => {
                         player.heal(50);
-                        updateBattleLog("Sickeningly delicious...? You question your current state of mind for a moment. +50 HP");
+                        updateBattleLog(
+                            `Sickeningly delicious...? You question your ` +
+                            `current state of mind for a moment. ` +
+                            `<span class="HP">+50 HP</span>`
+                        );
+                        return true;
                     },
                     merchantStockChance: .4,
                     weight: 1.2,
@@ -7445,7 +7785,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     use: () => {
                         player.heal(70);
                         playSFX('raisins');
-                        updateBattleLog("The Alaska Raisins sing a lovely song about how epic igloos are as you pop them into your mouth one by one. You can still hear them singing in your stomach... +70 HP");
+                        updateBattleLog(
+                            `The Alaska Raisins sing a lovely song about how ` +
+                            `epic igloos are as you pop them into your mouth ` +
+                            `one by one. You can still hear them singing in ` +
+                            `your stomach... <span class="HP">+70 HP</span>`
+                        );
+                        return true;
                     },
                     merchantStockChance: .35,
                     weight: 1.5,
@@ -7459,11 +7805,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const location = MAP.locate("exit");
                         if (!location) {
                             console.error("No exit exists on this map!");
-                            return;
+                            return false;
                         }
 
                         MAP.revealSpot(location.x, location.y, 1);
-                        updateBattleLog("The exit has been revealed!");
+                        updateBattleLog(
+                            `<span class="action">The exit has been revealed!` +
+                            `</span>`
+                        );
+                        render();
+                        return true;
                     },
                     merchantStockChance: 0.8,
                     weight: 1.7,
@@ -7476,13 +7827,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     use: () => {
                         if (player.isHoldingTorch) {
                             updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
-                            return;
+                            return false;
                         }
                         playSFX('torch');
                         MAP.reveal();
                         updateBattleLog("Lo, the way has been made clear!");
                         animTorchStart();
                         render();
+                        return true;
                     },
                     merchantStockChance: 0.8,
                     weight: 1.2,
@@ -7549,10 +7901,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                     }
                                 }
 
+                                GameControl.update();
                                 updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
                                 render();
                             }
                         });
+
+                        return true;
                     },
                     merchantStockChance: 0.5,
                     weight: 3,
@@ -7583,6 +7938,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             tromboneResumeType = null;
                         };
                         updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
+                        return true;
                     },
                     merchantStockChance: 1.0,
                     weight: 1.3,
@@ -7999,20 +8355,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     weapon: "fingerNail",
                     armor: "pectoralMass",
                 },
-
-                // Inventory event handlers
-                {
-                    onEquip: () => {
-                        if (player.hp > getEffectiveStat('maxHp')) {
-                            player.hp = getEffectiveStat('maxHp');
-                        }
-
-                        const $game = document.getElementById('game');
-                        player.inventory.hasEquippedRing('ringOfSightliness')
-                            ? $game.classList.add('sightliness')
-                            : $game.classList.remove('sightliness');
-                    },
-                },
             ),
             x: 1,
             y: 1,
@@ -8073,6 +8415,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.inCombat = true;
                 player.party.prepareForBattle();
                 GameControl.update();
+                InventorySidebar.enterCombat();
             },
             leaveCombat: () => {
                 player.leavingCombat = true;
@@ -8081,6 +8424,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 resumeExplorationMusic();
                 player.party.purgeDeadMembers();
                 GameControl.update();
+                InventorySidebar.leaveCombat();
             },
             heal: (hp) => {
                 player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
@@ -8946,7 +9290,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         const music = {
-            titleTrack: 
+            titleTrack:
                 new Audio("audio/title.wav"), // Title screen (Title - Xx_TheMilkMan69_xX)
             explorationTracks: [
                 new Audio("audio/explore.mp3"), // Into the Tardspire - Xx_TheMilkMan69_xX
@@ -8958,7 +9302,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 new Audio("audio/battle2.mp3"), // battle2 (A Dangerous Game of Tag - Xx_TheMilkMan69_xX)
                 new Audio("audio/battle3.mp3"), // battle3 (Eek! A Cunt! - Xx_TheMilkMan69_xX)
             ],
-            merchantTrack: 
+            merchantTrack:
                 new Audio("audio/merchant.mp3"), // Merchant (Welcome to SlobMart! - Xx_TheMilkMan69_xX)
         };
 
@@ -8971,7 +9315,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 track.pause();
                 track.currentTime = 0;
             });
-            
+
         }
         function playTitleMusic() {
             stopAllMusic();
@@ -9531,8 +9875,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             if (menu.isOpen()) {
                 const currentMenuData = menu.getCurrentMenuData();
-                const menuTitle = typeof currentMenuData?.title === 'function' 
-                    ? currentMenuData.title() 
+                const menuTitle = typeof currentMenuData?.title === 'function'
+                    ? currentMenuData.title()
                     : currentMenuData?.title || 'MENU';
                 $viewportHeader.innerHTML = `<span class="space-between">${menuTitle}</span>`;
             } else {
@@ -10857,23 +11201,25 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         menu.setMenuElement(document.getElementById("menu"));
         menu.setDefaultItemsPerPage(8);
         menu.setOnOpen(() => {
+            InventorySidebar.close();
             GameControl.update();
             updateViewportHeader();
         });
         menu.setOnPageChange(() => GameControl.update());
         menu.setOnHighlight(() => playSFX("uiOption"));
-        menu.setOnSelect(() => { 
-            playSFX("uiSelect"); 
-            GameControl.update(); 
+        menu.setOnSelect(() => {
+            playSFX("uiSelect");
+            GameControl.update();
             updateViewportHeader();
         });
-        menu.setOnCancel(() => { 
-            playSFX("uiCancel"); 
-            GameControl.update(); 
+        menu.setOnCancel(() => {
+            playSFX("uiCancel");
+            GameControl.update();
             updateViewportHeader();
         });
         menu.setOnClose(() => {
-            GameControl.update(); 
+            InventorySidebar.open("main");
+            GameControl.update();
             updateViewportHeader();
         });
 
@@ -11178,24 +11524,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const requiredStrength = weapon.requiredStr || 0;
                     if (player.strength < requiredStrength) {
                         updateBattleLog(
-                            `You require <span class="STR">` +
-                            `${requiredStrength} STR</span> to handle this ` +
-                            `weapon!`
+                            `You <span class="enemy">require</span> ` +
+                            `<span class="STR">${requiredStrength} STR` +
+                            `</span> to handle this weapon!`
                         );
                         return;
                     }
 
-                    if (player.inventory.equipWeapon(selectedOptionId)) {
-                        updateBattleLog(
-                            `You now wield a mighty <span class="friendly">` +
-                            `${weapon.name}</span>!`
-                        );
-                    } else {
-                        console.error(
-                            "Could not equip weapon",
-                            { selectedOptionId }
-                        );
-                    }
+                    player.inventory.equipWeapon(selectedOptionId);
                     menu.close();
                     render();
                 },
@@ -11259,25 +11595,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         return;
                     }
 
-                    if (player.inventory.equipArmor(selectedOptionId)) {
-                        const articleText = armor.article
-                            ? `${armor.article} `
-                            : "";
-
-                        updateBattleLog(
-                            `You are now wearing ${articleText}` +
-                            `<span class="friendly">${armor.name}</span>!`
-                        );
-
-                        if (player.hp > getEffectiveStat('maxHp')) {
-                            player.hp = getEffectiveStat('maxHp');
-                        }
-                    } else {
-                        console.error(
-                            "Could not equip armor",
-                            { selectedOptionId }
-                        );
-                    }
+                    player.inventory.equipArmor(selectedOptionId);
                     menu.close();
                     render();
                 },
@@ -11372,12 +11690,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         // Only update if a ring has been equipped
                         if (!player.inventory.hasEquippedRing(null, handId)) {
                             player.inventory.unequipRing(handId);
-                            updateBattleLog(
-                                `You pull the ring off your ` +
-                                `<span class="friendly">left hand</span>. ` +
-                                `The dungeon air caresses the pale circle ` +
-                                `that it left behind. You feel exposed... wuss.`
-                            );
                         }
 
                         menu.close();
@@ -11410,27 +11722,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         return;
                     }
 
-                    const hasRingEquipped = player.inventory.equipRing(
+                    player.inventory.equipRing(
                         handId,
                         selectedOptionId
                     );
-
-                    if (hasRingEquipped) {
-                        const articleText = ring.article
-                            ? `${ring.article} `
-                            : "";
-
-                        updateBattleLog(
-                            `You are now wearing ${articleText}` +
-                            `<span class="friendly">${ring.name}</span> on ` +
-                            `your <span class="friendly">left hand</span>!`
-                        );
-                    } else {
-                        console.error(
-                            "Could not equip ring on the player's left hand",
-                            { selectedOptionId }
-                        );
-                    }
 
                     menu.close();
                     render();
@@ -11480,11 +11775,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         // Only update if a ring has been equipped
                         if (!player.inventory.hasEquippedRing(null, handId)) {
                             player.inventory.unequipRing(handId);
-                            updateBattleLog(
-                                `You pull the ring off your ` +
-                                `<span class="friendly">right hand</span>. ` +
-                                `How unfashionable of you.`
-                            );
                         }
 
                         menu.close();
@@ -11518,27 +11808,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         return;
                     }
 
-                    const hasRingEquipped = player.inventory.equipRing(
+                    player.inventory.equipRing(
                         handId,
                         selectedOptionId
                     );
-
-                    if (hasRingEquipped) {
-                        const articleText = ring.article
-                            ? `${ring.article} `
-                            : "";
-
-                        updateBattleLog(
-                            `You are now wearing ${articleText}` +
-                            `<span class="friendly">${ring.name}</span> on ` +
-                            `your <span class="friendly">right hand</span>!`
-                        );
-                    } else {
-                        console.error(
-                            "Could not equip ring on the player's right hand",
-                            { selectedOptionId }
-                        );
-                    }
 
                     menu.close();
                     render();
@@ -12319,7 +12592,492 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         });
 
+        // Manages the inventory sidebar on the right side of the viewport
+        const InventorySidebar = {
+            // Sections of the sidebar, keyed by name
+            sections: {
+                main: {
+                    title: "Inventory",
+                    showCloseButton: false,
+                },
+                items: {
+                    title: "Items",
+                    showCloseButton: true,
+                },
+                weapons: {
+                    title: "Weapons",
+                    showCloseButton: true,
+                },
+                armor: {
+                    title: "Armor",
+                    showCloseButton: true,
+                },
+                rings: {
+                    title: "Rings",
+                    showCloseButton: true,
+                },
+            },
 
+            // Conceals buttons that should not be available during a fight
+            enterCombat: () => {
+                const currentMenu = document
+                    .querySelector(`#inventory [name]:not(.hidden)`)
+                    .getAttribute("name");
+
+                // If the player is on an equipment submenu, close it
+                if (! ["main", "items"].includes(currentMenu)) {
+                    InventorySidebar.open("main");
+                }
+
+                document
+                    .querySelectorAll(`#inventory [name="main"] > button`)
+                    .forEach($button => {
+                        const hideButton =
+                            $button.classList.contains("weapons") ||
+                            $button.classList.contains("armor") ||
+                            $button.classList.contains("rings");
+
+                        if (hideButton) {
+                            $button.classList.add("hidden");
+                        }
+                    });
+            },
+
+            // Reveals all buttons concealed during battle
+            leaveCombat: () => {
+                document
+                    .querySelectorAll(
+                        `#inventory [name="main"] > button.hidden`
+                    )
+                    .forEach($button => {
+                        $button.classList.remove("hidden");
+                    });
+            },
+
+            // Changes the title text of the inventory sidebar
+            changeTitle: (sectionName) => {
+                document.getElementById("inventorySidebarTitle").innerText =
+                    InventorySidebar.sections[sectionName]?.title ||
+                    "[ ? ? ? ]";
+            },
+
+            // Shows/hides the close button depending on the requested section
+            updateCloseButton: (sectionName) => {
+                const $closeButton =
+                    document.getElementById("inventorySidebarCloseButton");
+
+                const showCloseButton =
+                    InventorySidebar.sections[sectionName]?.showCloseButton ||
+                    false;
+
+                showCloseButton
+                    ? $closeButton.classList.remove("hidden")
+                    : $closeButton.classList.add("hidden");
+            },
+
+            // Returns the currently-opened section's element
+            getCurrentSectionElement: () =>
+                document.querySelector("#inventory > [name]:not(.hidden)"),
+
+            // Returns the requested section's element
+            getSectionElement: (sectionName) =>
+                document.querySelector(`#inventory > [name="${sectionName}"]`),
+
+            close: () => {
+                InventorySidebar
+                    .getCurrentSectionElement()
+                    ?.classList
+                    .add("hidden");
+            },
+
+            // Shows the requested section in the sidebar
+            open: (sectionName) => {
+                InventorySidebar.changeTitle(sectionName);
+                InventorySidebar.updateCloseButton(sectionName);
+
+                const $currentlyOpenedSection =
+                    InventorySidebar?.getCurrentSectionElement();
+                if ($currentlyOpenedSection) {
+                    const currentSectionName =
+                        $currentlyOpenedSection.getAttribute("name");
+
+                    if (currentSectionName === sectionName) {
+                        console.debug(
+                            "Tried to reopen the currently visible section",
+                            { sectionName }
+                        );
+                        return;
+                    }
+
+                    $currentlyOpenedSection.classList.add("hidden");
+                }
+
+                const $section =
+                    InventorySidebar.getSectionElement(sectionName);
+                if (!$section) {
+                    console.error(
+                        "Could not find the requested sidebar section",
+                        { sectionName }
+                    );
+                    return;
+                }
+
+                playSFX(sectionName === "main" ? "uiCancel" : "inventoryOpen");
+                $section.classList.remove("hidden");
+            },
+
+            // Refreshes the items in a given section, or all sections if no
+            // name was provided
+            refresh: (sectionName) => {
+                if (!sectionName) {
+                    Object.keys(InventorySidebar.sections).forEach(name => {
+                        InventorySidebar.refresh(name);
+                    });
+
+                    return;
+                }
+
+                switch (sectionName) {
+                    case "main":
+                        // The main section never changes
+                        return;
+                    case "items":
+                        InventorySidebar.refreshItems();
+                        return;
+                    case "weapons":
+                        InventorySidebar.refreshWeapons();
+                        return;
+                    case "armor":
+                        InventorySidebar.refreshArmor();
+                        return;
+                    case "rings":
+                        InventorySidebar.refreshRings();
+                        return;
+                }
+
+                console.error(
+                    "Inventory sidebar tried to refresh an unknown section",
+                    { sectionName }
+                );
+            },
+
+            createButton: (sectionName, objectDefinition) => {
+                const $button = document.createElement("button");
+                $button.className = `${sectionName}-${objectDefinition.id}`;
+                $button.dataset.id = objectDefinition.id;
+                $button.setAttribute(
+                    "title",
+                    `${objectDefinition.name}: ${objectDefinition.description}`
+                );
+
+                const $container = document.createElement("div");
+                $container.className = "container";
+
+                const $icon = document.createElement("div");
+                $icon.className = "icon";
+
+                const $label = document.createElement("div");
+                $label.className = "label";
+                $label.innerText = sectionName === "items"
+                    ? `${objectDefinition.count.toLocaleString(undefined)}x`
+                    : "";
+
+                $container.appendChild($icon);
+                $container.appendChild($label);
+                $button.appendChild($container);
+
+                return $button;
+            },
+
+            refreshItems: () => {
+                const playerItems = player.inventory.getItems();
+                const $items =
+                    document.querySelector(`#inventory [name="items"]`);
+
+                // Create and update item buttons
+                Object.values(playerItems).forEach(item => {
+                    const $item =
+                        $items.querySelector(`[data-id="${item.id}"]`);
+
+                    if (!$item) {
+                        // Create the item entry in the list
+                        const $button =
+                            InventorySidebar.createButton("items", item);
+
+                        $button.onclick = function () {
+                            playSFX("uiSelect");
+                            player.inventory.useItem(item.id);
+                            // Stop Enter from hitting the button again
+                            this.blur();
+                        };
+
+                        $items.appendChild($button);
+                    } else {
+                        // Update the count of the item entry in the list
+                        $item.querySelector(".label").innerText =
+                            `${item.count.toLocaleString(undefined)}x`;
+                    }
+                });
+
+                // Delete item buttons that no longer have a reference
+                $items.querySelectorAll("button[data-id]").forEach($item => {
+                    if (!Object.hasOwn(playerItems, $item.dataset.id)) {
+                        $item.remove();
+                    }
+                });
+            },
+
+            refreshWeapons: () => {
+                const playerWeapons = player.inventory.getWeapons();
+                const $weapons =
+                    document.querySelector(`#inventory [name="weapons"]`);
+
+                // Create weapon buttons
+                Object.values(playerWeapons).forEach(weapon => {
+                    const $weapon =
+                        $weapons.querySelector(`[data-id="${weapon.id}"]`);
+
+                    if (!$weapon) {
+                        // Create the weapon entry in the list
+                        const $button =
+                            InventorySidebar.createButton("weapons", weapon);
+
+                        $button.onclick = function () {
+                            const requiredStrength = weapon.requiredStr || 0;
+                            const playerMeetsReqirements =
+                                player.strength >= requiredStrength;
+
+                            if (playerMeetsReqirements) {
+                                playSFX("uiSelect");
+                                player.inventory.equipWeapon(weapon.id);
+                            } else {
+                                updateBattleLog(
+                                    `You <span class="enemy">require</span> ` +
+                                    `<span class="STR">${requiredStrength} ` +
+                                    `STR</span> to handle this weapon!`
+                                );
+                            }
+
+                            // Stop Enter from hitting the button again
+                            this.blur();
+                        };
+
+                        $weapons.appendChild($button);
+                    }
+                });
+
+                // Delete weapon buttons that no longer have a reference
+                $weapons
+                    .querySelectorAll("button[data-id]")
+                    .forEach($weapon => {
+                        if (!Object.hasOwn(playerWeapons, $weapon.dataset.id)) {
+                            $weapon.remove();
+                        }
+                    });
+
+                // Remove equipped highlighting
+                $weapons.querySelectorAll(".equipped").forEach($button => {
+                    $button.classList.remove("equipped");
+                });
+
+                // Highlight the equipped weapon
+                const equippedWeaponId = player.inventory.getEquippedWeaponId();
+                if (!equippedWeaponId) {
+                    return;
+                }
+
+                $weapons
+                    .querySelector(`[data-id="${equippedWeaponId}"]`)
+                    ?.classList
+                    .add("equipped");
+            },
+
+            refreshArmor: () => {
+                const playerArmor = player.inventory.getArmor();
+                const $armor =
+                    document.querySelector(`#inventory [name="armor"]`);
+
+                // Create armor buttons
+                Object.values(playerArmor).forEach(armor => {
+                    const $armorPiece =
+                        $armor.querySelector(`[data-id="${armor.id}"]`);
+
+                    if (!$armorPiece) {
+                        // Create the armor entry in the list
+                        const $button =
+                            InventorySidebar.createButton("armor", armor);
+
+                        $button.onclick = function () {
+                            playSFX("uiSelect");
+
+                            const requiredEndurance = armor.requiredEnd || 0;
+                            const playerMeetsReqirements =
+                                player.endurance >= requiredEndurance;
+
+                            if (playerMeetsReqirements) {
+                                player.inventory.equipArmor(armor.id);
+                            } else {
+                                updateBattleLog(
+                                    `You <span class="enemy">require</span> ` +
+                                    `<span class="END">${requiredEndurance} ` +
+                                    `END</span> to wear this armor!`
+                                );
+                            }
+
+                            // Stop Enter from hitting the button again
+                            this.blur();
+                        };
+
+                        $armor.appendChild($button);
+                    }
+                });
+
+                // Delete armor buttons that no longer have a reference
+                $armor
+                    .querySelectorAll("button[data-id]")
+                    .forEach($armorPiece => {
+                        const removeButton = !Object.hasOwn(
+                            playerArmor,
+                            $armorPiece.dataset.id
+                        );
+
+                        if (removeButton) {
+                            $armorPiece.remove();
+                        }
+                    });
+
+                // Remove equipped highlighting
+                $armor.querySelectorAll(".equipped").forEach($button => {
+                    $button.classList.remove("equipped");
+                });
+
+                // Highlight equipped armor
+                const equippedArmorId = player.inventory.getEquippedArmorId();
+                if (!equippedArmorId) {
+                    return;
+                }
+
+                $armor
+                    .querySelector(`[data-id="${equippedArmorId}"]`)
+                    ?.classList
+                    .add("equipped");
+            },
+
+            refreshRings: () => {
+                const playerRings = player.inventory.getRings();
+                const playerRingIds = Object.keys(playerRings);
+                const equippedRingIds = Object
+                    .values(player.inventory.getEquippedRingIds())
+                    .filter(r => r);
+                const $rings =
+                    document.querySelector(`#inventory [name="rings"]`);
+
+                // Create ring buttons
+                Object.values(playerRings).forEach(ring => {
+                    const $ring =
+                        $rings.querySelector(`[data-id="${ring.id}"]`);
+
+                    if (!$ring) {
+                        // Create the ring entry in the list
+                        const $button =
+                            InventorySidebar.createButton("rings", ring);
+
+                        $button.onclick = function () {
+                            playSFX("uiSelect");
+
+                            // @TODO Make a custom confirmation dialog for this
+                            const hand = confirm(
+                                "Do you want this to go on your left hand? " +
+                                "If not, it's going on your right hand"
+                            ) ? "leftHand" : "rightHand";
+                            player.inventory.equipRing(hand, ring.id);
+
+                            // Stop Enter from hitting the button again
+                            this.blur();
+                        };
+
+                        $rings.appendChild($button);
+                    }
+                });
+
+                // Delete unheld rings, update highlighting
+                $rings
+                    .querySelectorAll("button[data-id]")
+                    .forEach($ring => {
+                        if (! playerRingIds.includes($ring.dataset.id)) {
+                            $ring.remove();
+                        } else {
+                            equippedRingIds.includes($ring.dataset.id)
+                                ? $ring.classList.add("equipped")
+                                : $ring.classList.remove("equipped");
+                        }
+                    });
+            },
+        };
+
+        player.inventory.setHandlers({
+            onEquip: () => {
+                if (player.hp > getEffectiveStat('maxHp')) {
+                    player.hp = getEffectiveStat('maxHp');
+                }
+
+                const $game = document.getElementById('game');
+                player.inventory.hasEquippedRing('ringOfSightliness')
+                    ? $game.classList.add('sightliness')
+                    : $game.classList.remove('sightliness');
+            },
+            onWeaponEquip: (weapon) => {
+                updateBattleLog(
+                    `You now wield a mighty <span class="friendly">` +
+                    `${weapon.name}</span>!`
+                );
+                InventorySidebar.refresh("weapons");
+            },
+            onArmorEquip: (armor) => {
+                const articleText = armor.article
+                    ? `${armor.article} `
+                    : "";
+
+                updateBattleLog(
+                    `You are now wearing ${articleText}` +
+                    `<span class="friendly">${armor.name}</span>!`
+                );
+
+                if (player.hp > getEffectiveStat('maxHp')) {
+                    player.hp = getEffectiveStat('maxHp');
+                }
+
+                InventorySidebar.refresh("armor");
+            },
+            onRingEquip: (hand, ring) => {
+                const handText = hand.replace(/Hand$/, "");
+
+                if (ring) {
+                    const articleText = ring.article
+                        ? `${ring.article} `
+                        : "";
+
+                    updateBattleLog(
+                        `You are now wearing ${articleText}` +
+                        `<span class="friendly">${ring.name}</span> on ` +
+                        `your <span class="friendly">${handText} hand</span>!`
+                    );
+                } else {
+                    updateBattleLog(
+                        `You pull the ring off your <span class="friendly">` +
+                        `${handText} hand</span>. How unfashionable of you.`
+                    );
+                }
+
+                InventorySidebar.refresh("rings");
+            },
+            onItemCountChange: () => InventorySidebar.refresh("items"),
+            onWeaponCountChange: () => InventorySidebar.refresh("weapons"),
+            onArmorCountChange: () => InventorySidebar.refresh("armor"),
+            onRingCountChange: () => InventorySidebar.refresh("rings"),
+        });
+
+        InventorySidebar.refresh();
         generateMap();
         updateSeenTiles();
         playRandomExplorationMusic();
