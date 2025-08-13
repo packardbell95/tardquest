@@ -8581,10 +8581,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         tromboneIsPlaying = false;
                         animTromboneEnd();
                         if (musicEnabled) {
-                            if (player.inCombat && tromboneResumeType === "battle") {
+                            if (player.inCombat) {
                                 playRandomBattleMusic();
-                            } else {
+                            } else if (currentExplorationTrack && tromboneResumeType === "exploration") {
                                 resumeExplorationMusic();
+                            } else {
+                                playRandomExplorationMusic();
                             }
                         }
                         tromboneResumeType = null;
@@ -8999,7 +9001,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function playRandomExplorationMusic() {
             stopAllMusic();
-            if (!musicEnabled) {
+            if (!musicEnabled || tromboneIsPlaying) {
                 return;
             }
 
@@ -9050,7 +9052,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function playRandomBattleMusic() {
             stopAllMusic();
-            if (!musicEnabled) {
+            if (!musicEnabled || tromboneIsPlaying) {
                 return;
             }
 
@@ -9068,7 +9070,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function resumeExplorationMusic() {
             stopAllMusic();
-            if (!musicEnabled || !currentExplorationTrack) {
+            if (!musicEnabled || !currentExplorationTrack || tromboneIsPlaying) {
                 return;
             }
             currentMusic = currentExplorationTrack;
@@ -9374,6 +9376,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
         });
 
+        let tromboneIsPlaying = false;
+        let tromboneResumeType = null;
         let musicEnabled = true;
         let sfxEnabled = true;
         let speechEnabled = true;
@@ -9687,8 +9691,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (playBattleEndSFX) {
                 playSFX('battleEnd');
             }
+
             $battleTransition.classList.remove('offscreen');
             $battleTransition.classList.add('active');
+            
             setTimeout(() => {
                 // Wait 2 seconds at the bottom before starting reveal
                 setTimeout(() => {
@@ -9696,7 +9702,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     $battleTransition.classList.add('reveal');
                     
                     // Start battle music and show enemy when curtain begins to roll up
-                    playRandomBattleMusic();
+                    if (playBattleStartSFX && !tromboneIsPlaying) {
+                        playRandomBattleMusic();
+                    }
                     if (typeof callback === 'function') {
                         callback();
                     }
@@ -10054,7 +10062,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             } else {
                 // No animation, start battle immediately
                 playSFX('battleStart');
-                playRandomBattleMusic();
+                if (!tromboneIsPlaying) {
+                    playRandomBattleMusic();
+                }
                 player.enterCombat();
                 updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
                 render();
@@ -10067,12 +10077,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (
                 !player.inCombat ||
                 GameControl.awaitingPersuasionText ||
-                playerAttackCooldown
+                playerAttackCooldown ||
+                window._inputBlocked // Add this check
             ) {
                 return;
             }
 
-            playerAttackCooldown = true; // VOCAP: Prevent spamming attacks, such as holding down the attack key.
+            playerAttackCooldown = true; // VOCAP: Prevent spamming attacks
 
             playSFX('attack');
             animateEnemyDamaged();
@@ -10100,22 +10111,28 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
             }
             currentEnemy.hp -= dmg;
-            // VOCAP: leave time for attack animation. very crude, but it works?
+            
             setTimeout(() => {
-            endOfPlayerTurn();
-                playerAttackCooldown = false;
+                // Only reset cooldown if battle is still ongoing
+                if (player.inCombat && currentEnemy && currentEnemy.hp > 0) {
+                    playerAttackCooldown = false;
+                }
+                endOfPlayerTurn();
             }, 420); // VOCAP: blaze it lmao
         }
 
         function endOfPlayerTurn() {
             if (currentEnemy.hp <= 0) {
+                // When enemy dies, block input until battle is fully over
+                playerAttackCooldown = true;
+                
                 if (currentEnemy.id === "mimic") {
                     updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
-                    player.giveBitcoins(currentEnemy.bitcoins); // Award scaled BTC
+                    player.giveBitcoins(currentEnemy.bitcoins);
                 } else {
                     const baseExp = 3;
                     const floorBoost = Math.floor(floor / 2);
-                    const exp = baseExp + (floorBoost * 3); // +3 EXP per boost
+                    const exp = baseExp + (floorBoost * 3);
                     const bitcoinsEarned = currentEnemy.bitcoins;
                     const randomMsg = randomEntry([
                         "was beaten to a fucking pulp!",
@@ -10151,26 +10168,29 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const willLevelUp = player.exp >= player.getExpRequiredForLevelUp();
 
                 if (willLevelUp) {
-                    // If leveling up, exit combat immediately without battle transition
+                    playerAttackCooldown = false; // Reset for level up screen
                     player.leaveCombat();
                     setTorchOverlayVisibility();
                     startLevelUpAllocation();
                 } else {
                     if (battleTransitionAnimationsEnabled) {
                         animBattleTransitionStart(() => {
+                            playerAttackCooldown = false; // Reset when battle fully ends
                             player.leaveCombat();
                             setTorchOverlayVisibility();
                             render();
-                        }, false, true); // battleStart: false, battleEnd: true
+                        }, false, true);
                     } else {
-                        // No animation, end battle immediately
                         playSFX('battleEnd');
+                        playerAttackCooldown = false; // Reset when battle fully ends
                         player.leaveCombat();
                         setTorchOverlayVisibility();
                         render();
                     }
                 }
             } else {
+                // Enemy is still alive - reset cooldown for continued combat
+                playerAttackCooldown = false;
                 enemyAttack();
                 render();
                 setTorchOverlayVisibility();
