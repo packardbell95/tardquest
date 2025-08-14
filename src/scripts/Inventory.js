@@ -509,8 +509,8 @@ class Inventory {
     unequipWeapon() {
         if (this.#equipped.weapon) {
             this.#equipped.weapon = null;
-            this.#handlers.onWeaponEquip?.(this.getWeapon(weaponId));
-            this.#handlers.onEquip?.(this.getWeapon(weaponId));
+            this.#handlers.onWeaponEquip?.(null);
+            this.#handlers.onEquip?.(null);
         }
     }
 
@@ -618,8 +618,8 @@ class Inventory {
     unequipArmor() {
         if (this.#equipped.armor) {
             this.#equipped.armor = null;
-            this.#handlers.onArmorEquip?.(this.getArmor(armorId));
-            this.#handlers.onEquip?.(this.getArmor(armorId));
+            this.#handlers.onArmorEquip?.(null);
+            this.#handlers.onEquip?.(null);
         }
     }
 
@@ -753,6 +753,12 @@ class Inventory {
             return false;
         }
 
+        // Don't equip the ring if it's already on the other hand
+        const oppositeHand = hand === "leftHand" ? "rightHand" : "leftHand";
+        if (this.hasEquippedRing(ringId, oppositeHand)) {
+            return false;
+        }
+
         if (this.#equipped.ring[hand] !== ringId) {
             this.#equipped.ring[hand] = ringId;
             this.#handlers.onRingEquip?.(hand, this.getRing(ringId));
@@ -774,8 +780,8 @@ class Inventory {
 
         if (this.#equipped.ring[hand]) {
             this.#equipped.ring[hand] = null;
-            this.#handlers.onRingEquip?.(hand, this.getRing(ringId));
-            this.#handlers.onEquip?.(this.getRing(ringId));
+            this.#handlers.onRingEquip?.(hand, null);
+            this.#handlers.onEquip?.(null);
         }
     }
 }
