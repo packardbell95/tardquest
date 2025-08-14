@@ -53,6 +53,7 @@
             background-color: #000;
             cursor: pointer;
             height: 20px;
+            border: 2px solid #e3e3e3 #979797 #979797 #e3e3e3;
         }
 
         button:not(:disabled):hover {
@@ -1097,11 +1098,35 @@
             }
         }
 
+        #inventorySidebarScrollUp,
+        #inventorySidebarScrollDown {
+            width: 100%;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            &:hover:not(:disabled) {
+                border-color: #99f #00c #00c #99f;
+            }
+
+            &:active:not(:disabled) {
+                background-position: calc(50% + 2px) calc(50% + 2px);
+            }
+        }
+
+        #inventorySidebarScrollUp {
+            background-image: url(assets/interface/ui/scroll-up.png);
+        }
+
+        #inventorySidebarScrollDown {
+            background-image: url(assets/interface/ui/scroll-down.png);
+        }
+
         #inventory > [name] {
             display: flex;
             flex-direction: column;
-            height: 313px;
-            overflow-y: scroll;
+            height: 273px;
+            overflow: hidden;
         }
 
         #inventory > [name="main"] {
@@ -2062,6 +2087,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 class="hidden"
                 onclick="InventorySidebar.open('main')"
             ></button>
+            <button
+                id="inventorySidebarScrollUp"
+                onClick="InventorySidebar.scrollUp()"
+            ></button>
             <div name="main">
                 <button
                     class="items"
@@ -2104,6 +2133,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             <div name="weapons" class="hidden"></div>
             <div name="armor" class="hidden"></div>
             <div name="rings" class="hidden"></div>
+            <button
+                id="inventorySidebarScrollDown"
+                onClick="InventorySidebar.scrollDown()"
+            ></button>
         </div>
         <div id="playerInput">
             <div class="section navigation hidden">
@@ -12740,23 +12773,64 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 main: {
                     title: "Inventory",
                     showCloseButton: false,
+                    allowScrolling: false,
                 },
                 items: {
                     title: "Items",
                     showCloseButton: true,
+                    allowScrolling: true,
                 },
                 weapons: {
                     title: "Weapons",
                     showCloseButton: true,
+                    allowScrolling: true,
                 },
                 armor: {
                     title: "Armor",
                     showCloseButton: true,
+                    allowScrolling: true,
                 },
                 rings: {
                     title: "Rings",
                     showCloseButton: true,
+                    allowScrolling: true,
                 },
+            },
+
+            scrollAmount: 58,
+
+            scrollUp: () => {
+                document.querySelector(`#inventory [name]:not(.hidden)`)
+                    .scrollTop -= InventorySidebar.scrollAmount;
+            },
+
+            scrollDown: () => {
+                document.querySelector(`#inventory [name]:not(.hidden)`)
+                    .scrollTop += InventorySidebar.scrollAmount;
+            },
+
+            showScrollButtons: () => {
+                document
+                    .getElementById("inventorySidebarScrollUp")
+                    .classList
+                    .remove("hidden");
+
+                document
+                    .getElementById("inventorySidebarScrollDown")
+                    .classList
+                    .remove("hidden");
+            },
+
+            hideScrollButtons: () => {
+                document
+                    .getElementById("inventorySidebarScrollUp")
+                    .classList
+                    .add("hidden");
+
+                document
+                    .getElementById("inventorySidebarScrollDown")
+                    .classList
+                    .add("hidden");
             },
 
             // Conceals buttons that should not be available during a fight
@@ -12782,6 +12856,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             $button.classList.add("hidden");
                         }
                     });
+
+                InventorySidebar.hideScrollButtons();
             },
 
             // Reveals all buttons concealed during battle
@@ -12793,6 +12869,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     .forEach($button => {
                         $button.classList.remove("hidden");
                     });
+
+                const $currentlyOpenedSection =
+                    InventorySidebar?.getCurrentSectionElement();
+                const currentSectionName =
+                    $currentlyOpenedSection?.getAttribute("name");
+
+                InventorySidebar.updateScrollButtons(currentSectionName);
+            },
+
+            updateScrollButtons: (sectionName) => {
+                InventorySidebar.sections[sectionName]?.allowScrolling || false
+                    ? InventorySidebar.showScrollButtons()
+                    : InventorySidebar.hideScrollButtons();
             },
 
             // Changes the title text of the inventory sidebar
@@ -12834,12 +12923,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     .getElementById("inventorySidebarCloseButton")
                     .classList
                     .add("hidden");
+
+                InventorySidebar.hideScrollButtons();
             },
 
             // Shows the requested section in the sidebar
             open: (sectionName) => {
                 InventorySidebar.changeTitle(sectionName);
                 InventorySidebar.updateCloseButton(sectionName);
+                InventorySidebar.updateScrollButtons(sectionName);
 
                 const $currentlyOpenedSection =
                     InventorySidebar?.getCurrentSectionElement();
