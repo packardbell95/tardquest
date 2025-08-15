@@ -29,6 +29,8 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 [MySpace Tom](https://forum.agoraroad.com/index.php?members/3460/)
 
+[VocaPepper](https://vocapepper.com/)
+
 ### MUSIC + SOUND DESIGN
 [Xx_TheMilkMan69_xX](https://milklounge.wang/)
 
@@ -41,6 +43,9 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 ### LEADERBOARD STYLING
 [Xx_TheMilkMan69_xX](https://milklounge.wang/)
+
+### GAMEPAD SUPPORT
+[VocaPepper](https://vocapepper.com/)
 
 ### LIBRARIES USED
 - Synthesized voices are powered by [Imrane03/better-sam (SAM Software Automatic Mouth)](https://github.com/Imrane03/better-sam)
