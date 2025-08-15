@@ -142,6 +142,7 @@
 
         #titleScreen .startgame {
             cursor: pointer;
+            cursor: pointer;
             position: absolute;
             left: 50px;
             top: 170px;
@@ -156,6 +157,11 @@
             border-color: #ffffff;
             background-color: #000000;
             z-index: 999;
+
+            &:hover {
+                border-color: #090;
+                color: #0f0;
+            }
 
             &:hover {
                 border-color: #090;
@@ -325,6 +331,25 @@
             color: #fff;
         }
 
+        .layer.enemy {
+            position: absolute !important;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .layer.enemy pre {
+            margin: 0;
+            line-height: 1;
+            display: inline-block;
+            font-size: 12px;
+            transform: scale(0.5);
+            transform-origin: center center;
+            color: #fff;
+        }
+
         @keyframes layerHealingAnimation {
             from { transform: translateY(0); }
             to { transform: translateY(-100%) };
@@ -394,6 +419,23 @@
 
         #animTorch.onscreen {
             transform: translate(0, 0);
+        }
+
+        #animTrombone {
+            position: absolute;
+            background-repeat: no-repeat;
+            width: 300px;
+            height: 300px;
+            image-rendering: pixelated;
+            left: 0;
+            bottom: 0;
+            background-image: url(assets/fp-anim/fp-trombone.gif);
+            transform: translate(250px, 356px);
+            transition: transform .5s steps(8, jump-end);
+        }
+
+        #animTrombone.onscreen {
+            transform: translate(200px, 100px);
         }
 
         #animTrombone {
@@ -490,6 +532,7 @@
         }
 
         #menu .title {
+            display: none !important;
             display: none !important;
         }
 
@@ -710,17 +753,67 @@
             height: 2px;
             border: 2px solid #fff;
             z-index: 9;
+            position: absolute;
+            top: 117px;
+            left: 28px;
+            width: 692px;
+            height: 2px;
+            border: 2px solid #fff;
+            z-index: 9;
         }
 
         #inputBox input {
             flex-grow: 1;
             color: #fff;
+            flex-grow: 1;
+            color: #fff;
             background-color: #000;
+            font-size: 13px;
             font-size: 13px;
             padding: 10px;
             font-size: 16px;
             text-align: left;
             outline: none;
+            border: unset;
+        }
+
+        #inputBox input::placeholder {
+            color: #d8d8d8;
+        }
+
+        #confirmInputBox,
+        #closeInputBox {
+            border-color: transparent;
+
+            &:hover {
+                color: #fff;
+                background-color: #090;
+                border-color: #3c3 #090 #090 #3c3;
+            }
+
+            &:not(:disabled):active {
+                background-position: calc(50% + 2px) calc(50% + 2px);
+                &::after {
+                    top: 1px;
+                    left: 1px;
+                }
+            }
+
+            &::after {
+                content: "✔";
+                position: relative;
+            }
+        }
+
+        #closeInputBox {
+            &:hover {
+                background-color: #f00;
+                border-color: #f99 #c00 #c00 #f99;
+            }
+
+            &::after {
+                content: "×";
+            }
             border: unset;
         }
 
@@ -801,13 +894,14 @@
             justify-content: space-around;
         }
 
-        #battleLog      { grid-area: battleLog; }
-        #topLeft        { grid-area: topLeft; }
-        #stats          { grid-area: stats; }
-        #controls       { grid-area: controls; }
-        #viewport       { grid-area: viewport; }
-        #party          { grid-area: party; }
-        #inventory      { grid-area: inventory; }
+        #battleLog          { grid-area: battleLog; }
+        #topLeft            { grid-area: topLeft; }
+        #stats              { grid-area: stats; }
+        #controls           { grid-area: controls; }
+        #viewport           { grid-area: viewport; }
+        #party              { grid-area: party; }
+        #inventory          { grid-area: inventory; }
+        #playerInput    { grid-area: playerInput; }
         #playerInput    { grid-area: playerInput; }
 
         #viewport {
@@ -1923,6 +2017,11 @@
             opacity: 1;
             animation: PlayerDamaged 0.168s;
         }
+        .control-list span[data-control] img {
+            padding: 1px;
+            aspect-ratio: 1;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -2091,34 +2190,34 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             <div id="controlsExploration">
                 <div class="ui-header">Navigation Controls</div>
                 <div class="control-list">
-                    <div>↑/W:</div><div>Move Forward</div>
-                    <div>↓/S:</div><div>Move Backward</div>
-                    <div>←/A, →/D:</div><div>Turn</div>
-                    <div>Q, E:</div><div>Strafe</div>
-                    <div>T:</div><div>Talk</div>
-                    <div>I:</div><div>Inventory</div>
-                    <div>Escape:</div><div>Game Menu</div>
+                    <div><span data-control="forward" data-keyboard="↑/W" data-gamepad='<img src="assets/gamepad/generic/d-up.png" alt="D-Pad Up">'></span>:</div><div>Move Forward</div>
+                    <div><span data-control="backward" data-keyboard="↓/S" data-gamepad='<img src="assets/gamepad/generic/d-down.png" alt="D-Pad Down">'></span>:</div><div>Move Backward</div>
+                    <div><span data-control="turn" data-keyboard="←/A,→/D" data-gamepad='<img src="assets/gamepad/generic/d-left.png" alt="D-Pad Left">/<img src="assets/gamepad/generic/d-right.png" alt="D-Pad Right">'></span>:</div><div>Turn</div>
+                    <div><span data-control="strafe" data-keyboard="Q,E" data-gamepad='<img src="assets/gamepad/generic/L1.png" alt="LB">/<img src="assets/gamepad/generic/R1.png" alt="RB">'></span>:</div><div>Strafe</div>
+                    <div><span data-control="talk" data-keyboard="T" data-gamepad='<img src="assets/gamepad/xinput/x.png" alt="X">/<img src="assets/gamepad/playstation/square.png" alt="SQ">'></span>:</div><div>Talk</div>
+                    <div><span data-control="inventory" data-keyboard="I" data-gamepad='<img src="assets/gamepad/xinput/y.png" alt="Y">/<img src="assets/gamepad/playstation/triangle.png" alt="T">'></span>:</div><div>Inventory</div>
+                    <div><span data-control="menu" data-keyboard="Esc" data-gamepad='<img src="assets/gamepad/xinput/start.png" alt="Menu">/<img src="assets/gamepad/playstation/start.png" alt="MenuPS">'></span>:</div><div>Game Menu</div>
                 </div>
             </div>
             <div id="controlsCombat" class="hidden">
                 <div class="ui-header">Combat Controls</div>
                 <div class="control-list">
-                    <div>A:</div><div>Attack</div>
-                    <div>P:</div><div>Persuade</div>
-                    <div>R:</div><div>Run</div>
-                    <div>I:</div><div>Inventory</div>
-                    <div>Escape:</div><div>Game Menu</div>
+                    <div><span data-control="attack" data-keyboard="A" data-gamepad='<img src="assets/gamepad/xinput/a.png" alt="A">/<img src="assets/gamepad/playstation/cross.png" alt="X">'></span>:</div><div>Attack</div>
+                    <div><span data-control="persuade" data-keyboard="P" data-gamepad='<img src="assets/gamepad/xinput/x.png" alt="X">/<img src="assets/gamepad/playstation/square.png" alt="SQ">'></span>:</div><div>Persuade</div>
+                    <div><span data-control="run" data-keyboard="R" data-gamepad='<img src="assets/gamepad/xinput/b.png" alt="B">/<img src="assets/gamepad/playstation/circle.png" alt="O">'></span>:</div><div>Run</div>
+                    <div><span data-control="inventory" data-keyboard="I" data-gamepad='<img src="assets/gamepad/xinput/y.png" alt="Y">/<img src="assets/gamepad/playstation/triangle.png" alt="T">'></span>:</div><div>Inventory</div>
+                    <div><span data-control="menu" data-keyboard="Esc" data-gamepad='<img src="assets/gamepad/xinput/start.png" alt="Menu">/<img src="assets/gamepad/playstation/start.png" alt="MenuPS">'></span>:</div><div>Game Menu</div>
                 </div>
             </div>
             <div id="controlsMenu" class="hidden">
                 <div class="ui-header">Menu Controls</div>
                 <div class="control-list">
-                    <div>↑/W:</div><div>Previous Option</div>
-                    <div>↓/S:</div><div>Next Option</div>
-                    <div>←/A:</div><div>Previous Page</div>
-                    <div>→/D:</div><div>Next Page</div>
-                    <div>Enter/Space/E:</div><div>Select</div>
-                    <div>Escape:</div><div>Close Menu</div>
+                    <div><span data-control="menu-up" data-keyboard="↑/W" data-gamepad='<img src="assets/gamepad/generic/d-up.png" alt="D-Pad Up">'></span>:</div><div>Previous Option</div>
+                    <div><span data-control="menu-down" data-keyboard="↓/S" data-gamepad='<img src="assets/gamepad/generic/d-down.png" alt="D-Pad Down">'></span>:</div><div>Next Option</div>
+                    <div><span data-control="menu-prev" data-keyboard="←/A" data-gamepad='<img src="assets/gamepad/generic/d-left.png" alt="D-Pad Left">'></span>:</div><div>Previous Page</div>
+                    <div><span data-control="menu-next" data-keyboard="→/D" data-gamepad='<img src="assets/gamepad/generic/d-right.png" alt="D-Pad Right">'></span>:</div><div>Next Page</div>
+                    <div><span data-control="menu-confirm" data-keyboard="Enter" data-gamepad='<img src="assets/gamepad/xinput/a.png" alt="A">/<img src="assets/gamepad/playstation/cross.png" alt="X">'></span>:</div><div>Select</div>
+                    <div><span data-control="menu-close" data-keyboard="Esc" data-gamepad='<img src="assets/gamepad/xinput/b.png" alt="B">/<img src="assets/gamepad/playstation/circle.png" alt="O">'></span>:</div><div>Back</div>
                 </div>
             </div>
         </div>
@@ -2318,6 +2417,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <script src="scripts/Tooltip.js"></script>
     <script src="data/portraits.js"></script>
     <script src="data/enemyart.js"></script>
+    <script src="scripts/gamepad.js"></script>
     <script>
         /**
          * ASCII art that the sceneRenderer uses to draw scenes
@@ -7860,6 +7960,43 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             drawHealingLayer: () => '<div class="layer healing"></div>',
         };
 
+        // === UI Hint Swapper ===
+        (function(){
+            const STATE = { last: 'keyboard' };
+
+            function apply(){
+                document.querySelectorAll('.control-list span[data-control]').forEach(el=>{
+                    const html = el.dataset[STATE.last];
+                    if (html) el.innerHTML = html;
+                });
+            }
+            function set(device){
+                if (STATE.last === device) return;
+                STATE.last = device;
+                apply();
+            }
+
+            // Keyboard activity
+            window.addEventListener('keydown', ()=> set('keyboard'), { passive:true });
+
+            // Gamepad connection events
+            window.addEventListener('gamepadconnected', ()=> set('gamepad'));
+            window.addEventListener('gamepaddisconnected', ()=>{
+                // Fallback
+                const pads = navigator.getGamepads?.() || [];
+                if (!pads.some(p=>p)) set('keyboard');
+            });
+
+            // VOCAP: Expose for gamepad.js hook (called inside its processGamepad loop)
+            window.InputDeviceManager = {
+                setLast: d => set(d === 'gamepad' ? 'gamepad' : 'keyboard'),
+                getLast: () => STATE.last
+            };
+
+            document.addEventListener('DOMContentLoaded', apply);
+            apply();
+        })();
+
         const GameControl = {
             mode: null,
             enabled: true,
@@ -9980,6 +10117,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (weightLevel === "normal") {
                         MAP.setCell(x, y, "crackedFloor");
                         playSFX("floorCrackSlight");
+                        if (window.GamepadSupport && typeof GamepadSupport.vibrate === 'function') {
+                            GamepadSupport.vibrate(500, 0.25);
+                        }
                         updateBattleLog(
                             '<span class="action">The floor cracks under ' +
                             'your feet!</span>'
@@ -9987,6 +10127,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     } else if (weightLevel === "warning") {
                         MAP.setCell(x, y, "crackedFloorSevere");
                         playSFX("floorCrackSlight");
+                        if (window.GamepadSupport && typeof GamepadSupport.vibrate === 'function') {
+                            GamepadSupport.vibrate(500, 0.5);
+                        }
                         updateBattleLog(
                             '<span class="action">The floor trembles under ' +
                             'your feet!</span> You might want to lighten ' +
@@ -10006,6 +10149,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (weightLevel === "normal") {
                         MAP.setCell(x, y, "crackedFloorSevere");
                         playSFX("floorCrackSlight");
+                        if (window.GamepadSupport && typeof GamepadSupport.vibrate === 'function') {
+                            GamepadSupport.vibrate(500, 0.5);
+                        }
                         updateBattleLog(
                             '<span class="action">The floor cracks under ' +
                             'your feet!</span> It would be a good idea to ' +
@@ -11088,6 +11234,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 setTimeout(() => $flash.classList.remove('active'), 168); // VOCAP: match the damage animation duration
             }
         }
+
 
 
 
