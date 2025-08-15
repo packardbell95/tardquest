@@ -8156,6 +8156,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             `<span class="END">boiled socks. ` +
                             `<span class="HP">+5 HP</span>`
                         );
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: 0.9,
@@ -8172,6 +8177,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             `Your stomach feels nauseous, but your head ` +
                             `feels great! <span class="HP">+20 HP</span>`
                         );
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: 0.5,
@@ -8189,6 +8199,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             `current state of mind for a moment. ` +
                             `<span class="HP">+50 HP</span>`
                         );
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: .4,
@@ -8208,6 +8223,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             `one by one. You can still hear them singing in ` +
                             `your stomach... <span class="HP">+70 HP</span>`
                         );
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: .35,
@@ -8231,6 +8251,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             `</span>`
                         );
                         render();
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: 0.8,
@@ -8251,6 +8276,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         updateBattleLog("Lo, the way has been made clear!");
                         animTorchStart();
                         render();
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: 0.8,
@@ -8357,6 +8387,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             tromboneResumeType = null;
                         };
                         updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
+
+                        if (player.inCombat) {
+                            endOfPlayerTurn();
+                        }
+
                         return true;
                     },
                     merchantStockChance: 1.0,
@@ -10909,6 +10944,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function endOfPlayerTurn() {
+            // Can't end a turn if you're not in combat
+            if (! player.inCombat) {
+                return;
+            }
+
             if (currentEnemy.hp <= 0) {
                 // When enemy dies, block input until battle is fully over
                 playerAttackCooldown = true;
@@ -12226,10 +12266,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
 
                     menu.closeAll(); // Close all menus after using an item
-                    if (currentEnemy && currentEnemy.hp > 0) {
-                        enemyAttack();
-                        render();
-                    }
                 },
             },
             inventoryEquipment: {
