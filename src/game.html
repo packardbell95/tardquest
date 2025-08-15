@@ -13465,7 +13465,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             enterCombat: () => {
                 const currentMenu = document
                     .querySelector(`#inventory [name]:not(.hidden)`)
-                    .getAttribute("name");
+                    ?.getAttribute("name") || null;
 
                 // If the player is on an equipment submenu, close it
                 if (! ["main", "items"].includes(currentMenu)) {
@@ -13568,10 +13568,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         $currentlyOpenedSection.getAttribute("name");
 
                     if (currentSectionName === sectionName) {
-                        console.debug(
-                            "Tried to reopen the currently visible section",
-                            { sectionName }
-                        );
                         return;
                     }
 
