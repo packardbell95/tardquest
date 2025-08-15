@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TARDQUEST</title>
-    <style>
+   <style>
         /* ===== Scrollbar CSS ===== */
         /* Firefox */
         * {
@@ -142,7 +142,6 @@
 
         #titleScreen .startgame {
             cursor: pointer;
-            cursor: pointer;
             position: absolute;
             left: 50px;
             top: 170px;
@@ -157,11 +156,6 @@
             border-color: #ffffff;
             background-color: #000000;
             z-index: 999;
-
-            &:hover {
-                border-color: #090;
-                color: #0f0;
-            }
 
             &:hover {
                 border-color: #090;
@@ -331,25 +325,6 @@
             color: #fff;
         }
 
-        .layer.enemy {
-            position: absolute !important;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 10;
-        }
-        .layer.enemy pre {
-            margin: 0;
-            line-height: 1;
-            display: inline-block;
-            font-size: 12px;
-            transform: scale(0.5);
-            transform-origin: center center;
-            color: #fff;
-        }
-
         @keyframes layerHealingAnimation {
             from { transform: translateY(0); }
             to { transform: translateY(-100%) };
@@ -419,23 +394,6 @@
 
         #animTorch.onscreen {
             transform: translate(0, 0);
-        }
-
-        #animTrombone {
-            position: absolute;
-            background-repeat: no-repeat;
-            width: 300px;
-            height: 300px;
-            image-rendering: pixelated;
-            left: 0;
-            bottom: 0;
-            background-image: url(assets/fp-anim/fp-trombone.gif);
-            transform: translate(250px, 356px);
-            transition: transform .5s steps(8, jump-end);
-        }
-
-        #animTrombone.onscreen {
-            transform: translate(200px, 100px);
         }
 
         #animTrombone {
@@ -532,7 +490,6 @@
         }
 
         #menu .title {
-            display: none !important;
             display: none !important;
         }
 
@@ -753,67 +710,17 @@
             height: 2px;
             border: 2px solid #fff;
             z-index: 9;
-            position: absolute;
-            top: 117px;
-            left: 28px;
-            width: 692px;
-            height: 2px;
-            border: 2px solid #fff;
-            z-index: 9;
         }
 
         #inputBox input {
             flex-grow: 1;
             color: #fff;
-            flex-grow: 1;
-            color: #fff;
             background-color: #000;
-            font-size: 13px;
             font-size: 13px;
             padding: 10px;
             font-size: 16px;
             text-align: left;
             outline: none;
-            border: unset;
-        }
-
-        #inputBox input::placeholder {
-            color: #d8d8d8;
-        }
-
-        #confirmInputBox,
-        #closeInputBox {
-            border-color: transparent;
-
-            &:hover {
-                color: #fff;
-                background-color: #090;
-                border-color: #3c3 #090 #090 #3c3;
-            }
-
-            &:not(:disabled):active {
-                background-position: calc(50% + 2px) calc(50% + 2px);
-                &::after {
-                    top: 1px;
-                    left: 1px;
-                }
-            }
-
-            &::after {
-                content: "✔";
-                position: relative;
-            }
-        }
-
-        #closeInputBox {
-            &:hover {
-                background-color: #f00;
-                border-color: #f99 #c00 #c00 #f99;
-            }
-
-            &::after {
-                content: "×";
-            }
             border: unset;
         }
 
@@ -894,14 +801,13 @@
             justify-content: space-around;
         }
 
-        #battleLog          { grid-area: battleLog; }
-        #topLeft            { grid-area: topLeft; }
-        #stats              { grid-area: stats; }
-        #controls           { grid-area: controls; }
-        #viewport           { grid-area: viewport; }
-        #party              { grid-area: party; }
-        #inventory          { grid-area: inventory; }
-        #playerInput    { grid-area: playerInput; }
+        #battleLog      { grid-area: battleLog; }
+        #topLeft        { grid-area: topLeft; }
+        #stats          { grid-area: stats; }
+        #controls       { grid-area: controls; }
+        #viewport       { grid-area: viewport; }
+        #party          { grid-area: party; }
+        #inventory      { grid-area: inventory; }
         #playerInput    { grid-area: playerInput; }
 
         #viewport {
