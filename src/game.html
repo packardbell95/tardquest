@@ -6829,17 +6829,26 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         const SpeechSynthesizer = {
             isSpeaking: false,
+            pronunciationOverrides: {
+                "gauge": "gayge",
+                "PS2": "pee ess two",
+                "lughead": "lug head",
+                "the": "theee",
+            },
+
             speak: (sentence, voiceOptions, onEnded) => {
-                // Don't speak a new line if one is currently playing
                 if (!speechEnabled || SpeechSynthesizer.isSpeaking) {
                     onEnded?.();
                     return;
                 }
-
                 if (!voiceOptions) {
                     console.error("No voice options provided", { sentence });
                     return;
                 }
+
+                let normalizedSentence = SpeechSynthesizer.normalizeNumbers(sentence);
+                normalizedSentence = SpeechSynthesizer.expandAcronyms(normalizedSentence);
+                normalizedSentence = SpeechSynthesizer.applyPronunciationOverrides(normalizedSentence);
 
                 SpeechSynthesizer.isSpeaking = true;
                 const options = structuredClone(voiceOptions);
@@ -6855,11 +6864,169 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 options.onEnded = () => {
                     SpeechSynthesizer.isSpeaking = false;
                     onEnded?.();
-                }
+                };
 
-                new SamJs(options).speak(sentence);
+                new SamJs(options).speak(normalizedSentence);
             },
-        };
+
+            applyPronunciationOverrides: (text) => {
+                return text.replace(/\b([A-Za-z']+)\b/g, (m, w) => {
+                    const lower = w.toLowerCase();
+                    if (Object.hasOwn(SpeechSynthesizer.pronunciationOverrides, lower)) {
+                        const repl = SpeechSynthesizer.pronunciationOverrides[lower];
+                        if (w === w.toUpperCase()) {
+                            return /[\s-]/.test(repl) ? repl : repl.toUpperCase();
+                        }
+                        if (w[0] === w[0].toUpperCase()) {
+                            return repl.charAt(0).toUpperCase() + repl.slice(1);
+                        }
+                        return repl;
+                    }
+                    return m;
+                });
+            },
+
+            expandAcronyms: (text) => {
+                // VOCAP: use known acronyms to avoid expanding common ones, such as "HAHA" (whoops).
+                const knownAcronyms = [
+                    "HP", "EXP", "BTC" // VOCAP: not currently much use for this feature but maybe in the future?
+                ];
+                return text.replace(/\b([A-Z]{2,6})\b/g, (m, w) => {
+                    if (!knownAcronyms.includes(w)) return w;
+                    const lower = w.toLowerCase();
+                    if (Object.hasOwn(SpeechSynthesizer.pronunciationOverrides, lower)) return w;
+                    if (/'/.test(w)) return w;
+                    return w.split('').join(' ');
+                });
+            },
+
+            normalizeNumbers: (text) => {
+                // Pass 1: fractions
+                let out = text.replace(/(^|[^A-Za-z0-9+/-])([+-]?)(\d+)\s*\/\s*(\d+)(?=$|[^A-Za-z0-9/])/g,
+                    (full, pre, sign, numStr, denStr) => {
+                        const num = Number(numStr);
+                        const den = Number(denStr);
+                        if (!Number.isSafeInteger(num) || !Number.isSafeInteger(den) || den === 0) return full;
+                        if (numStr.length > 15 || denStr.length > 15) return full;
+                        const words = SpeechSynthesizer.fractionToWords(
+                            sign === '-' ? -1 : (sign === '+' ? 1 : 0),
+                            num,
+                            den
+                        );
+                        return pre + words;
+                    });
+
+                // Pass 2: decimals
+                out = out.replace(/(^|[^A-Za-z0-9.])([+-]?)(\d{1,3}(?:,\d{3})*|\d+)\.(\d+)(?=$|[^0-9.])/g,
+                    (full, pre, sign, intPart, fracPart) => {
+                        const cleanInt = intPart.replace(/,/g, '');
+                        if (cleanInt.length > 15 || fracPart.length > 30) return full;
+                        if (!/^\d+$/.test(cleanInt) || !/^\d+$/.test(fracPart)) return full;
+                        const intNum = Number(cleanInt);
+                        if (!Number.isSafeInteger(intNum) || intNum > 999_999_999_999) return full;
+                        return pre + SpeechSynthesizer.decimalToWords(sign, intNum, fracPart);
+                    });
+
+                // Pass 3: signed / unsigned integers
+                out = out.replace(/(^|[^A-Za-z0-9])([+-]?)(\d{1,3}(?:,\d{3})*|\d{1,15})(?=$|[^0-9])/g,
+                    (full, pre, sign, body) => {
+                        const clean = body.replace(/,/g, '');
+                        if (clean.length > 15) return full;
+                        if (!/^\d+$/.test(clean)) return full;
+                        const n = Number(clean);
+                        if (!Number.isSafeInteger(n) || n > 999_999_999_999) return full;
+                        return pre + SpeechSynthesizer.signedIntegerToWords(sign, n);
+                    });
+
+                return out;
+            },
+
+            signedIntegerToWords: (sign, n) => {
+                if (n === 0) return "zero";
+                const core = SpeechSynthesizer.numberToWordsLarge(n);
+                if (sign === '-') return `negative ${core}`;
+                if (sign === '+') return `positive ${core}`;
+                return core;
+            },
+
+            decimalToWords: (sign, intNum, fracStr) => {
+                const intWords = SpeechSynthesizer.numberToWordsLarge(intNum);
+                const fracDigits = fracStr.split('').map(d => SpeechSynthesizer.numberToWordsSmall(Number(d)));
+                const signWord = sign === '-' ? 'negative ' : (sign === '+' ? 'positive ' : '');
+                return `${signWord}${intWords} point ${fracDigits.join(' ')}`.replace(/\s+/g, ' ').trim();
+            },
+
+            fractionToWords: (signFlag, numerator, denominator) => {
+                // Reduce fraction
+                const gcd = (a, b) => b ? gcd(b, a % b) : a;
+                const g = gcd(numerator, denominator);
+                numerator = numerator / g;
+                denominator = denominator / g;
+
+                const signWord = signFlag < 0 ? 'negative ' : (signFlag > 0 ? 'positive ' : '');
+                const numWords = SpeechSynthesizer.numberToWordsLarge(numerator);
+                const denomWords = SpeechSynthesizer.fractionDenominatorToWords(denominator, numerator !== 1);
+
+                if (!denomWords) {
+                    const denomFallback = SpeechSynthesizer.numberToWordsLarge(denominator);
+                    return `${signWord}${numWords} over ${denomFallback}`.trim();
+                }
+                return `${signWord}${numWords} ${denomWords}`.trim();
+            },
+
+            fractionDenominatorToWords: (den, plural) => {
+                const map = {
+                    2: ['half', 'halves'],
+                    3: ['third', 'thirds'],
+                    4: ['fourth', 'fourths'],
+                    5: ['fifth', 'fifths'],
+                    6: ['sixth', 'sixths'],
+                    7: ['seventh', 'sevenths'],
+                    8: ['eighth', 'eighths'],
+                    9: ['ninth', 'ninths'],
+                    10: ['tenth', 'tenths'],
+                    11: ['eleventh', 'elevenths'],
+                    12: ['twelfth', 'twelfths'],
+                }[den];
+                if (!map) return null;
+                return plural ? map[1] : map[0];
+            },
+
+            numberToWordsSmall: (n) => {
+                const ones = [
+                    "zero","one","two","three","four","five","six","seven","eight","nine","ten",
+                    "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"
+                ];
+                const tens = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+                if (n < 20) return ones[n];
+                if (n < 100) {
+                    const t = Math.floor(n / 10);
+                    const o = n % 10;
+                    return o ? `${tens[t]}-${ones[o]}` : tens[t];
+                }
+                const h = Math.floor(n / 100);
+                const r = n % 100;
+                return r ? `${ones[h]} hundred ${SpeechSynthesizer.numberToWordsSmall(r)}` : `${ones[h]} hundred`;
+            },
+
+            numberToWordsLarge: (n) => {
+                if (n === 0) return "zero";
+                const scales = ["", "thousand", "million", "billion", "trillion"];
+                const parts = [];
+                let scaleIndex = 0;
+                while (n > 0 && scaleIndex < scales.length) {
+                    const chunk = n % 1000;
+                    if (chunk) {
+                        const words = SpeechSynthesizer.numberToWordsSmall(chunk);
+                        const scaleWord = scales[scaleIndex];
+                        parts.unshift(scaleWord ? `${words} ${scaleWord}` : words);
+                    }
+                    n = Math.floor(n / 1000);
+                    scaleIndex++;
+                }
+                return parts.join(' ').replace(/\s+/g, ' ').trim();
+            },
+        };    
 
         const sceneRenderer = {
             displayWidth: 50,
@@ -8863,7 +9030,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         const music = {
-            titleTrack: 
+            titleTrack:
                 new Audio("audio/title.wav"), // Title screen (Title - Xx_TheMilkMan69_xX)
             explorationTracks: [
                 new Audio("audio/explore.mp3"), // Into the Tardspire - Xx_TheMilkMan69_xX
@@ -8875,16 +9042,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 new Audio("audio/battle2.mp3"), // battle2 (A Dangerous Game of Tag - Xx_TheMilkMan69_xX)
                 new Audio("audio/battle3.mp3"), // battle3 (Eek! A Cunt! - Xx_TheMilkMan69_xX)
             ],
-            merchantTrack: 
+            merchantTrack:
                 new Audio("audio/merchant.mp3"), // Merchant (Welcome to SlobMart! - Xx_TheMilkMan69_xX)
+            gamblersTheme:
+                new Audio("audio/gamblers-theme.mp3"), // Gambler's Theme - Packard Bell 95
         };
 
         music.explorationTracks.forEach(track => track.loop = true);
         music.battleTracks.forEach(track => track.loop = true);
         music.titleTrack.loop = true;
+        music.gamblersTheme.loop = true;
 
         function stopAllMusic() {
-            [...music.explorationTracks, ...music.battleTracks].forEach(track => {
+            [
+                ...music.explorationTracks,
+                ...music.battleTracks,
+                music.gamblersTheme,
+            ].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
             });
@@ -8947,6 +9121,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 currentMusic.currentTime = 0;
                 currentMusic = null;
             }
+        }
+
+        function playGamblersTheme() {
+            stopAllMusic();
+            if (!musicEnabled) {
+                return;
+            }
+            currentMusic = music.gamblersTheme;
+            currentMusic.play();
         }
 
         let currentMusic = null;
@@ -11569,6 +11752,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onOpen: () => {
                     Portrait.show('gambler');
                     gambler.say('Place yer bets!');
+                    playGamblersTheme();
                 },
                 onClose: () => {
                     gambler.isActiveOnFloor = false;
@@ -11576,6 +11760,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (gamblerPosition) {
                         MAP.setCell(gamblerPosition.x, gamblerPosition.y);
                     }
+                    resumeExplorationMusic();
                     Portrait.hide();
                 },
                 landingHtml: () => {
