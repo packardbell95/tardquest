@@ -8034,8 +8034,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const cellInFrontOfPlayer = MAP.getCell(frontX, frontY);
                 const controlsEnabled =
                     GameControl.enabled &&
-                    !player.movementDisabled &&
-                    !window._inputBlocked;
+                    !player.movementDisabled;
                 const touchEnabled =
                     controlsEnabled &&
                     typeof cellInFrontOfPlayer?.onTouch === "function";
