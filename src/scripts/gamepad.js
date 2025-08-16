@@ -106,6 +106,17 @@
 
 
   /**
+   * Returns true if the game is over.
+   */
+  function isDead() {
+    // Use the global gameOver flag only
+    try { if (typeof gameOver !== 'undefined' && gameOver) return true; } catch {}
+    try { if (typeof window !== 'undefined' && window.gameOver) return true; } catch {}
+    return false;
+  }
+
+
+  /**
    * Returns the active menu instance, avoiding DOM collisions.
    */
   function getMenuInstance() {
@@ -367,6 +378,30 @@
         window.InputDeviceManager.setLast('gamepad');
       }
     })();
+
+  // Block all inputs unless GameControl.enabled is true
+  const gcForEnabled = getGameControl();
+  if (gcForEnabled && gcForEnabled.enabled !== true) {
+      // Keep previous states in sync to avoid edge-trigger bursts when re-enabled
+      if (gp.buttons) {
+        try {
+          prevButtons = gp.buttons.map(b => !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.5))));
+        } catch {}
+      }
+      prevAxes = axes.slice();
+      return;
+    }
+
+    // Block all inputs if game is over
+    if (isDead()) {
+      if (gp.buttons) {
+        try {
+          prevButtons = gp.buttons.map(b => !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.5))));
+        } catch {}
+      }
+      prevAxes = axes.slice();
+      return;
+    }
 
     if (isBlocked()) {
       // Allow A/Start to dismiss title screen even if input is blocked
