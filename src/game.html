@@ -8108,13 +8108,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 $mouseControl.querySelector(".backward")?.classList
                     .toggle("hidden", !moveBackwardEnabled);
 
-                // Turn Left and Right
+                // Turn Left and Right - always enabled, never on SPD cooldown
+                const turningEnabled = GameControl.enabled;
                 $playerInput
                     .querySelectorAll('[name="turn-left"], [name="turn-right"]')
-                    .forEach(($button) => controlsEnabled
+                    .forEach(($button) => turningEnabled
                         ? $button.removeAttribute("disabled")
                         : $button.setAttribute("disabled", "true")
-                );
+                    );
             },
 
             updateMenuControls: () => {
