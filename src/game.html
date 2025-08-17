@@ -10553,6 +10553,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             
             // Block input during transition
             window._inputBlocked = true;
+            GameControl.disableControls();
 
             // Only called when a battle begins
             if (playBattleStartSFX) {
@@ -10585,6 +10586,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         $battleTransition.classList.remove('reveal');
                         $battleTransition.classList.add('offscreen');
                         window._inputBlocked = false;
+                        GameControl.enableControls();
                     }, 300); // Match duration of curtain rolling down (0.3s)
                 }, 1000); // Wait 1s at the bottom
             }, 300); // Match duration of curtain rolling up (0.3s)
