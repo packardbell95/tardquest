@@ -117,7 +117,9 @@
   }
 
 
-
+  /**
+   * Updates the controller status text and class based on connection state (TheMilkMan)
+   */
   function updateControllerStatusDisplay() {
     if (!controllerStatusElement) {
       controllerStatusElement = document.getElementById('controllerStatusText');
@@ -521,7 +523,8 @@
    */
   function vibrate(ms = 120, amp = 1.0) {
     const gp = getPads()[0];
-    if (!gp) { console.warn('🎮 TardPad: No gamepad for rumble'); return; }
+    // VOCAP: Quiet down console warnings about missing gamepad or rumble support. Enable as needed for debugging.
+    // if (!gp) { console.warn('🎮 TardPad: No gamepad for rumble'); return; }
     const act = gp.vibrationActuator;
     if (!act || typeof act.playEffect !== 'function') {
       return;
@@ -566,5 +569,5 @@
   setInterval(updateControllerStatusDisplay, 1000);
 })();
 
-// Debugging info
+// Debugging info to make sure the script is loaded.
 // console.info('🎮 TardPad: Script loaded successfully!');
