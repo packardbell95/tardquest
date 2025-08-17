@@ -248,7 +248,17 @@
     if (edgePressed(gp, 1)) tryMenuInput('escape');
     if (edgePressed(gp, 9)) {
       const m = getMenuInstance();
-      if (m) { if (m.isOpen()) m.close(); else m.open('gameSettings'); }
+      if (m) { 
+        if (m.isOpen()) {
+          // Check if the current menu has escapeDisabled before closing
+          const currentMenuData = m.getCurrentMenuData?.();
+          if (!currentMenuData?.escapeDisabled) {
+            m.close(); 
+          }
+        } else {
+          m.open('gameSettings'); 
+        }
+      }
     }
   }
 
