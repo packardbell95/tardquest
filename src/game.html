@@ -838,7 +838,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: 10px;
         }
 
         #controllerStatusText.connected {
@@ -13416,11 +13416,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         return isLevelUpAllocation && levelUpStatPointsAllocated[statKey] >= 2;
                     }
                     return [
-                        ...(!isLevelUpAllocation ? [{
+                        {
                             id: "rollDice",
                             displayText: "[Diceroll]",
                             description: "Randomly allocate your points.",
-                        }] : []),
+                        },
                         {
                             id: "hp",
                             displayText: `HP: ${player.maxHp}`,
@@ -13529,8 +13529,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         }
                         menu.render();
                         render();
-                    } else if (!isLevelUpAllocation && selectedOptionId === "rollDice") {
-                        rollDiceForStats();
+                    } else if (selectedOptionId === "rollDice") {
+                        if (isLevelUpAllocation) {
+                            rollDiceForLevelUp();
+                        } else {
+                            rollDiceForStats();
+                        }
                         menu.render();
                         render();
                     } else if (player.remainingPoints > 0) {
@@ -14321,6 +14325,52 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.remainingPoints--;
             }
             updateBattleLog("Points have been randomly allocated. Good luck!");
+        }
+
+        function rollDiceForLevelUp() {
+            player.hp = player.maxHp = levelUpAllocatedStats.base.maxHp;
+            player.defense = levelUpAllocatedStats.base.defense;
+            player.strength = levelUpAllocatedStats.base.strength;
+            player.persuasion = levelUpAllocatedStats.base.persuasion;
+            player.endurance = levelUpAllocatedStats.base.endurance;
+            player.speed = levelUpAllocatedStats.base.speed;
+            player.luck = levelUpAllocatedStats.base.luck;
+            player.remainingPoints = 6;
+
+            levelUpStatPointsAllocated = {
+                maxHp: 0,
+                defense: 0,
+                strength: 0,
+                persuasion: 0,
+                endurance: 0,
+                speed: 0,
+                luck: 0
+            };
+
+            const stats = ["hp", "defense", "strength", "persuasion", "endurance", "speed", "luck"];
+
+            while (player.remainingPoints > 0) {
+                const availableStats = stats.filter(stat => {
+                    const statKey = stat === "hp" ? "maxHp" : stat;
+                    return levelUpStatPointsAllocated[statKey] < 2;
+                });
+                
+                if (availableStats.length === 0) break;
+                
+                const stat = randomEntry(availableStats);
+                const statKey = stat === "hp" ? "maxHp" : stat;
+                
+                if (stat === "hp") {
+                    player.maxHp++;
+                    player.hp = player.maxHp;
+                } else {
+                    player[stat]++;
+                }
+                
+                levelUpStatPointsAllocated[statKey]++;
+                player.remainingPoints--;
+            }
+            updateBattleLog("Level up points have been randomly allocated. Good luck!");
         }
 
         menu.open("statAllocation");
