@@ -772,12 +772,13 @@
             background: white;
 
             grid-template-columns: 220px 368px 100px;
-            grid-template-rows: 110px 184px 162px 148px;
+            grid-template-rows: 110px 184px 162px 148px 30px;
             grid-template-areas:
                 "battleLog  battleLog   battleLog"
                 "topLeft    viewport    inventory"
                 "stats      viewport    inventory"
-                "controls   party       playerInput";
+                "controls   party       playerInput"
+                "nowPlaying nowPlaying  controller";
         }
 
         #interface > div {
@@ -809,6 +810,50 @@
         #party          { grid-area: party; }
         #inventory      { grid-area: inventory; }
         #playerInput    { grid-area: playerInput; }
+        #nowPlaying     { 
+            grid-area: nowPlaying; 
+            display: flex;
+            flex-direction: column;
+            border-style: solid;
+            border-width: 2px;
+            border-color: #ffffff;  
+        }
+
+        #nowPlaying .track-info {
+            flex-grow: 1;
+            padding: 4px 8px;
+            align-items: center;
+            display: flex;
+            background-image: url('assets/interface/ui/tile1.gif');
+            background-repeat: repeat;
+            background-size: 25px;
+            font-size: 13px;
+        }
+
+        #nowPlaying .music-icon {
+            margin-right: 8px;
+            color: #0ff;
+        }
+
+        #controller     { 
+            grid-area: controller;
+            background-color: #000;
+            border: 2px solid #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+            font-size: 13px;
+        }
+
+        #controllerStatusText.connected {
+            color: #0f0;
+        }
+
+        #controllerStatusText.disconnected {
+            color: #ff0000;
+        }
 
         #viewport {
             position: relative;
@@ -1923,6 +1968,7 @@
             opacity: 1;
             animation: PlayerDamaged 0.168s;
         }
+
         .control-list span[data-control] img {
             padding: 1px;
             aspect-ratio: 1;
@@ -2310,6 +2356,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 </div>
             </div>
         </div>
+
+        <div id="nowPlaying">
+            <div class="track-info">
+                <span class="music-icon">♫</span>
+                <span id="currentTrackName">No music playing</span>
+            </div>
+        </div>
+
+        <div id="controller">
+            <div class="controller-status">
+                <div id="controllerStatusText"></div>
+            </div>
+        </div>
+
     </div>
 
     <script src="https://vocapepper.com/tardquest/mods/tardboard.js"></script>
@@ -9524,8 +9584,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const message =
                     `You ${transactionType} ${article}` +
                     `<span class="friendly">${merchandise.name}</span> for ` +
-                    `<span class="BTC">${priceBtc.toLocaleString(undefined)} ` +
-                    `BTC</span>.`;
+                    `<span class="BTC">₿ ${priceBtc.toLocaleString(undefined)}</span>. `;
                 updateBattleLog(message);
             },
         };
@@ -9796,7 +9855,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         const music = {
             titleTrack:
-                new Audio("audio/title.wav"), // Title screen (Title - Xx_TheMilkMan69_xX)
+                Object.assign(new Audio("audio/title.wav"), { trackName: "Title - Xx_TheMilkMan69_xX" }),
             explorationTracks: [
                 Object.assign(new Audio("audio/explore1.mp3"), { trackName: "Into the Tardspire - Xx_TheMilkMan69_xX" }),
                 Object.assign(new Audio("audio/explore2.mp3"), { trackName: "Metal Spoons - endless_self" }),
@@ -9812,9 +9871,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 Object.assign(new Audio("audio/battle5.mp3"), { trackName: "SURPRISE COCKFIGHT! - Xx_TheMilkMan69_xX" }),
             ],
             merchantTrack:
-                new Audio("audio/merchant.mp3"), // Merchant (Welcome to SlobMart! - Xx_TheMilkMan69_xX)
+                Object.assign(new Audio("audio/merchant.mp3"), { trackName: "Welcome to SlobMart! - Xx_TheMilkMan69_xX" }),
             gamblersTheme:
-                new Audio("audio/gamblers-theme.mp3"), // Gambler's Theme - Packard Bell 95
+                Object.assign(new Audio("audio/gamblers-theme.mp3"), { trackName: "Gambler's Theme - Packard Bell 95" }),
         };
 
         music.explorationTracks.forEach(track => track.loop = true);
@@ -9827,17 +9886,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ...music.explorationTracks,
                 ...music.battleTracks,
                 music.gamblersTheme,
+                music.merchantTrack,
+                music.titleTrack,
             ].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
             });
-
+            currentMusic = null;
+            updateNowPlaying();
         }
         function playTitleMusic() {
             stopAllMusic();
             if (!musicEnabled) return;
             currentMusic = music.titleTrack;
             currentMusic.play();
+            updateNowPlaying(getCurrentTrackName());
         }
 
         function stopTitleMusic() {
@@ -9845,6 +9908,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 currentMusic.pause();
                 currentMusic.currentTime = 0;
                 currentMusic = null;
+                updateNowPlaying();
             }
         }
 
@@ -9860,12 +9924,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 console.log("No exploration tracks enabled, playing silence");
                 currentExplorationTrack = null;
                 currentMusic = null;
+                 updateNowPlaying();
                 return;
             }
             
             currentExplorationTrack = randomEntry(availableTracks);
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
+            updateNowPlaying(getCurrentTrackName());
         }
 
         function getExplorationTrackNames() {
@@ -9910,11 +9976,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (availableTracks.length === 0) {
                 console.log("No battle tracks enabled, playing silence");
                 currentMusic = null;
+                updateNowPlaying();
                 return;
             }
             
             currentMusic = randomEntry(availableTracks);
             currentMusic.play();
+            updateNowPlaying(getCurrentTrackName());
         }
 
         function resumeExplorationMusic() {
@@ -9924,6 +9992,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
+            updateNowPlaying(getCurrentTrackName());
         }
 
         function playMerchantMusic() {
@@ -9932,6 +10001,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             currentMusic = music.merchantTrack;
             currentMusic.loop = true;
             currentMusic.play();
+            updateNowPlaying(getCurrentTrackName());
         }
 
         function stopMerchantMusic() {
@@ -9939,6 +10009,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 currentMusic.pause();
                 currentMusic.currentTime = 0;
                 currentMusic = null;
+                updateNowPlaying();
             }
         }
 
@@ -9949,7 +10020,57 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
             currentMusic = music.gamblersTheme;
             currentMusic.play();
+            updateNowPlaying(getCurrentTrackName());
         }
+
+        function updateNowPlaying(trackName = null) {
+            const $trackName = document.getElementById('currentTrackName');
+            if (!$trackName) return;
+
+            if (trackName) {
+                $trackName.textContent = trackName;
+                $trackName.style.color = '#fff';
+            } else {
+                $trackName.textContent = 'No music playing';
+                $trackName.style.color = '#666';
+            }
+        }
+
+        function getCurrentTrackName() {
+            if (!musicEnabled || !currentMusic) {
+                return null;
+            }
+
+            // Check if it's the title track
+            if (currentMusic === music.titleTrack) {
+                return "Title - Xx_TheMilkMan69_xX";
+            }
+
+            // Check if it's the merchant track
+            if (currentMusic === music.merchantTrack) {
+                return "Welcome to SlobMart! - Xx_TheMilkMan69_xX";
+            }
+
+            // Check if it's the gambler's theme
+            if (currentMusic === music.gamblersTheme) {
+                return "Gambler's Theme - Packard Bell 95";
+            }
+
+            // Check exploration tracks
+            const explorationIndex = music.explorationTracks.indexOf(currentMusic);
+            if (explorationIndex !== -1) {
+                return explorationTrackNames[explorationIndex];
+            }
+
+            // Check battle tracks
+            const battleIndex = music.battleTracks.indexOf(currentMusic);
+            if (battleIndex !== -1) {
+                return battleTrackNames[battleIndex];
+            }
+
+            return "Unknown Track";
+        }
+
 
         let currentMusic = null;
         let currentExplorationTrack = null;
@@ -10234,7 +10355,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     updateBattleLog(
                         `<span class="action">WHAT THE FUCK? That ` +
                         `was a mimic?!</span> You obtained ` +
-                        `<span class="BTC">${mimicBTC} BTC</span> ` +
+                        `<span class="BTC">₿ ${mimicBTC}</span> ` +
                         `from the intestines spilled from its gaping ` +
                         `maw.`
                     );
@@ -10378,6 +10499,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         loadSettings();
         initializeMusicSettings();
+        setTimeout(() => {
+            if (window.GamepadSupport?.updateControllerStatus) {
+                window.GamepadSupport.updateControllerStatus();
+            }
+        }, 100);
 
         function placeWelcomeBanner() {
             if (MAP.getCell(player.x, player.y - 1)?.type === 'floor') {
@@ -11012,7 +11138,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 playerAttackCooldown = true;
                 
                 if (currentEnemy.id === "mimic") {
-                    updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">${currentEnemy.bitcoins} BTC</span> in its remains!`);
+                    updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">₿ ${currentEnemy.bitcoins}</span> in its remains!`);
                     player.giveBitcoins(currentEnemy.bitcoins);
                 } else {
                     const baseExp = 3;
@@ -11044,7 +11170,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     updateBattleLog(
                         `<span class="friendly">You</span> gained ` +
                         `<span class="EXP">+${exp} EXP</span> and ` +
-                        `<span class="BTC">${bitcoinsEarned} BTC</span>`
+                        `<span class="BTC">₿ ${bitcoinsEarned}</span>`
                     );
                     player.giveBitcoins(bitcoinsEarned);
                     player.exp += exp;
@@ -11332,7 +11458,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const amount = parseInt(cmd.split(" ")[1], 10);
                 if (!isNaN(amount) && amount > 0) {
                     player.giveBitcoins(amount);
-                    updateBattleLog(`<span class="BTC">CHEAT: Added ${amount} BTC to your worn out Kamen Rider wallet</span>`);
+                    updateBattleLog(`<span class="BTC">CHEAT: Added ₿ ${amount} to your worn out Kamen Rider wallet</span>`);
                 } else {
                     updateBattleLog(`<span class="action">Invalid BTC amount.</span>`);
                 }
@@ -11500,7 +11626,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function gamble() {
             player.takeBitcoins(gambler.playPrice);
-            updateBattleLog(`You hand the gambler <span class="tooExpensive">${gambler.playPrice} BTC</span>. Let's hope it was worth it`);
+            updateBattleLog(`You hand the gambler <span class="BTC">₿ ${gambler.playPrice}</span>. Let's hope it was worth it`);
 
             document.getElementById('menu').classList.add('hidden');
 
@@ -11784,7 +11910,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     let total = chestContents.amount + bonus;
                     player.giveBitcoins(total);
                     updateBattleLog(
-                        `You found <span class="BTC">${total} BTC</span> in the chest!`
+                        `You found <span class="BTC">₿ ${total}</span> in the chest!`
                     );
                 } else if (chestContents.type === 'item') {
                     const key = chestContents.item;
@@ -12148,23 +12274,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const index = parseInt(selectedOptionId.split("_")[1]);
                         enabledExplorationTracks[index] = !enabledExplorationTracks[index];
                         saveSettings();
-
                         if (!player.inCombat && currentMusic && music.explorationTracks.includes(currentMusic)) {
-                            if (!enabledExplorationTracks[index] && currentMusic === music.explorationTracks[index]) {
-                                const availableTracks = music.explorationTracks.filter((_, idx) => enabledExplorationTracks[idx]);
-                                if (availableTracks.length > 0) {
-                                    const newTrack = randomEntry(availableTracks);
-                                    stopAllMusic();
-                                    currentExplorationTrack = newTrack;
-                                    currentMusic = newTrack;
-                                    if (musicEnabled) {
-                                        newTrack.play();
-                                    }
-                                } else {
-                                    stopAllMusic();
-                                    currentExplorationTrack = null;
-                                    currentMusic = null;
-                                }
+                            const currentTrackIndex = music.explorationTracks.indexOf(currentMusic);
+                            if (!enabledExplorationTracks[currentTrackIndex]) {
+                                playRandomExplorationMusic();
                             }
                         }
                         
@@ -12197,21 +12310,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const index = parseInt(selectedOptionId.split("_")[1]);
                         enabledBattleTracks[index] = !enabledBattleTracks[index];
                         saveSettings();
-
                         if (player.inCombat && currentMusic && music.battleTracks.includes(currentMusic)) {
-                            if (!enabledBattleTracks[index] && currentMusic === music.battleTracks[index]) {
-                                const availableTracks = music.battleTracks.filter((_, idx) => enabledBattleTracks[idx]);
-                                if (availableTracks.length > 0) {
-                                    const newTrack = randomEntry(availableTracks);
-                                    stopAllMusic();
-                                    currentMusic = newTrack;
-                                    if (musicEnabled) {
-                                        newTrack.play();
-                                    }
-                                } else {
-                                    stopAllMusic();
-                                    currentMusic = null;
-                                }
+                            const currentTrackIndex = music.battleTracks.indexOf(currentMusic);
+                            if (!enabledBattleTracks[currentTrackIndex]) {
+                                playRandomBattleMusic();
                             }
                         }
                         
@@ -12733,7 +12835,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return player.bitcoins > 0
                         ?
                             `You have <span class="BTC">` +
-                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `₿ ${player.bitcoins.toLocaleString(undefined)}` +
                             `</span> in your wallet`
                         :
                             "Your wallet is emptier than a lughead's skull. " +
@@ -12787,7 +12889,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return player.bitcoins > 0
                         ?
                             `You have <span class="BTC">` +
-                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `₿ ${player.bitcoins.toLocaleString(undefined)}` +
                             `</span> in your wallet`
                         :
                             "Your wallet is emptier than a lughead's skull. " +
@@ -12799,7 +12901,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         id: itemId,
                         displayText: items[itemId].name,
                         description: items[itemId].description,
-                        trailText: `${items[itemId].price} BTC`,
+                        trailText: `₿ ${items[itemId].price}`,
                         className: items[itemId].price > player.bitcoins
                             ? 'tooExpensive'
                             : undefined,
@@ -12823,7 +12925,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const message = player.bitcoins > 0
                         ?
                             `You have <span class="BTC">` +
-                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `₿ ${player.bitcoins.toLocaleString(undefined)}` +
                             `</span> in your wallet`
                         :
                             "Your wallet is emptier than a lughead's skull. " +
@@ -12867,7 +12969,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `LOAD: ${weapon.weight}\n` +
                                 `Stat Requirement: ${requiredStrengthHtml}`,
                             trailText:
-                                `${weapon.price.toLocaleString(undefined)} BTC`,
+                                `₿ ${weapon.price.toLocaleString(undefined)}`,
                             className: alreadyOwned
                                 ? 'muted'
                                 : (tooExpensive ? 'tooExpensive' : undefined),
@@ -12892,7 +12994,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const message = player.bitcoins > 0
                         ?
                             `You have <span class="BTC">` +
-                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `₿ ${player.bitcoins.toLocaleString(undefined)}` +
                             `</span> in your wallet`
                         :
                             "Your wallet is emptier than a lughead's skull. " +
@@ -12931,7 +13033,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 `Defense: ${armor.defense}\n` +
                                 `LOAD: ${armor.weight}\n` +
                                 `Stat Requirement: ${requiredEnduranceHtml}`,
-                            trailText: `${armor.price} BTC`,
+                            trailText: `₿ ${armor.price}`,
                             className: alreadyOwned
                                 ? 'muted'
                                 : (tooExpensive ? 'tooExpensive' : undefined),
@@ -12955,7 +13057,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ? `You have <span class="BTC">` +
-                            `${player.bitcoins.toLocaleString(undefined)} BTC` +
+                            `₿ ${player.bitcoins.toLocaleString(undefined)}` +
                             `</span> in your wallet`
                         : "Your wallet is emptier than a lughead's skull. " +
                             "But you can still look around";
@@ -12971,7 +13073,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             displayText: ring.name,
                             description: ring.description,
                             trailText:
-                                `${ring.price.toLocaleString(undefined)} BTC`,
+                                `₿ ${ring.price.toLocaleString(undefined)}`,
                             className: alreadyOwned
                                 ? 'muted'
                                 : (tooExpensive ? 'tooExpensive' : undefined),
@@ -12996,7 +13098,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 landingHtml: () =>
                     `Sell your unwanted inventory for a small sum.\n\n` +
                     `You have <span class="BTC">` +
-                    `${player.bitcoins.toLocaleString(undefined)} BTC</span> ` +
+                    `₿ ${player.bitcoins.toLocaleString(undefined)}</span> ` +
                     `in your wallet.`,
                 getOptions: () => {
                     const itemOptions = Object
@@ -13010,7 +13112,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 id: `sell_item_${item.id}`,
                                 displayText: `[I] ${item.name}`,
                                 description:
-                                    `Sell for <span class="BTC">₿${sellPrice}` +
+                                    `Sell for <span class="BTC">₿ ${sellPrice}` +
                                     `</span>`,
                                 trailText:
                                     item.count.toLocaleString(undefined),
@@ -13031,7 +13133,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 displayText: `[W] ${weapon.name}`,
                                 description:
                                     `Sell for ` +
-                                    `<span class="BTC">₿${sellPrice}</span>`,
+                                    `<span class="BTC">₿ ${sellPrice}</span>`,
                                 trailText:
                                     weapon.count.toLocaleString(undefined),
                                 className: isEquipped ? "muted" : undefined,
@@ -13052,7 +13154,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 displayText: `[A] ${armor.name}`,
                                 description:
                                     `Sell for ` +
-                                    `<span class="BTC">₿${sellPrice}</span>`,
+                                    `<span class="BTC">₿ ${sellPrice}</span>`,
                                 trailText:
                                     armor.count.toLocaleString(undefined),
                                 className: isEquipped ? "muted" : undefined,
@@ -13072,7 +13174,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 id: `sell_ring_${ring.id}`,
                                 displayText: `[R] ${ring.name}`,
                                 description:
-                                    `Sell for <span class="BTC">₿${sellPrice}` +
+                                    `Sell for <span class="BTC">₿ ${sellPrice}` +
                                     `</span>`,
                                 trailText: ring.count.toLocaleString(undefined),
                                 className: isEquipped ? "muted" : undefined,
@@ -13249,7 +13351,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
                         `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
                         `Just <span class="tooExpensive">${gambler.playPrice}</span> to play!"\n\n` +
-                        `You have <span class="BTC">${player.bitcoins.toLocaleString(undefined)} BTC</span> in your wallet`
+                        `You have <span class="BTC">₿ ${player.bitcoins.toLocaleString(undefined)}</span> in your wallet`
                     );
                 },
                 getOptions: () => {
@@ -13257,7 +13359,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         {
                             id: "play",
                             displayText: "Play the game",
-                            trailText: `${gambler.playPrice} BTC`,
+                            trailText: `₿ ${gambler.playPrice}`,
                             description: "Take your chance with the gambler",
                         },
                         {
@@ -14150,6 +14252,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         generateMap();
         updateSeenTiles();
         playRandomExplorationMusic();
+        updateNowPlaying(getCurrentTrackName());
         render();
 
         let isLevelUpAllocation = false;

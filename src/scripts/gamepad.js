@@ -16,6 +16,7 @@
   let lastMenuDpad = { up: 0, down: 0, left: 0, right: 0 };
   let partyTalkLocked = false;
   let talkHoldStart = 0;
+  let controllerStatusElement = null;
 
 
   /**
@@ -113,6 +114,30 @@
     try { if (typeof gameOver !== 'undefined' && gameOver) return true; } catch {}
     try { if (typeof window !== 'undefined' && window.gameOver) return true; } catch {}
     return false;
+  }
+
+
+
+  function updateControllerStatusDisplay() {
+    if (!controllerStatusElement) {
+      controllerStatusElement = document.getElementById('controllerStatusText');
+    }
+    
+    if (!controllerStatusElement) return;
+
+    const $controllerBox = document.getElementById('controller');
+    const pads = getPads();
+    const hasController = pads.length > 0 && pads[0];
+
+    if (hasController) {
+      controllerStatusElement.textContent = '✓ TardPad';
+      controllerStatusElement.className = 'connected';
+      if ($controllerBox) $controllerBox.className = 'connected';
+    } else {
+      controllerStatusElement.textContent = '✗ TardPad';
+      controllerStatusElement.className = 'disconnected';
+      if ($controllerBox) $controllerBox.className = 'disconnected';
+    }
   }
 
 
@@ -473,6 +498,7 @@
   function onConnect() {
     connected = true;
     if (!rafId) rafId = window.requestAnimationFrame(loop);
+    updateControllerStatusDisplay();
   }
 
   /**
@@ -486,6 +512,7 @@
       prevButtons = [];
       prevAxes = [];
     }
+    updateControllerStatusDisplay();
   }
 
 
@@ -518,7 +545,10 @@
 
 
   // Expose rumble helper
-  window.GamepadSupport = { vibrate };
+  window.GamepadSupport = { 
+    vibrate,
+    updateControllerStatus: updateControllerStatusDisplay
+  };
 
   /**
    * Initializes gamepad support and starts polling.
@@ -532,6 +562,8 @@
 
   // Start gamepad support after window load
   window.addEventListener('load', start);
+
+  setInterval(updateControllerStatusDisplay, 1000);
 })();
 
 // Debugging info
