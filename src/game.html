@@ -835,7 +835,6 @@
         #controller {
             grid-area: controller;
             display: flex;
-            line-height: 5;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -843,6 +842,18 @@
             background-image: url('assets/interface/ui/tile1.gif');
             background-repeat: repeat;
             background-size: 25px;
+        }
+
+        #controller .controller-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #controller .controller-icon {
+            width: 20px;
+            height: 16px;
+            vertical-align: middle;
         }
 
         #controllerStatusText.connected {
@@ -2364,7 +2375,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         <div id="controller">
             <div class="controller-status">
-                <div id="controllerStatusText"></div>
+                <img src="assets/interface/ui/tardpad.png" class="controller-icon" alt="Controller">
+                <span id="controllerStatusText"></span>
             </div>
         </div>
 

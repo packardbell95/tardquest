@@ -132,11 +132,11 @@
     const hasController = pads.length > 0 && pads[0];
 
     if (hasController) {
-      controllerStatusElement.innerHTML = '<img src="assets/interface/ui/tardpad.png" height="15">  TardPad ✓';
+      controllerStatusElement.innerHTML = 'TardPad ✓';
       controllerStatusElement.className = 'connected';
       if ($controllerBox) $controllerBox.className = 'connected';
     } else {
-      controllerStatusElement.innerHTML = '<img src="assets/interface/ui/tardpad.png" height="15">  TardPad ✗';
+      controllerStatusElement.innerHTML = 'TardPad ✗';
       controllerStatusElement.className = 'disconnected';
       if ($controllerBox) $controllerBox.className = 'disconnected';
     }
