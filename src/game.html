@@ -10456,6 +10456,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 `Dungeon Floor ${floor}`;
         }
 
+        let autoDicerollEnabled = false;
+
         function loadSettings() {
             const music = localStorage.getItem("musicEnabled");
             if (music !== null) musicEnabled = music === "true";
@@ -10469,6 +10471,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (skipTitle !== null) skipTitleScreen = skipTitle === "true";
             const battleTransitions = localStorage.getItem("battleTransitionAnimationsEnabled");
             if (battleTransitions !== null) battleTransitionAnimationsEnabled = battleTransitions === "true";
+            const autoDiceroll = localStorage.getItem("autoDicerollEnabled");
+            if (autoDiceroll !== null) autoDicerollEnabled = autoDiceroll === "true";
 
             const explorationTracks = localStorage.getItem("enabledExplorationTracks");
             if (explorationTracks !== null) {
@@ -10487,6 +10491,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             localStorage.setItem("speechEnabled", speechEnabled);
             localStorage.setItem("skipTitleScreen", skipTitleScreen);
             localStorage.setItem("battleTransitionAnimationsEnabled", battleTransitionAnimationsEnabled);
+            localStorage.setItem("autoDicerollEnabled", autoDicerollEnabled);
             localStorage.setItem("enabledExplorationTracks", JSON.stringify(enabledExplorationTracks));
             localStorage.setItem("enabledBattleTracks", JSON.stringify(enabledBattleTracks));
         }
@@ -12164,6 +12169,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             : "Enable the curtain animation when entering/leaving battles",
                     },
                     {
+                        id: "toggleAutoDiceroll",
+                        displayText: autoDicerollEnabled ? "Disable auto diceroll" : "Enable auto diceroll",
+                        description: autoDicerollEnabled ? "Disable automatic random stat allocation" : "Automatically roll stats on character creation and level up",
+                    },
+                    {
                         id: "resetGame",
                         displayText: "Reset the game",
                         description:
@@ -12176,15 +12186,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         case "toggleMusic":
                             musicEnabled = !musicEnabled;
                             saveSettings();
-                            stopAllMusic();
-                            if (musicEnabled) {
-                                player.inCombat
-                                    ? playRandomBattleMusic()
-                                    : (currentExplorationTrack
-                                        ? resumeExplorationMusic()
-                                        : playRandomExplorationMusic()
-                                    );
+                            if (!musicEnabled) {
+                                stopAllMusic();
+                            } else {
+                                if (player.inCombat) {
+                                    playRandomBattleMusic();
+                                } else {
+                                    playRandomExplorationMusic();
+                                }
                             }
+                            menu.render();
                             break;
                         case "musicSettings":
                             menu.open("musicSettings");
@@ -12192,22 +12203,32 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         case "toggleSFX":
                             sfxEnabled = !sfxEnabled;
                             saveSettings();
+                            menu.render();
                             break;
                         case "toggleSpeech":
                             speechEnabled = !speechEnabled;
                             saveSettings();
+                            menu.render();
                             break;
                         case "toggleSkipTitleScreen":
                             skipTitleScreen = !skipTitleScreen;
                             saveSettings();
+                            menu.render();
                             break;
                         case "toggleEatRatAnimation":
                             eatRatAnimationEnabled = !eatRatAnimationEnabled;
                             saveSettings();
+                            menu.render();
                             break;
                         case "toggleBattleTransitionAnimations":
                             battleTransitionAnimationsEnabled = !battleTransitionAnimationsEnabled;
                             saveSettings();
+                            menu.render();
+                            break;
+                        case "toggleAutoDiceroll":
+                            autoDicerollEnabled = !autoDicerollEnabled;
+                            saveSettings();
+                            menu.render();
                             break;
                         case "resetGame":
                             menu.open("resetGameConfirmation");
@@ -14281,7 +14302,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 luck: 0
             };
             player.levelUp();
-            menu.open("statAllocation");
+            
+            // If auto diceroll enabled
+            if (autoDicerollEnabled) {
+                rollDiceForLevelUp();
+                isLevelUpAllocation = false;
+                updateBattleLog("Stats increased! You consume an unsuspecting rat to restore your health. Poor feller...");
+                if (eatRatAnimationEnabled) {
+                    GameControl.disableControls();
+                    animEatRat(() => GameControl.enableControls());
+                }
+                render();
+            } else {
+                menu.open("statAllocation");
+            }
         }
 
         player.remainingPoints = 12; //Points to allocate at start of game
@@ -14373,7 +14407,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             updateBattleLog("Level up points have been randomly allocated. Good luck!");
         }
 
-        menu.open("statAllocation");
+        if (autoDicerollEnabled) {
+            rollDiceForStats();
+            updateBattleLog(
+                `Stat allocation complete! You consume an ` +
+                `unsuspecting rat to ensure you are in good ` +
+                `health, and <span class="friendly">your ` +
+                `adventure begins</span>...`
+            );
+            if (eatRatAnimationEnabled) {
+                GameControl.disableControls();
+                animEatRat(() => GameControl.enableControls());
+            }
+        } else {
+            menu.open("statAllocation");
+        }
 
         const gambleFrames = [
     `
