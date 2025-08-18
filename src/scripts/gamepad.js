@@ -8,9 +8,7 @@
   const ACTIVITY_AXIS_DEADZONE = 0.45; // Threshold for UI hint swapping
 
   // --- State ---
-  let connected = false;
   let prevButtons = [];
-  let prevAxes = [];
   let loggedPadInfo = false;
   let lastMenuDpad = { up: 0, down: 0, left: 0, right: 0 };
   let partyTalkLocked = false;
@@ -255,10 +253,6 @@
    * Handles exploration navigation and quick actions.
    */
   function handleNavigation(gp, axes) {
-    const lx = withDeadzone(axes[0] || 0);
-    const ly = withDeadzone(axes[1] || 0);
-    const rx = withDeadzone(axes[2] || 0);
-    const ry = withDeadzone(axes[3] || 0);
     const hat = hatToDpad(axes[9]);
     const sticks = sticksToDpad(axes);
 
@@ -360,7 +354,6 @@
     const axes = gp.axes || [];
     // Prepare previous button/axis states
     if (!prevButtons.length) prevButtons = gp.buttons.map(b => !!b.pressed);
-    if (!prevAxes.length) prevAxes = axes.slice();
 
     // UI input device activity detection
     (function detectActivity(){
@@ -397,7 +390,6 @@
           prevButtons = gp.buttons.map(b => !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.5))));
         } catch {}
       }
-      prevAxes = axes.slice();
       return;
     }
 
@@ -408,27 +400,23 @@
           prevButtons = gp.buttons.map(b => !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.5))));
         } catch {}
       }
-      prevAxes = axes.slice();
       return;
     }
 
     if (isBlocked()) {
       // Allow A/Start to dismiss title screen even if input is blocked
       handleTitleScreen(gp);
-      prevAxes = axes.slice();
       return;
     }
 
     // Title screen
     if (handleTitleScreen(gp)) {
-      prevAxes = axes.slice();
       return;
     }
 
     // Menu mode
     if (getMenuInstance()?.isOpen()) {
       handleMenu(gp, axes);
-      prevAxes = axes.slice();
       return;
     }
 
@@ -441,7 +429,6 @@
       handleNavigation(gp, axes);
     }
 
-    prevAxes = axes.slice();
   }
 
 
@@ -482,22 +469,13 @@
     }  
   }
 
-
-  /**
-   * Handles gamepad connection event.
-   */
-  function onConnect() {
-    connected = true;
-  }
-
   /**
    * Handles gamepad disconnection event.
    */
   function onDisconnect() {
-    connected = getPads().length > 0;
-  if (!connected) {
+    const hasPads = getPads().length > 0;
+    if (!hasPads) {
       prevButtons = [];
-      prevAxes = [];
     }
   }
 
@@ -539,7 +517,6 @@
    * Initializes gamepad support and starts polling.
    */
   function start() {
-    window.addEventListener('gamepadconnected', onConnect);
     window.addEventListener('gamepaddisconnected', onDisconnect);
   }
 
