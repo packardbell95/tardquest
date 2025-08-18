@@ -86,8 +86,8 @@ After an enemy has been successfully persuaded to join you in your quest, they w
 
 # Notable Forks
 ### VocaPepper
-VocaPepper's build most notably includes touch controls for touchscreen devices, as well as an online multiplayer mode.
+VocaPepper's 1.10.0 build most notably includes an online multiplayer mode (discontinued - for now).
 
-▶[Main](https://vocapepper.com/tardquest/)
+▶[Main](https://vocapepper.com/tardquest/src/multiplayer.html)
 
-▶[GitHub](https://github.com/VocaPepper/tardquest)
+▶[GitHub](https://github.com/VocaPepper/tardquest-online-legacy)
