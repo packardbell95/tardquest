@@ -1385,19 +1385,23 @@
                 top 2px right -2px,
                 bottom -2px right -2px,
                 bottom -2px left 2px;
-
+        
             & .container {
                 top: 2px;
                 left: 2px;
-
+        
                 & .label {
                    background-color: transparent;
                 }
-
+        
                 & .icon {
                     filter: invert();
                 }
             }
+        }
+        
+        #inventory button:disabled {
+            opacity: 0.25;
         }
 
         .party-member {
@@ -7909,12 +7913,25 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             awaitingPersuasionText: false,
 
             enableControls: () => {
+                window._inputBlocked = false;
                 GameControl.enabled = true;
+                // Re-enable inventory sidebar buttons when controls are enabled
+                if (typeof InventorySidebar !== 'undefined') {
+                    InventorySidebar.setEnabled(true);
+                }
                 GameControl.update();
             },
 
             disableControls: () => {
+                // Block input only if not awaiting persuasion text
+                if (!GameControl.awaitingPersuasionText) {
+                    window._inputBlocked = true;
+                }
                 GameControl.enabled = false;
+                // Disable inventory sidebar buttons while controls are disabled
+                if (typeof InventorySidebar !== 'undefined') {
+                    InventorySidebar.setEnabled(false);
+                }
                 GameControl.update();
             },
 
@@ -9055,7 +9072,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     stopAllMusic();
                     animTorchEnd();
                     Portrait.show('death');
-                    window._inputBlocked = true;
+                    GameControl.disableControls();
                     document.getElementById('game').style =
                         "transition: opacity 1.2s linear, transform 1.2s linear; " +
                         "opacity: 0; transform: translateY(-400px);";
@@ -10552,7 +10569,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const $battleTransition = document.getElementById('animBattleTransition');
             
             // Block input during transition
-            window._inputBlocked = true;
             GameControl.disableControls();
 
             // Only called when a battle begins
@@ -10585,7 +10601,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     setTimeout(() => {
                         $battleTransition.classList.remove('reveal');
                         $battleTransition.classList.add('offscreen');
-                        window._inputBlocked = false;
                         GameControl.enableControls();
                     }, 300); // Match duration of curtain rolling down (0.3s)
                 }, 1000); // Wait 1s at the bottom
@@ -10596,7 +10611,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const container = document.getElementById('viewport');
             if (!container) return;
 
-            window._inputBlocked = true;
+            GameControl.disableControls();
 
             let overlay = document.getElementById('animEatRat');
             if (!overlay) {
@@ -10634,7 +10649,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 overlay.style.display = 'none';
                 overlay.innerHTML = '';
-                window._inputBlocked = false;
+                GameControl.enableControls();
                 if (typeof callback === 'function') callback();
                 ratVideo.remove();
             }
@@ -13491,6 +13506,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         // Manages the inventory sidebar on the right side of the viewport
         const InventorySidebar = {
+            // Whether sidebar buttons are interactive
+            enabled: true,
             // Sections of the sidebar, keyed by name
             sections: {
                 main: {
@@ -13521,6 +13538,26 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             scrollAmount: 58,
+
+            // Enable/disable all buttons within the sidebar without hiding it
+            setEnabled: (enabled) => {
+                InventorySidebar.enabled = !!enabled;
+
+                const buttons = [
+                    ...document.querySelectorAll('#inventory button'),
+                    document.getElementById('inventorySidebarCloseButton'),
+                    document.getElementById('inventorySidebarScrollUp'),
+                    document.getElementById('inventorySidebarScrollDown'),
+                ].filter(Boolean);
+
+                buttons.forEach(btn => {
+                    if (InventorySidebar.enabled) {
+                        btn.removeAttribute('disabled');
+                    } else {
+                        btn.setAttribute('disabled', 'true');
+                    }
+                });
+            },
 
             scrollUp: () => {
                 document.querySelector(`#inventory [name]:not(.hidden)`)
@@ -13726,6 +13763,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     "title",
                     `${objectDefinition.name}: ${objectDefinition.description}`
                 );
+                // Reflect current enabled state on creation
+                if (!InventorySidebar.enabled) {
+                    $button.setAttribute('disabled', 'true');
+                }
 
                 const $container = document.createElement("div");
                 $container.className = "container";
@@ -14449,7 +14490,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             playTitleMusic();
             $titleScreen.style.display = 'flex';
             stopAllMusic();
-            window._inputBlocked = true;
+            GameControl.disableControls();
         }
         function hideTitleScreen() {
             stopTitleMusic();
@@ -14461,7 +14502,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             setTimeout(() => {
                 $titleScreen.style.display = 'none';
-                window._inputBlocked = false;
+                GameControl.enableControls();
                 playRandomExplorationMusic();
                 render();
 
