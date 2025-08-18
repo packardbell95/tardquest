@@ -1400,6 +1400,31 @@
             }
         }
 
+        #inventory > [name] button:not(:disabled):active {
+            background-position:
+                top 2px left 2px,
+                top 2px right -2px,
+                bottom -2px right -2px,
+                bottom -2px left 2px;
+        
+            & .container {
+                top: 2px;
+                left: 2px;
+        
+                & .label {
+                   background-color: transparent;
+                }
+        
+                & .icon {
+                    filter: invert();
+                }
+            }
+        }
+        
+        #inventory button:disabled {
+            opacity: 0.25;
+        }
+
         .party-member {
             gap: 2px;
             display: flex;
@@ -7911,12 +7936,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             enableControls: () => {
                 window._inputBlocked = false;
                 GameControl.enabled = true;
+                // Re-enable inventory sidebar buttons when controls are enabled
+                if (typeof InventorySidebar !== 'undefined') {
+                    InventorySidebar.setEnabled(true);
+                }
                 GameControl.update();
             },
 
             disableControls: () => {
                 window._inputBlocked = true;
                 GameControl.enabled = false;
+                // Disable inventory sidebar buttons while controls are disabled
+                if (typeof InventorySidebar !== 'undefined') {
+                    InventorySidebar.setEnabled(false);
+                }
                 GameControl.update();
             },
 
@@ -13491,6 +13524,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         // Manages the inventory sidebar on the right side of the viewport
         const InventorySidebar = {
+            // Whether sidebar buttons are interactive
+            enabled: true,
             // Sections of the sidebar, keyed by name
             sections: {
                 main: {
@@ -13521,6 +13556,26 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             scrollAmount: 58,
+
+            // Enable/disable all buttons within the sidebar without hiding it
+            setEnabled: (enabled) => {
+                InventorySidebar.enabled = !!enabled;
+
+                const buttons = [
+                    ...document.querySelectorAll('#inventory button'),
+                    document.getElementById('inventorySidebarCloseButton'),
+                    document.getElementById('inventorySidebarScrollUp'),
+                    document.getElementById('inventorySidebarScrollDown'),
+                ].filter(Boolean);
+
+                buttons.forEach(btn => {
+                    if (InventorySidebar.enabled) {
+                        btn.removeAttribute('disabled');
+                    } else {
+                        btn.setAttribute('disabled', 'true');
+                    }
+                });
+            },
 
             scrollUp: () => {
                 document.querySelector(`#inventory [name]:not(.hidden)`)
@@ -13726,6 +13781,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     "title",
                     `${objectDefinition.name}: ${objectDefinition.description}`
                 );
+                // Reflect current enabled state on creation
+                if (!InventorySidebar.enabled) {
+                    $button.setAttribute('disabled', 'true');
+                }
 
                 const $container = document.createElement("div");
                 $container.className = "container";
