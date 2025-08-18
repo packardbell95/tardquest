@@ -10515,8 +10515,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         loadSettings();
         initializeMusicSettings();
         setTimeout(() => {
-            if (window.GamepadSupport?.updateControllerStatus) {
-                window.GamepadSupport.updateControllerStatus();
+            if (window.GamepadSupport?.loop) {
+                window.GamepadSupport.loop();
             }
         }, 100);
 

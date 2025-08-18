@@ -116,33 +116,7 @@
     return false;
   }
 
-
-  /**
-   * Updates the controller status text and class based on connection state (TheMilkMan)
-   */
-  function updateControllerStatusDisplay() {
-    if (!controllerStatusElement) {
-      controllerStatusElement = document.getElementById('controllerStatusText');
-    }
-    
-    if (!controllerStatusElement) return;
-
-    const $controllerBox = document.getElementById('controller');
-    const pads = getPads();
-    const hasController = pads.length > 0 && pads[0];
-
-    if (hasController) {
-      controllerStatusElement.innerHTML = 'TardPad ✓';
-      controllerStatusElement.className = 'connected';
-      if ($controllerBox) $controllerBox.className = 'connected';
-    } else {
-      controllerStatusElement.innerHTML = 'TardPad ✗';
-      controllerStatusElement.className = 'disconnected';
-      if ($controllerBox) $controllerBox.className = 'disconnected';
-    }
-  }
-
-
+  
   /**
    * Returns the active menu instance, avoiding DOM collisions.
    */
@@ -478,6 +452,7 @@
    */
   function loop() {
     const pads = getPads();
+    const $controllerBox = document.getElementById('controller');
     if (pads.length && pads[0]) {
       // Patch party.enableButtons every frame if needed
       const player = getPlayer();
@@ -499,7 +474,14 @@
         loggedPadInfo = true;
       }
       processGamepad(pads[0]);
-    }
+      controllerStatusText.innerHTML = 'TardPad ✓';
+      controllerStatusText.className = 'connected';
+      if ($controllerBox) $controllerBox.className = 'connected';
+    } else {
+      controllerStatusText.innerHTML = 'TardPad ✗';
+      controllerStatusText.className = 'disconnected';
+      if ($controllerBox) $controllerBox.className = 'disconnected';
+    }  
     rafId = window.requestAnimationFrame(loop);
   }
 
@@ -510,7 +492,6 @@
   function onConnect() {
     connected = true;
     if (!rafId) rafId = window.requestAnimationFrame(loop);
-    updateControllerStatusDisplay();
   }
 
   /**
@@ -524,7 +505,6 @@
       prevButtons = [];
       prevAxes = [];
     }
-    updateControllerStatusDisplay();
   }
 
 
@@ -533,8 +513,7 @@
    */
   function vibrate(ms = 120, amp = 1.0) {
     const gp = getPads()[0];
-    // VOCAP: Quiet down console warnings about missing gamepad or rumble support. Enable as needed for debugging.
-    // if (!gp) { console.warn('🎮 TardPad: No gamepad for rumble'); return; }
+    if (!gp) { return; }
     const act = gp.vibrationActuator;
     if (!act || typeof act.playEffect !== 'function') {
       return;
@@ -560,7 +539,6 @@
   // Expose rumble helper
   window.GamepadSupport = { 
     vibrate,
-    updateControllerStatus: updateControllerStatusDisplay
   };
 
   /**
@@ -575,8 +553,7 @@
 
   // Start gamepad support after window load
   window.addEventListener('load', start);
-
-  setInterval(updateControllerStatusDisplay, 1000);
+  setInterval(() => { loop(); }, 1000);
 })();
 
 // Debugging info to make sure the script is loaded.
