@@ -3,12 +3,11 @@
   const DEADZONE = 0.35; // Thumbstick deadzone threshold
   const L2_AXIS = 4;     // Axis index for left trigger (L2)
   const R2_AXIS = 5;     // Axis index for right trigger (R2)
-  const INPUT_REPEAT_MS = 250; // Repeat delay for D-pad and thumbstick navigation
+  const INPUT_REPEAT_MS = 200; // Repeat delay for D-pad and thumbstick navigation
   const TALK_HOLD_MS = 1000; // Hold X for 1 second to trigger Release
   const ACTIVITY_AXIS_DEADZONE = 0.45; // Threshold for UI hint swapping
 
   // --- State ---
-  let rafId = null;
   let connected = false;
   let prevButtons = [];
   let prevAxes = [];
@@ -16,7 +15,6 @@
   let lastMenuDpad = { up: 0, down: 0, left: 0, right: 0 };
   let partyTalkLocked = false;
   let talkHoldStart = 0;
-  let controllerStatusElement = null;
 
 
   /**
@@ -482,7 +480,6 @@
       controllerStatusText.className = 'disconnected';
       if ($controllerBox) $controllerBox.className = 'disconnected';
     }  
-    rafId = window.requestAnimationFrame(loop);
   }
 
 
@@ -491,7 +488,6 @@
    */
   function onConnect() {
     connected = true;
-    if (!rafId) rafId = window.requestAnimationFrame(loop);
   }
 
   /**
@@ -499,9 +495,7 @@
    */
   function onDisconnect() {
     connected = getPads().length > 0;
-    if (!connected && rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
+  if (!connected) {
       prevButtons = [];
       prevAxes = [];
     }
@@ -547,13 +541,11 @@
   function start() {
     window.addEventListener('gamepadconnected', onConnect);
     window.addEventListener('gamepaddisconnected', onDisconnect);
-    // Start polling regardless; some browsers/controllers don't always emit the event reliably
-    if (!rafId) rafId = window.requestAnimationFrame(loop);
   }
 
   // Start gamepad support after window load
   window.addEventListener('load', start);
-  setInterval(() => { loop(); }, 1000);
+  setInterval(() => { loop(); }, 1000 / 60); // 60 FPS
 })();
 
 // Debugging info to make sure the script is loaded.
