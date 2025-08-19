@@ -3,15 +3,12 @@
   const DEADZONE = 0.35; // Thumbstick deadzone threshold
   const L2_AXIS = 4;     // Axis index for left trigger (L2)
   const R2_AXIS = 5;     // Axis index for right trigger (R2)
-  const INPUT_REPEAT_MS = 250; // Repeat delay for D-pad and thumbstick navigation
+  const INPUT_REPEAT_MS = 200; // Repeat delay for D-pad and thumbstick navigation
   const TALK_HOLD_MS = 1000; // Hold X for 1 second to trigger Release
   const ACTIVITY_AXIS_DEADZONE = 0.45; // Threshold for UI hint swapping
 
   // --- State ---
-  let rafId = null;
-  let connected = false;
   let prevButtons = [];
-  let prevAxes = [];
   let loggedPadInfo = false;
   let lastMenuDpad = { up: 0, down: 0, left: 0, right: 0 };
   let partyTalkLocked = false;
@@ -115,7 +112,7 @@
     return false;
   }
 
-
+  
   /**
    * Returns the active menu instance, avoiding DOM collisions.
    */
@@ -221,7 +218,17 @@
     if (edgePressed(gp, 1)) tryMenuInput('escape');
     if (edgePressed(gp, 9)) {
       const m = getMenuInstance();
-      if (m) { if (m.isOpen()) m.close(); else m.open('gameSettings'); }
+      if (m) { 
+        if (m.isOpen()) {
+          // Check if the current menu has escapeDisabled before closing
+          const currentMenuData = m.getCurrentMenuData?.();
+          if (!currentMenuData?.escapeDisabled) {
+            m.close(); 
+          }
+        } else {
+          m.open('gameSettings'); 
+        }
+      }
     }
   }
 
@@ -246,10 +253,6 @@
    * Handles exploration navigation and quick actions.
    */
   function handleNavigation(gp, axes) {
-    const lx = withDeadzone(axes[0] || 0);
-    const ly = withDeadzone(axes[1] || 0);
-    const rx = withDeadzone(axes[2] || 0);
-    const ry = withDeadzone(axes[3] || 0);
     const hat = hatToDpad(axes[9]);
     const sticks = sticksToDpad(axes);
 
@@ -351,7 +354,6 @@
     const axes = gp.axes || [];
     // Prepare previous button/axis states
     if (!prevButtons.length) prevButtons = gp.buttons.map(b => !!b.pressed);
-    if (!prevAxes.length) prevAxes = axes.slice();
 
     // UI input device activity detection
     (function detectActivity(){
@@ -388,7 +390,6 @@
           prevButtons = gp.buttons.map(b => !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.5))));
         } catch {}
       }
-      prevAxes = axes.slice();
       return;
     }
 
@@ -399,27 +400,23 @@
           prevButtons = gp.buttons.map(b => !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.5))));
         } catch {}
       }
-      prevAxes = axes.slice();
       return;
     }
 
     if (isBlocked()) {
       // Allow A/Start to dismiss title screen even if input is blocked
       handleTitleScreen(gp);
-      prevAxes = axes.slice();
       return;
     }
 
     // Title screen
     if (handleTitleScreen(gp)) {
-      prevAxes = axes.slice();
       return;
     }
 
     // Menu mode
     if (getMenuInstance()?.isOpen()) {
       handleMenu(gp, axes);
-      prevAxes = axes.slice();
       return;
     }
 
@@ -432,7 +429,6 @@
       handleNavigation(gp, axes);
     }
 
-    prevAxes = axes.slice();
   }
 
 
@@ -441,6 +437,7 @@
    */
   function loop() {
     const pads = getPads();
+    const $controllerBox = document.getElementById('controller');
     if (pads.length && pads[0]) {
       // Patch party.enableButtons every frame if needed
       const player = getPlayer();
@@ -462,29 +459,23 @@
         loggedPadInfo = true;
       }
       processGamepad(pads[0]);
-    }
-    rafId = window.requestAnimationFrame(loop);
-  }
-
-
-  /**
-   * Handles gamepad connection event.
-   */
-  function onConnect() {
-    connected = true;
-    if (!rafId) rafId = window.requestAnimationFrame(loop);
+      controllerStatusText.innerHTML = 'TardPad ✓';
+      controllerStatusText.className = 'connected';
+      if ($controllerBox) $controllerBox.className = 'connected';
+    } else {
+      controllerStatusText.innerHTML = 'TardPad ✗';
+      controllerStatusText.className = 'disconnected';
+      if ($controllerBox) $controllerBox.className = 'disconnected';
+    }  
   }
 
   /**
    * Handles gamepad disconnection event.
    */
   function onDisconnect() {
-    connected = getPads().length > 0;
-    if (!connected && rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
+    const hasPads = getPads().length > 0;
+    if (!hasPads) {
       prevButtons = [];
-      prevAxes = [];
     }
   }
 
@@ -494,7 +485,7 @@
    */
   function vibrate(ms = 120, amp = 1.0) {
     const gp = getPads()[0];
-    if (!gp) { console.warn('🎮 TardPad: No gamepad for rumble'); return; }
+    if (!gp) { return; }
     const act = gp.vibrationActuator;
     if (!act || typeof act.playEffect !== 'function') {
       return;
@@ -518,21 +509,21 @@
 
 
   // Expose rumble helper
-  window.GamepadSupport = { vibrate };
+  window.GamepadSupport = { 
+    vibrate,
+  };
 
   /**
    * Initializes gamepad support and starts polling.
    */
   function start() {
-    window.addEventListener('gamepadconnected', onConnect);
     window.addEventListener('gamepaddisconnected', onDisconnect);
-    // Start polling regardless; some browsers/controllers don't always emit the event reliably
-    if (!rafId) rafId = window.requestAnimationFrame(loop);
   }
 
   // Start gamepad support after window load
   window.addEventListener('load', start);
+  setInterval(() => { loop(); }, 1000 / 60); // 60 FPS
 })();
 
-// Debugging info
+// Debugging info to make sure the script is loaded.
 // console.info('🎮 TardPad: Script loaded successfully!');
