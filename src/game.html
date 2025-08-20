@@ -10811,6 +10811,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const $interface = document.getElementById('interface');
             if ($interface) {
                 $interface.classList.add('shake');
+
                 setTimeout(() => $interface.classList.remove('shake'), 168); // VOCAP: match the damage animation duration
             }
 
@@ -11278,6 +11279,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function animPlayerDamaged() {
+            playerAttackCooldown = true;
             const $interface = document.getElementById('interface');
             if ($interface) {
                 $interface.classList.add('shake');
@@ -11289,6 +11291,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 $flash.classList.add('active');
                 setTimeout(() => $flash.classList.remove('active'), 168); // VOCAP: match the damage animation duration
             }
+            setTimeout(() => {
+                playerAttackCooldown = false;
+            }, 168); // Reset after animation
         }
 
         
