@@ -9951,7 +9951,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 console.log("No exploration tracks enabled, playing silence");
                 currentExplorationTrack = null;
                 currentMusic = null;
-                 updateNowPlaying();
+                updateNowPlaying();
                 return;
             }
 
@@ -12215,11 +12215,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             if (!musicEnabled) {
                                 stopAllMusic();
                             } else {
-                                if (player.inCombat) {
-                                    playRandomBattleMusic();
-                                } else {
-                                    playRandomExplorationMusic();
-                                }
+                                player.inCombat ? playRandomBattleMusic() : playRandomExplorationMusic();
                             }
                             menu.render();
                             break;
