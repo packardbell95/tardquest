@@ -11204,6 +11204,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         player.leaveCombat();
                         setTorchOverlayVisibility();
                         if (battleTransitionAnimationsEnabled) {
+                            playerAttackCooldown = false;
                             animBattleTransitionStart(() => {
                                 render();
                             }, false, true);
@@ -11361,7 +11362,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 } else {
                     setTimeout(() => {
                         if (typeof onDone === 'function') onDone();
-                        playerAttackCooldown = false; // VOCAP: workaround for a bug where playerAttackCooldown is not reset: on fix-it list before PR.
                     }, 500);
                 }
             }
