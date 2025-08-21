@@ -1439,21 +1439,21 @@
                 top 2px right -2px,
                 bottom -2px right -2px,
                 bottom -2px left 2px;
-        
+
             & .container {
                 top: 2px;
                 left: 2px;
-        
+
                 & .label {
                    background-color: transparent;
                 }
-        
+
                 & .icon {
                     filter: invert();
                 }
             }
         }
-        
+
         #inventory button:disabled {
             opacity: 0.25;
         }
@@ -11159,7 +11159,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!player.inCombat) {
                 return;
             }
-        
+
             if (currentEnemy.hp <= 0) {
                 // When enemy dies, block input until battle is fully over
                 playerAttackCooldown = true;
@@ -11183,20 +11183,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             "picked their nose, and died picking their nose.",
                             "got bored and jumped down a 'bottomless' hole. You not faint."
                         ]);
-        
+
                         updateBattleLog(
                             `<span class="enemy">${currentEnemy.name}</span> ${randomMsg}`
                         );
-        
+
                         updateBattleLog(
                             `<span class="friendly">You</span> gained <span class="EXP">+${exp} EXP</span> and <span class="BTC">₿ ${bitcoinsEarned}</span>`
                         );
                         player.giveBitcoins(bitcoinsEarned);
                         player.exp += exp;
                     }
-        
+
                     const willLevelUp = player.exp >= player.getExpRequiredForLevelUp();
-        
+
                     if (willLevelUp) {
                         playerAttackCooldown = false; // Reset for level up screen
                         player.leaveCombat();
@@ -11298,21 +11298,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }, 168); // Reset after animation
         }
 
-        
+
         function animAsh(enemyId, onDone) {
             const $enemyLayer = document.querySelector('.layer.enemy');
             if (!$enemyLayer) return;
-        
+
             const $enemyPre = $enemyLayer.querySelector('pre');
             if (!$enemyPre) return;
-        
+
             // Get the ASCII art for the enemy
             const indexedArt = window.ENEMY_ART?.[enemyId];
             if (!indexedArt) { console.warn(`animAsh: No art found for enemyId "${enemyId}"`); return; }
-        
+
             // Format art and apply offsets (just like drawEnemyLayer)
             let art = sceneRenderer.formatArt(indexedArt);
-        
+
             // Apply horizontal offset if specified
             if (indexedArt.offsetX) {
                 art = art
@@ -11320,20 +11320,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     .map(line => ' '.repeat(indexedArt.offsetX) + line)
                     .join('\n');
             }
-        
+
             // Apply vertical offset if specified
             if (indexedArt.offsetY) {
                 art = '\n'.repeat(indexedArt.offsetY) + art;
             }
-        
+
             // Prepare the art as a 2D array
             let artLines = art.split('\n');
             let width = Math.max(...artLines.map(l => l.length));
             let height = artLines.length;
-        
+
             // Pad lines to equal width
             artLines = artLines.map(l => l.padEnd(width, ' '));
-        
+
             // Each cell: {char, y}
             let fragments = [];
             for (let y = 0; y < height; y++) {
@@ -11344,26 +11344,28 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 }
             }
-        
+
             // Animation loop
             let frame = 0;
             let maxFrames = height + 8;
             function draw() {
-                // Build empty grid
-                let grid = Array.from({ length: height }, () => Array(width).fill(' '));
-        
-                // Drop fragments
-                for (let frag of fragments) {
-                    let below = frag.y + 1;
-                    if (below < height && !fragments.some(f => f.x === frag.x && f.y === below)) {
-                        frag.y++;
+                for (let step = 0; step < 2; step++) {
+                    // Build empty grid
+                    let grid = Array.from({ length: height }, () => Array(width).fill(' '));
+
+                    // Drop fragments
+                    for (let frag of fragments) {
+                        let below = frag.y + 1;
+                        if (below < height && !fragments.some(f => f.x === frag.x && f.y === below)) {
+                            frag.y++;
+                        }
+                        grid[frag.y][frag.x] = frag.char;
                     }
-                    grid[frag.y][frag.x] = frag.char;
+
+                    // Draw grid in the original <pre>
+                    $enemyPre.textContent = grid.map(row => row.join('')).join('\n');
                 }
-        
-                // Draw grid in the original <pre>
-                $enemyPre.textContent = grid.map(row => row.join('')).join('\n');
-        
+
                 frame++;
                 if (frame < maxFrames) {
                     requestAnimationFrame(draw);
@@ -14430,7 +14432,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 luck: 0
             };
             player.levelUp();
-            
+
             // If auto diceroll enabled
             if (autoDicerollEnabled) {
                 rollDiceForLevelUp();
@@ -14516,19 +14518,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const statKey = stat === "hp" ? "maxHp" : stat;
                     return levelUpStatPointsAllocated[statKey] < 2;
                 });
-                
+
                 if (availableStats.length === 0) break;
-                
+
                 const stat = randomEntry(availableStats);
                 const statKey = stat === "hp" ? "maxHp" : stat;
-                
+
                 if (stat === "hp") {
                     player.maxHp++;
                     player.hp = player.maxHp;
                 } else {
                     player[stat]++;
                 }
-                
+
                 levelUpStatPointsAllocated[statKey]++;
                 player.remainingPoints--;
             }
