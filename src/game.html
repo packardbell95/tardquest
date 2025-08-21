@@ -11375,6 +11375,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
             playSFX('ash');
             draw();
+            GameControl.disableControls();
+            setTimeout(() => {
+                GameControl.enableControls();
+            }, 1800); // VOCAP: Adjust this timeout as needed, more of a temp fix
         }
 
 
