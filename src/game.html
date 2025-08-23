@@ -11371,7 +11371,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 } else {
                     setTimeout(() => {
                         if (typeof onDone === 'function') onDone();
-                        if (battleTransitionAnimationsEnabled === false) {
+                        if (battleTransitionAnimationsEnabled === false || isLevelUpAllocation) {
                             GameControl.enableControls();
                         }
                     }, 500);
