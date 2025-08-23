@@ -11300,6 +11300,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         
         function animAsh(enemyId, onDone) {
+            GameControl.disableControls(); // Block input during animation
             const $enemyLayer = document.querySelector('.layer.enemy');
             if (!$enemyLayer) return;
         
@@ -11370,15 +11371,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 } else {
                     setTimeout(() => {
                         if (typeof onDone === 'function') onDone();
+                        if (battleTransitionAnimationsEnabled === false) {
+                            GameControl.enableControls();
+                        }
                     }, 500);
                 }
             }
             playSFX('ash');
             draw();
-            GameControl.disableControls();
-            setTimeout(() => {
-                GameControl.enableControls();
-            }, 1800); // VOCAP: Adjust this timeout as needed, more of a temp fix
         }
 
 
