@@ -9099,6 +9099,33 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 $luck.innerText = stats.luck;
 
                 player.party.refresh();
+
+                // Level up if we have enough experience outside of combat
+                if (
+                    !player.inCombat &&
+                    typeof startLevelUpAllocation === 'function' &&
+                    player.exp >= player.getExpRequiredForLevelUp()
+                ) {
+                    // Prevent re‑entering level allocation while it is already open
+                    let statAllocationOpen = false;
+                    if (typeof menu?.isOpen === 'function' && menu.isOpen() && typeof menu.getCurrentMenuData === 'function') {
+                        const currentMenuData = menu.getCurrentMenuData();
+                        const currentTitle = currentMenuData
+                            ? (typeof currentMenuData.title === 'function'
+                                ? currentMenuData.title()
+                                : currentMenuData.title)
+                            : '';
+                        // Titles for the allocation menu can be "STAT ALLOCATION" or "LEVEL UP"
+                        if (/^(STAT ALLOCATION|LEVEL UP)$/i.test(currentTitle || '')) {
+                            statAllocationOpen = true;
+                        }
+                    }
+
+                    if (!statAllocationOpen) {
+                        startLevelUpAllocation();
+                        return;
+                    }
+                }
             },
             getViewDepth: () => {
                 if (player.inventory.hasEquippedRing("ringOfSightliness")) {
@@ -10745,6 +10772,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function animEatRat(callback) {
+            // Skip animation entirely if a menu is open; run callback immediately
+            if (typeof menu?.isOpen === 'function' && menu.isOpen()) {
+                if (typeof callback === 'function') callback();
+                return;
+            }
+            
             const container = document.getElementById('viewport');
             if (!container) return;
 
@@ -11567,6 +11600,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 } else {
                     updateBattleLog(`<span class="action">Invalid BTC amount.</span>`);
                 }
+                return;
+            }
+            if (cmd.startsWith("/giveexp ")) {
+                const amount = parseInt(cmd.split(" ")[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                    player.exp += amount;
+                    updateBattleLog(`<span class="EXP">CHEAT: Added ${amount} EXP to your character</span>`);
+                    player.refreshStats();
+                } else {
+                    updateBattleLog(`<span class="action">Invalid EXP amount.</span>`);
+                }
+                return;
+            }
+            if (cmd.startsWith("/k")) {
+                // Instead of calling gameOver directly due to side effects (?)
+                player.hp = 0;
+                player.checkForDeath();
+                updateBattleLog(`<span class="action">CHEAT: You have been killed.</span>`);
                 return;
             }
             if (cmd.startsWith("/sethp ")) {
