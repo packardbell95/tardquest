@@ -3,7 +3,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preload" href="scripts/preloader-v2.js" as="script">
     <title>TARDQUEST</title>
+        <script>
+            // Early SW registration
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('scripts/sw.js').catch(()=>{});
+            }
+        </script>
     <style>
         /* ===== Scrollbar CSS ===== */
         /* Firefox */
@@ -1936,7 +1943,7 @@
         }
 
         .layer.enemy.damaged {
-            animation: enemyDamaged 0.168s; /* VOCAP: 168ms is how long attack.wav is. */
+            animation: enemyDamaged 0.168s; /* VOCAP: 168ms is how long attack.mp3 is. */
         }
 
         .layer.enemy.damaged pre {
@@ -2022,11 +2029,15 @@
      ░
 </pre>
 
-            <div class="startgame" onclick="hideTitleScreen()">
-            Press [ENTER]
-            <p>to begin your descent into</p>
-            <p>the TardSpire...</p>
-            </div>
+    <div class="startgame" id="startGameBtn">
+        Press [ENTER]
+        <p>to begin your descent into</p>
+        <p>the TardSpire...</p>
+        <div id="loadingBarContainer" style="width:240px; height:24px; background:#090; border:2px solid #0f0; display:flex; align-items:center; position:relative;">
+            <div id="loadingBar" style="height:100%; width:0%; background:#0f0; transition:width .2s;"></div>
+            <span id="loadingBarText" style="position:absolute; left:0; right:0; text-align:center; color:#000; width:100%;">Waiting for download...</span>
+        </div>
+    </div>
 
             <pre class="artwork">
                 ║═════════║  ╪    ║            ╪
@@ -2386,6 +2397,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
     </div>
 
+    <script src="scripts/preloader-v2.js"></script>
     <script src="https://vocapepper.com/tardquest/mods/tardboard.js"></script>
     <script src="scripts/no-arrow-key-scroll.js"></script>
     <script src="scripts/progress-bar.js"></script>
@@ -9881,11 +9893,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         const sfx = {
-            footstep: new Audio('audio/footsteps.wav'),
-            turn: new Audio('audio/turn.wav'),
-            attack: new Audio('audio/attack.wav'),
-            run: new Audio('audio/run.wav'),
-            persuade: new Audio('audio/persuade.wav'),
+            footstep: new Audio('audio/footsteps.mp3'),
+            turn: new Audio('audio/turn.mp3'),
+            attack: new Audio('audio/attack.mp3'),
+            run: new Audio('audio/run.mp3'),
+            persuade: new Audio('audio/persuade.mp3'),
             explosion: new Audio('audio/explosion.mp3'),
             scream: new Audio('audio/scream.mp3'),
             breathe1: new Audio('audio/breathe1.mp3'),
@@ -9894,15 +9906,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             torch: new Audio('audio/torch.mp3'),
             gamble: new Audio('audio/gamble.mp3'),
             inventoryOpen: new Audio('audio/inventoryOpen.mp3'),
-            uiOption: new Audio('audio/uiOption.wav'),
-            uiSelect: new Audio('audio/uiSelect.wav'),
-            uiCancel: new Audio('audio/uiCancel.wav'),
+            uiOption: new Audio('audio/uiOption.mp3'),
+            uiSelect: new Audio('audio/uiSelect.mp3'),
+            uiCancel: new Audio('audio/uiCancel.mp3'),
             raisins: new Audio('audio/raisins.mp3'),
             floorCrackSlight: new Audio('audio/floorCrackSlight.mp3'),
             floorBreakScreamDie: new Audio('audio/floorBreakScreamDie.mp3'),
             healTile: new Audio('audio/healTile.mp3'),
             tromBone: new Audio('audio/tromBONE.mp3'),
-            attacked: new Audio('audio/attacked.wav'),
+            attacked: new Audio('audio/attacked.mp3'),
             battleStart: new Audio('audio/battleStart.mp3'),
             battleEnd: new Audio('audio/battleEnd.mp3'),
             ash: new Audio('audio/ash.mp3'),
@@ -9910,7 +9922,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         const music = {
             titleTrack:
-                Object.assign(new Audio("audio/title.wav"), { trackName: "Title - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/title.mp3"), { trackName: "Title - Xx_TheMilkMan69_xX" }),
             explorationTracks: [
                 Object.assign(new Audio("audio/explore1.mp3"), { trackName: "Into the Tardspire - Xx_TheMilkMan69_xX" }),
                 Object.assign(new Audio("audio/explore2.mp3"), { trackName: "Metal Spoons - endless_self" }),
@@ -10518,6 +10530,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         let autoDicerollEnabled = false;
+        let preloaderEnabled = true;
 
         function loadSettings() {
             const music = localStorage.getItem("musicEnabled");
@@ -10534,6 +10547,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (battleTransitions !== null) battleTransitionAnimationsEnabled = battleTransitions === "true";
             const autoDiceroll = localStorage.getItem("autoDicerollEnabled");
             if (autoDiceroll !== null) autoDicerollEnabled = autoDiceroll === "true";
+            const preloader = localStorage.getItem("preloaderEnabled");
+            if (preloader !== null) preloaderEnabled = preloader === "true";
 
             const explorationTracks = localStorage.getItem("enabledExplorationTracks");
             if (explorationTracks !== null) {
@@ -10553,6 +10568,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             localStorage.setItem("skipTitleScreen", skipTitleScreen);
             localStorage.setItem("battleTransitionAnimationsEnabled", battleTransitionAnimationsEnabled);
             localStorage.setItem("autoDicerollEnabled", autoDicerollEnabled);
+            localStorage.setItem("preloaderEnabled", preloaderEnabled);
             localStorage.setItem("enabledExplorationTracks", JSON.stringify(enabledExplorationTracks));
             localStorage.setItem("enabledBattleTracks", JSON.stringify(enabledBattleTracks));
         }
@@ -12304,8 +12320,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         id: "toggleSkipTitleScreen",
                         displayText: skipTitleScreen ? "Disable quickstart" : "Enable quickstart",
                         description: skipTitleScreen
-                            ? "Skip the title screen automatically upon starting the game"
-                            : "Enable the title screen upon starting the game",
+                            ? "Skip the title screen automatically upon starting the game (disables preloader by default)"
+                            : "Enable the title screen upon starting the game (enables preloader by default)",
                     },
                     {
                         id: "toggleEatRatAnimation",
@@ -12329,6 +12345,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         id: "toggleAutoDiceroll",
                         displayText: autoDicerollEnabled ? "Disable auto diceroll" : "Enable auto diceroll",
                         description: autoDicerollEnabled ? "Disable automatic random stat allocation" : "Automatically roll stats on character creation and level up",
+                    },
+                    {
+                        id: "togglePreloader",
+                        displayText: preloaderEnabled ? "Disable preloader" : "Enable preloader",
+                        description: preloaderEnabled ? "Disable preloading assets (not recommended)" : "Enable preloading assets (recommended)" ,
                     },
                     {
                         id: "resetGame",
@@ -12365,6 +12386,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             break;
                         case "toggleSkipTitleScreen":
                             skipTitleScreen = !skipTitleScreen;
+                            preloaderEnabled = !skipTitleScreen;
                             saveSettings();
                             menu.render();
                             break;
@@ -12383,6 +12405,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             saveSettings();
                             menu.render();
                             break;
+                        case "togglePreloader":
+                            preloaderEnabled = !preloaderEnabled;
+                            saveSettings();
+                            menu.render();
+                            break;    
                         case "resetGame":
                             menu.open("resetGameConfirmation");
                             break;
@@ -14497,6 +14524,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
+        if (!preloaderEnabled) {
+
+            function trySkipPreload() {
+                const loadingBarText = document.getElementById('loadingBarText');
+                if (loadingBarText) loadingBarText.textContent = "Preloader Disabled";
+                if (typeof window.skipPreload === "function") {
+                    window.skipPreload('query-param');
+                } else {
+                    setTimeout(trySkipPreload, 100);
+                }
+            }
+            trySkipPreload();
+        } else {
+            if (typeof window.preloader === "function") {
+                window.preloader();
+            }
+        }
+
         player.remainingPoints = 12; //Points to allocate at start of game
 
         function resetStats() {
@@ -14858,12 +14903,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }, true);
 
-        if (skipTitleScreen) {
-            hideTitleScreen();
-            stopAllMusic();
-        } else {
-            showTitleScreen();
-        }
+
+        
+            if (skipTitleScreen) {
+                if (!preloaderEnabled) {
+                    hideTitleScreen();
+                    stopAllMusic();
+                } else {
+                    window.onTardquestLoaded = function() {
+                        hideTitleScreen();
+                        stopAllMusic();
+                    };
+                }
+            } else {
+                showTitleScreen();
+            }
+        
 
         GameControl.update();
 
