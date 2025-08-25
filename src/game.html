@@ -10196,6 +10196,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 music.gamblersTheme,
                 music.merchantTrack,
                 music.titleTrack,
+                music.erokTheme,
             ].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
@@ -10362,6 +10363,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             // Check if it's the gambler's theme
             if (currentMusic === music.gamblersTheme) {
                 return "Gambler's Theme - Packard Bell 95";
+            }
+
+            // Check if it's the erok theme
+            if (currentMusic === music.erokTheme) {
+                return "A Dog Named Erok - Xx_TheMilkMan69_xX";
             }
 
             // Check exploration tracks
