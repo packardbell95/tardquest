@@ -102,11 +102,11 @@
 
         // audio
         './audio/ash.mp3','./audio/attack.mp3','./audio/attacked.mp3','./audio/battle1.mp3','./audio/battle2.mp3','./audio/battle3.mp3','./audio/battle4.mp3',
-        './audio/battle5.mp3','./audio/battleEnd.mp3','./audio/battleStart.mp3','./audio/breathe1.mp3','./audio/breathe2.mp3','./audio/explore1.mp3',
+        './audio/battle5.mp3','./audio/battleEnd.mp3','./audio/battleStart.mp3','./audio/breathe1.mp3','./audio/breathe2.mp3', './audio/erok.mp3',
         './audio/explore2.mp3','./audio/explore3.mp3','./audio/explore4.mp3','./audio/explore5.mp3','./audio/explosion.mp3','./audio/floorBreakScreamDie.mp3',
         './audio/floorCrackSlight.mp3','./audio/footsteps.mp3','./audio/gamble.mp3','./audio/gamblers-theme.mp3','./audio/healTile.mp3','./audio/inventoryOpen.mp3',
-        './audio/kaching.mp3','./audio/merchant.mp3','./audio/metalspoons.mp3','./audio/persuade.mp3','./audio/raisins.mp3','./audio/run.mp3',
-        './audio/scream.mp3','./audio/tardedwarrior.mp3','./audio/title.mp3','./audio/torch.mp3','./audio/tromBONE.mp3','./audio/turn.mp3',
+        './audio/kaching.mp3','./audio/merchant.mp3','./audio/persuade.mp3','./audio/raisins.mp3','./audio/run.mp3',
+        './audio/scream.mp3','./audio/title.mp3','./audio/torch.mp3','./audio/tromBONE.mp3','./audio/turn.mp3',
         './audio/uiCancel.mp3','./audio/uiOption.mp3','./audio/uiSelect.mp3'
     ];
 
