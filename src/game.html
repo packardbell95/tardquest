@@ -15339,23 +15339,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }, true);
 
-
-        
-            if (skipTitleScreen) {
-                if (!preloaderEnabled) {
+        if (skipTitleScreen) {
+            if (!preloaderEnabled) {
+                hideTitleScreen();
+                stopAllMusic();
+            } else {
+                window.onTardquestLoaded = function() {
                     hideTitleScreen();
                     stopAllMusic();
-                } else {
-                    window.onTardquestLoaded = function() {
-                        hideTitleScreen();
-                        stopAllMusic();
-                    };
-                }
-            } else {
-                showTitleScreen();
+                };
             }
+        } else {
+            showTitleScreen();
+        }
         
-
         GameControl.update();
 
     </script>
