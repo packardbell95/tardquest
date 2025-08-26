@@ -756,6 +756,11 @@
             top: 132px; /* lazy fix for clipping over border */
         }
 
+        #portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
+            color: rgb(255, 214, 138);
+            top: 132px; /* lazy fix for clipping over border */
+        }
+
         .hidden {
             display: none !important;
         }
@@ -7251,39 +7256,39 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     {
                         transparentCharacter: '%',
                         data: `
-                            %%%%%%%%%%%%%%%%%▄▀█%%%%%
-                            %%%%%%%%%%%%%%%%▄▀ ▀▀▄%%%
+                            %%%%%%%%%%%%%%%%%▄▀█
+                            %%%%%%%%%%%%%%%%▄▀ ▀▀▄
                             %%%%%%%%%%%%%%%█    ▀ ▀▀▄
-                            %▄▀▀▀▄%%%%%%%▄▀      ▄▀▀%
-                            █  ▀▀ ▀▀▀▀▀▀▀       █%%%%
-                            ▀▄▄▄▀               █%%%%
-                            %%█  ▄▄▄▄     ▀▄   █%%%%%
-                            %█  █%%%%▀▀▀▀▀▀█  █%%%%%%
-                            %█ █%%%%%%%%%%%█ █%%%%%%%
-                            %█▄█▄%%%%%%%%%%█▄█▄%%%%%%
+                            %▄▀▀▀▄%%%%%%%▄▀      ▄▀▀
+                            █  ▀▀ ▀▀▀▀▀▀▀       █
+                            ▀▄▄▄▀               █
+                            %%█  ▄▄▄▄     ▀▄   █
+                            %█  █%%%%▀▀▀▀▀▀█  █
+                            %█ █%%%%%%%%%%%█ █
+                            %█▄█▄%%%%%%%%%%█▄█▄
                         `,
                     },
                     {
                         transparentCharacter: '%',
                         data: `
-                            %%%%%%%%%%%▄%%%%%%%%%%%%%
-                            %%%%%%%%%%%█▀▄▄▄%%%%%%%%%
-                            %▄▄%%%%%%▄▀     ▀▄%%%%%%%
-                            █ ▄▀▀▀▀▀▀    ▄▀▀▀%%%%%%%%
-                            ▀▄         ▄▀%%%%%%%%%%%%
-                            %%█▄▀▀▀▀▀▄▄█%%%%%%%%%%%%%
-                            %%█▄%%%%%%%█▄%%%%%%%%%%%%
+                            %%%%%%%%%%%▄
+                            %%%%%%%%%%%█▀▄▄▄
+                            %▄▄%%%%%%▄▀     ▀▄
+                            █ ▄▀▀▀▀▀▀    ▄▀▀▀
+                            ▀▄         ▄▀
+                            %%█▄▀▀▀▀▀▄▄█
+                            %%█▄%%%%%%%█▄
                             %
                         `,
                     },
                     {
                         transparentCharacter: '%',
                         data: `
-                            %%%%%%%%%%%%%%%%%%%%%%%%%
-                            %%%%%%%%▄%%%%%%%%%%%%%%%%
-                            %▄%%%%%▄▀▀▀▄%%%%%%%%%%%%%
-                            ▀▄▀▀▀▀▀  ▄▀%%%%%%%%%%%%%%
-                            %%█▄▀▀▀▀█▄%%%%%%%%%%%%%%%
+                            %
+                            %%%%%%%%▄
+                            %▄%%%%%▄▀▀▀▄
+                            ▀▄▀▀▀▀▀  ▄▀
+                            %%█▄▀▀▀▀█▄
                             %
                             %
                         `,
@@ -9983,7 +9988,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     SpeechSynthesizer.speak(str, erok.voice);
                 }
                 updateBattleLog(
-                    `<span class="erok">&lt;Erok&gt;</span> "${str}"`
+                    `<span class="erok">&lt;EROK&gt;</span> "${str}"`
                 );
             },
             isAt: function(x, y) {
@@ -13934,6 +13939,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             erok: {
                 title: "EROK",
+                escapeDisabled: () => erok.isPetting,
                 onOpen: () => {
                     Portrait.show('erokIdle');
                     stopAllMusic();
