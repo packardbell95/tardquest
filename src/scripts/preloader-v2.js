@@ -36,6 +36,7 @@
     const WAIT_FOR_SERVICE_WORKER = true;         // Gate finalize on SW readiness
     const SW_READY_TIMEOUT_MS = 3000;             // Fallback timeout for SW readiness
     const SIZE_CACHE_KEY = 'tqAssetSizes_v1';     // localStorage key for persisted size hints
+    const MAX_CONCURRENCY = 12;
 
     /* --------------------------------------------------------------------- *
      *  STATIC MANIFEST
@@ -147,6 +148,29 @@
      * Guess size for an asset when unknown. These heuristics are deliberately
      * coarse—only to maintain a stable progress bar.
      */
+    function getInitialConcurrency(){
+        try {
+            const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (c){
+                if (c.saveData) return 2;
+                switch (c.effectiveType){
+                    case 'slow-2g': return 1;
+                    case '2g': return 2;
+                    case '3g': return 4;
+                    // 4g / unknown -> downlink heuristics
+                }
+                if (typeof c.downlink === 'number'){
+                    if (c.downlink >= 20) return 12;
+                    if (c.downlink >= 15) return 10;
+                    if (c.downlink >= 10) return 8;
+                    if (c.downlink >= 5)  return 6;
+                    if (c.downlink >= 2)  return 5;
+                    return 4;
+                }
+            }
+        } catch(_e){}
+        return 6; // optimistic default
+    }
     function guessSize(url){
         if (/fonts\//.test(url)) return 80000;
         if (/\.woff2$/i.test(url)) return 60000;
@@ -533,7 +557,8 @@
      * --------------------------------------------------------------------- */
     const scheduler = {
         started:false,
-        concurrency:4,
+        // CHANGED: dynamic optimistic initial concurrency
+        concurrency: getInitialConcurrency(),
         active:0,
         queue:[],                // [{ url, priority }]
         throughputSamples:[],    // bytes/ms
@@ -571,17 +596,34 @@
         sort(){ this.queue.sort((a,b)=> a.priority - b.priority); },
 
         adjust(){
-            if (this.throughputSamples.length < 3) return;
-            const recent = this.throughputSamples.slice(-5);
-            const avg = recent.reduce((a,b)=>a+b,0) / recent.length; // bytes/ms
-            const kbps = (avg * 1000) / 1024;
+            if (this.throughputSamples.length < 2) return;
+
+            // Use the last few samples; median is more robust against spikes.
+            const recent = this.throughputSamples.slice(-6).sort((a,b)=>a-b);
+            const mid = recent[Math.floor(recent.length / 2)];
+            const kbps = (mid * 1000) / 1024; // bytes/ms -> KB/s
+
             let target;
-            if (kbps < 60) target = 2;
-            else if (kbps < 120) target = 3;
-            else if (kbps < 250) target = 4;
-            else if (kbps < 600) target = 6;
-            else target = 8;
-            this.concurrency = target;
+            if (kbps >= 1200)      target = 12;
+            else if (kbps >= 900)  target = 11;
+            else if (kbps >= 700)  target = 10;
+            else if (kbps >= 500)  target = 9;
+            else if (kbps >= 350)  target = 8;
+            else if (kbps >= 250)  target = 7;
+            else if (kbps >= 170)  target = 6;
+            else if (kbps >= 110)  target = 5;
+            else if (kbps >= 70)   target = 4;
+            else if (kbps >= 40)   target = 3;
+            else                   target = 2;
+
+            // Clamp & only change if different
+            if (target > MAX_CONCURRENCY) target = MAX_CONCURRENCY;
+
+            // Prefer scaling up quickly; scaling down only if we are far off.
+            const diff = target - this.concurrency;
+            if (diff > 0 || (diff < 0 && Math.abs(diff) >= 2)){
+                this.concurrency = target;
+            }
         },
 
         pick(){ return this.queue.shift(); },
@@ -668,6 +710,8 @@
             this.started = true;
             this.sort();
             this.pump();
+            // Extra early pump to fill any newly raised concurrency quickly.
+            setTimeout(()=>this.pump(), 0);
         }
     };
     scheduler.build();

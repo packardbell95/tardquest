@@ -26,7 +26,7 @@
  *     - { type:'CACHE_LIST_RESULT', urls:[...] }
  *
  * Caching Strategy Details:
- *   - Navigation requests: network-first -> fallback chain (game.html -> game-v1.html -> ./)
+ *   - Navigation requests: network-first -> fallback chain (game.html -> ./)
  *   - Static asset extensions (images/audio/video/fonts/etc): stale-while-revalidate
  *   - Streaming: When body streaming is supported, we tee() the response so one
  *     branch is cached while the other is progressively streamed to the client.
@@ -241,6 +241,3 @@ self.addEventListener('message', e => {
     );
   }
 });
-
-// (legacy helper retained for backward compatibility; now unused but harmless)
-function eventWait(p){ try { self.addEventListener('activate', () => p); } catch(_){} }

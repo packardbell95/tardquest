@@ -170,6 +170,53 @@
             }
         }
 
+        #titleScreen .preloaderStatus {
+            cursor: pointer;
+            position: absolute;
+            left: 50px;
+            top: 250px;
+            width: 190px;
+            height: 54px;
+            padding: 8px;
+            text-align: center;
+            line-height: 0%;
+            border-style: solid;
+            border-width: 2px;
+            border-top-width: 10px;
+            border-color: #ffffff;
+            background-color: #000000;
+            z-index: 999;
+        }
+
+        #titleScreen .loadingBarContainer {
+            width: 190px;
+            height: 22px;
+            background: #090;
+            border: 2px solid #0f0;
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin: auto;
+        }
+
+        #titleScreen .skipPreloaderBtn {
+            position: absolute;
+            left: -2px;
+            top: 28px;
+            width: 194px;
+            height: 26px;
+            background: #000;
+            border: 2px solid #fff;
+            color: #fff;
+            font-weight: bold;
+
+            &:hover {
+                background-color: #fff;
+                color: #000;
+            }
+        }
+
+
         #titleScreen .artwork {
             position: absolute;
             left: 270px;
@@ -2033,11 +2080,14 @@
         Press [ENTER]
         <p>to begin your descent into</p>
         <p>the TardSpire...</p>
-        <div id="loadingBarContainer" style="width:240px; height:24px; background:#090; border:2px solid #0f0; display:flex; align-items:center; position:relative;">
-            <div id="loadingBar" style="height:100%; width:0%; background:#0f0; transition:width .2s;"></div>
-            <span id="loadingBarText" style="position:absolute; left:0; right:0; text-align:center; color:#000; width:100%;">Waiting for download...</span>
-        </div>
     </div>
+    <div class="preloaderStatus">
+        <div id="loadingBarContainer" class="loadingBarContainer">
+            <div id="loadingBar" style="height:100%; width:0%; background:#0f0; transition:width .2s;"></div>
+            <span id="loadingBarText" style="position:absolute; left:0; right:0; text-align:center; color:#000; width:100%;">Checking files...</span>
+            <button class="skipPreloaderBtn" onclick="trySkipPreload();">Skip Preloading</button>
+    </div>
+        </div>
 
             <pre class="artwork">
                 ║═════════║  ╪    ║            ╪
@@ -14524,17 +14574,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-        if (!preloaderEnabled) {
-
-            function trySkipPreload() {
-                const loadingBarText = document.getElementById('loadingBarText');
-                if (loadingBarText) loadingBarText.textContent = "Preloader Disabled";
-                if (typeof window.skipPreload === "function") {
-                    window.skipPreload('query-param');
-                } else {
-                    setTimeout(trySkipPreload, 100);
-                }
+        function trySkipPreload() {
+            const loadingBarText = document.getElementById('loadingBarText');
+            if (loadingBarText) loadingBarText.textContent = "Preloader Disabled";
+            if (typeof window.skipPreload === "function") {
+                window.skipPreload('query-param');
+            } else {
+                setTimeout(trySkipPreload, 100);
             }
+        }
+
+        if (!preloaderEnabled) {
             trySkipPreload();
         } else {
             if (typeof window.preloader === "function") {
