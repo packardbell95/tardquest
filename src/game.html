@@ -8164,6 +8164,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 "PS2": "pee ess two",
                 "lughead": "lug head",
                 "the": "theee",
+                "goodbye": "good bye",
             },
 
             speak: (sentence, voiceOptions, onEnded) => {
@@ -10098,6 +10099,50 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         () => player.party.enableButtons()
                     );
                 },
+                say: (partyMemberId, message) => {
+                    const responder = player.party.members
+                        .find((e) => e.id === partyMemberId);
+
+                    if (! responder) {
+                        console.error(
+                            "Party member not found",
+                            { partyMemberId }
+                        );
+                        return;
+                    }
+
+                    if (responder.hp <= 0) {
+                        console.error(
+                            "Sorry, but you can't talk to ghosts",
+                            { responder }
+                        );
+                        return;
+                    }
+
+                    const enemyDefinition =
+                        enemies.find(e => e.id === responder.enemyId);
+                    if (! enemyDefinition) {
+                        console.error(
+                            "Ally cannot speak; enemy definition not found",
+                            { enemyId: responder.enemyId }
+                        );
+                        return;
+                    }
+
+                    updateBattleLog(
+                        `<span class="friendly">&lt;${responder.name}&gt;` +
+                        `</span> <span class="player">--you pull out your ` +
+                        `translator--</span> "${message}"`
+                    );
+
+                    player.party.disableButtons();
+
+                    SpeechSynthesizer.speak(
+                        message,
+                        enemyDefinition.voice,
+                        () => player.party.enableButtons()
+                    );
+                },
                 disableButtons: (partyMemberId) => {
                     const $container = document.getElementById("partyMembers");
                     const selector =
@@ -10127,21 +10172,82 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 },
                 release: (partyMemberId) => {
-                    // @TODO: Make a confirmation prompt before releasing
-                    const partyMember = player.party.members.find((e) => e.id === partyMemberId);
+                    const partyMember = player.party.members
+                        .find((e) => e.id === partyMemberId);
                     if (!partyMember) {
-                        console.error("Party member not found", { partyMemberId });
+                        console.error(
+                            "Party member not found",
+                            { partyMemberId }
+                        );
                         return;
                     }
 
-                    updateBattleLog(
-                        `You booted <span class="friendly">` +
-                        `${partyMember.name}</span> to the curb. ` +
-                        `<span class="action">SEE YA!</span>`
+                    Modal.open(
+                        `Release ${partyMember.name}?`,
+                        `Are you sure you want to kick ` +
+                            `<span class="friendly">${partyMember.name}` +
+                            `</span> out of your party?`,
+                        [
+                            {
+                                text: "Nah, keep the bastard",
+                                type: "danger",
+                                onclick: () => {
+                                    const message = randomEntry([
+                                        "Thanks for keeping me, boss.",
+                                        "Oh joy.",
+                                        "Whoopty doo.",
+                                        "Yay. More sewer adventures!",
+                                    ]);
+
+                                    player.party.say(
+                                        partyMember.id,
+                                        message
+                                    );
+                                },
+                            },
+                            {
+                                text: "Yes",
+                                type: "primary",
+                                onclick: () => {
+                                    const message = randomEntry([
+                                        "This field trip is over.",
+                                        "I guess this is goodbye.",
+                                        "Well fuck you too, asshole.",
+                                        "Actually, I quit!",
+                                        "But I love you!",
+                                    ]);
+
+                                    player.party.say(
+                                        partyMember.id,
+                                        message
+                                    );
+
+                                    const bye = randomEntry([
+                                        "SEE YA!",
+                                        "BYE!",
+                                        "FUCK RIGHT THE FUCK OFF NOW!",
+                                        "ADIOS!",
+                                        "さようなら、哀れな生き物。",
+                                    ]);
+
+                                    updateBattleLog(
+                                        `You booted <span class="friendly">` +
+                                        `${partyMember.name}</span> to the ` +
+                                        `curb. <span class="action">${bye}` +
+                                        `</span>`
+                                    );
+                                    player.party.members =
+                                        player.party.members
+                                        .filter((e) => e.id !== partyMemberId);
+                                    const selector =
+                                        `#partyMembers [data-partyMemberId="` +
+                                        `${partyMemberId}"]`;
+                                    document.querySelector(selector).remove();
+                                    player.party.refreshPartyCount();
+                                },
+                            },
+                        ]
                     );
-                    player.party.members = player.party.members.filter((e) => e.id !== partyMemberId);
-                    document.querySelector(`#partyMembers [data-partyMemberId="${partyMemberId}"]`).remove();
-                    player.party.refreshPartyCount();
                 },
                 refreshPartyCount: () => {
                     document.getElementById("totalPartyMembers").innerText =
@@ -11162,6 +11268,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             if (currentEnemy?.id === "vampire") {
                 playVampireBattleTheme();
+                return;
             }
 
             const availableTracks = music.battleTracks.filter((_, index) => enabledBattleTracks[index]);
@@ -11711,6 +11818,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function generateMap() {
+            MAP.setEntities({
+                player: {
+                    x: player.x,
+                    y: player.y,
+                },
+            });
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
 
             if (floor === 1) {
