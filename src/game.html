@@ -697,6 +697,11 @@
             color: #fc8;
         }
 
+        #portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
+            color: rgb(255, 214, 138);
+            top: 132px; /* lazy fix for clipping over border */
+        }
+
         .hidden {
             display: none !important;
         }
@@ -1516,6 +1521,9 @@
         }
         .gambler {
             color: #ffd700;
+        }
+        .erok {
+            color: #ffd68a;
         }
         .muted {
             color: #666;
@@ -7025,6 +7033,213 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ],
             },
 
+            erok: {
+                relativeColor: { r: 255, g: 214, b: 138 },
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -16, y: 15 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 13 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -15, y: 12 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 17, y: 12 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 36, y: 12 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -9, y: 14 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 3, y: 13 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 19, y: 13 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 33, y: 13 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 44, y: 14 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -5, y: 14 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: 1, y: 13 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 11, y: 13 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 22, y: 13 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 35, y: 13 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 14 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 3, y: 14 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 8, y: 14 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 13, y: 14 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 23, y: 14 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 27, y: 14 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 31, y: 14 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 36, y: 14 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 41, y: 14 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 14 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 14 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 14 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 14 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 14 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 14 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 14 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%%%%%%%▄▀█%%%%%
+                            %%%%%%%%%%%%%%%%▄▀ ▀▀▄%%%
+                            %%%%%%%%%%%%%%%█    ▀ ▀▀▄
+                            %▄▀▀▀▄%%%%%%%▄▀      ▄▀▀%
+                            █  ▀▀ ▀▀▀▀▀▀▀       █%%%%
+                            ▀▄▄▄▀               █%%%%
+                            %%█  ▄▄▄▄     ▀▄   █%%%%%
+                            %█  █%%%%▀▀▀▀▀▀█  █%%%%%%
+                            %█ █%%%%%%%%%%%█ █%%%%%%%
+                            %█▄█▄%%%%%%%%%%█▄█▄%%%%%%
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%▄%%%%%%%%%%%%%
+                            %%%%%%%%%%%█▀▄▄▄%%%%%%%%%
+                            %▄▄%%%%%%▄▀     ▀▄%%%%%%%
+                            █ ▄▀▀▀▀▀▀    ▄▀▀▀%%%%%%%%
+                            ▀▄         ▄▀%%%%%%%%%%%%
+                            %%█▄▀▀▀▀▀▄▄█%%%%%%%%%%%%%
+                            %%█▄%%%%%%%█▄%%%%%%%%%%%%
+                            %
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%%%%%%%%%%%%%%%
+                            %%%%%%%%▄%%%%%%%%%%%%%%%%
+                            %▄%%%%%▄▀▀▀▄%%%%%%%%%%%%%
+                            ▀▄▀▀▀▀▀  ▄▀%%%%%%%%%%%%%%
+                            %%█▄▀▀▀▀█▄%%%%%%%%%%%%%%%
+                            %
+                            %
+                        `,
+                    },
+                    {
+                        data: `
+                            ▌▙▖
+                            ▝▀
+                        `,
+                    },
+                    {
+                        data: `
+                            ♠
+                        `,
+                    },
+                ],
+            },
+
             crater: {
                 positions: {
                     p0_0: {
@@ -9691,6 +9906,46 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         };
 
+        const erok = {
+            isAlive: true,
+            isActiveOnFloor: false,
+            isPetting: false,
+            voice: {
+                pitch: 200,
+                speed: 50,
+                mouth: 124,
+                throat: 144,
+            },
+            say: function(str, suppressSpeechSynthesis) {
+                if (!suppressSpeechSynthesis) {
+                    SpeechSynthesizer.speak(str, erok.voice);
+                }
+                updateBattleLog(
+                    `<span class="erok">&lt;Erok&gt;</span> "${str}"`
+                );
+            },
+            isAt: function(x, y) {
+                return (
+                    erok.isAlive &&
+                    erok.isActiveOnFloor &&
+                    MAP.getCell(x, y)?.type === 'erok'
+                );
+            },
+            location: function() {
+                return erok.isAlive && erok.isActiveOnFloor
+                    ? MAP.locate("erok")
+                    : null;
+            },
+            set: function() {
+                const points =
+                    shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
+
+                if (points) {
+                    MAP.setCell(points.x, points.y, "erok");
+                }
+            }
+        };
+
         const enemies = [
             {
                 id: "snailSentinel",
@@ -9929,12 +10184,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 Object.assign(new Audio("audio/merchant.mp3"), { trackName: "Welcome to SlobMart! - Xx_TheMilkMan69_xX" }),
             gamblersTheme:
                 Object.assign(new Audio("audio/gamblers-theme.mp3"), { trackName: "Gambler's Theme - Packard Bell 95" }),
+            erokTheme:
+                Object.assign(new Audio("audio/erok.mp3"), { trackName: "A Dog Named Erok - Xx_TheMilkMan69_xX" }),                
         };
 
         music.explorationTracks.forEach(track => track.loop = true);
         music.battleTracks.forEach(track => track.loop = true);
         music.titleTrack.loop = true;
         music.gamblersTheme.loop = true;
+        music.erokTheme.loop = true;
 
         function stopAllMusic() {
             [
@@ -9943,6 +10201,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 music.gamblersTheme,
                 music.merchantTrack,
                 music.titleTrack,
+                music.erokTheme,
             ].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
@@ -10109,6 +10368,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             // Check if it's the gambler's theme
             if (currentMusic === music.gamblersTheme) {
                 return "Gambler's Theme - Packard Bell 95";
+            }
+
+            // Check if it's the erok theme
+            if (currentMusic === music.erokTheme) {
+                return "A Dog Named Erok - Xx_TheMilkMan69_xX";
             }
 
             // Check exploration tracks
@@ -10367,6 +10631,31 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     );
                 },
             },
+            erok: {
+                displayName: "Erok",
+                mapCharacter: "D",
+                onEnter: function() {
+                    menu.open('erok');
+                },
+                isVisible: function() {
+                    return (
+                        erok.isAlive &&
+                        erok.isActiveOnFloor
+                    );
+                },
+                onExplode: function (x, y) {
+                    erok.isAlive = false;
+                    erok.isActiveOnFloor = false;
+                    MAP.setCell(x, y, "bloodyCrater");
+                    playSFX('scream');
+                    erok.say('i died oh noes', true);
+                    updateBattleLog(
+                        'OH NO! <span class="friendly">' +
+                        'Erok</span> has been ' +
+                        '<span class="action">blown the fuck up</span>! You monster...'
+                    );
+                },
+            },
             tardspireBanner: {
                 displayName: "Floor",
                 mapCharacter: ".",
@@ -10507,6 +10796,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
             if (gambler.isActiveOnFloor) {
                 gambler.set();
+            }
+
+            erok.isActiveOnFloor = erok.isAlive && Math.random() < 1; // Spawns on every floor because he is a good boy
+            if (erok.isActiveOnFloor) {
+                erok.set();
             }
 
             spawnTreasureChests();
@@ -11592,6 +11886,25 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }
                 return;
             }
+            if (cmd === "/spawn d") {
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (MAP.getCell(nx, ny)?.type === 'floor') {
+                        erok.isAlive = true;
+                        erok.isActiveOnFloor = true;
+                        MAP.setCell(nx, ny, 'erok');
+                        updateBattleLog('<span class="erok">CHEAT: Erok spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="erok">CHEAT: Erok not spawned. Try a different spot.</span>');
+                }
+                return;
+            }
             if (cmd.startsWith("/givebtc ")) {
                 const amount = parseInt(cmd.split(" ")[1], 10);
                 if (!isNaN(amount) && amount > 0) {
@@ -12209,7 +12522,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     "Your torch flickers strangely in the windless corridor.",
                     "A draft carries the scent of mildew, ash, and Lemon " +
                         "Pledge.",
-                    "You hear a dog yipping in the distance.",
+                    "You hear a erok yipping in the distance.",
                     "An empty snail shell lies cracked on the stairs.",
                     "A growl echoes through the hallway.",
                     "A faint smell of urinal cake wafts up from below.",
@@ -13539,6 +13852,73 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 select: () => {
                     gamble();
+                },
+            },
+
+            erok: {
+                title: "EROK",
+                onOpen: () => {
+                    Portrait.show('erokIdle');
+                    stopAllMusic();
+                    if (musicEnabled) {
+                        music.erokTheme.play();
+                        currentMusic = music.erokTheme;
+                        updateNowPlaying(getCurrentTrackName());
+                    }
+
+                    erok.say('oh my god oh my god hi stranger i love motorcycles');
+                },
+                onClose: () => {
+                    erok.say('I am barking happily, stranger!');
+                    Portrait.hide();
+                    // Stop Erok's theme and resume exploration music
+                    if (currentMusic === music.erokTheme) {
+                        music.erokTheme.pause();
+                        music.erokTheme.currentTime = 0;
+                        currentMusic = null;
+                    }
+                    resumeExplorationMusic();
+                    erok.isActiveOnFloor = false;
+                    const erokPosition = erok.location();
+                    if (erokPosition) {
+                        MAP.setCell(erokPosition.x, erokPosition.y);
+                    }
+                },
+                landingHtml: () => {
+                    return `You've approached a dog named Erok... seems friendly enough, for a dog!`;
+                },
+                getOptions: () => [
+                    {
+                        id: "pet",
+                        displayText: "Give the dog motivation to give you motivation",
+                        description: ":)",
+                        className: erok.isPetting ? "muted" : undefined,
+                    },
+                    {
+                        id: "_back",
+                        displayText: "Make the dog sad.",
+                        description: "... :(",
+                        className: erok.isPetting ? "muted" : undefined,
+                    },
+                ],
+                select: (selectedOptionId) => {
+                    if (erok.isPetting) {
+                        return;
+                    }
+                    
+                    if (selectedOptionId === "pet") {
+                        erok.isPetting = true;
+                        erok.say('holy crap oh my god pet me pet me oh my god holy shit oh god oh fuck oh god');
+                        Portrait.show('erokPet');
+                        menu.render();
+                        
+                        // Timeout for when petting animation ends
+                        setTimeout(() => {
+                            erok.isPetting = false;
+                            Portrait.show('erokIdle');
+                            menu.render();
+                        }, 1540);
+                    }
                 },
             },
             chest: {
