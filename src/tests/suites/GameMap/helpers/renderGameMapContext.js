@@ -1,5 +1,5 @@
 // Renders a GameMap object as a DOM element
-const renderGameMapContext = (mapObject, path) => {
+const renderGameMapContext = (mapObject, path = []) => {
     const $map = document.createElement("div");
     $map.className = "blocky cellular";
     $map.style.backgroundColor = "#000";

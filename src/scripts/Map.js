@@ -296,6 +296,20 @@ class GameMap {
         return coordinates;
     }
 
+    countPassableCells() {
+        let total = 0;
+
+        for (let y=0; y<this.#cells.length; y++) {
+            for (let x=0; x<this.#cells[y].length; x++) {
+                if (! this.#cells[y][x]?.isSolid) {
+                    total++;
+                }
+            }
+        }
+
+        return total;
+    }
+
     // Sets details for entities, such as the player or any wandering NPCs
     setEntities(entities) {
         const changedCoordinates = this.getChangedCoordinates(

@@ -14,6 +14,7 @@
 
     <!-- Test Suites -->
     <script src="suites/GameMap/helpers/renderGameMapContext.js"></script>
+    <script src="suites/GameMap/countPassableCells.js"></script>
     <script src="suites/GameMap/findPath-out-in-the-open.js"></script>
     <script src="suites/GameMap/findPath-around-curves.js"></script>
     <script src="suites/GameMap/findPath-around-spiral.js"></script>
@@ -69,7 +70,8 @@
             )
         );
 
-
+        testGroup("Map: Information and Stats");
+        GameMap_countPassableCells();
 
         testGroup("Map: Pathfinding");
         GameMap_findPathOutInTheOpen();
