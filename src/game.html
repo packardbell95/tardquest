@@ -10580,9 +10580,26 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 if (vampire.isActiveOnFloor) {
                     vampire.resetToEntrance();
-                    vampire.showFocalPoint();
+                    vampire.showFocalPoint({}, () => {
+                        if (vampire.isAt(player.x, player.y)) {
+                            updateBattleLog(
+                                `<span class="action">OH SHIT!</span> That ` +
+                                `pale-ass goblin motherfucker just spawned ` +
+                                `on top of you!`
+                            );
 
-                    if (vampire.level === 1) {
+                            startEncounter(
+                                "vampire",
+                                vampire.getEncounterOverrides()
+                            );
+                        }
+                    });
+
+                    const printVampireIntroMessage =
+                        vampire.level === 1 &&
+                        ! vampire.isAt(player.x, player.y);
+
+                    if (printVampireIntroMessage) {
                         updateBattleLog(
                             `Your nostrils are suddenly filled with a ` +
                             `stench of bleach and sulfur. ` +
@@ -11158,7 +11175,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             gamblersTheme:
                 Object.assign(new Audio("audio/gamblers-theme.mp3"), { trackName: "Gambler's Theme - Packard Bell 95" }),
             erokTheme:
-                Object.assign(new Audio("audio/erok.mp3"), { trackName: "A Dog Named Erok - Xx_TheMilkMan69_xX" }),                
+                Object.assign(new Audio("audio/erok.mp3"), { trackName: "A Dog Named Erok - Xx_TheMilkMan69_xX" }),
         };
 
         music.explorationTracks.forEach(track => track.loop = true);
@@ -11166,7 +11183,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         music.titleTrack.loop = true;
         music.gamblersTheme.loop = true;
         music.erokTheme.loop = true;
-        music.vampireBattle.loop = true;
+        music.vampireBattle.addEventListener("timeupdate", () => {
+            if (music.vampireBattle.currentTime >= 51.484) {
+                music.vampireBattle.currentTime = 16.5;
+                music.vampireBattle.play();
+            }
+        });
         music.vampireLurking.loop = true;
 
         function stopAllMusic() {
@@ -12053,20 +12075,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function render() {
-            const entities = {
-                player: {
-                    forceRefresh: true,
-                    x: player.x,
-                    y: player.y,
-                    displayName:
-                        `You <span class="player lets-go">ヽ(°٢° )ノ</span>`,
-                    isExplored: true,
-                    isVisible: true,
-                    mapCharacter: player.getDisplayCharacter(),
-                    type: "player",
-                },
-            };
+            const entities = {};
 
+            // Set the vampire first so it takes precedence over the player
             if (vampire.isActiveOnFloor) {
                 entities.vampire = {
                     x: vampire.x,
@@ -12080,6 +12091,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     type: "vampire",
                 };
             }
+
+            entities.player = {
+                forceRefresh: true,
+                x: player.x,
+                y: player.y,
+                displayName:
+                    `You <span class="player lets-go">ヽ(°٢° )ノ</span>`,
+                isExplored: true,
+                isVisible: true,
+                mapCharacter: player.getDisplayCharacter(),
+                type: "player",
+            };
 
             MAP.setEntities(entities);
             updateSeenTiles();
