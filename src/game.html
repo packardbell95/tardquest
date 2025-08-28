@@ -11345,26 +11345,38 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }
             }
 
+            // Speed multiplier
+            const SPEED_MULTIPLIER = 1.5;
+
             // Animation loop
             let frame = 0;
-            let maxFrames = height + 8;
+            // Reduce required frames proportionally to speed
+            let maxFrames = Math.max(1, Math.round((height + 8) / SPEED_MULTIPLIER));
             function draw() {
-                for (let step = 0; step < 2; step++) {
-                    // Build empty grid
-                    let grid = Array.from({ length: height }, () => Array(width).fill(' '));
+                // Build empty grid
+                let grid = Array.from({ length: height }, () => Array(width).fill(' '));
 
-                    // Drop fragments
-                    for (let frag of fragments) {
-                        let below = frag.y + 1;
-                        if (below < height && !fragments.some(f => f.x === frag.x && f.y === below)) {
-                            frag.y++;
-                        }
-                        grid[frag.y][frag.x] = frag.char;
+                // Drop fragments (use float y internally, round for collisions / drawing)
+                for (let frag of fragments) {
+                    // ensure frag.y is numeric (it starts as integer)
+                    if (typeof frag.y !== 'number') frag.y = Number(frag.y);
+
+                    const proposedY = Math.round(frag.y + SPEED_MULTIPLIER);
+                    // check if there's a fragment occupying the target integer row below
+                    const blocked = proposedY < height && fragments.some(f => f.x === frag.x && Math.round(f.y) === proposedY);
+
+                    if (proposedY < height && !blocked) {
+                        frag.y += SPEED_MULTIPLIER;
+                        if (frag.y > height - 1) frag.y = height - 1;
                     }
 
-                    // Draw grid in the original <pre>
-                    $enemyPre.textContent = grid.map(row => row.join('')).join('\n');
+                    // draw at rounded position
+                    const drawY = Math.round(frag.y);
+                    grid[drawY][frag.x] = frag.char;
                 }
+
+                // Draw grid in the original <pre>
+                $enemyPre.textContent = grid.map(row => row.join('')).join('\n');
 
                 frame++;
                 if (frame < maxFrames) {
@@ -11372,9 +11384,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 } else {
                     setTimeout(() => {
                         if (typeof onDone === 'function') onDone();
-                    }, 500);
+                        if (battleTransitionAnimationsEnabled === false || isLevelUpAllocation) {
+                            GameControl.enableControls();
+                        }
+                    }, Math.round(500 / SPEED_MULTIPLIER)); // time spent on final frame
                 }
             }
+
             playSFX('ash');
             draw();
         }
