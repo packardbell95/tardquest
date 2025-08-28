@@ -15,6 +15,7 @@
     const DELIVERY_POLL_INTERVAL_MS = 60000; // poll cadence
     const DELIVERY_MIN_INTERVAL_MS = 5000;   // min gap between forced polls
     let lastDeliveryAttempt = 0;
+    let pendingDeliveredMessage = null;
 
     function getSessionId(){
         return sessionStorage.getItem('vocaguardSessionId');
@@ -99,23 +100,28 @@
     }
 
     function ensurePolling(){
-        if (pollTimer) return;
+        if (pollTimer || pendingDeliveredMessage) return; // Don't poll if a message is pending
         pollTimer = setInterval(()=>{
-            if (isTitleScreenActive()) return;
+            if (isTitleScreenActive() || pendingDeliveredMessage) return;
             requestDeliveryOnce();
         }, DELIVERY_POLL_INTERVAL_MS);
-        setTimeout(()=>{ if (!isTitleScreenActive()) requestDeliveryOnce(true); }, 1500);
+        setTimeout(()=>{
+            if (!isTitleScreenActive() && !pendingDeliveredMessage) requestDeliveryOnce(true);
+        }, 1500);
         log.debug('Delivery polling started');
     }
 
     // Delivery display
     function displayDeliveredMessage(msg){
+        if (!msg && pendingDeliveredMessage) {
+            msg = pendingDeliveredMessage;
+        }
         if (!msg) return;
+        pendingDeliveredMessage = null; // Message is now handled, allow polling again
         function show(){
             if (typeof updateBattleLog === 'function') {
-                // Placeholder for NPC interaction, just display in log immediately.
+                // TODO: Use NPC TTS for delivery (e.g. Pigeon.say(msg))
                 updateBattleLog(`<span class="friendly">&lt;A pigeon delivers a message&gt;:</span> "${msg.replace(/</g,'&lt;')}"`);
-                // Resume polling after message is displayed
                 ensurePolling();
             } else {
                 setTimeout(show, 250);
@@ -127,6 +133,7 @@
     async function requestDeliveryOnce(force=false){
         const now = Date.now();
         if (!force && now - lastDeliveryAttempt < DELIVERY_MIN_INTERVAL_MS) return;
+        if (pendingDeliveredMessage) return; // Don't fetch new if one is pending
         const sid = getSessionId();
         if (!sid) return;
         lastDeliveryAttempt = now;
@@ -140,9 +147,7 @@
             if (data && data.pigeon_message) {
                 log.info('Delivered pigeon id:', data.pigeon_id || 'n/a');
                 stopPolling(); // Pause polling until message is displayed
-
-                 // We will move this function inside the NPC interaction inside game.html later
-                displayDeliveredMessage(data.pigeon_message);
+                pendingDeliveredMessage = data.pigeon_message;
             }
         } catch (e){
             log.debug('Delivery request failed', e);
@@ -185,7 +190,8 @@
         send: sendPigeon,
         pollNow: ()=>requestDeliveryOnce(true),
         isActive: () => pigeonInputMode,
-        debug: { haveLocalPigeon, getSessionId, version: VERSION }
+        debug: { haveLocalPigeon, getSessionId, version: VERSION },
+        displayDeliveredMessage
     };
     log.info('Module loaded; autonomous delivery polling active.');
 })();
