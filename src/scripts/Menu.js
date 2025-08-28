@@ -196,6 +196,9 @@ class Menu {
     close() {
         const previousMenu = this.#breadcrumbs.pop();
         if (previousMenu) {
+            if (typeof previousMenu.onClose === "function") {
+                previousMenu.onClose();
+            }
             this.#menus[previousMenu.menuName].onClose?.();
             this.#selectionIndex = previousMenu.selectionIndex;
             this.#currentPage = previousMenu.currentPage;
@@ -215,6 +218,9 @@ class Menu {
     closeAll() {
         while (this.#breadcrumbs.length > 0) {
             const previousMenu = this.#breadcrumbs.pop();
+            if (typeof previousMenu.onClose === "function") {
+                previousMenu.onClose();
+            }
             this.#menus[previousMenu.menuName].onClose?.();
         }
         this.#elements.$menu.classList.add('hidden');
@@ -247,7 +253,7 @@ class Menu {
         const itemsPerPage = this.getItemsPerPage();
         const totalPages = this.getTotalPages();
         const itemsOnCurrentPage = (this.#currentPage + 1) >= totalPages
-            ? ((options.length % itemsPerPage) || itemsPerPage)
+            ? ((options?.length % itemsPerPage) || itemsPerPage)
             : itemsPerPage;
 
         return {

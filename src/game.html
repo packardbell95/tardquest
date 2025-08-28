@@ -9916,6 +9916,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.hp = getEffectiveStat('maxHp');
                 document.getElementById('playerLevel').innerText = player.level;
             },
+            getInputDelayMs: () => {
+                const minDelayMs = 1;
+                const maxDelayMs = 2000;
+                const baseDelayMs = maxDelayMs;
+
+                // 5% reduction per speed point
+                const speedModifier = getEffectiveStat('speed') * 0.05;
+
+                return Math.max(
+                    minDelayMs,
+                    baseDelayMs * (1 - speedModifier)
+                );
+            },
             getCarryWeightLimit: () => {
                 // Example: 35 base + 0.6 per END point
                 return 35 + (player.endurance * 0.4);
@@ -10576,6 +10589,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 mouth: 139,
                 throat: 158,
             },
+            steps: [],
+            isDoneMoving: function() {
+                return vampire.steps.length === 0;
+            },
             say: function(str, suppressSpeechSynthesis) {
                 if (!suppressSpeechSynthesis) {
                     SpeechSynthesizer.speak(str, vampire.voice);
@@ -10657,24 +10674,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 vampire.y = entrance.y;
                 render();
             },
-            chasePlayer: function(callback) {
-                GameControl.disableControls();
-                const totalSteps = vampire.level;
-                const chaseSteps = MAP.findPath(
-                    [ vampire.x, vampire.y ],
-                    [ player.x, player.y ]
-                )?.slice(1, totalSteps + 1) ?? [];
-
-                if (chaseSteps.length === 0) {
-                    callback?.();
+            prepareMovement: function() {
+                if (! vampire.isActiveOnFloor) {
                     return;
                 }
 
-                vampire.chaseStep(
-                    chaseSteps,
-                    1000 / Math.max(totalSteps, 1),
-                    callback
-                );
+                const totalSteps = vampire.level;
+                vampire.steps = MAP.findPath(
+                    [ vampire.x, vampire.y ],
+                    [ player.x, player.y ]
+                )?.slice(1, totalSteps + 1) ?? [];
             },
             playFlapSfx: function() {
                 const deltaX = player.x - vampire.x;
@@ -10689,55 +10698,36 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 playSFX("batWingFlapDry", dryVolume);
                 playSFX("batWingFlapWet", wetVolume);
             },
-            chaseStep: function(chaseSteps, stepDelayMs = 1000, callback) {
+            move: function() {
+                if (! vampire.isActiveOnFloor) {
+                    return;
+                }
+
+                if (vampire.steps.length === 0) {
+                    return null;
+                }
+
                 vampire.playFlapSfx();
 
-                if (vampire.checkEncounter()) {
-                    callback?.();
-                    return;
-                }
+                const step = vampire.steps.shift();
+                vampire.x = step[0];
+                vampire.y = step[1];
 
-                if (chaseSteps.length === 0) {
-                    player.movementDisabled = false;
-                    GameControl.enableControls();
-                    callback?.();
-                    return;
-                }
-
-                const chaseStep = chaseSteps.shift();
-                vampire.x = chaseStep[0];
-                vampire.y = chaseStep[1];
-                render();
-
-                if (chaseSteps < 2) {
-                    vampire.chaseStep(chaseSteps, stepDelayMs);
-                } else {
-                    setTimeout(() => {
-                        vampire.chaseStep(chaseSteps, stepDelayMs);
-                    }, stepDelayMs);
+                if (vampire.encounteredPlayer()) {
+                    vampire.steps = [];
+                    return () => vampire.encounter();
                 }
             },
-            checkEncounter: function() {
-                const isEncounter =
+            encounteredPlayer: function() {
+                return (
                     vampire.isActiveOnFloor &&
                     vampire.x === player.x &&
-                    vampire.y === player.y;
-
-                if (! isEncounter) {
-                    return false;
-                }
-
-                player.movementDisabled = false;
-                GameControl.enableControls();
+                    vampire.y === player.y
+                );
+            },
+            encounter: function() {
                 player.hasEncounteredVampire = true;
                 startEncounter("vampire", vampire.getEncounterOverrides());
-
-                return true;
-            },
-            update: function(callback) {
-                vampire.isActiveOnFloor
-                    ? vampire.chasePlayer(callback)
-                    : vampire.checkForActivation(callback);
             },
             getEncounterOverrides: function() {
                 return ({
@@ -10783,15 +10773,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
 
                 vampire.level++;
-                const stepsUntilReactivation = Math.max(5 - vampire.level, 0);
-                if (stepsUntilReactivation > 1) {
-                    vampire.setPlayerStepsUntilActive(
-                        player.stepsTakenOnCurrentFloor + stepsUntilReactivation
-                    );
-                    vampire.checkForActivation();
-                } else {
-                    vampire.resetToEntrance();
-                }
+                const stepsUntilReactivation = Math.max(5 - vampire.level, 1);
+                vampire.setPlayerStepsUntilActive(
+                    player.stepsTakenOnCurrentFloor + stepsUntilReactivation
+                );
+                vampire.checkForActivation();
             },
 
             showFocalPoint: function(options, onAnimationEnd) {
@@ -11506,7 +11492,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             healingTile: {
                 displayName: "Healing Tile",
                 mapCharacter: "H",
-                onEnter: function (x, y, callback) {
+                onEnter: async function (x, y) {
                     player.steppingOnHealingTile = true;
 
                     // Heal player
@@ -11533,10 +11519,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     updateBattleLog(logMsg);
                     MAP.setCell(x, y);
-
-                    if (typeof callback === "function") {
-                        callback();
-                    }
                 },
             },
             wall: {
@@ -11558,7 +11540,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             crackedFloorSlight: {
                 displayName: "Slightly-Cracked Floor",
                 mapCharacter: '✕',
-                onEnter: function (x, y, callback) {
+                onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
                     if (weightLevel === "normal") {
@@ -11571,10 +11553,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             '<span class="action">The floor cracks under ' +
                             'your feet!</span>'
                         );
-
-                        if (typeof callback === "function") {
-                            callback();
-                        }
                     } else if (weightLevel === "warning") {
                         MAP.setCell(x, y, "crackedFloorSevere");
                         playSFX("floorCrackSlight");
@@ -11586,10 +11564,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             'your feet!</span> You might want to lighten ' +
                             'your load and avoid stepping here again!'
                         );
-
-                        if (typeof callback === "function") {
-                            callback();
-                        }
                     } else if (weightLevel === "danger") {
                         player.fallThroughFloorAndDie();
                     }
@@ -11598,7 +11572,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             crackedFloor: {
                 displayName: "Cracked Floor",
                 mapCharacter: '✕',
-                onEnter: function (x, y, callback) {
+                onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
                     if (weightLevel === "normal") {
@@ -11612,10 +11586,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             'your feet!</span> It would be a good idea to ' +
                             'avoid stepping here again'
                         );
-
-                        if (typeof callback === "function") {
-                            callback();
-                        }
                     } else if (["warning", "danger"].includes(weightLevel)) {
                         player.fallThroughFloorAndDie();
                     }
@@ -11624,7 +11594,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             crackedFloorSevere: {
                 displayName: "Severely-Cracked Floor",
                 mapCharacter: '✖',
-                onEnter: function (x, y) {
+                onEnter: async function (x, y) {
                     player.fallThroughFloorAndDie();
                 },
             },
@@ -11677,16 +11647,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             exit: {
                 displayName: "Exit",
                 mapCharacter: "E",
-                onEnter: function() {
+                onEnter: async function() {
                     descend();
                 }
             },
             merchant: {
                 displayName: "Merchant",
                 mapCharacter: "M",
-                onEnter: function(x, y, callback) {
+                onEnter: async function(x, y) {
                     playMerchantMusic();
-                    menu.open('merchant', callback);
+                    menu.open('merchant');
                 },
                 isVisible: function() {
                     return (
@@ -11711,8 +11681,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             gambler: {
                 displayName: "Gambler",
                 mapCharacter: "G",
-                onEnter: function(x, y, callback) {
-                    menu.open('gambler', callback);
+                onEnter: async function(x, y) {
+                    menu.open('gambler');
                 },
                 isVisible: function () {
                     return (
@@ -11743,8 +11713,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             erok: {
                 displayName: "Erok",
                 mapCharacter: "D",
-                onEnter: function(x, y, callback) {
-                    menu.open('erok', callback);
+                onEnter: async function(x, y) {
+                    menu.open('erok');
                 },
                 isVisible: function() {
                     return (
@@ -11768,11 +11738,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             tardspireBanner: {
                 displayName: "Floor",
                 mapCharacter: ".",
-                onEnter: function (x, y, callback) {
+                onEnter: async function (x, y) {
                     MAP.setCell(x, y);
-                    if (typeof callback === "function") {
-                        callback();
-                    }
                 },
                 onExplode: function (x, y) {
                     MAP.setCell(x, y);
@@ -11781,8 +11748,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             treasureChest: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
-                onEnter: function(x, y, callback) {
-                    menu.open("chest", callback);
+                onEnter: async function(x, y) {
+                    menu.open("chest");
                 },
                 onExplode: function (x, y) {
                     MAP.setCell(x, y, "crater");
@@ -11796,8 +11763,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             mimic: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
-                onEnter: function (x, y, callback) {
-                    menu.open("chest", callback);
+                onEnter: async function (x, y) {
+                    menu.open("chest");
                 },
                 onExplode: function (x, y) {
                     MAP.setCell(x, y, "bloodyCrater");
@@ -12121,7 +12088,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-        function render() {
+        function refreshMinimap() {
             const entities = {};
 
             // Set the vampire first so it takes precedence over the player
@@ -12130,7 +12097,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     x: vampire.x,
                     y: vampire.y,
                     displayName: player.hasEncounteredVampire
-                        ? `<span class="${vampire.className}">${vampire.displayName}</span>`
+                        ?
+                            `<span class="${vampire.className}">` +
+                            `${vampire.displayName}</span>`
                         : `<em>A Menacing... Fruit Bat?</em>`,
                     isExplored: true,
                     isVisible: true,
@@ -12153,8 +12122,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             MAP.setEntities(entities);
             updateSeenTiles();
-            updateBreathingSFX();
             MAP.refreshMinimap();
+        }
+
+        function render() {
+            refreshMinimap();
+            updateBreathingSFX();
 
             // @TODO: Keep this out of render()
             // Stat updates should update the appropriate sections on their own
@@ -12199,7 +12172,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             return true;
         }
 
-        function animBattleTransitionStart(callback, playBattleStartSFX = false, playBattleEndSFX = false) {
+        function animBattleTransitionStart(
+            callback,
+            playBattleStartSFX = false,
+            playBattleEndSFX = false
+        ) {
+            refreshMinimap();
             const $battleTransition = document.getElementById('animBattleTransition');
 
             // Block input during transition
@@ -12421,7 +12399,61 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-        function move(direction) {
+        function sleepMs(durationMs) {
+            return new Promise((resolve) => {
+                setTimeout(resolve, durationMs);
+            });
+        }
+
+        async function endOfPlayerMove() {
+            const startMs = performance.now();
+
+            await npcMove();
+
+            const elapsedMs = performance.now() - startMs;
+            const remainingMs = Math.max(0, player.getInputDelayMs() - elapsedMs);
+
+            if (remainingMs > 0) {
+                await sleepMs(remainingMs);
+            }
+        }
+
+        // After the player has moved, the NPCs may need to move too
+        async function npcMove() {
+            render();
+
+            if (! vampire.isActiveOnFloor) {
+                vampire.checkForActivation();
+                return;
+            }
+
+            vampire.prepareMovement();
+
+            const stepsThisTurn = vampire.steps.length;
+            const stepDurationMs = 120;
+            const callables = [];
+
+            for (let i=0; i<stepsThisTurn; i++) {
+                // In the real version we would move the vampire here and
+                // update the minimap / scene between frames.
+                await sleepMs(stepDurationMs);
+                const result = vampire.move();
+                if (typeof result === "function") {
+                    callables.push(result);
+                }
+                render();
+
+                if (vampire.isDoneMoving()) {
+                    break;
+                }
+            }
+
+            for (let i=0; i<callables.length; i++) {
+                callables[i]();
+            }
+        }
+
+        async function move(direction) {
             if (player.inCombat || gameOver || player.movementDisabled) {
                 return;
             }
@@ -12459,19 +12491,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
 
+                // @TODO: Make the map system support onEnter for entities
+                //        and move this logic there
+                if (vampire.encounteredPlayer()) {
+                    vampire.encounter();
+                }
+
                 const fireOnEnter =
                     typeof tile.onEnter === "function" &&
                     (typeof tile.isVisible !== "function" || tile.isVisible());
 
                 if (fireOnEnter) {
-                    tile.onEnter(nx, ny, () => vampire.checkEncounter());
-                } else if (! vampire.checkEncounter()) {
-                    const isRandomEncounter =
-                        ! fireOnEnter &&
-                        Math.random() < randomEncounterChance;
-                    if (isRandomEncounter) {
-                        startEncounter();
+                    const maybePromise = tile.onEnter(nx, ny);
+                    const isAsync =
+                        maybePromise &&
+                        typeof maybePromise.then === "function";
+
+                    if (isAsync) {
+                        await maybePromise;
                     }
+                } else if (Math.random() < randomEncounterChance) {
+                    startEncounter();
                 }
             } else if (typeof tile.onTouch === "function") {
                 tile.onTouch();
@@ -12480,28 +12520,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             GameControl.update();
 
-            // Skip NPC checks if the player is in combat
-            if (player.inCombat) {
-                return;
+            // @TODO: Handle NPC movement after the menu has closed
+            const shouldSkipNpc = player.inCombat || menu.isOpen();
+
+            if (!shouldSkipNpc) {
+                await endOfPlayerMove();
+            } else {
+                const timeDelayMs = player.getInputDelayMs();
+                await sleepMs(timeDelayMs);
             }
 
-            vampire.update(() => {
-                // Set the movement delay range
-                const maxDelay = 2000; // Max speed (movement delay) in milliseconds (2s)
-                const minDelay = 1; // Min speed (movement delay) in milliseconds (1/4 of 1s)
-
-                // Calculate movement delay based on speed
-                const baseDelay = maxDelay; // Start with the maximum delay
-                const speedModifier = getEffectiveStat('speed') * 0.05; // 5% reduction per speed point
-                const movementDelay = Math.max(minDelay, baseDelay * (1 - speedModifier)); // Ensure delay is at least minDelay
-
-                setTimeout(() => {
-                    player.movementDisabled = false;
-                    GameControl.update();
-                }, movementDelay);
-
-                render();
-            });
+            player.movementDisabled = false;
+            GameControl.update();
         }
 
         function turnLeft() {
@@ -12736,7 +12766,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!player.inCombat) {
                 return;
             }
-        
+
             if (currentEnemy.hp <= 0) {
                 // When enemy dies, block input until battle is fully over
                 playerAttackCooldown = true;
@@ -12772,7 +12802,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             `The <span class="${enemyClassname}">` +
                             `${currentEnemy.name}</span> ${randomMsg}`
                         );
-        
+
                         updateBattleLog(
                             `<span class="friendly">You</span> gained ` +
                             `<span class="EXP">+${exp} EXP</span> and ` +
@@ -12785,29 +12815,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             vampire.defeated();
                         }
                     }
-        
+
                     const willLevelUp =
                         player.exp >= player.getExpRequiredForLevelUp();
-        
+
                     if (willLevelUp) {
                         playerAttackCooldown = false; // Reset for level up screen
                         player.leaveCombat();
                         setTorchOverlayVisibility();
-                        startLevelUpAllocation(() => vampire.update());
+                        startLevelUpAllocation(() => npcMove());
                     } else {
                         player.leaveCombat();
                         setTorchOverlayVisibility();
                         if (battleTransitionAnimationsEnabled) {
                             playerAttackCooldown = false;
                             animBattleTransitionStart(() => {
-                                vampire.update();
-                                render();
+                                npcMove();
                             }, false, true);
                         } else {
                             playSFX('battleEnd');
                             playerAttackCooldown = false; // Reset when battle fully ends
-                            vampire.update();
-                            render();
+                            npcMove();
                         }
                     }
                 });
@@ -13896,6 +13924,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             InventorySidebar.open("main");
             GameControl.update();
             updateViewportHeader();
+            render();
         });
 
         menu.setMenus({
