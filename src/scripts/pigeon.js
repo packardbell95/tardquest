@@ -116,12 +116,18 @@
         if (!msg && pendingDeliveredMessage) {
             msg = pendingDeliveredMessage;
         }
-        if (!msg) return;
+        if (!msg) {
+            if (typeof updateBattleLog === 'function') {
+                updateBattleLog('<span class="friendly">&lt;PIGEON&gt;</span> "I have no more messages."');
+                ensurePolling();
+            }
+            return;
+        }
         pendingDeliveredMessage = null; // Message is now handled, allow polling again
         function show(){
             if (typeof updateBattleLog === 'function') {
                 // TODO: Use NPC TTS for delivery (e.g. Pigeon.say(msg))
-                updateBattleLog(`<span class="friendly">&lt;A pigeon delivers a message&gt;:</span> "${msg.replace(/</g,'&lt;')}"`);
+                updateBattleLog(`<span class="friendly">&lt;PIGEON&gt;</span> "${msg.replace(/</g,'&lt;')}"`);
                 ensurePolling();
             } else {
                 setTimeout(show, 250);
