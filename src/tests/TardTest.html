@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TardTest :: TardQuest Unit Tests</title>
+
+    <!-- Test Runner -->
+    <script src="includes/TardTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="includes/TardTest.css">
+
+    <!-- Libraries to test -->
+    <script src="../scripts/Map.js"></script>
+
+    <!-- Test Suites -->
+    <script src="suites/GameMap/helpers/renderGameMapContext.js"></script>
+    <script src="suites/GameMap/countPassableCells.js"></script>
+    <script src="suites/GameMap/findPath-out-in-the-open.js"></script>
+    <script src="suites/GameMap/findPath-around-curves.js"></script>
+    <script src="suites/GameMap/findPath-around-spiral.js"></script>
+    <script src="suites/GameMap/findPath-around-object.js"></script>
+    <script src="suites/GameMap/findNextStep.js"></script>
+</head>
+<body>
+    <section>
+        <h1>TardTest Unit Test Runner</h1>
+        <p>
+            This page is a test runner for the TardQuest's libraries. When
+            opened, it automatically executes a series of unit tests organized
+            into sections by library or feature area. Each section summarizes
+            the results: if all tests pass, the section shows "All Tests Passed"
+            and collapses to keep the view clean. But if any test fails, the
+            section shows "Tests Failed" and expands to display detailed results
+            for debugging.
+        </p>
+        <p>
+            This page should be checked before approving or releasing code to
+            ensure that everything is in working order. If a test fails, then
+            either the implementation broke something, or the implementation has
+            changed deliberately and the test needs to be updated to match the
+            expected behavior.
+        </p>
+    </section>
+
+    <script>
+        const testMap = new GameMap();
+
+        testGroup("Map: Initialization");
+        test(
+            "Throw an Error when map is too small",
+            () => Assert.throws(
+                () => testMap.generate(4, 4),
+                "Map size must be at least 5x5"
+            )
+        );
+
+        test(
+            "Throw an Error when player position is out of bounds (under)",
+            () => Assert.throws(
+                () => testMap.generate(5, 5, -1, -1),
+                "Player coordinates are outside of the map's boundaries"
+            )
+        );
+
+        test(
+            "Throw an Error when player position is out of bounds (over)",
+            () => Assert.throws(
+                () => testMap.generate(5, 5, 6, 6),
+                "Player coordinates are outside of the map's boundaries"
+            )
+        );
+
+        testGroup("Map: Information and Stats");
+        GameMap_countPassableCells();
+
+        testGroup("Map: Pathfinding");
+        GameMap_findPathOutInTheOpen();
+        GameMap_findPathAroundCurves();
+        GameMap_findPathAroundSpiral();
+        GameMap_findPathAroundObject();
+        GameMap_findNextStep();
+
+        printResults();
+
+        window.addEventListener("load", () => {
+            // Remove the error message and loader
+            document.getElementById("codebaseErrorMessage").remove();
+            document.getElementById("loadingContainer").remove();
+        });
+    </script>
+    <section id="codebaseErrorMessage">
+        <h2>⚠️ It appears that something has broken!</h2>
+        <p>
+            If you are seeing this message, then JavaScript has failed to run.
+            This most likely means that there is an error in the codebase.
+            Check the console in your browser's Developer Tools to see what went
+            wrong.
+        </p>
+    </section>
+    <section id="loadingContainer">
+        <div class="loading"><div></div><div></div><div></div></div>
+    </section>
+</body>
+</html>
