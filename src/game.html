@@ -11656,7 +11656,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 mapCharacter: "M",
                 onEnter: async function(x, y) {
                     playMerchantMusic();
-                    menu.open('merchant');
+                    menu.open('merchant', () => npcMove());
                 },
                 isVisible: function() {
                     return (
@@ -11682,7 +11682,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayName: "Gambler",
                 mapCharacter: "G",
                 onEnter: async function(x, y) {
-                    menu.open('gambler');
+                    menu.open('gambler', () => npcMove());
                 },
                 isVisible: function () {
                     return (
@@ -11714,7 +11714,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayName: "Erok",
                 mapCharacter: "D",
                 onEnter: async function(x, y) {
-                    menu.open('erok');
+                    menu.open('erok', () => npcMove());
                 },
                 isVisible: function() {
                     return (
@@ -13006,7 +13006,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
 
-        function tryRun() {
+        async function tryRun() {
             if (!player.inCombat || GameControl.awaitingPersuasionText) {
                 return;
             }
@@ -13025,6 +13025,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (Math.random() < 0.5) {
                 player.say("Gee willikers, I'm outta here!");
                 player.leaveCombat();
+                await npcMove();
             } else {
                 updateBattleLog("Couldn't escape!");
                 enemyAttack();
@@ -13682,8 +13683,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-
-        function openChest() {
+        async function openChest() {
             const cellType = MAP.getCell(player.x, player.y)?.type;
 
             if (cellType === 'mimic') {
@@ -13756,6 +13756,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 // Remove the chest from the map
                 MAP.setCell(player.x, player.y);
+                await npcMove();
             }
 
             render();
@@ -15281,6 +15282,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
             chest: {
                 title: "TREASURE CHEST",
+                defaultCloseOption: "resistTemptation",
                 onOpen: () => {
                     Portrait.show('chest');
                 },
@@ -15298,7 +15300,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             description: "Claim your succulent reward!",
                         },
                         {
-                            id: "_back",
+                            id: "resistTemptation",
                             displayText: "Resist your burning temptation...",
                             description: "DON'T claim your succulent reward!",
                         },
@@ -15307,6 +15309,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 select: (selectedOptionId) => {
                     if (selectedOptionId === "open") {
                         openChest();
+                    } else if (selectedOptionId === "resistTemptation") {
+                        npcMove();
                     }
                     menu.close();
                     render();

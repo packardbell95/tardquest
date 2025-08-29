@@ -407,6 +407,29 @@ class Menu {
     handleInput(key) {
         switch (key) {
             case 'escape':
+                const activeMenu = this.getActiveMenu();
+                const defaultCloseOption =
+                    activeMenu?.defaultCloseOption || null;
+
+                if (defaultCloseOption !== null) {
+                    const closeOptionIndex = activeMenu.getOptions().findIndex(
+                        (option) => option.id === defaultCloseOption
+                    );
+
+                    if (closeOptionIndex === -1) {
+                        console.error(
+                            "Default close option was set, but no option was " +
+                            "matched",
+                            { defaultCloseOption, activeMenu }
+                        );
+                        this.goToPreviousMenu();
+                        break;
+                    }
+
+                    this.select(closeOptionIndex);
+                    break;
+                }
+
                 this.goToPreviousMenu();
                 break;
             case 'w':
