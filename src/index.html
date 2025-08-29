@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TARDQUEST</title>
+    <meta name="viewport" content="width=710, height=680, initial-scale=1.0">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        iframe {
+            width: 696px;
+            height: 646px;
+            aspect-ratio: 696/646;
+            transition: transform 0.3s ease-in-out;
+            transform-origin: center center;
+        }
+    </style>
+</head>
+<body>
+    <iframe src="game.html" frameborder="0" id="gameFrame"></iframe>
+    
+    <script>
+        function resizeFrame() {
+            const iframe = document.getElementById('gameFrame');
+            const originalWidth = 696;
+            const originalHeight = 646;
+            const aspectRatio = originalWidth / originalHeight;
+            
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const windowAspectRatio = windowWidth / windowHeight;
+            
+            let scale;
+            if (windowAspectRatio > aspectRatio) {
+                scale = windowHeight / originalHeight;
+            } else {
+                scale = windowWidth / originalWidth;
+            }
+            iframe.style.transform = `scale(${scale})`;
+        }
+        resizeFrame();
+
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeFrame, 50);
+        });
+        window.addEventListener('load', resizeFrame);
+    </script>
+</body>
+</html>

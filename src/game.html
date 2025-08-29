@@ -36,11 +36,14 @@
             font-family: "DejaVuSansMono", monospace;
         }
 
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
         body {
             background: #000;
             color: #fff;
             font-size: 10px;
-            padding: 20px;
             display: flex;
             box-sizing: content-box;
             user-select: none;
@@ -172,7 +175,7 @@
 
         #titleScreen .credits {
             position: absolute;
-            top: 554px;
+            top: 540px;
             left: 30px;
             border-style: solid;
             border-width: 2px;
@@ -679,7 +682,7 @@
 
         #portraitArtOverlay.portrait-art {
             position: absolute;
-            top: 135px;
+            top: 107px;
             pointer-events: none;
             font-size: 5px;
             line-height: 1;
@@ -699,7 +702,7 @@
 
         #portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
             color: rgb(255, 214, 138);
-            top: 132px; /* lazy fix for clipping over border */
+            top: 104px; /* lazy fix for clipping over border */
         }
 
         .hidden {
@@ -709,8 +712,8 @@
         #inputBox {
             display: none;
             position: absolute;
-            top: 117px;
-            left: 28px;
+            top: 89px;
+            left: 0px;
             width: 692px;
             height: 2px;
             border: 2px solid #fff;
