@@ -98,6 +98,7 @@ class MapCell {
             );
 
             this.$element.setAttribute('data-tooltipPosition', 'right');
+            this.$element.setAttribute('data-tooltipGroupId', 'minimap');
         } else {
             console.warn("No coordinates found for cell", {
                 cellProperties,
@@ -109,7 +110,7 @@ class MapCell {
         }
 
         this.$element.innerText = tile;
-        Tooltip.refresh(this.$element);
+        Tooltip.initialize(this.$element);
     }
 
     static defaultsByType(type) {
