@@ -13877,11 +13877,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "EROK",
                 escapeDisabled: () => erok.isPetting,
                 onOpen: () => {
-                    Portrait.show('erokIdle');
+                    if (!erok.isPetting) {
+                        Portrait.show('erokIdle');
+                    }
                     stopAllMusic();
                     if (musicEnabled) {
-                        music.erokTheme.play();
                         currentMusic = music.erokTheme;
+                        currentMusic.play();
                         updateNowPlaying(getCurrentTrackName());
                     }
 
@@ -13890,11 +13892,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onClose: () => {
                     erok.say('I am barking happily, stranger!');
                     Portrait.hide();
-                    // Stop Erok's theme and resume exploration music
                     if (currentMusic === music.erokTheme) {
-                        music.erokTheme.pause();
-                        music.erokTheme.currentTime = 0;
-                        currentMusic = null;
+                        stopAllMusic();
                     }
                     resumeExplorationMusic();
                     erok.isActiveOnFloor = false;
@@ -13909,13 +13908,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 getOptions: () => [
                     {
                         id: "pet",
-                        displayText: "Give the dog motivation to give you motivation",
+                        displayText: "give the dog motivation to give you motivation",
                         description: ":)",
                         className: erok.isPetting ? "muted" : undefined,
                     },
                     {
-                        id: "_back",
-                        displayText: "Make the dog sad.",
+                        id: "leave",
+                        displayText: "make the dog sad",
                         description: "... :(",
                         className: erok.isPetting ? "muted" : undefined,
                     },
@@ -13927,16 +13926,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     if (selectedOptionId === "pet") {
                         erok.isPetting = true;
-                        erok.say('holy crap oh my god pet me pet me oh my god holy shit oh god oh fuck oh god');
                         Portrait.show('erokPet');
-                        menu.render();
-
-                        // Timeout for when petting animation ends
+                        erok.say('holy crap oh my god pet me pet me oh my god holy shit oh god oh fuck oh god');
                         setTimeout(() => {
                             erok.isPetting = false;
-                            Portrait.show('erokIdle');
+                            if (menu.isOpen() && menu.getCurrentMenuData()?.title === "EROK") {
+                                Portrait.show('erokIdle');
+                            }
                             menu.render();
-                        }, 1540);
+                        }, 2000);
+                    } else if (selectedOptionId === "leave") {
+                        menu.close();
                     }
                 },
             },
