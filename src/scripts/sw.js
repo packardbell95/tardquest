@@ -75,7 +75,6 @@ function revalidate(cache, request){
 /** Build navigation fallback chain. */
 function navFallback(){
   return caches.match('./game.html')
-    .then(r => r || caches.match('./game-v1.html'))
     .then(r => r || caches.match('./'));
 }
 

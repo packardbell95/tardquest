@@ -29,7 +29,7 @@
     const QUIET_MS = 400;                         // Time with no new assets before finalize attempt
     const CSS_BG_SCAN_BATCH = 400;                // Nodes per frame for computed background scan
     const MANIFEST_AUDIO_IMMEDIATE = true;        // Load audio early (match v1 behavior)
-    const CRITICAL_IMG_REGEX = /assets\/(interface|cursors|fp-anim|.*\/ui)\/|assets\/.*?(?:turn|attack|items?|weapons?|armor|rings)/i;
+    const CRITICAL_IMG_REGEX = /assets\/(interface|cursors|fp-anim|transitions|gamepad|.*\/ui)\/|assets\/.*?(?:turn|attack|items?|weapons?|armor|rings)/i;
     const ENABLE_DECODE_WARMUP = true;            // Create decoded image pool post-load
     const DECODE_WARMUP_LIMIT = 150;              // Max retained decoded image objects
     const DEFERRED_MEDIA_DELAY_MS = 600;          // Delay before starting deferred (non-critical) media
