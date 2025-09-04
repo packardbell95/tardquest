@@ -36,11 +36,14 @@
             font-family: "DejaVuSansMono", monospace;
         }
 
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
         body {
             background: #000;
             color: #fff;
             font-size: 10px;
-            padding: 20px;
             display: flex;
             box-sizing: content-box;
             user-select: none;
@@ -181,7 +184,7 @@
 
         #titleScreen .credits {
             position: absolute;
-            top: 554px;
+            top: 540px;
             left: 30px;
             border-style: solid;
             border-width: 2px;
@@ -727,7 +730,7 @@
 
         #portraitArtOverlay.portrait-art {
             position: absolute;
-            top: 135px;
+            top: 107px;
             pointer-events: none;
             font-size: 5px;
             line-height: 1;
@@ -747,7 +750,7 @@
 
         #portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
             color: rgb(255, 214, 138);
-            top: 132px; /* lazy fix for clipping over border */
+            top: 104px; /* lazy fix for clipping over border */
         }
 
         .hidden {
@@ -757,8 +760,8 @@
         #inputBox {
             display: none;
             position: absolute;
-            top: 117px;
-            left: 28px;
+            top: 89px;
+            left: 0px;
             width: 692px;
             height: 2px;
             border: 2px solid #fff;
@@ -1492,21 +1495,21 @@
                 top 2px right -2px,
                 bottom -2px right -2px,
                 bottom -2px left 2px;
-        
+
             & .container {
                 top: 2px;
                 left: 2px;
-        
+
                 & .label {
                    background-color: transparent;
                 }
-        
+
                 & .icon {
                     filter: invert();
                 }
             }
         }
-        
+
         #inventory button:disabled {
             opacity: 0.25;
         }
@@ -12228,7 +12231,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 if (typeof callback === 'function') callback();
                 return;
             }
-            
+
             const container = document.getElementById('viewport');
             if (!container) return;
 
@@ -12796,9 +12799,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 "You heard a scream, and the sound was " +
                                 "absolutely not faint."
                         ]);
-        
+
                         const enemyClassname =
                             currentEnemy?.displayClassName || "enemy";
+
                         updateBattleLog(
                             `The <span class="${enemyClassname}">` +
                             `${currentEnemy.name}</span> ${randomMsg}`
@@ -12923,22 +12927,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }, 168); // Reset after animation
         }
 
-        
+
         function animAsh(enemyId, onDone) {
             GameControl.disableControls(); // Block input during animation
             const $enemyLayer = document.querySelector('.layer.enemy');
             if (!$enemyLayer) return;
-        
+
             const $enemyPre = $enemyLayer.querySelector('pre');
             if (!$enemyPre) return;
-        
+
             // Get the ASCII art for the enemy
             const indexedArt = window.ENEMY_ART?.[enemyId];
             if (!indexedArt) { console.warn(`animAsh: No art found for enemyId "${enemyId}"`); return; }
-        
+
             // Format art and apply offsets (just like drawEnemyLayer)
             let art = sceneRenderer.formatArt(indexedArt);
-        
+
             // Apply horizontal offset if specified
             if (indexedArt.offsetX) {
                 art = art
@@ -12946,20 +12950,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     .map(line => ' '.repeat(indexedArt.offsetX) + line)
                     .join('\n');
             }
-        
+
             // Apply vertical offset if specified
             if (indexedArt.offsetY) {
                 art = '\n'.repeat(indexedArt.offsetY) + art;
             }
-        
+
             // Prepare the art as a 2D array
             let artLines = art.split('\n');
             let width = Math.max(...artLines.map(l => l.length));
             let height = artLines.length;
-        
+
             // Pad lines to equal width
             artLines = artLines.map(l => l.padEnd(width, ' '));
-        
+
             // Each cell: {char, y}
             let fragments = [];
             for (let y = 0; y < height; y++) {
@@ -12970,26 +12974,40 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 }
             }
-        
+
+            // Speed multiplier
+            const SPEED_MULTIPLIER = 1.5;
+
             // Animation loop
             let frame = 0;
-            let maxFrames = height + 8;
+            // Reduce required frames proportionally to speed
+            let maxFrames = Math.max(1, Math.round((height + 8) / SPEED_MULTIPLIER));
             function draw() {
                 // Build empty grid
                 let grid = Array.from({ length: height }, () => Array(width).fill(' '));
-        
-                // Drop fragments
+
+                // Drop fragments (use float y internally, round for collisions / drawing)
                 for (let frag of fragments) {
-                    let below = frag.y + 1;
-                    if (below < height && !fragments.some(f => f.x === frag.x && f.y === below)) {
-                        frag.y++;
+                    // ensure frag.y is numeric (it starts as integer)
+                    if (typeof frag.y !== 'number') frag.y = Number(frag.y);
+
+                    const proposedY = Math.round(frag.y + SPEED_MULTIPLIER);
+                    // check if there's a fragment occupying the target integer row below
+                    const blocked = proposedY < height && fragments.some(f => f.x === frag.x && Math.round(f.y) === proposedY);
+
+                    if (proposedY < height && !blocked) {
+                        frag.y += SPEED_MULTIPLIER;
+                        if (frag.y > height - 1) frag.y = height - 1;
                     }
-                    grid[frag.y][frag.x] = frag.char;
+
+                    // draw at rounded position
+                    const drawY = Math.round(frag.y);
+                    grid[drawY][frag.x] = frag.char;
                 }
-        
+
                 // Draw grid in the original <pre>
                 $enemyPre.textContent = grid.map(row => row.join('')).join('\n');
-        
+
                 frame++;
                 if (frame < maxFrames) {
                     requestAnimationFrame(draw);
@@ -12999,9 +13017,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         if (battleTransitionAnimationsEnabled === false || isLevelUpAllocation) {
                             GameControl.enableControls();
                         }
-                    }, 500);
+                    }, Math.round(500 / SPEED_MULTIPLIER)); // time spent on final frame
                 }
             }
+
             playSFX('ash');
             draw();
         }
@@ -15218,11 +15237,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "EROK",
                 escapeDisabled: () => erok.isPetting,
                 onOpen: () => {
-                    Portrait.show('erokIdle');
+                    if (!erok.isPetting) {
+                        Portrait.show('erokIdle');
+                    }
                     stopAllMusic();
                     if (musicEnabled) {
-                        music.erokTheme.play();
                         currentMusic = music.erokTheme;
+                        currentMusic.play();
                         updateNowPlaying(getCurrentTrackName());
                     }
 
@@ -15231,11 +15252,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onClose: () => {
                     erok.say('I am barking happily, stranger!');
                     Portrait.hide();
-                    // Stop Erok's theme and resume exploration music
                     if (currentMusic === music.erokTheme) {
-                        music.erokTheme.pause();
-                        music.erokTheme.currentTime = 0;
-                        currentMusic = null;
+                        stopAllMusic();
                     }
                     resumeExplorationMusic();
                     erok.isActiveOnFloor = false;
@@ -15250,13 +15268,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 getOptions: () => [
                     {
                         id: "pet",
-                        displayText: "Give the dog motivation to give you motivation",
+                        displayText: "give the dog motivation to give you motivation",
                         description: ":)",
                         className: erok.isPetting ? "muted" : undefined,
                     },
                     {
-                        id: "_back",
-                        displayText: "Make the dog sad.",
+                        id: "leave",
+                        displayText: "make the dog sad",
                         description: "... :(",
                         className: erok.isPetting ? "muted" : undefined,
                     },
@@ -15265,19 +15283,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (erok.isPetting) {
                         return;
                     }
-                    
+
                     if (selectedOptionId === "pet") {
                         erok.isPetting = true;
-                        erok.say('holy crap oh my god pet me pet me oh my god holy shit oh god oh fuck oh god');
                         Portrait.show('erokPet');
-                        menu.render();
-                        
-                        // Timeout for when petting animation ends
+                        erok.say('holy crap oh my god pet me pet me oh my god holy shit oh god oh fuck oh god');
                         setTimeout(() => {
                             erok.isPetting = false;
-                            Portrait.show('erokIdle');
+                            if (menu.isOpen() && menu.getCurrentMenuData()?.title === "EROK") {
+                                Portrait.show('erokIdle');
+                            }
                             menu.render();
-                        }, 1540);
+                        }, 2000);
+                    } else if (selectedOptionId === "leave") {
+                        menu.close();
                     }
                 },
             },
@@ -16226,7 +16245,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 luck: 0
             };
             player.levelUp();
-            
+
             // If auto diceroll enabled
             if (autoDicerollEnabled) {
                 rollDiceForLevelUp();
@@ -16317,19 +16336,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const statKey = stat === "hp" ? "maxHp" : stat;
                     return levelUpStatPointsAllocated[statKey] < 2;
                 });
-                
+
                 if (availableStats.length === 0) break;
-                
+
                 const stat = randomEntry(availableStats);
                 const statKey = stat === "hp" ? "maxHp" : stat;
-                
+
                 if (stat === "hp") {
                     player.maxHp++;
                     player.hp = player.maxHp;
                 } else {
                     player[stat]++;
                 }
-                
+
                 levelUpStatPointsAllocated[statKey]++;
                 player.remainingPoints--;
             }
