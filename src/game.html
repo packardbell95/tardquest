@@ -689,13 +689,13 @@
             color: #f00;
         }
 
-        #minimap .vampire {
+        #minimap .vampire,
+        .mapCellDetails .enlargedTile.vampire {
             position: relative;
-            width: 1ch;
 
             &::before {
                 position: absolute;
-                left: 0;
+                left: calc(50% - (1ch / 2));
                 top: 0;
                 width: 1ch;
                 overflow: hidden;
@@ -704,6 +704,10 @@
                 animation: minimapVampireFlap 0.6s infinite;
                 color: #f0f;
             }
+        }
+
+        #minimap .vampire {
+            width: 1ch;
         }
 
         @keyframes minimapVampireFlap {
@@ -1764,52 +1768,14 @@
 
         /* Tooltip styles */
         [role="tooltip"] {
-            opacity: 0;
-            position: absolute;
-            width: auto;
-            height: auto;
+            pointer-events: none;
             min-height: 25px;
             line-height: 25px;
             font-size: 1rem;
             background-color: #000d;
             color: #fff;
-            margin-top: 10px;
             padding: 4px;
-            transform: translateX(-50%);
-            z-index: 100; /* Appear over everything except title screen items */
-        }
-
-        [role="tooltip"].top {
-            transform: translateX(calc(-50% + 4.5px)) translateY(calc(-100% - 20px));
-        }
-
-        [role="tooltip"].bottom {
-            transform: translateX(calc(-50% + 4.5px)) translateY(15px);
-        }
-
-        [role="tooltip"].left {
-            transform: translateX(calc(-100% - 10px)) translateY(calc(-50% - 2.5px));
-        }
-
-        [role="tooltip"].right {
-            transform: translateX(18px) translateY(calc(-50% - 2.5px));
-        }
-
-        [role="tooltip"].active {
-            opacity: 1;
-            transition: opacity 0.1s;
-        }
-
-        [role="tooltip"]::before {
-            content: "";
-            width: 0;
-            height: 0;
-            border: 10px solid transparent;
-            border-top: 0;
-            position: absolute;
-            margin-top: -20px;
-            transform: translateX(-50%);
-            left: 50%;
+            box-shadow: 10px 10px 0 #0006;
         }
 
         .mapCellDetails {
@@ -1821,6 +1787,7 @@
         }
 
         .mapCellDetails .enlargedTile {
+            width: 40px;
             height: 40px;
             aspect-ratio: 1;
             display: flex;
@@ -1830,6 +1797,7 @@
             border: 2px solid #fff;
 
             &.vampire::before {
+                width: 40px;
                 line-height: 42px;
             }
         }
@@ -1869,6 +1837,35 @@
         .player.lets-go {
             display: inline-block;
             animation: letsGo .8s linear infinite;
+        }
+
+        .inventoryTooltip {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border: 2px solid #fff;
+            max-width: 500px;
+        }
+
+        .inventoryTooltip .name {
+            font-size: 1.2em;
+        }
+
+        .inventoryTooltip .details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .playerInputTooltip {
+            padding: 0 1ch;
+            max-width: 500px;
+            border: 0;
+            color: #000;
+            background: #fff;
+
+            &.warning {
+                background: #ff0;
+            }
         }
 
         dialog.modal {
@@ -2566,32 +2563,68 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     <div id="navigationInput">
                         <button
                             name="turn-left"
-                            title="Turn Left"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="top end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Turn Left
+                                </div>
+                            '
                             onclick="turnLeft()"
                         ></button>
                         <button
                             name="forward"
-                            title="Move Forward"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="top end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Move Forward
+                                </div>
+                            '
                             onclick="move('forward')"
                         ></button>
                         <button
                             name="turn-right"
-                            title="Turn Right"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="top end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Turn Right
+                                </div>
+                            '
                             onclick="turnRight()"
                         ></button>
                         <button
                             name="strafe-left"
-                            title="Strafe Left"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="bottom end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Strafe Left
+                                </div>
+                            '
                             onclick="move('strafeLeft')"
                         ></button>
                         <button
                             name="backward"
-                            title="Move Backward"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="bottom end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Move Backward
+                                </div>
+                            '
                             onclick="move('backward')"
                         ></button>
                         <button
                             name="strafe-right"
-                            title="Strafe Right"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="bottom end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Strafe Right
+                                </div>
+                            '
                             onclick="move('strafeRight')"
                         ></button>
                     </div>
@@ -2603,17 +2636,32 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     <div id="battleInput">
                         <button
                             name="attack"
-                            title="KILL THAT SUCKA!"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    KILL THAT SUCKA!
+                                </div>
+                            '
                             onclick="playerAttack()"
                         ></button>
                         <button
                             name="persuade"
-                            title="Persuade the enemy to join your party"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Persuade the enemy to join your party
+                                </div>
+                            '
                             onclick="tryPersuade()"
                         ></button>
                         <button
                             name="run"
-                            title="Run away like a coward"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Run away like a coward
+                                </div>
+                            '
                             onclick="tryRun()"
                         ></button>
                     </div>
@@ -2624,30 +2672,55 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 <div class="grid-container">
                     <button
                         name="previous-page"
-                        title="Previous Page"
+                        data-tooltipgroupid="playerInput"
+                        data-tooltiphtml='
+                            <div class="playerInputTooltip">
+                                Previous Page
+                            </div>
+                        '
                         onclick="menu.previousPage()"
                         disabled="disabled"
                     ></button>
                     <div>
                         <button
                             name="up"
-                            title="Previous Option"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Previous Option
+                                </div>
+                            '
                             onclick="menu.handleInput('arrowup')"
                         ></button>
                         <button
                             name="confirm"
-                            title="Confirm Selection"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Confirm Selection
+                                </div>
+                            '
                             onclick="menu.handleInput('enter')"
                         ></button>
                         <button
                             name="down"
-                            title="Next Option"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Next Option
+                                </div>
+                            '
                             onclick="menu.handleInput('arrowdown')"
                         ></button>
                     </div>
                     <button
                         name="next-page"
-                        title="Next Page"
+                        data-tooltipgroupid="playerInput"
+                        data-tooltiphtml='
+                            <div class="playerInputTooltip">
+                                Next Page
+                            </div>
+                        '
                         onclick="menu.nextPage()"
                         disabled="disabled"
                     ></button>
@@ -2685,6 +2758,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <script src="data/enemyart.js"></script>
     <script src="scripts/gamepad.js"></script>
     <script>
+        Tooltip.groupSettings = {
+            playerInput: {
+                delayMs: 800,
+                hideAfterInteraction: true,
+                position: "left",
+            },
+        };
+        document.querySelectorAll("#playerInput [data-tooltiphtml]")
+            .forEach(($e) => Tooltip.initialize($e));
+
         /**
          * ASCII art that the sceneRenderer uses to draw scenes
          *
@@ -8962,30 +9045,35 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             case "persuade":
                                 enabled = enabled && hasPersuasionAttempts;
                                 if (enabled) {
-                                    $button.setAttribute(
-                                        "title",
-                                        "Persuade the enemy to join your party"
-                                    );
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip">
+                                            Persuade the enemy to join your
+                                            party
+                                        </div>
+                                    `;
                                 } else {
-                                    $button.setAttribute(
-                                        "title",
-                                        "Can't persuade the enemy to join " +
-                                        "your party!"
-                                    );
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip warning">
+                                            Can't persuade the enemy to join
+                                            your party!
+                                        </div>
+                                    `;
                                 }
                                 break;
                             case "run":
                                 enabled = enabled && canRunAway;
                                 if (enabled) {
-                                    $button.setAttribute(
-                                        "title",
-                                        "Run away like a coward"
-                                    );
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip">
+                                            Run away like a coward
+                                        </div>
+                                    `;
                                 } else {
-                                    $button.setAttribute(
-                                        "title",
-                                        "Can't run from this enemy!"
-                                    );
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip warning">
+                                            Can't run from this enemy!
+                                        </div>
+                                    `;
                                 }
                                 break;
                             default:
@@ -11225,7 +11313,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 Object.assign(new Audio("audio/battle5.mp3"), { trackName: "SURPRISE COCKFIGHT! - Xx_TheMilkMan69_xX" }),
             ],
             vampireBattle:
-                Object.assign(new Audio("audio/vampire-battle-theme.mp3"), { trackName: "VAMPIRE BATTLE THEME! - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/vampire-battle-theme.mp3"), { trackName: "Vengeful Fruit - Xx_TheMilkMan69_xX" }),
             vampireLurking:
                 Object.assign(new Audio("audio/lurking.ogg"), { trackName: "Lurking - Packard Bell 95" }),
             merchantTrack:
@@ -11492,7 +11580,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
 
             if (currentMusic === music.vampireBattle) {
-                return "VAMPIRE BATTLE THEME! - Xx_TheMilkMan69_xX";
+                return "Vengeful Fruit - Xx_TheMilkMan69_xX";
             }
 
             if (currentMusic === music.vampireLurking) {
@@ -15841,10 +15929,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const $button = document.createElement("button");
                 $button.className = `${sectionName}-${objectDefinition.id}`;
                 $button.dataset.id = objectDefinition.id;
+
                 $button.setAttribute(
-                    "title",
-                    `${objectDefinition.name}: ${objectDefinition.description}`
+                    'data-tooltipHtml',
+                    `<div class="inventoryTooltip">
+                        <div class="name">${objectDefinition.name}</div>
+                        <div class="details">
+                            ${objectDefinition.description}
+                        </div>
+                    </div>`
                 );
+                $button.setAttribute('data-tooltipPosition', 'left');
+                $button.setAttribute('data-tooltipGroupId', 'inventorySidebar');
+
                 // Reflect current enabled state on creation
                 if (!InventorySidebar.enabled) {
                     $button.setAttribute('disabled', 'true');
@@ -15865,6 +15962,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 $container.appendChild($icon);
                 $container.appendChild($label);
                 $button.appendChild($container);
+                Tooltip.initialize($button);
 
                 return $button;
             },
@@ -16676,6 +16774,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }, 500);
             }, 500);
         }
+
+        document.querySelectorAll("#inventory > div[name]").forEach(($e) => {
+            const isScrollable = ["items", "weapons", "armor", "rings"]
+                .includes($e.getAttribute("name"));
+
+            if (! isScrollable) {
+                return;
+            }
+
+            addEventListener(
+                "wheel",
+                function (e) {
+                    $e.scrollTop += e.deltaY;
+                }
+            );
+        });
 
         document.addEventListener('keydown', function titleScreenHandler(e) {
             if ($titleScreen.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
