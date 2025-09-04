@@ -338,12 +338,23 @@ class Menu {
 
         this.#elements.$list.replaceWith($list);
         this.#elements.$list = $list; // Make sure the reference is updated too
+        const escapeDisabled = this.checkIfEscapeIsDisabled(activeMenu);
 
-        if (activeMenu.escapeDisabled) {
+        if (escapeDisabled) {
             this.#elements.$escapeMessage.classList.add("hidden");
         } else {
             this.#elements.$escapeMessage.classList.remove("hidden");
         }
+    }
+
+    checkIfEscapeIsDisabled(activeMenu = null) {
+        activeMenu = activeMenu || this.getActiveMenu();
+
+        return Boolean(
+            typeof activeMenu.escapeDisabled === "function"
+                ? activeMenu.escapeDisabled()
+                : (activeMenu?.escapeDisabled || false)
+        );
     }
 
     getItemIndex() {
@@ -458,7 +469,7 @@ class Menu {
     }
 
     goToPreviousMenu() {
-        if (this.getActiveMenu()?.escapeDisabled) {
+        if (this.checkIfEscapeIsDisabled()) {
             return;
         }
 

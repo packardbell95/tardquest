@@ -757,6 +757,10 @@
             display: none !important;
         }
 
+        .invisible {
+            visibility: hidden !important;
+        }
+
         #inputBox {
             display: none;
             position: absolute;
@@ -2389,8 +2393,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 </div>
                 <progress-bar
                     id="statHp"
-                    cautionBelowPercentage="26"
-                    dangerBelowPercentage="11"
+                    cautionAtOrBelowPercentage="25"
+                    dangerAtOrBelowPercentage="10"
                 ></progress-bar>
 
                 <div>
@@ -2407,8 +2411,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 </div>
                 <progress-bar
                     id="statLoad"
-                    cautionAbovePercentage="50"
-                    dangerAbovePercentage="80"
+                    cautionAtOrAbovePercentage="50"
+                    dangerAtOrAbovePercentage="80"
                     emptyColor="#000"
                     filledColor="#f04"
                 ></progress-bar>
@@ -8106,7 +8110,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             hide: () => {
                 clearTimeout(Portrait.timer);
                 document.getElementById('portraitArtOverlay').classList.add('hidden');
-                document.getElementById('minimapContainer').classList.remove('hidden');
+                document.getElementById('minimapContainer').classList.remove('invisible');
             },
             show: (portraitName) => {
                 const $overlay = document.getElementById('portraitArtOverlay');
@@ -8123,7 +8127,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return;
                 }
 
-                document.getElementById('minimapContainer').classList.add('hidden');
+                document.getElementById('minimapContainer').classList.add('invisible');
 
                 clearTimeout(Portrait.timer);
                 Portrait.activeFrame = 0;
@@ -9029,7 +9033,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         updateBattleLog(
                             `You <span class="action">chug the can,</span> ` +
                             `filling your mouth with the flavor of ` +
-                            `<span class="END">boiled socks. ` +
+                            `${waveText("boiled socks.", "END").outerHTML} ` +
                             `<span class="HP">+5 HP</span>`
                         );
 
@@ -10581,7 +10585,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             displayName: "GAY COCKSUCKING VAMPIRE",
             displayClassName: "gay",
             isActiveOnFloor: false,
-            baseHp: 400,
+            baseHp: 100,
             playerStepsUntilActive: Infinity,
             x: null,
             y: null,
@@ -10607,9 +10611,37 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
             },
             setPlayerStepsUntilActive: function(override = null) {
-                vampire.playerStepsUntilActive = typeof override !== "number"
-                    ? MAP.countPassableCells() * 2
-                    : override;
+                if (typeof override === "number") {
+                    vampire.playerStepsUntilActive = override;
+                    return;
+                }
+
+                const mapEntrance = MAP.getEntrance();
+                const mapExit = MAP.locate("exit");
+                const optimalPathLength = MAP.findPath(
+                    [ mapEntrance.x, mapEntrance.y ],
+                    [ mapExit.x, mapExit.y ]
+                )?.length || 0;
+
+                if (optimalPathLength <= 0) {
+                    console.error(
+                        "Cannot determine the map's optimal path length",
+                        { mapEntrance, mapExit }
+                    );
+                    vampire.playerStepsUntilActive = Infinity;
+                    return;
+                }
+
+                const luckMod = getEffectiveStat('luck') * 0.01;
+                const luckFloor = Math.max(luckMod - 0.5, 0);
+                const luckBoost = luckFloor + (Math.random() * luckMod);
+                const floorDeboost = floor * 0.05;
+                const modifier = 1.2 - floorDeboost + luckBoost;
+                const calculatedSteps =
+                    Math.max(Math.round(optimalPathLength * modifier), 10);
+                const steps = Math.max(calculatedSteps, optimalPathLength);
+
+                vampire.playerStepsUntilActive = steps;
             },
             isAt: function(x, y) {
                 return (
@@ -10733,13 +10765,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 startEncounter("vampire", vampire.getEncounterOverrides());
             },
             getEncounterOverrides: function() {
+                const baseAttack = enemies.find(e => e.id === "vampire").attack;
+                const playerMod = Math.max(Math.round(player.strength / 2), 0);
+                const lowMod = Math.max((vampire.level - 1) * 5, 0);
+                const highMod = Math.max((vampire.level - 1) * 10, 0);
+
                 return ({
                     hp: Math.ceil(
-                        vampire.baseHp + player.maxHp + (vampire.level * 200)
+                        vampire.baseHp + (10 * (floor - 1)) +
+                        Math.max(Math.round(player.maxHp / 2), 0) +
+                        (Math.max(vampire.level - 1, 0) * 100)
                     ),
                     attack: [
-                        35 + player.strength + (vampire.level * 5),
-                        50 + player.strength + (vampire.level * 10),
+                        baseAttack[0] + playerMod + lowMod,
+                        baseAttack[1] + playerMod + highMod,
                     ],
                 });
             },
@@ -10776,7 +10815,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 );
 
                 vampire.level++;
-                const stepsUntilReactivation = Math.max(5 - vampire.level, 1);
+                const stepsUntilReactivation =
+                    Math.max(10 - (vampire.level * 2), 1);
                 vampire.setPlayerStepsUntilActive(
                     player.stepsTakenOnCurrentFloor + stepsUntilReactivation
                 );
@@ -10922,7 +10962,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 13,
-                attack: [2, 5],
+                attack: [1, 5],
                 bitcoins: 4,
                 talkSlots: [
                     ["Sss...", "Hrk!", "Glorp", "Snail", "Halt!", "Beware"],
@@ -10944,7 +10984,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 9,
-                attack: [3, 6],
+                attack: [1, 5],
                 bitcoins: 3,
                 voice: {
                     pitch: 125,
@@ -10959,7 +10999,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 8,
-                attack: [4, 6],
+                attack: [1, 5],
                 bitcoins: 2,
                 voice: {
                     pitch: 80,
@@ -10974,7 +11014,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 25,
-                attack: [8, 14],
+                attack: [1, 5],
                 bitcoins: 5,
                 voice: {
                     pitch: 95,
@@ -10989,7 +11029,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 17,
-                attack: [4, 7],
+                attack: [1, 5],
                 bitcoins: 4,
                 voice: {
                     pitch: 33,
@@ -11004,7 +11044,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 23,
-                attack: [9, 16],
+                attack: [1, 5],
                 bitcoins: 4,
                 voice: {
                     pitch: 225,
@@ -11019,7 +11059,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 27,
-                attack: [8, 14],
+                attack: [1, 5],
                 bitcoins: 3,
                 voice: {
                     pitch: 174,
@@ -11034,7 +11074,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 28,
-                attack: [8, 13],
+                attack: [1, 5],
                 bitcoins: 4,
                 talkSlots: [
                     ["Ugh", "LUG", "Arrgh", "UNG", "Borf", "AHHHHHHH", "Bunginga"],
@@ -11055,7 +11095,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 15,
-                attack: [4, 7],
+                attack: [1, 5],
                 bitcoins: 2,
                 voice: {
                     pitch: 42,
@@ -11070,7 +11110,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: true,
                 hp: 14,
-                attack: [4, 6],
+                attack: [1, 5],
                 bitcoins: 4,
                 voice: {
                     pitch: 36,
@@ -11085,7 +11125,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: "enemy",
                 isWild: false,
                 hp: 140,
-                attack: [10, 16],
+                attack: [1, 5],
                 bitcoins: 100,
                 voice: {
                     pitch: 142,
@@ -11100,7 +11140,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayClassName: vampire.displayClassName,
                 isWild: false,
                 hp: vampire.baseHp,
-                attack: [35, 50],
+                attack: [1, 5],
                 bitcoins: 40,
                 voice: vampire.voice,
             },
@@ -11732,10 +11772,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     MAP.setCell(x, y, "bloodyCrater");
                     playSFX('scream');
                     erok.say('i died oh noes', true);
+
+                    // You better believe there's a price to pay
+                    const previousLuck = player.luck;
+                    player.luck = Math.max(player.luck - 10, 1);
+                    const badLuck = previousLuck - player.luck;
+
                     updateBattleLog(
-                        'OH NO! <span class="friendly">' +
-                        'Erok</span> has been ' +
-                        '<span class="action">blown the fuck up</span>! You monster...'
+                        `OH NO! <span class="friendly">Erok</span> has been ` +
+                        `<span class="action">blown the fuck up!</span> ` +
+                        `You monster... ` +
+                        `<strong class="enemy">-${badLuck} LUCK</strong>`
                     );
                 },
             },
@@ -12856,7 +12903,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function enemyAttack() {
             // Base damage + boost damage, boost damage scaled every 2 floors
-            const damage = numberBetween(1, 5) + Math.floor(floor / 2);
+            const damage = numberBetween(
+                currentEnemy?.attack?.[0] || 1,
+                currentEnemy?.attack?.[1] || 5
+            ) + Math.floor(floor / 2);
 
             // Calculate damage based on player's defense
             const defense = getEffectiveStat('defense');
@@ -15193,7 +15243,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "GAMBLER",
                 onOpen: () => {
                     Portrait.show('gambler');
-                    gambler.say('Place yer bets!');
+                    gambler.say(
+                        player.inventory.hasEquippedRing("ringGamble")
+                            ? 'Cheesed to meet you!'
+                            : 'Place yer bets!'
+                    );
                     playGamblersTheme();
                 },
                 onClose: () => {
@@ -15207,10 +15261,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 landingHtml: () => {
                     return (
-                        `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
-                        `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
-                        `Just <span class="tooExpensive">${gambler.playPrice}</span> to play!"\n\n` +
-                        `You have <span class="BTC">₿ ${player.bitcoins.toLocaleString(undefined)}</span> in your wallet`
+                        `<span class="gambler">&lt;GAMBLER&gt;</span> ` +
+                        `"Welcome, dungeon dweller! ` +
+                        `<span class="friendly">Roll a 12</span> and ` +
+                        `<span class="BTC">boost one of yer stats.</span> ` +
+                        `Just <span class="tooExpensive">` +
+                        `₿ ${gambler.playPrice}</span> to play!"\n\n` +
+                        `You have <span class="BTC">₿ ` +
+                        `${player.bitcoins.toLocaleString(undefined)}</span> ` +
+                        `in your wallet`
                     );
                 },
                 getOptions: () => {
