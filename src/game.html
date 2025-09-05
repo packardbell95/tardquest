@@ -80,6 +80,15 @@
             text-decoration: line-through;
         }
 
+        .upside-down {
+            display: inline-block;
+            transform: scaleY(-1);
+        }
+
+        .ch {
+            width: 1ch;
+        }
+
         a:visited,
         a:link {
             color: #fff;
@@ -680,6 +689,49 @@
             color: #f00;
         }
 
+        #minimap .vampire,
+        .mapCellDetails .enlargedTile.vampire {
+            position: relative;
+
+            &::before {
+                position: absolute;
+                left: calc(50% - (1ch / 2));
+                top: 0;
+                width: 1ch;
+                overflow: hidden;
+                content: " ";
+                display: inline-block;
+                animation: minimapVampireFlap 0.6s infinite;
+                color: #f0f;
+            }
+        }
+
+        #minimap .vampire {
+            width: 1ch;
+        }
+
+        @keyframes minimapVampireFlap {
+            0%, 25% {
+                content: "v";
+                transform: translateY(1px) scaleY(1);
+            }
+
+            25.01%, 50% {
+                content: "m";
+                transform: translateY(0) scaleY(1);
+            }
+
+            50.01%, 75% {
+                content: "w";
+                transform: translateY(-1px) scaleY(-1);
+            }
+
+            75.01%, 100% {
+                content: "m";
+                transform: translateY(-1px) scaleY(1);
+            }
+        }
+
         #portraitArtOverlay.portrait-art {
             position: absolute;
             top: 107px;
@@ -707,6 +759,10 @@
 
         .hidden {
             display: none !important;
+        }
+
+        .invisible {
+            visibility: hidden !important;
         }
 
         #inputBox {
@@ -1712,52 +1768,14 @@
 
         /* Tooltip styles */
         [role="tooltip"] {
-            opacity: 0;
-            position: absolute;
-            width: auto;
-            height: auto;
+            pointer-events: none;
             min-height: 25px;
             line-height: 25px;
             font-size: 1rem;
             background-color: #000d;
             color: #fff;
-            margin-top: 10px;
             padding: 4px;
-            transform: translateX(-50%);
-            z-index: 100; /* Appear over everything except title screen items */
-        }
-
-        [role="tooltip"].top {
-            transform: translateX(calc(-50% + 4.5px)) translateY(calc(-100% - 20px));
-        }
-
-        [role="tooltip"].bottom {
-            transform: translateX(calc(-50% + 4.5px)) translateY(15px);
-        }
-
-        [role="tooltip"].left {
-            transform: translateX(calc(-100% - 10px)) translateY(calc(-50% - 2.5px));
-        }
-
-        [role="tooltip"].right {
-            transform: translateX(18px) translateY(calc(-50% - 2.5px));
-        }
-
-        [role="tooltip"].active {
-            opacity: 1;
-            transition: opacity 0.1s;
-        }
-
-        [role="tooltip"]::before {
-            content: "";
-            width: 0;
-            height: 0;
-            border: 10px solid transparent;
-            border-top: 0;
-            position: absolute;
-            margin-top: -20px;
-            transform: translateX(-50%);
-            left: 50%;
+            box-shadow: 10px 10px 0 #0006;
         }
 
         .mapCellDetails {
@@ -1769,6 +1787,7 @@
         }
 
         .mapCellDetails .enlargedTile {
+            width: 40px;
             height: 40px;
             aspect-ratio: 1;
             display: flex;
@@ -1776,6 +1795,11 @@
             align-items: center;
             font-size: 36px;
             border: 2px solid #fff;
+
+            &.vampire::before {
+                width: 40px;
+                line-height: 42px;
+            }
         }
 
         .mapCellDetails .details {
@@ -1813,6 +1837,35 @@
         .player.lets-go {
             display: inline-block;
             animation: letsGo .8s linear infinite;
+        }
+
+        .inventoryTooltip {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border: 2px solid #fff;
+            max-width: 500px;
+        }
+
+        .inventoryTooltip .name {
+            font-size: 1.2em;
+        }
+
+        .inventoryTooltip .details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .playerInputTooltip {
+            padding: 0 1ch;
+            max-width: 500px;
+            border: 0;
+            color: #000;
+            background: #fff;
+
+            &.warning {
+                background: #ff0;
+            }
         }
 
         dialog.modal {
@@ -1998,6 +2051,224 @@
             aspect-ratio: 1;
             vertical-align: middle;
         }
+
+        .gay {
+            background: linear-gradient(
+                90deg,
+                #E60000  0%, #E60000  8%,
+                #FF8E00  8%, #FF8E00 16%,
+                #FFEF00 16%, #FFEF00 25%,
+                #00821B 25%, #00821B 33%,
+                #004BFF 33%, #004BFF 42%,
+                #780089 42%, #780089 50%,
+                #E60000 50%, #E60000 58%,
+                #FF8E00 58%, #FF8E00 67%,
+                #FFEF00 67%, #FFEF00 75%,
+                #00821B 75%, #00821B 83%,
+                #004BFF 83%, #004BFF 92%,
+                #780089 92%, #780089 100%
+            );
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            animation: gayness 1s linear infinite;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes gayness {
+            from {
+                background-position: 0% 50%;
+            }
+            to {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* Wave text */
+        @property --waveTextPhase {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: true;
+        }
+
+        /* Optional: declare percentage custom properties for nicer interpolation */
+        @property --brightnessMaxPct {
+            syntax: "<percentage>";
+            initial-value: 140%;
+            inherits: true;
+        }
+
+        @property --contrastMaxPct {
+            syntax: "<percentage>";
+            initial-value: 120%;
+            inherits: true;
+        }
+
+        .waveText {
+            display: inline-block;
+
+            /* Wave geometry and timing */
+            --amplitudePx: 2px;
+            --stepAngle: 22.5deg;
+            --speedSec: 1.2s;
+
+            /* Animation phase accumulator */
+            --waveTextPhase: 0deg;
+
+            /* Filter maxima (tweak to taste) */
+            --brightnessMaxPct: 140%;
+            --contrastMaxPct: 120%;
+
+            animation: wave-text-phase var(--speedSec) linear infinite;
+        }
+
+        /* Each letter sits on its own phase offset via --i (we set this in markup) */
+        .waveText > span {
+            display: inline-block;
+
+            /* We compute the instantaneous angle and its sine once, then reuse it */
+            --angleNow: calc(
+                var(--waveTextPhase) + var(--i) * var(--stepAngle)
+            );
+            --sineNow: sin(var(--angleNow));
+
+            /* Positive-only component: 0 when at/below baseline, 0..1 when above */
+            --sinePositive: max(var(--sineNow), 0);
+
+            /* Vertical wobble */
+            transform: translateY(
+                calc(var(--amplitudePx) * var(--sineNow))
+            );
+
+            /* Filter modulation:
+               - At/below baseline: brightness/contrast are 100%.
+               - Above baseline: ease up to the configured maxima. */
+            color: oklch(
+                from currentColor
+                calc(l + 0.5 * var(--sinePositive))
+                calc(c + 0.2 * var(--sinePositive))
+                h
+            );
+
+            /* We hint the browser since we animate transform and filter */
+            will-change: transform, filter;
+        }
+
+        @keyframes wave-text-phase {
+            to {
+                --waveTextPhase: 360deg;
+            }
+        }
+
+        #vampireFocalPoint {
+            position: fixed;
+            z-index: 10;
+            inset: 0;
+            pointer-events: none;
+            background: #f00;
+
+            --center-x: 50%;
+            --center-y: 50%;
+            --radius-start: 240px;
+            --radius-end: 16px;
+
+            clip-path:
+                circle(var(--radius-start) at var(--center-x) var(--center-y));
+            opacity: 0;
+
+            will-change: clip-path, opacity;
+        }
+
+        @keyframes vampireFocalPointShrinkFade {
+            0% {
+                clip-path: circle(var(--radius-start)
+                    at var(--center-x) var(--center-y));
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            65% {
+                clip-path: circle(var(--radius-end)
+                    at var(--center-x) var(--center-y));
+                opacity: 1;
+            }
+            100% {
+                clip-path: circle(var(--radius-end)
+                    at var(--center-x) var(--center-y));
+                opacity: 0;
+            }
+        }
+
+        /* We add this class from JS to play the animation. */
+        #vampireFocalPoint.is-animating {
+            animation-name: vampireFocalPointShrinkFade;
+            animation-duration: 700ms;
+            animation-timing-function: cubic-bezier(0.22, 1, 0.66, 1);
+            animation-fill-mode: forwards;
+        }
+
+        @property --hole-radius {
+            syntax: '<length>';
+            inherits: false;
+            initial-value: 240px;
+        }
+
+        #vampireFocalPointDesaturationOverlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9;
+
+            backdrop-filter: saturate(0);
+            background: rgba(0, 0, 0, 0.1);
+
+            --center-x: 50%;
+            --center-y: 50%;
+            --radius-start: 240px;
+            --radius-end: 16px;
+            --hole-radius: var(--radius-start);
+
+            -webkit-mask: radial-gradient(
+                circle var(--hole-radius) at var(--center-x) var(--center-y),
+                transparent 0 calc(var(--hole-radius) + 1px),
+                #000 calc(var(--hole-radius) + 1px) 100%
+            );
+            mask: radial-gradient(
+                circle var(--hole-radius) at var(--center-x) var(--center-y),
+                transparent 0 calc(var(--hole-radius) + 1px),
+                #000 calc(var(--hole-radius) + 1px) 100%
+            );
+
+            opacity: 0;
+            will-change: opacity, mask, -webkit-mask;
+        }
+
+        /* Shrink the hole, then fade the overlay away. */
+        @keyframes vampireFocalPointDesaturationOverlayShrinkFade {
+            0% {
+                --hole-radius: var(--radius-start);
+                opacity: 1;
+            }
+            70% {
+                --hole-radius: var(--radius-end);
+                opacity: 1;
+            }
+            100% {
+                --hole-radius: var(--radius-end);
+                opacity: 0;
+            }
+        }
+
+        /* We add this class from JS to trigger the animation. */
+        #vampireFocalPointDesaturationOverlay.is-animating {
+            animation-name: vampireFocalPointDesaturationOverlayShrinkFade;
+            animation-duration: 700ms;
+            animation-timing-function: cubic-bezier(0.22, 1, 0.66, 1);
+            animation-fill-mode: forwards;
+        }
     </style>
 </head>
 <body>
@@ -2119,8 +2390,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 </div>
                 <progress-bar
                     id="statHp"
-                    cautionBelowPercentage="26"
-                    dangerBelowPercentage="11"
+                    cautionAtOrBelowPercentage="25"
+                    dangerAtOrBelowPercentage="10"
                 ></progress-bar>
 
                 <div>
@@ -2137,8 +2408,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 </div>
                 <progress-bar
                     id="statLoad"
-                    cautionAbovePercentage="50"
-                    dangerAbovePercentage="80"
+                    cautionAtOrAbovePercentage="50"
+                    dangerAtOrAbovePercentage="80"
                     emptyColor="#000"
                     filledColor="#f04"
                 ></progress-bar>
@@ -2292,32 +2563,68 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     <div id="navigationInput">
                         <button
                             name="turn-left"
-                            title="Turn Left"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="top end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Turn Left
+                                </div>
+                            '
                             onclick="turnLeft()"
                         ></button>
                         <button
                             name="forward"
-                            title="Move Forward"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="top end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Move Forward
+                                </div>
+                            '
                             onclick="move('forward')"
                         ></button>
                         <button
                             name="turn-right"
-                            title="Turn Right"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="top end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Turn Right
+                                </div>
+                            '
                             onclick="turnRight()"
                         ></button>
                         <button
                             name="strafe-left"
-                            title="Strafe Left"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="bottom end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Strafe Left
+                                </div>
+                            '
                             onclick="move('strafeLeft')"
                         ></button>
                         <button
                             name="backward"
-                            title="Move Backward"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="bottom end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Move Backward
+                                </div>
+                            '
                             onclick="move('backward')"
                         ></button>
                         <button
                             name="strafe-right"
-                            title="Strafe Right"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="bottom end"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Strafe Right
+                                </div>
+                            '
                             onclick="move('strafeRight')"
                         ></button>
                     </div>
@@ -2329,17 +2636,32 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     <div id="battleInput">
                         <button
                             name="attack"
-                            title="KILL THAT SUCKA!"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    KILL THAT SUCKA!
+                                </div>
+                            '
                             onclick="playerAttack()"
                         ></button>
                         <button
                             name="persuade"
-                            title="Persuade the enemy to join your party"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Persuade the enemy to join your party
+                                </div>
+                            '
                             onclick="tryPersuade()"
                         ></button>
                         <button
                             name="run"
-                            title="Run away like a coward"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Run away like a coward
+                                </div>
+                            '
                             onclick="tryRun()"
                         ></button>
                     </div>
@@ -2350,30 +2672,55 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 <div class="grid-container">
                     <button
                         name="previous-page"
-                        title="Previous Page"
+                        data-tooltipgroupid="playerInput"
+                        data-tooltiphtml='
+                            <div class="playerInputTooltip">
+                                Previous Page
+                            </div>
+                        '
                         onclick="menu.previousPage()"
                         disabled="disabled"
                     ></button>
                     <div>
                         <button
                             name="up"
-                            title="Previous Option"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Previous Option
+                                </div>
+                            '
                             onclick="menu.handleInput('arrowup')"
                         ></button>
                         <button
                             name="confirm"
-                            title="Confirm Selection"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Confirm Selection
+                                </div>
+                            '
                             onclick="menu.handleInput('enter')"
                         ></button>
                         <button
                             name="down"
-                            title="Next Option"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltiphtml='
+                                <div class="playerInputTooltip">
+                                    Next Option
+                                </div>
+                            '
                             onclick="menu.handleInput('arrowdown')"
                         ></button>
                     </div>
                     <button
                         name="next-page"
-                        title="Next Page"
+                        data-tooltipgroupid="playerInput"
+                        data-tooltiphtml='
+                            <div class="playerInputTooltip">
+                                Next Page
+                            </div>
+                        '
                         onclick="menu.nextPage()"
                         disabled="disabled"
                     ></button>
@@ -2394,8 +2741,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 <span id="controllerStatusText"></span>
             </div>
         </div>
-
     </div>
+    <div id="vampireFocalPoint"></div>
+    <div id="vampireFocalPointDesaturationOverlay"></div>
 
     <script src="https://vocapepper.com/tardquest/mods/tardboard.js"></script>
     <script src="scripts/no-arrow-key-scroll.js"></script>
@@ -2410,6 +2758,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <script src="data/enemyart.js"></script>
     <script src="scripts/gamepad.js"></script>
     <script>
+        Tooltip.groupSettings = {
+            playerInput: {
+                delayMs: 800,
+                hideAfterInteraction: true,
+                position: "left",
+            },
+        };
+        document.querySelectorAll("#playerInput [data-tooltiphtml]")
+            .forEach(($e) => Tooltip.initialize($e));
+
         /**
          * ASCII art that the sceneRenderer uses to draw scenes
          *
@@ -7243,6 +7601,203 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ],
             },
 
+            vampire: {
+                relativeColor: { r: 247, g: 119, b: 247 },
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 14 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 14 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 12 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 16, y: 10 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 33, y: 10 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 11 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 4, y: 10 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 20, y: 10 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 43, y: 11 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -5, y: 13 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 12 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 11, y: 12 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 27, y: 12 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 34, y: 12 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 14 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 4, y: 13 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 9, y: 13 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 19, y: 13 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 24, y: 13 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 32, y: 13 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 37, y: 13 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 42, y: 13 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 14 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 14 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 14 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 14 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 14 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 14 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 14 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%▄%▄
+                            %%%%%%%%███
+                            %%%▄███▄▀█▀▄███▄
+                            %%███████████████
+                            %%█████▀███▀█████
+                            %%██▀%% ▀█▀ %%▀██
+                            %%█%%%%▀▀%▀▀%%%%█
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %
+                            %
+                            %▄██▄█▄██▄
+                            ███████████
+                            █▀%%▀█▀%%▀█
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %
+                            %
+                            ▄▀▄▀▄
+                            ▀%%%▀
+                        `,
+                    },
+                    {
+                        data: `
+                            π
+                        `,
+                    },
+                    {
+                        data: `
+                            π
+                        `,
+                    },
+                ],
+            },
+
             crater: {
                 positions: {
                     p0_0: {
@@ -7638,7 +8193,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             hide: () => {
                 clearTimeout(Portrait.timer);
                 document.getElementById('portraitArtOverlay').classList.add('hidden');
-                document.getElementById('minimapContainer').classList.remove('hidden');
+                document.getElementById('minimapContainer').classList.remove('invisible');
             },
             show: (portraitName) => {
                 const $overlay = document.getElementById('portraitArtOverlay');
@@ -7655,7 +8210,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return;
                 }
 
-                document.getElementById('minimapContainer').classList.add('hidden');
+                document.getElementById('minimapContainer').classList.add('invisible');
 
                 clearTimeout(Portrait.timer);
                 Portrait.activeFrame = 0;
@@ -7699,6 +8254,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 "PS2": "pee ess two",
                 "lughead": "lug head",
                 "the": "theee",
+                "goodbye": "good bye",
+                "tasty": "tay stee",
+                "consent": "cun sent",
+                "date": "daytt",
             },
 
             speak: (sentence, voiceOptions, onEnded) => {
@@ -7914,15 +8473,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const index = i % 2 === 0 ? i - (i / 2) : view[depth].length - Math.floor(i / 2) - 1;
                         const isCentered = i === view[depth].length - 1;
 
-                        sceneLayer = sceneRenderer.draw(
-                            sceneLayer,
-                            view[depth][index],
-                            depth,
-                            maxPlayerVisibilityDepth,
-                            index,
-                            isCentered,
-                            maxBrightness
-                        );
+                        for (let j=0; j<view[depth][index].length; j++) {
+                            sceneLayer = sceneRenderer.draw(
+                                sceneLayer,
+                                view[depth][index][j],
+                                depth,
+                                maxPlayerVisibilityDepth,
+                                index,
+                                isCentered,
+                                maxBrightness
+                            );
+                        }
                     }
 
                     scene +=
@@ -7970,14 +8531,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     const offsetEnd = depth === 0 ? 1 : depth;
 
                     for (let offset = offsetStart; offset <= offsetEnd; offset++) {
-                        if (depth > fixedViewDepth) {
-                            row.push(new MapCell('darkness'));
-                            continue;
-                        }
+                        const gridCell = [];
                         const lateralOffset = offset * dir.flip;
-                        const tx = x + dir.dx * depth + dir.lateral.dx * lateralOffset;
-                        const ty = y + dir.dy * depth + dir.lateral.dy * lateralOffset;
-                        row.push(MAP.getCell(tx, ty));
+                        const tx =
+                            x + dir.dx * depth + dir.lateral.dx * lateralOffset;
+                        const ty =
+                            y + dir.dy * depth + dir.lateral.dy * lateralOffset;
+
+                        gridCell.push(
+                            depth > fixedViewDepth
+                                ? new MapCell('darkness')
+                                : MAP.getCell(tx, ty)
+                        );
+
+                        // NPC check
+                        // Only the vampire is here for now until we get the
+                        // other NPCs organized together
+                        if (vampire.isAt(tx, ty)) {
+                            gridCell.push({ type: "vampire" });
+                        }
+
+                        row.push(gridCell);
                     }
 
                     grid.push(row);
@@ -8296,13 +8870,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             update: () => {
                 if (gameOver) {
-                    const $mouseControl = document.getElementById('mouseControl');
+                    const $mouseControl =
+                        document.getElementById('mouseControl');
                     if ($mouseControl) {
                         $mouseControl.style.display = 'none';
                     }
                     return;
                 } else {
-                    const $mouseControl = document.getElementById('mouseControl');
+                    const $mouseControl =
+                        document.getElementById('mouseControl');
                     if ($mouseControl) {
                         $mouseControl.style.display = 'block';
                     }
@@ -8451,16 +9027,59 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             updateCombatControls: () => {
                 const hasPersuasionAttempts =
+                    currentEnemy?.id !== "vampire" &&
                     persuasionAttempts < getEffectiveStat('persuasionAttempts');
+
+                const canRunAway = currentEnemy?.id !== "vampire";
 
                 document
                     .querySelectorAll('#playerInput .section.battle [name]')
                     .forEach(($button) => {
-                        const enabled =
-                            GameControl.enabled && (
-                                $button.getAttribute('name') !== "persuade" ||
-                                hasPersuasionAttempts
-                            );
+                        const buttonName = $button.getAttribute('name');
+                        let enabled = GameControl.enabled;
+
+                        switch (buttonName) {
+                            case "attack":
+                                // Nothing to do
+                                break;
+                            case "persuade":
+                                enabled = enabled && hasPersuasionAttempts;
+                                if (enabled) {
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip">
+                                            Persuade the enemy to join your
+                                            party
+                                        </div>
+                                    `;
+                                } else {
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip warning">
+                                            Can't persuade the enemy to join
+                                            your party!
+                                        </div>
+                                    `;
+                                }
+                                break;
+                            case "run":
+                                enabled = enabled && canRunAway;
+                                if (enabled) {
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip">
+                                            Run away like a coward
+                                        </div>
+                                    `;
+                                } else {
+                                    $button.dataset.tooltiphtml = `
+                                        <div class="playerInputTooltip warning">
+                                            Can't run from this enemy!
+                                        </div>
+                                    `;
+                                }
+                                break;
+                            default:
+                                console.warn("Unknown button", { buttonName });
+                                break;
+                        }
 
                         enabled
                             ? $button.removeAttribute("disabled")
@@ -8502,7 +9121,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         updateBattleLog(
                             `You <span class="action">chug the can,</span> ` +
                             `filling your mouth with the flavor of ` +
-                            `<span class="END">boiled socks. ` +
+                            `${waveText("boiled socks.", "END").outerHTML} ` +
                             `<span class="HP">+5 HP</span>`
                         );
 
@@ -8639,19 +9258,36 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 brickOfC4: {
                     article: 'a',
                     name: "BRICK OF C-4",
-                    description: "An incendiary plastic explosive. Great for turning anything into nothing real quick! +3 LOAD",
+                    description:
+                        "An incendiary plastic explosive. Great for turning " +
+                        "anything into nothing real quick! +3 LOAD",
                     use: () => {
                         setTimeout(() => playSFX('explosion'), 50);
                         explosionAnimation(() => {
                             if (player.inCombat) {
-                                const dmg = Math.max(20, Math.round(Math.random() * 10) * 5);
+                                const dmg = Math.max(
+                                    20,
+                                    Math.round(Math.random() * 10) * 5
+                                );
                                 currentEnemy.hp -= dmg;
-                                updateBattleLog(`You exploded the shit out of <span class="enemy">${currentEnemy.name}</span> for <span class="HP">${dmg} HP</span>!!!`);
+
+                                const enemyClassname =
+                                    currentEnemy?.displayClassName || "enemy";
+                                updateBattleLog(
+                                    `You exploded the shit out of the ` +
+                                    `<span class="${enemyClassname}">` +
+                                    `${currentEnemy.name}</span> for ` +
+                                    `<span class="HP">${dmg} HP</span>!!!`
+                                );
+
                                 if (currentEnemy.hp <= 0) {
                                     playSFX('scream');
                                     const nx = player.x + DX[player.dir];
                                     const ny = player.y + DY[player.dir];
-                                    if (['floor', 'rubble1', 'rubble2'].includes(MAP.getCell(nx, ny)?.type)) {
+                                    const setBloodyCrater =
+                                        ['floor', 'rubble1', 'rubble2']
+                                        .includes(MAP.getCell(nx, ny)?.type);
+                                    if (setBloodyCrater) {
                                         MAP.setCell(nx, ny, "bloodyCrater");
                                     }
                                 }
@@ -8687,7 +9323,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                     for (let x=xMin; x<=xMax; x++) {
                                         const cell = MAP.getCell(x, y);
                                         const isVisible =
-                                            typeof cell.isVisible !== 'function' ||
+                                            typeof cell.isVisible !==
+                                                'function' ||
                                             cell.isVisible();
 
                                         if (isVisible) {
@@ -8698,7 +9335,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 }
 
                                 GameControl.update();
-                                updateBattleLog('<span class="action">KABOOM!</span> The dungeon walls crumble like charred toast!');
+                                updateBattleLog(
+                                    '<span class="action">KABOOM!</span> The ' +
+                                    'dungeon walls crumble like charred toast!'
+                                );
                                 render();
                             }
                         });
@@ -9173,12 +9813,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             luck: baseStats.luck,
             exp: 0,
             level: 1,
+            stepsTakenOnCurrentFloor: 0,
             inCombat: false,
             isHoldingTorch: false,
             enteringCombat: false,
             leavingCombat: false,
             steppingOnHealingTile: false,
             movementDisabled: false,
+            hasEncounteredVampire: false,
             getDisplayCharacter: () => ["↑", "→", "↓", "←"][player.dir] || "?",
             say: function(str) {
                 const message = str.trim();
@@ -9368,6 +10010,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.exp = rolledOverExp;
                 player.hp = getEffectiveStat('maxHp');
                 document.getElementById('playerLevel').innerText = player.level;
+            },
+            getInputDelayMs: () => {
+                const minDelayMs = 1;
+                const maxDelayMs = 2000;
+                const baseDelayMs = maxDelayMs;
+
+                // 5% reduction per speed point
+                const speedModifier = getEffectiveStat('speed') * 0.05;
+
+                return Math.max(
+                    minDelayMs,
+                    baseDelayMs * (1 - speedModifier)
+                );
             },
             getCarryWeightLimit: () => {
                 // Example: 35 base + 0.6 per END point
@@ -9582,6 +10237,50 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         () => player.party.enableButtons()
                     );
                 },
+                say: (partyMemberId, message) => {
+                    const responder = player.party.members
+                        .find((e) => e.id === partyMemberId);
+
+                    if (! responder) {
+                        console.error(
+                            "Party member not found",
+                            { partyMemberId }
+                        );
+                        return;
+                    }
+
+                    if (responder.hp <= 0) {
+                        console.error(
+                            "Sorry, but you can't talk to ghosts",
+                            { responder }
+                        );
+                        return;
+                    }
+
+                    const enemyDefinition =
+                        enemies.find(e => e.id === responder.enemyId);
+                    if (! enemyDefinition) {
+                        console.error(
+                            "Ally cannot speak; enemy definition not found",
+                            { enemyId: responder.enemyId }
+                        );
+                        return;
+                    }
+
+                    updateBattleLog(
+                        `<span class="friendly">&lt;${responder.name}&gt;` +
+                        `</span> <span class="player">--you pull out your ` +
+                        `translator--</span> "${message}"`
+                    );
+
+                    player.party.disableButtons();
+
+                    SpeechSynthesizer.speak(
+                        message,
+                        enemyDefinition.voice,
+                        () => player.party.enableButtons()
+                    );
+                },
                 disableButtons: (partyMemberId) => {
                     const $container = document.getElementById("partyMembers");
                     const selector =
@@ -9611,21 +10310,82 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 },
                 release: (partyMemberId) => {
-                    // @TODO: Make a confirmation prompt before releasing
-                    const partyMember = player.party.members.find((e) => e.id === partyMemberId);
+                    const partyMember = player.party.members
+                        .find((e) => e.id === partyMemberId);
                     if (!partyMember) {
-                        console.error("Party member not found", { partyMemberId });
+                        console.error(
+                            "Party member not found",
+                            { partyMemberId }
+                        );
                         return;
                     }
 
-                    updateBattleLog(
-                        `You booted <span class="friendly">` +
-                        `${partyMember.name}</span> to the curb. ` +
-                        `<span class="action">SEE YA!</span>`
+                    Modal.open(
+                        `Release ${partyMember.name}?`,
+                        `Are you sure you want to kick ` +
+                            `<span class="friendly">${partyMember.name}` +
+                            `</span> out of your party?`,
+                        [
+                            {
+                                text: "Nah, keep the bastard",
+                                type: "danger",
+                                onclick: () => {
+                                    const message = randomEntry([
+                                        "Thanks for keeping me, boss.",
+                                        "Oh joy.",
+                                        "Whoopty doo.",
+                                        "Yay. More sewer adventures!",
+                                    ]);
+
+                                    player.party.say(
+                                        partyMember.id,
+                                        message
+                                    );
+                                },
+                            },
+                            {
+                                text: "Yes",
+                                type: "primary",
+                                onclick: () => {
+                                    const message = randomEntry([
+                                        "This field trip is over.",
+                                        "I guess this is goodbye.",
+                                        "Well fuck you too, asshole.",
+                                        "Actually, I quit!",
+                                        "But I love you!",
+                                    ]);
+
+                                    player.party.say(
+                                        partyMember.id,
+                                        message
+                                    );
+
+                                    const bye = randomEntry([
+                                        "SEE YA!",
+                                        "BYE!",
+                                        "FUCK RIGHT THE FUCK OFF NOW!",
+                                        "ADIOS!",
+                                        "さようなら、哀れな生き物。",
+                                    ]);
+
+                                    updateBattleLog(
+                                        `You booted <span class="friendly">` +
+                                        `${partyMember.name}</span> to the ` +
+                                        `curb. <span class="action">${bye}` +
+                                        `</span>`
+                                    );
+                                    player.party.members =
+                                        player.party.members
+                                        .filter((e) => e.id !== partyMemberId);
+                                    const selector =
+                                        `#partyMembers [data-partyMemberId="` +
+                                        `${partyMemberId}"]`;
+                                    document.querySelector(selector).remove();
+                                    player.party.refreshPartyCount();
+                                },
+                            },
+                        ]
                     );
-                    player.party.members = player.party.members.filter((e) => e.id !== partyMemberId);
-                    document.querySelector(`#partyMembers [data-partyMemberId="${partyMemberId}"]`).remove();
-                    player.party.refreshPartyCount();
                 },
                 refreshPartyCount: () => {
                     document.getElementById("totalPartyMembers").innerText =
@@ -9909,6 +10669,340 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         };
 
+        const vampire = {
+            displayName: "GAY COCKSUCKING VAMPIRE",
+            displayClassName: "gay",
+            isActiveOnFloor: false,
+            baseHp: 100,
+            playerStepsUntilActive: Infinity,
+            x: null,
+            y: null,
+            level: 1,
+            voice: {
+                pitch: 92,
+                speed: 80,
+                mouth: 139,
+                throat: 158,
+            },
+            steps: [],
+            isDoneMoving: function() {
+                return vampire.steps.length === 0;
+            },
+            say: function(str, suppressSpeechSynthesis) {
+                if (!suppressSpeechSynthesis) {
+                    SpeechSynthesizer.speak(str, vampire.voice);
+                }
+
+                updateBattleLog(
+                    `<span class="gay vampire">&lt;${vampire.displayName}&gt;` +
+                    `</span> "${str}"`
+                );
+            },
+            setPlayerStepsUntilActive: function(override = null) {
+                if (typeof override === "number") {
+                    vampire.playerStepsUntilActive = override;
+                    return;
+                }
+
+                const mapEntrance = MAP.getEntrance();
+                const mapExit = MAP.locate("exit");
+                const optimalPathLength = MAP.findPath(
+                    [ mapEntrance.x, mapEntrance.y ],
+                    [ mapExit.x, mapExit.y ]
+                )?.length || 0;
+
+                if (optimalPathLength <= 0) {
+                    console.error(
+                        "Cannot determine the map's optimal path length",
+                        { mapEntrance, mapExit }
+                    );
+                    vampire.playerStepsUntilActive = Infinity;
+                    return;
+                }
+
+                const luckMod = getEffectiveStat('luck') * 0.01;
+                const luckFloor = Math.max(luckMod - 0.5, 0);
+                const luckBoost = luckFloor + (Math.random() * luckMod);
+                const floorDeboost = floor * 0.05;
+                const modifier = 1.2 - floorDeboost + luckBoost;
+                const calculatedSteps =
+                    Math.max(Math.round(optimalPathLength * modifier), 10);
+                const steps = Math.max(calculatedSteps, optimalPathLength);
+
+                vampire.playerStepsUntilActive = steps;
+            },
+            isAt: function(x, y) {
+                return (
+                    vampire.isActiveOnFloor &&
+                    vampire.x === x &&
+                    vampire.y === y
+                );
+            },
+            initialize: function() {
+                vampire.isActiveOnFloor = false;
+                vampire.level = 1;
+                vampire.setPlayerStepsUntilActive();
+            },
+            checkForActivation: function(callback) {
+                vampire.isActiveOnFloor =
+                    player.stepsTakenOnCurrentFloor >=
+                    vampire.playerStepsUntilActive;
+
+                if (vampire.isActiveOnFloor) {
+                    vampire.resetToEntrance();
+                    vampire.showFocalPoint({}, () => {
+                        if (vampire.isAt(player.x, player.y)) {
+                            updateBattleLog(
+                                `<span class="action">OH SHIT!</span> That ` +
+                                `pale-ass goblin motherfucker just spawned ` +
+                                `on top of you!`
+                            );
+
+                            startEncounter(
+                                "vampire",
+                                vampire.getEncounterOverrides()
+                            );
+                        }
+                    });
+
+                    const printVampireIntroMessage =
+                        vampire.level === 1 &&
+                        ! vampire.isAt(player.x, player.y);
+
+                    if (printVampireIntroMessage) {
+                        updateBattleLog(
+                            `Your nostrils are suddenly filled with a ` +
+                            `stench of bleach and sulfur. ` +
+                            `<span class="action">It would be a good ` +
+                            `idea to find the exit as soon as possible.` +
+                            `</span>`
+                        );
+                    }
+                }
+
+                callback?.();
+            },
+            resetToEntrance: function() {
+                const entrance = MAP.getEntrance();
+                if (entrance.x === null || entrance.y === null) {
+                    console.error(
+                        "Could not place the vampire because no " +
+                        "entrance exists within in the map"
+                    );
+                    callback?.();
+                    return;
+                }
+
+                vampire.x = entrance.x;
+                vampire.y = entrance.y;
+                render();
+            },
+            prepareMovement: function() {
+                if (! vampire.isActiveOnFloor) {
+                    return;
+                }
+
+                const totalSteps = vampire.level;
+                vampire.steps = MAP.findPath(
+                    [ vampire.x, vampire.y ],
+                    [ player.x, player.y ]
+                )?.slice(1, totalSteps + 1) ?? [];
+            },
+            playFlapSfx: function() {
+                const deltaX = player.x - vampire.x;
+                const deltaY = player.y - vampire.y;
+                const distance = Math.round(Math.sqrt(
+                    Math.pow(deltaX, 2) + Math.pow(deltaY, 2)
+                ));
+
+                const dryVolume = Math.max(10 - distance, 0) / 10;
+                const wetVolume = Math.max(10 - distance - dryVolume, 0) / 10;
+
+                playSFX("batWingFlapDry", dryVolume);
+                playSFX("batWingFlapWet", wetVolume);
+            },
+            move: function() {
+                if (! vampire.isActiveOnFloor) {
+                    return;
+                }
+
+                if (vampire.steps.length === 0) {
+                    return null;
+                }
+
+                vampire.playFlapSfx();
+
+                const step = vampire.steps.shift();
+                vampire.x = step[0];
+                vampire.y = step[1];
+
+                if (vampire.encounteredPlayer()) {
+                    vampire.steps = [];
+                    return () => vampire.encounter();
+                }
+            },
+            encounteredPlayer: function() {
+                return (
+                    vampire.isActiveOnFloor &&
+                    vampire.x === player.x &&
+                    vampire.y === player.y
+                );
+            },
+            encounter: function() {
+                player.hasEncounteredVampire = true;
+                startEncounter("vampire", vampire.getEncounterOverrides());
+            },
+            getEncounterOverrides: function() {
+                const baseAttack = enemies.find(e => e.id === "vampire").attack;
+                const playerMod = Math.max(Math.round(player.strength / 2), 0);
+                const lowMod = Math.max((vampire.level - 1) * 5, 0);
+                const highMod = Math.max((vampire.level - 1) * 10, 0);
+
+                return ({
+                    hp: Math.ceil(
+                        vampire.baseHp + (10 * (floor - 1)) +
+                        Math.max(Math.round(player.maxHp / 2), 0) +
+                        (Math.max(vampire.level - 1, 0) * 100)
+                    ),
+                    attack: [
+                        baseAttack[0] + playerMod + lowMod,
+                        baseAttack[1] + playerMod + highMod,
+                    ],
+                });
+            },
+            defeated: function() {
+                const mapEntrance = MAP.getEntrance();
+                const hasEntrance =
+                    Object.hasOwn(mapEntrance, 'x') &&
+                    Object.hasOwn(mapEntrance, 'y');
+
+                if (! hasEntrance) {
+                    console.error(
+                        "Could not find the map's entrance",
+                        { mapEntrance }
+                    );
+
+                    vampire.isActiveOnFloor = false;
+                    return;
+                }
+
+                const action = randomEntry([
+                    "bitchslapped",
+                    "butt-kicked",
+                    "laughed all the way",
+                    "blasted",
+                    "spanked",
+                    "b-b-b-booted"
+                ]);
+
+                updateBattleLog(
+                    `<span class="${vampire.displayClassName}">` +
+                    `${vampire.displayName}</span> has been ` +
+                    `<span class="action">${action} back to the floor's ` +
+                    `entrance!</span>`
+                );
+
+                vampire.level++;
+                const stepsUntilReactivation =
+                    Math.max(10 - (vampire.level * 2), 1);
+                vampire.setPlayerStepsUntilActive(
+                    player.stepsTakenOnCurrentFloor + stepsUntilReactivation
+                );
+                vampire.checkForActivation();
+            },
+
+            showFocalPoint: function(options, onAnimationEnd) {
+                const $vampireFocalPoint =
+                    document.getElementById("vampireFocalPoint");
+                if (! $vampireFocalPoint) {
+                    console.error("#vampireFocalPoint element was not found");
+                    return;
+                }
+
+                const $desaturationOverlay = document.getElementById(
+                    "vampireFocalPointDesaturationOverlay"
+                );
+                if (! $desaturationOverlay) {
+                    console.error(
+                        "#vampireFocalPointDesaturationOverlay element was " +
+                        "not found"
+                    );
+                    return;
+                }
+
+                const selector = "#minimap > .vampire";
+                const $minimapVampire = document.querySelector(selector);
+                if (! $minimapVampire) {
+                    console.error("Could not find the vampire on the minimap");
+                    return;
+                }
+
+                const rect = $minimapVampire.getBoundingClientRect();
+                const x = Math.round(rect.left + (rect.width / 2));
+                const y = Math.round(rect.top + (rect.height / 2));
+
+                const {
+                    radiusStartPx = 2240,
+                    radiusEndPx = 16,
+                    durationMs = 2000,
+                    easingCss =
+                        'cubic-bezier(0.22, 1, 0.36, 1)'
+                } = options || {};
+
+                $vampireFocalPoint.style.setProperty('--center-x', `${x}px`);
+                $vampireFocalPoint.style.setProperty('--center-y', `${y}px`);
+                $vampireFocalPoint.style
+                    .setProperty('--radius-start', `${radiusStartPx}px`);
+                $vampireFocalPoint.style
+                    .setProperty('--radius-end', `${radiusEndPx}px`);
+
+                $desaturationOverlay.style.setProperty('--center-x', `${x}px`);
+                $desaturationOverlay.style.setProperty('--center-y', `${y}px`);
+                $desaturationOverlay.style.setProperty('--radius-start', `${radiusStartPx}px`);
+                $desaturationOverlay.style.setProperty('--radius-end', `${radiusEndPx}px`);
+
+
+                $vampireFocalPoint.style.animationDuration = `${durationMs}ms`;
+                $vampireFocalPoint.style.animationTimingFunction = easingCss;
+                $vampireFocalPoint.classList.remove('is-animating');
+                $vampireFocalPoint.offsetWidth; // Force reflow
+                $vampireFocalPoint.classList.add('is-animating');
+
+                $desaturationOverlay.style.animationDuration = `${durationMs + 500}ms`;
+                $desaturationOverlay.style.animationTimingFunction = easingCss;
+                $desaturationOverlay.classList.remove('is-animating');
+                $desaturationOverlay.offsetWidth; // Force reflow
+                $desaturationOverlay.classList.add('is-animating');
+
+                stopAllMusic();
+                playSFX("alert");
+                setTimeout(() => playVampireLurkingTheme(), 2000);
+
+                function handleAnimationEnd(event) {
+                    if (event.target !== $desaturationOverlay) {
+                        return;
+                    }
+
+                    $desaturationOverlay.removeEventListener(
+                        "animationend",
+                        handleAnimationEnd
+                    );
+
+                    $vampireFocalPoint.classList.remove("is-animating");
+                    $desaturationOverlay.classList.remove("is-animating");
+
+                    if (typeof onAnimationEnd === "function") {
+                        onAnimationEnd();
+                    }
+                }
+
+                $desaturationOverlay.addEventListener(
+                    "animationend",
+                    handleAnimationEnd
+                );
+            }
+        };
+
         const erok = {
             isAlive: true,
             isActiveOnFloor: false,
@@ -9953,8 +11047,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "snailSentinel",
                 name: "SNAIL SENTINEL",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 13,
-                attack: [2, 5],
+                attack: [1, 5],
                 bitcoins: 4,
                 talkSlots: [
                     ["Sss...", "Hrk!", "Glorp", "Snail", "Halt!", "Beware"],
@@ -9973,8 +11069,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "stupidDog",
                 name: "STUPID DOG",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 9,
-                attack: [3, 6],
+                attack: [1, 5],
                 bitcoins: 3,
                 voice: {
                     pitch: 125,
@@ -9986,8 +11084,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "wangRat",
                 name: "WANG RAT",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 8,
-                attack: [4, 6],
+                attack: [1, 5],
                 bitcoins: 2,
                 voice: {
                     pitch: 80,
@@ -9999,8 +11099,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "keeperOfTheToiletBowl",
                 name: "KEEPER OF THE TOILET BOWL",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 25,
-                attack: [8, 14],
+                attack: [1, 5],
                 bitcoins: 5,
                 voice: {
                     pitch: 95,
@@ -10012,8 +11114,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "mysteriousScooter",
                 name: "MYSTERIOUS SCOOTER",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 17,
-                attack: [4, 7],
+                attack: [1, 5],
                 bitcoins: 4,
                 voice: {
                     pitch: 33,
@@ -10025,8 +11129,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "badassFlamingSkeleton",
                 name: "BADASS FLAMING SKELETON",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 23,
-                attack: [9, 16],
+                attack: [1, 5],
                 bitcoins: 4,
                 voice: {
                     pitch: 225,
@@ -10038,8 +11144,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "fridgeOfForgottenLeftovers",
                 name: "FRIDGE OF FORGOTTEN LEFTOVERS",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 27,
-                attack: [8, 14],
+                attack: [1, 5],
                 bitcoins: 3,
                 voice: {
                     pitch: 174,
@@ -10051,8 +11159,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "lughead",
                 name: "LUGHEAD",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 28,
-                attack: [8, 13],
+                attack: [1, 5],
                 bitcoins: 4,
                 talkSlots: [
                     ["Ugh", "LUG", "Arrgh", "UNG", "Borf", "AHHHHHHH", "Bunginga"],
@@ -10070,8 +11180,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "pissedOffPoultry",
                 name: "PISSED-OFF POULTRY",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 15,
-                attack: [4, 7],
+                attack: [1, 5],
                 bitcoins: 2,
                 voice: {
                     pitch: 42,
@@ -10083,8 +11195,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "krampusElf",
                 name: "KRAMPUS ELF",
+                displayClassName: "enemy",
+                isWild: true,
                 hp: 14,
-                attack: [4, 6],
+                attack: [1, 5],
                 bitcoins: 4,
                 voice: {
                     pitch: 36,
@@ -10096,8 +11210,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             {
                 id: "mimic",
                 name: "MIMIC",
+                displayClassName: "enemy",
+                isWild: false,
                 hp: 140,
-                attack: [10, 16],
+                attack: [1, 5],
                 bitcoins: 100,
                 voice: {
                     pitch: 142,
@@ -10105,6 +11221,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     mouth: 132,
                     throat: 170,
                 },
+            },
+            {
+                id: "vampire",
+                name: vampire.displayName,
+                displayClassName: vampire.displayClassName,
+                isWild: false,
+                hp: vampire.baseHp,
+                attack: [1, 5],
+                bitcoins: 40,
+                voice: vampire.voice,
             },
         ];
 
@@ -10164,6 +11290,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             battleStart: new Audio('audio/battleStart.mp3'),
             battleEnd: new Audio('audio/battleEnd.mp3'),
             ash: new Audio('audio/ash.mp3'),
+            alert: new Audio('audio/alert.ogg'),
+            batWingFlapDry: new Audio('audio/bat-wings-dry.ogg'),
+            batWingFlapWet: new Audio('audio/bat-wings-wet.ogg'),
         };
 
         const music = {
@@ -10183,6 +11312,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 Object.assign(new Audio("audio/battle4.mp3"), { trackName: "The Cumdown - Xx_TheMilkMan69_xX" }),
                 Object.assign(new Audio("audio/battle5.mp3"), { trackName: "SURPRISE COCKFIGHT! - Xx_TheMilkMan69_xX" }),
             ],
+            vampireBattle:
+                Object.assign(new Audio("audio/vampire-battle-theme.mp3"), { trackName: "Vengeful Fruit - Xx_TheMilkMan69_xX" }),
+            vampireLurking:
+                Object.assign(new Audio("audio/lurking.ogg"), { trackName: "Lurking - Packard Bell 95" }),
             merchantTrack:
                 Object.assign(new Audio("audio/merchant.mp3"), { trackName: "Welcome to SlobMart! - Xx_TheMilkMan69_xX" }),
             gamblersTheme:
@@ -10196,6 +11329,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         music.titleTrack.loop = true;
         music.gamblersTheme.loop = true;
         music.erokTheme.loop = true;
+        music.vampireBattle.addEventListener("timeupdate", () => {
+            const loopEnd = music.vampireBattle.duration - 0.053;
+            if (music.vampireBattle.currentTime >= loopEnd) {
+                music.vampireBattle.currentTime = 16.5;
+                music.vampireBattle.play();
+            }
+        });
+        music.vampireLurking.loop = true;
 
         function stopAllMusic() {
             [
@@ -10205,6 +11346,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 music.merchantTrack,
                 music.titleTrack,
                 music.erokTheme,
+                music.vampireBattle,
+                music.vampireLurking,
             ].forEach(track => {
                 track.pause();
                 track.currentTime = 0;
@@ -10235,10 +11378,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return;
             }
 
+            if (vampire.isActiveOnFloor) {
+                playVampireLurkingTheme();
+                return;
+            }
+
             const availableTracks = music.explorationTracks.filter((_, index) => enabledExplorationTracks[index]);
 
             if (availableTracks.length === 0) {
-                console.log("No exploration tracks enabled, playing silence");
                 currentExplorationTrack = null;
                 currentMusic = null;
                 updateNowPlaying();
@@ -10288,10 +11435,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return;
             }
 
+            if (currentEnemy?.id === "vampire") {
+                playVampireBattleTheme();
+                return;
+            }
+
             const availableTracks = music.battleTracks.filter((_, index) => enabledBattleTracks[index]);
 
             if (availableTracks.length === 0) {
-                console.log("No battle tracks enabled, playing silence");
                 currentMusic = null;
                 updateNowPlaying();
                 return;
@@ -10307,6 +11458,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!musicEnabled || !currentExplorationTrack || tromboneIsPlaying) {
                 return;
             }
+
+            const turnOffVampireTunes =
+                ! vampire.isActiveOnFloor &&
+                currentExplorationTrack === music.vampireLurking;
+            if (turnOffVampireTunes) {
+                playRandomExplorationMusic();
+            }
+
             currentMusic = currentExplorationTrack;
             currentExplorationTrack.play();
             updateNowPlaying(getCurrentTrackName());
@@ -10338,6 +11497,49 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             currentMusic = music.gamblersTheme;
             currentMusic.play();
             updateNowPlaying(getCurrentTrackName());
+        }
+
+        function playVampireLurkingTheme() {
+            stopAllMusic();
+            if (!musicEnabled) {
+                return;
+            }
+            currentMusic = music.vampireLurking;
+            currentExplorationTrack = currentMusic;
+            currentMusic.play();
+            updateNowPlaying(getCurrentTrackName());
+        }
+
+        function stopVampireLurkingTheme() {
+            if (currentMusic !== music.vampireLurking) {
+                return;
+            }
+
+            currentMusic.pause();
+            currentMusic.currentTime = 0;
+            currentMusic = null;
+            updateNowPlaying();
+        }
+
+        function playVampireBattleTheme() {
+            stopAllMusic();
+            if (!musicEnabled) {
+                return;
+            }
+            currentMusic = music.vampireBattle;
+            currentMusic.play();
+            updateNowPlaying(getCurrentTrackName());
+        }
+
+        function stopVampireBattleTheme() {
+            if (currentMusic !== music.vampireBattle) {
+                return;
+            }
+
+            currentMusic.pause();
+            currentMusic.currentTime = 0;
+            currentMusic = null;
+            updateNowPlaying();
         }
 
         function updateNowPlaying(trackName = null) {
@@ -10373,9 +11575,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return "Gambler's Theme - Packard Bell 95";
             }
 
-            // Check if it's the erok theme
             if (currentMusic === music.erokTheme) {
                 return "A Dog Named Erok - Xx_TheMilkMan69_xX";
+            }
+
+            if (currentMusic === music.vampireBattle) {
+                return "Vengeful Fruit - Xx_TheMilkMan69_xX";
+            }
+
+            if (currentMusic === music.vampireLurking) {
+                return "Lurking - Packard Bell 95";
             }
 
             // Check exploration tracks
@@ -10404,7 +11613,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let animationActive = false;
         let currentBreathing = null;
         let floor = 1;
-        const MAP = new Map();
+        const MAP = new GameMap();
         MAP.setMinimap(document.getElementById("minimap"));
 
         MAP.setCellTypes({
@@ -10415,7 +11624,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             healingTile: {
                 displayName: "Healing Tile",
                 mapCharacter: "H",
-                onEnter: function (x, y) {
+                onEnter: async function (x, y) {
                     player.steppingOnHealingTile = true;
 
                     // Heal player
@@ -10441,7 +11650,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
 
                     updateBattleLog(logMsg);
-
                     MAP.setCell(x, y);
                 },
             },
@@ -10464,7 +11672,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             crackedFloorSlight: {
                 displayName: "Slightly-Cracked Floor",
                 mapCharacter: '✕',
-                onEnter: function (x, y) {
+                onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
                     if (weightLevel === "normal") {
@@ -10496,7 +11704,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             crackedFloor: {
                 displayName: "Cracked Floor",
                 mapCharacter: '✕',
-                onEnter: function (x, y) {
+                onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
                     if (weightLevel === "normal") {
@@ -10518,7 +11726,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             crackedFloorSevere: {
                 displayName: "Severely-Cracked Floor",
                 mapCharacter: '✖',
-                onEnter: function (x, y) {
+                onEnter: async function (x, y) {
                     player.fallThroughFloorAndDie();
                 },
             },
@@ -10571,16 +11779,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             exit: {
                 displayName: "Exit",
                 mapCharacter: "E",
-                onEnter: function() {
+                onEnter: async function() {
                     descend();
                 }
             },
             merchant: {
                 displayName: "Merchant",
                 mapCharacter: "M",
-                onEnter: function() {
+                onEnter: async function(x, y) {
                     playMerchantMusic();
-                    menu.open('merchant');
+                    menu.open('merchant', () => npcMove());
                 },
                 isVisible: function() {
                     return (
@@ -10605,8 +11813,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             gambler: {
                 displayName: "Gambler",
                 mapCharacter: "G",
-                onEnter: function() {
-                    menu.open('gambler');
+                onEnter: async function(x, y) {
+                    menu.open('gambler', () => npcMove());
                 },
                 isVisible: function () {
                     return (
@@ -10637,8 +11845,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             erok: {
                 displayName: "Erok",
                 mapCharacter: "D",
-                onEnter: function() {
-                    menu.open('erok');
+                onEnter: async function(x, y) {
+                    menu.open('erok', () => npcMove());
                 },
                 isVisible: function() {
                     return (
@@ -10652,17 +11860,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     MAP.setCell(x, y, "bloodyCrater");
                     playSFX('scream');
                     erok.say('i died oh noes', true);
+
+                    // You better believe there's a price to pay
+                    const previousLuck = player.luck;
+                    player.luck = Math.max(player.luck - 10, 1);
+                    const badLuck = previousLuck - player.luck;
+
                     updateBattleLog(
-                        'OH NO! <span class="friendly">' +
-                        'Erok</span> has been ' +
-                        '<span class="action">blown the fuck up</span>! You monster...'
+                        `OH NO! <span class="friendly">Erok</span> has been ` +
+                        `<span class="action">blown the fuck up!</span> ` +
+                        `You monster... ` +
+                        `<strong class="enemy">-${badLuck} LUCK</strong>`
                     );
                 },
             },
             tardspireBanner: {
                 displayName: "Floor",
                 mapCharacter: ".",
-                onEnter: function (x, y) {
+                onEnter: async function (x, y) {
                     MAP.setCell(x, y);
                 },
                 onExplode: function (x, y) {
@@ -10672,7 +11887,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             treasureChest: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
-                onEnter: function() {
+                onEnter: async function(x, y) {
                     menu.open("chest");
                 },
                 onExplode: function (x, y) {
@@ -10687,7 +11902,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             mimic: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
-                onEnter: function () {
+                onEnter: async function (x, y) {
                     menu.open("chest");
                 },
                 onExplode: function (x, y) {
@@ -10778,6 +11993,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function generateMap() {
+            MAP.setEntities({
+                player: {
+                    x: player.x,
+                    y: player.y,
+                },
+            });
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
 
             if (floor === 1) {
@@ -10801,7 +12022,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 gambler.set();
             }
 
-            erok.isActiveOnFloor = erok.isAlive && Math.random() < 1; // Spawns on every floor because he is a good boy
+            erok.isActiveOnFloor = erok.isAlive; // Spawns on every floor because he is a good boy
             if (erok.isActiveOnFloor) {
                 erok.set();
             }
@@ -10812,6 +12033,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
+
+            vampire.initialize();
         }
 
         let autoDicerollEnabled = false;
@@ -10931,23 +12154,61 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function updateSeenTiles() {
             player.inventory.hasEquippedRing('ringOfSightliness')
-                ? MAP.revealFOV(player.x, player.y, 2)
+                ? MAP.revealFieldOfView(player.x, player.y, 2)
                 : MAP.revealSpot(player.x, player.y, 1);
         }
 
         function updateBattleLog(entry) {
+            const $battleLog = document.getElementById("battleLog");
             const line = document.createElement('div');
             line.innerHTML = entry;
-            document.getElementById("battleLog").prepend(line);
+            $battleLog.prepend(line);
+
+            // Clear special animations after 2 lines
+            // Special animations currently include "waveText" and "gay"
+            const $waveTextElements = document.getElementById("battleLog")
+                .children?.[2]?.querySelectorAll(".waveText, .gay") || [];
+
+            for (let i=0; i<$waveTextElements.length; i++) {
+                const classList = $waveTextElements[i].classList;
+                classList.remove("waveText");
+                if (classList.contains("gay")) {
+                    classList.remove("gay");
+                    classList.add("enemy");
+                }
+            }
         }
 
-        function playSFX(name) {
-            if (!sfxEnabled) return;
+        // Returns the input message as a DOM element that will create wavy text
+        function waveText(message, className = "") {
+            const $message = document.createElement("span");
+            $message.classList.add("waveText");
+            if (className) {
+                $message.classList.add(className);
+            }
+
+            for (let i=0; i<message.length; i++) {
+                const $character = document.createElement("span");
+                $character.style.setProperty("--i", i);
+                $character.textContent = message[i];
+                $message.appendChild($character);
+            }
+
+            return $message;
+        }
+
+        function playSFX(name, volume = 1.0) {
+            if (!sfxEnabled || volume < 0) {
+                return;
+            }
+
             if (!sfx[name]) {
                 console.error("SFX not found", { name });
                 return;
             }
+
             sfx[name].currentTime = 0;
+            sfx[name].volume = Math.min(1.0, volume);
             sfx[name].play();
         }
 
@@ -10966,22 +12227,46 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-        function render() {
-            MAP.setEntities({
-                player: {
-                    forceRefresh: true,
-                    x: player.x,
-                    y: player.y,
-                    displayName: `You <span class="player lets-go">ヽ(°٢° )ノ</span>`,
+        function refreshMinimap() {
+            const entities = {};
+
+            // Set the vampire first so it takes precedence over the player
+            if (vampire.isActiveOnFloor) {
+                entities.vampire = {
+                    x: vampire.x,
+                    y: vampire.y,
+                    displayName: player.hasEncounteredVampire
+                        ?
+                            `<span class="${vampire.className}">` +
+                            `${vampire.displayName}</span>`
+                        : `<em>A Menacing... Fruit Bat?</em>`,
                     isExplored: true,
                     isVisible: true,
-                    mapCharacter: player.getDisplayCharacter(),
-                    type: "player",
-                },
-            });
+                    mapCharacter: " ", // Handled by the #minimap .vampire class
+                    type: "vampire",
+                };
+            }
+
+            entities.player = {
+                forceRefresh: true,
+                x: player.x,
+                y: player.y,
+                displayName:
+                    `You <span class="player lets-go">ヽ(°٢° )ノ</span>`,
+                isExplored: true,
+                isVisible: true,
+                mapCharacter: player.getDisplayCharacter(),
+                type: "player",
+            };
+
+            MAP.setEntities(entities);
             updateSeenTiles();
-            updateBreathingSFX();
             MAP.refreshMinimap();
+        }
+
+        function render() {
+            refreshMinimap();
+            updateBreathingSFX();
 
             // @TODO: Keep this out of render()
             // Stat updates should update the appropriate sections on their own
@@ -11026,10 +12311,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             return true;
         }
 
-        function animBattleTransitionStart(callback, playBattleStartSFX = false, playBattleEndSFX = false) {
+        function animBattleTransitionStart(
+            callback,
+            playBattleStartSFX = false,
+            playBattleEndSFX = false
+        ) {
+            refreshMinimap();
             const $battleTransition = document.getElementById('animBattleTransition');
 
             // Block input during transition
+            window._inputBlocked = true;
             GameControl.disableControls();
 
             // Only called when a battle begins
@@ -11045,7 +12336,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             $battleTransition.classList.add('active');
 
             setTimeout(() => {
-                // Wait 2 seconds at the bottom before starting reveal
+                // Wait 1 second at the bottom before starting reveal
                 setTimeout(() => {
                     $battleTransition.classList.remove('active');
                     $battleTransition.classList.add('reveal');
@@ -11063,6 +12354,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         $battleTransition.classList.remove('reveal');
                         $battleTransition.classList.add('offscreen');
                         GameControl.enableControls();
+                        window._inputBlocked = false;
                     }, 300); // Match duration of curtain rolling down (0.3s)
                 }, 1000); // Wait 1s at the bottom
             }, 300); // Match duration of curtain rolling up (0.3s)
@@ -11246,7 +12538,61 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-        function move(direction) {
+        function sleepMs(durationMs) {
+            return new Promise((resolve) => {
+                setTimeout(resolve, durationMs);
+            });
+        }
+
+        async function endOfPlayerMove() {
+            const startMs = performance.now();
+
+            await npcMove();
+
+            const elapsedMs = performance.now() - startMs;
+            const remainingMs = Math.max(0, player.getInputDelayMs() - elapsedMs);
+
+            if (remainingMs > 0) {
+                await sleepMs(remainingMs);
+            }
+        }
+
+        // After the player has moved, the NPCs may need to move too
+        async function npcMove() {
+            render();
+
+            if (! vampire.isActiveOnFloor) {
+                vampire.checkForActivation();
+                return;
+            }
+
+            vampire.prepareMovement();
+
+            const stepsThisTurn = vampire.steps.length;
+            const stepDurationMs = 120;
+            const callables = [];
+
+            for (let i=0; i<stepsThisTurn; i++) {
+                // In the real version we would move the vampire here and
+                // update the minimap / scene between frames.
+                await sleepMs(stepDurationMs);
+                const result = vampire.move();
+                if (typeof result === "function") {
+                    callables.push(result);
+                }
+                render();
+
+                if (vampire.isDoneMoving()) {
+                    break;
+                }
+            }
+
+            for (let i=0; i<callables.length; i++) {
+                callables[i]();
+            }
+        }
+
+        async function move(direction) {
             if (player.inCombat || gameOver || player.movementDisabled) {
                 return;
             }
@@ -11282,13 +12628,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (!tile.isSolid) {
                 player.x = nx;
                 player.y = ny;
+                player.stepsTakenOnCurrentFloor++;
+
+                // @TODO: Make the map system support onEnter for entities
+                //        and move this logic there
+                if (vampire.encounteredPlayer()) {
+                    vampire.encounter();
+                }
 
                 const fireOnEnter =
                     typeof tile.onEnter === "function" &&
                     (typeof tile.isVisible !== "function" || tile.isVisible());
 
                 if (fireOnEnter) {
-                    tile.onEnter(nx, ny);
+                    const maybePromise = tile.onEnter(nx, ny);
+                    const isAsync =
+                        maybePromise &&
+                        typeof maybePromise.then === "function";
+
+                    if (isAsync) {
+                        await maybePromise;
+                    }
                 } else if (Math.random() < randomEncounterChance) {
                     startEncounter();
                 }
@@ -11296,23 +12656,21 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 tile.onTouch();
             }
 
+
             GameControl.update();
 
-            // Set the movement delay range
-            const maxDelay = 2000; // Max speed (movement delay) in milliseconds (2s)
-            const minDelay = 1;  // Min speed (movement delay) in milliseconds (1/4 of 1s)
+            // @TODO: Handle NPC movement after the menu has closed
+            const shouldSkipNpc = player.inCombat || menu.isOpen();
 
-            // Calculate movement delay based on speed
-            const baseDelay = maxDelay; // Start with the maximum delay
-            const speedModifier = getEffectiveStat('speed') * 0.05; // 5% reduction per speed point
-            const movementDelay = Math.max(minDelay, baseDelay * (1 - speedModifier)); // Ensure delay is at least minDelay
+            if (!shouldSkipNpc) {
+                await endOfPlayerMove();
+            } else {
+                const timeDelayMs = player.getInputDelayMs();
+                await sleepMs(timeDelayMs);
+            }
 
-            setTimeout(() => {
-                player.movementDisabled = false;
-                GameControl.update();
-            }, movementDelay);
-
-            render();
+            player.movementDisabled = false;
+            GameControl.update();
         }
 
         function turnLeft() {
@@ -11391,12 +12749,39 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-        function startEncounter() {
-            // Filter out the mimic from the random enemy pool
-            const randomEnemies = enemies.filter(enemy => enemy.id !== "mimic");
+        function startEncounter(enemyId, enemyOverrides = {}) {
+            if (enemyId) {
+                const enemy = enemies.find((e) => e.id === enemyId);
+                if (! enemy) {
+                    console.error(
+                        "Cannot start an encounter because the specified " +
+                        "enemy was not found",
+                        { enemyId }
+                    );
+                    return;
+                }
 
-            // Pick a random enemy
-            currentEnemy = structuredClone(randomEntry(randomEnemies));
+                currentEnemy = structuredClone({
+                    ...enemy,
+                    ...enemyOverrides,
+                });
+            } else {
+                // Select wild enemies from the enemy pool
+                const randomEnemies = enemies.filter(enemy => enemy.isWild);
+                if (randomEnemies.length === 0) {
+                    console.error(
+                        "Cannot start an encounter because no enemies were " +
+                        "found in the enemy pool"
+                    );
+                    return;
+                }
+
+                // Pick a random enemy
+                currentEnemy = structuredClone({
+                    ...randomEntry(randomEnemies),
+                    ...enemyOverrides,
+                });
+            }
 
             // Scale enemy stats based on floor
             const floorBoost = Math.floor(floor / 2); // Scale every 2 floors
@@ -11409,11 +12794,38 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 currentEnemy.bitcoins += floorBoost; // Increase Bitcoin drop based on floor scaling
             }
 
+            const combatMessage = [
+                enemyId === "vampire" ? "The" : "A",
+                enemyId ? "" : "wild",
+                `<span class="${currentEnemy?.displayClassName || "enemy"}">` +
+                    `${currentEnemy.name}</span>`,
+                randomEntry([
+                    "appears!",
+                    "wants to fight!",
+                    "is ready to rumble!",
+                    "sniffed up some trouble!",
+                    "wants to give you a lesson in pain!",
+                    "flexes at you menacingly!",
+                    "ominously slides into view!",
+                    "crawls out of a nearby gutter!",
+                    "approaches rudely!",
+                    "just insulted your mom!",
+                    "is foaming at the mouth! " +
+                        "(But I don't think that's foam...)",
+                ])
+            ].filter(m => m).join(" ");
+
+            const startCombat = () => {
+                player.enterCombat();
+                updateBattleLog(combatMessage);
+                render();
+            };
+
+            player.inCombat = true;
+
             if (battleTransitionAnimationsEnabled) {
                 animBattleTransitionStart(() => {
-                    player.enterCombat();
-                    updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
-                    render();
+                    startCombat();
                 }, true, false); // battleStart: true, battleEnd: false
             } else {
                 // No animation, start battle immediately
@@ -11421,9 +12833,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 if (!tromboneIsPlaying) {
                     playRandomBattleMusic();
                 }
-                player.enterCombat();
-                updateBattleLog(`A wild <span class="enemy">${currentEnemy.name}</span> appears!`);
-                render();
+
+                startCombat();
             }
         }
 
@@ -11452,24 +12863,29 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             const weaponDamage =
                 player.inventory.getEquippedWeapon()?.damage ||
                 { base: 1, randomMultiplier: 4 };
-            const damagePoints =
+            const damagePoints = Math.ceil(
                 player.strength + (
                     Math.floor(Math.random() * weaponDamage.randomMultiplier) +
                     weaponDamage.base
-                ) * damageMultiplier;
+                ) * damageMultiplier
+            );
+
+            const enemyClassname = currentEnemy?.displayClassName || "enemy";
 
             if (isCriticalHit) {
                 updateBattleLog(
-                    `<span class="LUK">CRITICAL HIT!</span> ` +
+                    `${waveText("CRITICAL HIT!", "LUK").outerHTML} ` +
                     `<span class="friendly">You</span> dealt ` +
                     `<span class="action">${damagePoints} HP</span> ` +
-                    `to <span class="enemy">${currentEnemy.name}</span>`
+                    `to the <span class="${enemyClassname}">` +
+                    `${currentEnemy.name}</span>`
                 );
             } else {
                 updateBattleLog(
                     `<span class="friendly">You</span> deal ` +
                     `<span class="action">${damagePoints} HP</span> ` +
-                    `to <span class="enemy">${currentEnemy.name}</span>`
+                    `to the <span class="${enemyClassname}">` +
+                    `${currentEnemy.name}</span>`
                 );
             }
 
@@ -11504,46 +12920,62 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         const bitcoinsEarned = currentEnemy.bitcoins;
                         const randomMsg = randomEntry([
                             "was beaten to a fucking pulp!",
-                            "had their bollocks slammed against the hard concrete wall!",
+                            "had their bollocks slammed against the hard " +
+                                "concrete wall!",
                             "got their face scraped along the floor!",
                             "died from a nosebleed. Alright then?",
-                            "was pulverized before they could activate their anti-retard orbital laser.",
-                            "pancaked their diaper and died from embarassment. <em>Gross.</em>",
+                            "was pulverized before they could activate their " +
+                                "anti-retard orbital laser.",
+                            "pancaked their diaper and died from " +
+                                "embarrassment. <em>Gross.</em>",
                             "left the server.",
                             "picked their nose, and died picking their nose.",
-                            "got bored and jumped down a 'bottomless' hole. You not faint."
+                            "got bored and jumped down a 'bottomless' hole. " +
+                                "You heard a scream, and the sound was " +
+                                "absolutely not faint."
                         ]);
 
+                        const enemyClassname =
+                            currentEnemy?.displayClassName || "enemy";
+
                         updateBattleLog(
-                            `<span class="enemy">${currentEnemy.name}</span> ${randomMsg}`
+                            `The <span class="${enemyClassname}">` +
+                            `${currentEnemy.name}</span> ${randomMsg}`
                         );
 
                         updateBattleLog(
-                            `<span class="friendly">You</span> gained <span class="EXP">+${exp} EXP</span> and <span class="BTC">₿ ${bitcoinsEarned}</span>`
+                            `<span class="friendly">You</span> gained ` +
+                            `<span class="EXP">+${exp} EXP</span> and ` +
+                            `<span class="BTC">₿ ${bitcoinsEarned}.</span>`
                         );
                         player.giveBitcoins(bitcoinsEarned);
                         player.exp += exp;
+
+                        if (currentEnemy.id === "vampire") {
+                            vampire.defeated();
+                        }
                     }
 
-                    const willLevelUp = player.exp >= player.getExpRequiredForLevelUp();
+                    const willLevelUp =
+                        player.exp >= player.getExpRequiredForLevelUp();
 
                     if (willLevelUp) {
                         playerAttackCooldown = false; // Reset for level up screen
                         player.leaveCombat();
                         setTorchOverlayVisibility();
-                        startLevelUpAllocation();
+                        startLevelUpAllocation(() => npcMove());
                     } else {
                         player.leaveCombat();
                         setTorchOverlayVisibility();
                         if (battleTransitionAnimationsEnabled) {
                             playerAttackCooldown = false;
                             animBattleTransitionStart(() => {
-                                render();
+                                npcMove();
                             }, false, true);
                         } else {
                             playSFX('battleEnd');
                             playerAttackCooldown = false; // Reset when battle fully ends
-                            render();
+                            npcMove();
                         }
                     }
                 });
@@ -11559,7 +12991,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function enemyAttack() {
             // Base damage + boost damage, boost damage scaled every 2 floors
-            const damage = numberBetween(1, 5) + Math.floor(floor / 2);
+            const damage = numberBetween(
+                currentEnemy?.attack?.[0] || 1,
+                currentEnemy?.attack?.[1] || 5
+            ) + Math.floor(floor / 2);
 
             // Calculate damage based on player's defense
             const defense = getEffectiveStat('defense');
@@ -11575,9 +13010,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ? `your <span class="friendly">${ally.name}</span>`
                 : `<span class="friendly">you</span>`;
 
+            const enemyClassname = currentEnemy?.displayClassName || "enemy";
             updateBattleLog(
-                `<span class="enemy">${currentEnemy.name}</span> deals ` +
-                `<span class="enemy">${totalDamage} HP</span> to ${targetLine}`
+                `The <span class="${enemyClassname}">${currentEnemy.name}` +
+                `</span> deals <span class="enemy">${totalDamage} HP</span> ` +
+                `to ${targetLine}!`
             );
 
             if (ally && ally.hp <= 0) {
@@ -11727,8 +13164,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
 
-        function tryRun() {
+        async function tryRun() {
             if (!player.inCombat || GameControl.awaitingPersuasionText) {
+                return;
+            }
+
+            if (currentEnemy?.id === "vampire") {
+                vampire.say(randomEntry([
+                    "I'm not letting my tasty snack get away that easily!",
+                    "You're not going anywhere, big boy!",
+                    "I won't take no for an answer!",
+                    "Let's not turn this date into a consent accident!",
+                ]));
                 return;
             }
 
@@ -11736,6 +13183,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (Math.random() < 0.5) {
                 player.say("Gee willikers, I'm outta here!");
                 player.leaveCombat();
+                await npcMove();
             } else {
                 updateBattleLog("Couldn't escape!");
                 enemyAttack();
@@ -11780,6 +13228,40 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             // ======== Persuasion During Combat ========
             if (player.inCombat) {
                 persuasionAttempts++;
+
+                if (currentEnemy?.id === "vampire") {
+                    if (Math.random() < 0.5) {
+                        updateBattleLog(randomEntry([
+                            `<span class="action">Your words pass right ` +
+                                `through his ears.</span> His reptilian eyes ` +
+                                `are completely fixated on your groin.`,
+                            `<span class="action">Your speech is totally ` +
+                                `ineffective.</span> He starts to hungrily ` +
+                                `lick his fangs in <em>eager</em> ` +
+                                `anticipation.`,
+                            `<span class="action">Your feeble persuasion ` +
+                                `attempt fails.</span> The vampire is ` +
+                                `entranced, having spotted his next meal. ` +
+                                `<span class="enemy">Tardwurst is on the ` +
+                                `menu!</span>`,
+                            `<span class="action">The vampire ignores your ` +
+                                `words.</span> His mouth is ` +
+                                `<em>salivating</em> for <span class="enemy">` +
+                                `your blood sausage!</span> (Yes, this is a ` +
+                                `euphemism!)`,
+                        ]));
+                    } else {
+                        vampire.say(randomEntry([
+                            "My fangs will join your wang!",
+                            "Blood is life, but cummy is yummy!",
+                            "Unzip, unzip! I will sip your tippy tip!",
+                            "I vant to zuck your cock!",
+                        ]));
+                    }
+                    enemyAttack();
+                    render();
+                    return;
+                }
 
                 // Check limit FIRST
                 if (persuasionAttempts > maxPersuasionAttempts) {
@@ -11832,16 +13314,30 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             enemyHp,
                             maxEnemyHp
                         );
-                        updateBattleLog(`<span class="friendly">${currentEnemy.name}</span> is now following your trail of sweat.`);
+                        updateBattleLog(
+                            `The <span class="friendly">${currentEnemy.name}` +
+                            `</span> is now following your trail of sweat.`
+                        );
                     } else {
-                        updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> was <span class="friendly">spared</span> and went back home...`);
+                        updateBattleLog(
+                            `The <span class="enemy">${currentEnemy.name}` +
+                            `</span> was <span class="friendly">spared` +
+                            `</span> and went back home.`
+                        );
                     }
                     player.leaveCombat();
                 } else {
-                    updateBattleLog(`<span class="enemy">${currentEnemy.name}</span> really, quite genuinely, does not care...`);
+                    updateBattleLog(
+                        `The <span class="enemy">${currentEnemy.name}</span> ` +
+                        `really, quite genuinely, does not care.`
+                    );
+
                     // If this was the last attempt, show a message
                     if (persuasionAttempts >= maxPersuasionAttempts) {
-                        updateBattleLog(`<span class="action">You've used your last persuasion attempt for this fight..</span>`);
+                        updateBattleLog(
+                            `<span class="action">You've used your last ` +
+                            `persuasion attempt for this fight.</span>`
+                        );
                     }
                     enemyAttack();
                 }
@@ -12345,8 +13841,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
-
-        function openChest() {
+        async function openChest() {
             const cellType = MAP.getCell(player.x, player.y)?.type;
 
             if (cellType === 'mimic') {
@@ -12419,6 +13914,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 // Remove the chest from the map
                 MAP.setCell(player.x, player.y);
+                await npcMove();
             }
 
             render();
@@ -12524,6 +14020,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         function descend() {
             floor++;
+            player.stepsTakenOnCurrentFloor = 0;
             updateBattleLog(`Descending into floor ${floor}...`);
 
             const floorBoost = Math.floor(floor / 2);
@@ -12586,6 +14083,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             InventorySidebar.open("main");
             GameControl.update();
             updateViewportHeader();
+            render();
         });
 
         menu.setMenus({
@@ -13833,7 +15331,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "GAMBLER",
                 onOpen: () => {
                     Portrait.show('gambler');
-                    gambler.say('Place yer bets!');
+                    gambler.say(
+                        player.inventory.hasEquippedRing("ringGamble")
+                            ? 'Cheesed to meet you!'
+                            : 'Place yer bets!'
+                    );
                     playGamblersTheme();
                 },
                 onClose: () => {
@@ -13847,10 +15349,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 landingHtml: () => {
                     return (
-                        `<span class="gambler">&lt;GAMBLER&gt;</span> "Welcome, dungeon dweller! ` +
-                        `<span class="friendly">Roll a 12</span> and <span class="BTC">boost one of yer stats.</span> ` +
-                        `Just <span class="tooExpensive">${gambler.playPrice}</span> to play!"\n\n` +
-                        `You have <span class="BTC">₿ ${player.bitcoins.toLocaleString(undefined)}</span> in your wallet`
+                        `<span class="gambler">&lt;GAMBLER&gt;</span> ` +
+                        `"Welcome, dungeon dweller! ` +
+                        `<span class="friendly">Roll a 12</span> and ` +
+                        `<span class="BTC">boost one of yer stats.</span> ` +
+                        `Just <span class="tooExpensive">` +
+                        `₿ ${gambler.playPrice}</span> to play!"\n\n` +
+                        `You have <span class="BTC">₿ ` +
+                        `${player.bitcoins.toLocaleString(undefined)}</span> ` +
+                        `in your wallet`
                     );
                 },
                 getOptions: () => {
@@ -13942,6 +15449,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
             chest: {
                 title: "TREASURE CHEST",
+                defaultCloseOption: "resistTemptation",
                 onOpen: () => {
                     Portrait.show('chest');
                 },
@@ -13959,7 +15467,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             description: "Claim your succulent reward!",
                         },
                         {
-                            id: "_back",
+                            id: "resistTemptation",
                             displayText: "Resist your burning temptation...",
                             description: "DON'T claim your succulent reward!",
                         },
@@ -13968,6 +15476,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 select: (selectedOptionId) => {
                     if (selectedOptionId === "open") {
                         openChest();
+                    } else if (selectedOptionId === "resistTemptation") {
+                        npcMove();
                     }
                     menu.close();
                     render();
@@ -14288,6 +15798,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         $button.classList.remove("hidden");
                     });
 
+                player.movementDisabled = false;
+
                 const $currentlyOpenedSection =
                     InventorySidebar?.getCurrentSectionElement();
                 const currentSectionName =
@@ -14417,10 +15929,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const $button = document.createElement("button");
                 $button.className = `${sectionName}-${objectDefinition.id}`;
                 $button.dataset.id = objectDefinition.id;
+
                 $button.setAttribute(
-                    "title",
-                    `${objectDefinition.name}: ${objectDefinition.description}`
+                    'data-tooltipHtml',
+                    `<div class="inventoryTooltip">
+                        <div class="name">${objectDefinition.name}</div>
+                        <div class="details">
+                            ${objectDefinition.description}
+                        </div>
+                    </div>`
                 );
+                $button.setAttribute('data-tooltipPosition', 'left');
+                $button.setAttribute('data-tooltipGroupId', 'inventorySidebar');
+
                 // Reflect current enabled state on creation
                 if (!InventorySidebar.enabled) {
                     $button.setAttribute('disabled', 'true');
@@ -14441,6 +15962,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 $container.appendChild($icon);
                 $container.appendChild($label);
                 $button.appendChild($container);
+                Tooltip.initialize($button);
 
                 return $button;
             },
@@ -14856,7 +16378,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let levelUpAllocatedStats = {};
         let levelUpStatPointsAllocated = {};
 
-        function startLevelUpAllocation() {
+        function startLevelUpAllocation(callback) {
             isLevelUpAllocation = true;
             levelUpAllocatedStats = {};
             player.remainingPoints = 6;
@@ -14890,9 +16412,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     GameControl.disableControls();
                     animEatRat(() => GameControl.enableControls());
                 }
+
+                if (typeof callback === "function") {
+                    callback();
+                }
+
                 render();
             } else {
-                menu.open("statAllocation");
+                menu.open("statAllocation", callback);
             }
         }
 
@@ -15247,6 +16774,22 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }, 500);
             }, 500);
         }
+
+        document.querySelectorAll("#inventory > div[name]").forEach(($e) => {
+            const isScrollable = ["items", "weapons", "armor", "rings"]
+                .includes($e.getAttribute("name"));
+
+            if (! isScrollable) {
+                return;
+            }
+
+            addEventListener(
+                "wheel",
+                function (e) {
+                    $e.scrollTop += e.deltaY;
+                }
+            );
+        });
 
         document.addEventListener('keydown', function titleScreenHandler(e) {
             if ($titleScreen.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {

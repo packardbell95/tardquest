@@ -10,9 +10,13 @@
  * @attribute {number} [max=100] - Maximum value the bar can reach
  * @attribute {number} [height=14] - Height of the bar in pixels
  *
+ * @attribute {number} [cautionAtOrAbovePercentage] - Triggers caution animation if percentage meets or exceeds this value
  * @attribute {number} [cautionAbovePercentage] - Triggers caution animation if percentage exceeds this value
+ * @attribute {number} [cautionAtOrBelowPercentage] - Triggers caution animation if percentage meets or is below this value
  * @attribute {number} [cautionBelowPercentage] - Triggers caution animation if percentage is below this value
+ * @attribute {number} [dangerAtOrAbovePercentage] - Triggers danger animation if percentage meets or exceeds this value
  * @attribute {number} [dangerAbovePercentage] - Triggers danger animation if percentage exceeds this value
+ * @attribute {number} [dangerAtOrBelowPercentage] - Triggers danger animation if percentage meets or is below this value
  * @attribute {number} [dangerBelowPercentage] - Triggers danger animation if percentage is below this value
  *
  * @attribute {string} [emptyColor="#900"] - CSS color for the unfilled portion
@@ -31,9 +35,13 @@ class ProgressBar extends HTMLElement {
             'height',
             'emptyColor',
             'filledColor',
+            'cautionAtOrAbovePercentage',
             'cautionAbovePercentage',
+            'cautionAtOrBelowPercentage',
             'cautionBelowPercentage',
+            'dangerAtOrAbovePercentage',
             'dangerAbovePercentage',
+            'dangerAtOrBelowPercentage',
             'dangerBelowPercentage',
             'value',
             'max'
@@ -226,11 +234,27 @@ class ProgressBar extends HTMLElement {
             return null;
         }
 
+        const dangerAtOrAbove = this.getAttribute('dangerAtOrAbovePercentage');
+        if (dangerAtOrAbove !== null && activePercentage >= dangerAtOrAbove) {
+            return {
+                level: "danger",
+                direction: "above",
+            };
+        }
+
         const dangerAbove = this.getAttribute('dangerAbovePercentage');
         if (dangerAbove !== null && activePercentage > dangerAbove) {
             return {
                 level: "danger",
                 direction: "above",
+            };
+        }
+
+        const dangerAtOrBelow = this.getAttribute('dangerAtOrBelowPercentage');
+        if (dangerAtOrBelow !== null && activePercentage <= dangerAtOrBelow) {
+            return {
+                level: "danger",
+                direction: "below",
             };
         }
 
@@ -242,11 +266,27 @@ class ProgressBar extends HTMLElement {
             };
         }
 
+        const cautionAtOrAbove = this.getAttribute('cautionAtOrAbovePercentage');
+        if (cautionAtOrAbove !== null && activePercentage >= cautionAtOrAbove) {
+            return {
+                level: "caution",
+                direction: "above",
+            };
+        }
+
         const cautionAbove = this.getAttribute('cautionAbovePercentage');
         if (cautionAbove !== null && activePercentage > cautionAbove) {
             return {
                 level: "caution",
                 direction: "above",
+            };
+        }
+
+        const cautionAtOrBelow = this.getAttribute('cautionAtOrBelowPercentage');
+        if (cautionAtOrBelow !== null && activePercentage <= cautionAtOrBelow) {
+            return {
+                level: "caution",
+                direction: "below",
             };
         }
 
