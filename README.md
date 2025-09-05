@@ -38,6 +38,8 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 [Packard Bell 95](https://packardbell95.com/)
 
+[Kirbydogs](https://kirbydogs.neocities.org/)
+
 ### LEADERBOARD API HOSTING
 [VocaPepper](https://vocapepper.com/)
 

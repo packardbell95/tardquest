@@ -1,0 +1,367 @@
+:root {
+    --lime: #A8E038;
+    --lavender: #E0D0FF;
+    --purple: #A070C8;
+    --indigo: #683090;
+    --plum: #481868;
+    --butter: #EEDD77;
+    --amber: #FFA800;
+    --orange: #FF7000;
+
+    --card: #241632; /* card background */
+    --text: #f5f1ff; /* primary text on dark */
+    --muted: #cfc3e9;
+    --headerText: #205;
+    --border: color-mix(in oklab, var(--lavender) 60%, var(--plum));
+    --row-alt: color-mix(in oklab, var(--plum) 70%, white);
+    --row-hover: color-mix(in oklab, var(--indigo) 70%, white);
+    --head-bg: linear-gradient(180deg, var(--indigo), var(--plum));
+
+    --errorMessageAppearsAfter: 2s;
+}
+
+@font-face {
+    font-family: 'Web437_IBM_CGAthin';
+    src: url('Web437_IBM_CGAthin.woff') format('woff');
+}
+
+.blocky {
+    font-family: "Web437_IBM_CGAthin", monospace;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: auto;
+}
+
+.cellular > span {
+    cursor: help;
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+
+    &:hover {
+        background-color: #000;
+        filter: invert();
+    }
+}
+
+@keyframes appear {
+    from {
+        height: 0;
+        opacity: 0;
+    }
+    to {
+        height: initial;
+        opacity: 1;
+    }
+}
+
+@keyframes disappear {
+    from {
+        height: initial;
+        opacity: 1;
+    }
+    to {
+        height: 0;
+        opacity: 0;
+    }
+}
+
+#codebaseErrorMessage {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    animation: appear 0s var(--errorMessageAppearsAfter) forwards;
+}
+
+
+@keyframes loading {
+    0% {
+        top: 8px;
+        height: 64px;
+    }
+    50%, 100% {
+        top: 24px;
+        height: 32px;
+    }
+}
+
+#loadingContainer {
+    overflow: hidden;
+    animation: disappear 0s var(--errorMessageAppearsAfter) forwards;
+    display: flex;
+    justify-content: center;
+}
+
+.loading,
+.loading div {
+    box-sizing: border-box;
+}
+.loading {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+.loading div {
+    display: inline-block;
+    position: absolute;
+    left: 8px;
+    width: 16px;
+    background: currentColor;
+    animation: loading 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+.loading div:nth-child(1) {
+    left: 8px;
+    animation-delay: -0.24s;
+}
+.loading div:nth-child(2) {
+    left: 32px;
+    animation-delay: -0.12s;
+}
+.loading div:nth-child(3) {
+    left: 56px;
+    animation-delay: 0s;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.understated {
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+}
+
+html {
+    min-width: 100vw;
+    min-height: 100vh;
+    background: linear-gradient(330deg, var(--plum) 0%, var(--lavender) 100%);
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    color: var(--text);
+    font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+body {
+    margin: 0 10%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--headerText);
+}
+
+h1 {
+    margin-block: 0.67em;
+    font-size: 2em;
+}
+
+/* --- Report container ---------------------------------------------------- */
+section, details {
+    max-width: 900px;
+}
+
+section {
+    background: #fff6;
+    color: #000;
+    padding: 2px 20px;
+    margin: 10px auto 0;
+    border-radius: 10px;
+}
+
+details {
+    margin: 2rem auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow:
+        0 20px 40px -20px color-mix(in oklab, var(--indigo) 35%, transparent),
+        inset 0 1px 0 color-mix(in oklab, white 6%, transparent);
+    overflow: clip;
+}
+
+/* --- Summary header (status bar) ---------------------------------------- */
+summary {
+    list-style: none; /* Hide default triangle; we’ll add our own */
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 1.25rem auto;
+    align-items: center;
+    gap: .5rem;
+    padding: .9rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text);
+
+    & > .header {
+        display: flex;
+        justify-content: space-between;
+    }
+}
+
+summary::marker { /* Firefox */
+    content: "";
+}
+
+summary::before { /* custom chevron */
+    content: "";
+    width: .6rem;
+    height: .6rem;
+    border-right: 2px solid color-mix(in oklab, var(--butter) 70%, white);
+    border-bottom: 2px solid color-mix(in oklab, var(--butter) 70%, white);
+    transform: rotate(45deg);
+    transition: transform .2s ease;
+    justify-self: center;
+}
+
+details[open] > summary::before {
+    transform: rotate(225deg) translate(-1px, -1px);
+}
+
+/* Optional: emphasize the (x/y) part in the title if present */
+summary :where(em, .muted) {
+    color: var(--muted);
+}
+
+/* --- Table --------------------------------------------------------------- */
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: var(--head-bg);
+    color: white;
+    text-align: left;
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding: .75rem .9rem;
+    border-bottom: 1px solid color-mix(in oklab, white 15%, transparent);
+    white-space: nowrap;
+}
+
+tbody td {
+    padding: .65rem .9rem;
+    border-bottom: 1px dashed color-mix(in oklab, var(--lavender) 40%, var(--card));
+    vertical-align: top;
+}
+
+thead th:last-child,
+tbody td:last-child {
+    text-align: right;
+}
+
+td div {
+    text-align: initial;
+}
+
+/* Column sizing for nicer proportions */
+tbody td:nth-child(1) { width: 55%; }
+tbody td:nth-child(2) { width: 15%; letter-spacing: .02em; }
+tbody td:nth-child(3) { width: 30%; }
+
+/* Zebra striping + hover */
+tbody tr:nth-child(odd)  { background: color-mix(in oklab, var(--row-alt) 65%, transparent); }
+tbody tr:hover           { background: var(--row-hover); color: #1a1a1a; }
+
+/* Rounded corners on the outermost cells */
+table tr:last-child  td:first-child { border-bottom-left-radius: 10px; }
+table tr:last-child  td:last-child  { border-bottom-right-radius: 10px; }
+
+/* Chip-like status in column 2 (works with "true"/"false" text) */
+tbody td:nth-child(2) {
+    font-weight: 600;
+}
+tbody td:nth-child(2)::before {
+    content: attr(data-status);
+    display: none; /* hidden unless you add data-status */
+}
+tbody td:nth-child(2) {
+    /* Progressive enhancement: colorize common literals */
+}
+tbody td:nth-child(2):where(:has(> .passed)) { color: var(--lime); }     /* if you add <span class="passed"> */
+tbody td:nth-child(2):where(:has(> .failed)) { color: var(--orange); }
+tbody td:nth-child(2) {
+    /* Fallback heuristic: color by text value (modern :has + :matches) */
+}
+tbody td:nth-child(2):has(:matches(:not(*))) { /* noop: placeholder for clarity */ }
+
+/* If you can add classes, use these chips */
+.passed {
+    display: inline-block;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--lime) 35%, white);
+    color: #163a00;
+    border: 1px solid color-mix(in oklab, var(--lime) 60%, #0a0);
+    font-size: .75rem;
+    letter-spacing: .06em;
+}
+.failed {
+    display: inline-block;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--orange) 35%, white);
+    color: #4a1400;
+    border: 1px solid color-mix(in oklab, var(--orange) 60%, #a30);
+    font-size: .75rem;
+    letter-spacing: .06em;
+}
+
+/* --- Small screens ------------------------------------------------------- */
+@media (max-width: 640px) {
+    summary {
+        grid-template-columns: 1rem auto;
+        padding: .8rem .85rem;
+    }
+    thead th, tbody td {
+        padding: .6rem .7rem;
+        font-size: .95em;
+    }
+}
+
+input.toggle {
+    display: none;
+}
+
+label.toggle {
+    display: block;
+    width: 50px; height: 30px; padding: 5px;
+    background: #cacaca;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+label.toggle::before {
+    content: "";
+    display: block;
+    width: 50%;
+    height: 100%;
+    background: #fff;
+}
+
+label.toggle,
+label.toggle::before {
+    transition: all 0.3s;
+}
+
+input.toggle:checked + label.toggle {
+    background: #1a8;
+}
+
+input.toggle:checked + label.toggle::before {
+    transform: translateX(100%);
+}

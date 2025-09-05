@@ -159,7 +159,7 @@ class Menu {
         return this.#isOpen;
     }
 
-    open(menuName) {
+    open(menuName, onClose) {
         if (typeof this.#menus[menuName] === 'undefined') {
             console.error('The requested menu does not exist', { menuName });
             return;
@@ -168,11 +168,17 @@ class Menu {
         this.#isOpen = true;
         const activeMenu = this.#menus[menuName];
 
-        this.#breadcrumbs.push({
+        const breadcrumb = {
             menuName,
             selectionIndex: this.#selectionIndex,
             currentPage: this.#currentPage,
-        });
+        };
+
+        if (typeof onClose === "function") {
+            breadcrumb.onClose = onClose;
+        }
+
+        this.#breadcrumbs.push(breadcrumb);
 
         this.#selectionIndex = 0; // Reset selection index
         this.#currentPage = 0; // Reset to the first page
@@ -190,6 +196,9 @@ class Menu {
     close() {
         const previousMenu = this.#breadcrumbs.pop();
         if (previousMenu) {
+            if (typeof previousMenu.onClose === "function") {
+                previousMenu.onClose();
+            }
             this.#menus[previousMenu.menuName].onClose?.();
             this.#selectionIndex = previousMenu.selectionIndex;
             this.#currentPage = previousMenu.currentPage;
@@ -209,6 +218,9 @@ class Menu {
     closeAll() {
         while (this.#breadcrumbs.length > 0) {
             const previousMenu = this.#breadcrumbs.pop();
+            if (typeof previousMenu.onClose === "function") {
+                previousMenu.onClose();
+            }
             this.#menus[previousMenu.menuName].onClose?.();
         }
         this.#elements.$menu.classList.add('hidden');
@@ -241,7 +253,7 @@ class Menu {
         const itemsPerPage = this.getItemsPerPage();
         const totalPages = this.getTotalPages();
         const itemsOnCurrentPage = (this.#currentPage + 1) >= totalPages
-            ? ((options.length % itemsPerPage) || itemsPerPage)
+            ? ((options?.length % itemsPerPage) || itemsPerPage)
             : itemsPerPage;
 
         return {
@@ -326,12 +338,23 @@ class Menu {
 
         this.#elements.$list.replaceWith($list);
         this.#elements.$list = $list; // Make sure the reference is updated too
+        const escapeDisabled = this.checkIfEscapeIsDisabled(activeMenu);
 
-        if (activeMenu.escapeDisabled) {
+        if (escapeDisabled) {
             this.#elements.$escapeMessage.classList.add("hidden");
         } else {
             this.#elements.$escapeMessage.classList.remove("hidden");
         }
+    }
+
+    checkIfEscapeIsDisabled(activeMenu = null) {
+        activeMenu = activeMenu || this.getActiveMenu();
+
+        return Boolean(
+            typeof activeMenu.escapeDisabled === "function"
+                ? activeMenu.escapeDisabled()
+                : (activeMenu?.escapeDisabled || false)
+        );
     }
 
     getItemIndex() {
@@ -395,6 +418,29 @@ class Menu {
     handleInput(key) {
         switch (key) {
             case 'escape':
+                const activeMenu = this.getActiveMenu();
+                const defaultCloseOption =
+                    activeMenu?.defaultCloseOption || null;
+
+                if (defaultCloseOption !== null) {
+                    const closeOptionIndex = activeMenu.getOptions().findIndex(
+                        (option) => option.id === defaultCloseOption
+                    );
+
+                    if (closeOptionIndex === -1) {
+                        console.error(
+                            "Default close option was set, but no option was " +
+                            "matched",
+                            { defaultCloseOption, activeMenu }
+                        );
+                        this.goToPreviousMenu();
+                        break;
+                    }
+
+                    this.select(closeOptionIndex);
+                    break;
+                }
+
                 this.goToPreviousMenu();
                 break;
             case 'w':
@@ -423,7 +469,7 @@ class Menu {
     }
 
     goToPreviousMenu() {
-        if (this.getActiveMenu()?.escapeDisabled) {
+        if (this.checkIfEscapeIsDisabled()) {
             return;
         }
 
