@@ -16070,6 +16070,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             player.inventory.useItem(item.id);
                             // Stop Enter from hitting the button again
                             this.blur();
+
+                            if (! player.inventory.hasItem(item.id)) {
+                                const id = $button?.dataset?.tooltipid;
+                                if (id) {
+                                    document.getElementById(id)?.remove();
+                                }
+                            }
                         };
 
                         $items.appendChild($button);
