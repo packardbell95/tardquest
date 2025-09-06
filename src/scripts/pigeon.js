@@ -22,10 +22,14 @@
     })();
     if (pendingDeliveredMessage) {
         log.info('Restored pending message from localStorage.');
-        // Re-surface pigeon so user can trigger reading
+        // Re-surface pigeon so user can trigger reading, but don't duplicate if already placed
         if (window.pigeon && pigeon.isAlive === true) {
             pigeon.isActiveOnFloor = true;
-            pigeon.set();
+            if (pigeon.x == null || pigeon.y == null) {
+                pigeon.set();
+            } else {
+                log.debug('Pigeon already positioned at', pigeon.x, pigeon.y);
+            }
         }
     }
 
@@ -167,7 +171,12 @@
                 try { localStorage.setItem(LS_PENDING_KEY, pendingDeliveredMessage); } catch {}
                 if (pigeon && pigeon.isAlive === true) {
                     pigeon.isActiveOnFloor = true;
-                    pigeon.set();
+                    // Only place if not already on the map (prevents second static spawn)
+                    if (pigeon.x == null || pigeon.y == null) {
+                        pigeon.set();
+                    } else {
+                        log.debug('Pigeon already active at', pigeon.x, pigeon.y, '- skipping new spawn');
+                    }
                 }
             }
         } catch (e){

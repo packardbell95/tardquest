@@ -9088,13 +9088,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         const pigeon = {
             isAlive: true,
             isActiveOnFloor: false,
+            // Homing state
+            x: null,
+            y: null,
+            steps: [],
             voice: {
                 pitch: 89,
                 speed: 70,
                 mouth: 152,
                 throat: 191,
             },
-            say: function(str, suppressSpeechSynthesis) {
+            say(str, suppressSpeechSynthesis) {
                 if (!suppressSpeechSynthesis) {
                     SpeechSynthesizer.speak(str, pigeon.voice);
                 }
@@ -9102,31 +9106,79 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     `<span class="pigeon">&lt;CARRIER PIGEON&gt;</span> "${str}"`
                 );
             },
-            isAt: function(x, y) {
+            isDoneMoving() {
+                return this.steps.length === 0;
+            },
+            isAt(x, y) {
                 return (
                     pigeon.isAlive &&
                     pigeon.isActiveOnFloor &&
-                    MAP.getCell(x, y)?.type === 'pigeon'
+                    this.x === x &&
+                    this.y === y
                 );
             },
-            location: function() {
+            location() {
                 return pigeon.isAlive && pigeon.isActiveOnFloor
-                    ? MAP.locate("pigeon")
+                    ? { x: this.x, y: this.y }
                     : null;
             },
-            set: function() {
-                const points =
-                    shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
-
-                if (points) {
-                    MAP.setCell(points.x, points.y, "pigeon");
-                }
-            },
-            checkForMessages: function() {
-                if (typeof PigeonMessaging !== 'undefined' && typeof PigeonMessaging.hasPendingMessages === 'function') {
+            checkForMessages() {
+                if (typeof PigeonMessaging !== 'undefined' &&
+                    typeof PigeonMessaging.hasPendingMessages === 'function') {
                     return PigeonMessaging.hasPendingMessages();
                 }
                 return false;
+            },
+            prepareMovement() {
+                if (!this.isActiveOnFloor) return;
+                if (!this.checkForMessages()) return;
+                if (this.x == null || this.y == null) return;
+                // One step per player move toward player
+                const path = MAP.findPath([this.x, this.y], [player.x, player.y]) || [];
+                this.steps = path.slice(1, 2); // take only the next step
+            },
+            move() {
+                if (!this.isActiveOnFloor || this.steps.length === 0) return null;
+                const [nx, ny] = this.steps.shift();
+                // Clear old tile (if still pigeon)
+                if (this.x != null && this.y != null && MAP.getCell(this.x, this.y)?.type === 'pigeon') {
+                    MAP.setCell(this.x, this.y); // revert to floor
+                }
+                this.x = nx;
+                this.y = ny;
+                MAP.setCell(this.x, this.y, 'pigeon');
+                if (this.x === player.x && this.y === player.y) {
+                    return () => this.encounter();
+                }
+                return null;
+            },
+            encounter() {
+                // Despawn to avoid re-trigger
+                if (MAP.getCell(this.x, this.y)?.type === 'pigeon') {
+                    MAP.setCell(this.x, this.y);
+                }
+                this.isActiveOnFloor = false;
+                // Open pigeon menu then display message
+                if (typeof menu?.open === 'function') {
+                    setTimeout(() => {
+                        menu.open('pigeon', () => npcMove());
+                    }, 75);
+                }
+            },
+            set() {
+                // Clear previous placement to avoid leaving a stale static pigeon
+                if (this.x != null && this.y != null) {
+                    const prev = MAP.getCell(this.x, this.y);
+                    if (prev?.type === 'pigeon') {
+                        MAP.setCell(this.x, this.y); // revert to floor
+                    }
+                }
+                const point = shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
+                if (point) {
+                    this.x = point.x;
+                    this.y = point.y;
+                    MAP.setCell(point.x, point.y, "pigeon");
+                }
             }
         };
 
@@ -10118,6 +10170,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 pigeon.set();
             } else {
                 pigeon.isActiveOnFloor = false;
+                pigeon.x = pigeon.y = null;
             }
             
             if (floor === 1) {
@@ -10683,34 +10736,39 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         async function npcMove() {
             render();
 
-            if (! vampire.isActiveOnFloor) {
+            // VOCAP: unchanged logic, but do not early-return so pigeon can still act
+            if (!vampire.isActiveOnFloor) {
                 vampire.checkForActivation();
-                return;
+            } else {
+                vampire.prepareMovement();
+
+                const stepsThisTurn = vampire.steps.length;
+                const stepDurationMs = 120;
+                const callables = [];
+
+                for (let i = 0; i < stepsThisTurn; i++) {
+                    await sleepMs(stepDurationMs);
+                    const result = vampire.move();
+                    if (typeof result === "function") {
+                        callables.push(result);
+                    }
+                    render();
+                    if (vampire.isDoneMoving()) break;
+                }
+                for (let i = 0; i < callables.length; i++) {
+                    callables[i]();
+                }
             }
 
-            vampire.prepareMovement();
-
-            const stepsThisTurn = vampire.steps.length;
-            const stepDurationMs = 120;
-            const callables = [];
-
-            for (let i=0; i<stepsThisTurn; i++) {
-                // In the real version we would move the vampire here and
-                // update the minimap / scene between frames.
-                await sleepMs(stepDurationMs);
-                const result = vampire.move();
-                if (typeof result === "function") {
-                    callables.push(result);
-                }
+            // PIGEON HOMING (one step per player move if a message is pending)
+            if (pigeon.isActiveOnFloor && pigeon.checkForMessages()) {
+                pigeon.prepareMovement();
+                const result = pigeon.move();
                 render();
-
-                if (vampire.isDoneMoving()) {
-                    break;
+                if (typeof result === 'function') {
+                    result();
+                    render();
                 }
-            }
-
-            for (let i=0; i<callables.length; i++) {
-                callables[i]();
             }
         }
 
