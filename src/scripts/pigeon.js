@@ -21,7 +21,7 @@
         try { return localStorage.getItem(LS_PENDING_KEY) || null; } catch { return null; }
     })();
     if (pendingDeliveredMessage) {
-        log.info('Restored pending pigeon message from localStorage.');
+        log.info('Restored pending message from localStorage.');
         // Re-surface pigeon so user can trigger reading
         if (window.pigeon && pigeon.isAlive === true) {
             pigeon.isActiveOnFloor = true;
@@ -63,7 +63,7 @@
         log.debug('Send attempt len=%d', message?.length||0);
         const sid = getSessionId();
         if (!sid) {
-            updateBattleLog('<span class="enemy">Cannot send (no session).</span>');
+            updateBattleLog('<span class="enemy">Cannot send: No active VocaGuard session.</span>');
             log.warn('Send aborted: no session id');
             return false;
         }
@@ -82,7 +82,7 @@
                     InventorySidebar.refresh('items');
                 }
                 pigeon.say("Your message has been sent! Coo coo!");
-                log.info('Send success id=%s queue=%s remainingLocal=%s', j.id || 'n/a', j.queue_length, j.carrierPigeon_remaining);
+                log.info('Sent successfully!', j.id || 'Queue:', j.queue_length, 'Remaining carrierPigeon:', j.carrierPigeon_remaining);
                 if (typeof GameControl?.closePersuasionInputBox === "function") {
                     GameControl.closePersuasionInputBox();
                     render();
@@ -90,12 +90,12 @@
                 return true;
             } else {
                 updateBattleLog(`<span class="enemy">Pigeon failed: ${j.error||'Unknown error'}</span>`);
-                log.warn('Send failed status=%d payload=', r.status, j);
+                log.warn('Send failed!', r.status, j);
                 return false;
             }
         } catch (e){
             updateBattleLog('<span class="enemy">Network error sending pigeon.</span>');
-            log.error('Send network error', e);
+            log.error('Network error sending pigeon', e);
             return false;
         }
     }
@@ -137,7 +137,7 @@
         try { localStorage.removeItem(LS_PENDING_KEY); } catch {}
         function show(){
             if (typeof updateBattleLog === 'function') {
-                pigeon.say(`The message reads: "${msg}". Message delivered! Coo coo!`);
+                pigeon.say(`The message says: "${msg}" Message delivered! Coo coo!`);
                 ensurePolling();
             } else {
                 setTimeout(show, 250);
@@ -161,7 +161,7 @@
             });
             const data = await r.json().catch(()=>({}));
             if (data && data.pigeon_message) {
-                log.info('Delivered, ID:', data.pigeon_id || 'n/a');
+                log.info('Received Message ID:', data.pigeon_id || 'n/a');
                 stopPolling(); // Pause polling until message is displayed
                 pendingDeliveredMessage = data.pigeon_message;
                 try { localStorage.setItem(LS_PENDING_KEY, pendingDeliveredMessage); } catch {}
