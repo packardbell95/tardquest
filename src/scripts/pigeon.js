@@ -69,10 +69,7 @@
                 if (typeof InventorySidebar?.refresh === 'function') {
                     InventorySidebar.refresh('items');
                 }
-                updateBattleLog(
-                    `<span class="friendly">&lt;PIGEON&gt;:</span> "` +
-                    (j.sanitized_text || message.replace(/</g,'&lt;')) + '"'
-                );
+                pigeon.say("Your message has been sent! Coo coo!");
                 log.info('Send success id=%s queue=%s remainingLocal=%s', j.id || 'n/a', j.queue_length, j.carrierPigeon_remaining);
                 if (typeof GameControl?.closePersuasionInputBox === "function") {
                     GameControl.closePersuasionInputBox();
