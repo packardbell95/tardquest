@@ -15,7 +15,19 @@
     const DELIVERY_POLL_INTERVAL_MS = 60000; // poll cadence
     const DELIVERY_MIN_INTERVAL_MS = 5000;   // min gap between forced polls
     let lastDeliveryAttempt = 0;
-    let pendingDeliveredMessage = null;
+    const LS_PENDING_KEY = 'pigeonPendingMessage';
+    // Load any pending message from storage (persist across reloads)
+    let pendingDeliveredMessage = (function(){
+        try { return localStorage.getItem(LS_PENDING_KEY) || null; } catch { return null; }
+    })();
+    if (pendingDeliveredMessage) {
+        log.info('Restored pending pigeon message from localStorage.');
+        // Re-surface pigeon so user can trigger reading
+        if (window.pigeon && pigeon.isAlive === true) {
+            pigeon.isActiveOnFloor = true;
+            pigeon.set();
+        }
+    }
 
     function getSessionId(){
         return sessionStorage.getItem('vocaguardSessionId');
@@ -115,12 +127,14 @@
         }
         if (!msg) {
             if (typeof updateBattleLog === 'function') {
-                updateBattleLog('<span class="friendly">&lt;PIGEON&gt;</span> "I have no more messages."');
+                log.debug('No message to display');
                 ensurePolling();
             }
             return;
         }
-        pendingDeliveredMessage = null; // Message is now handled, allow polling again
+        // Clear persisted state first (prevents duplicates if user reloads mid-display)
+        pendingDeliveredMessage = null;
+        try { localStorage.removeItem(LS_PENDING_KEY); } catch {}
         function show(){
             if (typeof updateBattleLog === 'function') {
                 pigeon.say(`The message reads: "${msg}". Message delivered! Coo coo!`);
@@ -150,6 +164,7 @@
                 log.info('Delivered, ID:', data.pigeon_id || 'n/a');
                 stopPolling(); // Pause polling until message is displayed
                 pendingDeliveredMessage = data.pigeon_message;
+                try { localStorage.setItem(LS_PENDING_KEY, pendingDeliveredMessage); } catch {}
                 if (pigeon && pigeon.isAlive === true) {
                     pigeon.isActiveOnFloor = true;
                     pigeon.set();
