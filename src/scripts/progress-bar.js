@@ -6,10 +6,15 @@
  *
  * @element progress-bar
  *
+ * Values
  * @attribute {number} [value=0] - Current value shown by the progress bar
  * @attribute {number} [max=100] - Maximum value the bar can reach
  * @attribute {number} [height=14] - Height of the bar in pixels
  *
+ * Special Attributes
+ * @attribute {boolean} [placeholder] - If set, will display the bar as a placeholder instead of showing any values
+ *
+ * Thresholds
  * @attribute {number} [cautionAtOrAbovePercentage] - Triggers caution animation if percentage meets or exceeds this value
  * @attribute {number} [cautionAbovePercentage] - Triggers caution animation if percentage exceeds this value
  * @attribute {number} [cautionAtOrBelowPercentage] - Triggers caution animation if percentage meets or is below this value
@@ -19,6 +24,7 @@
  * @attribute {number} [dangerAtOrBelowPercentage] - Triggers danger animation if percentage meets or is below this value
  * @attribute {number} [dangerBelowPercentage] - Triggers danger animation if percentage is below this value
  *
+ * Colors
  * @attribute {string} [emptyColor="#900"] - CSS color for the unfilled portion
  * @attribute {string} [filledColor="#090"] - CSS color for the filled portion
  */
@@ -33,6 +39,7 @@ class ProgressBar extends HTMLElement {
     static get observedAttributes() {
         return [
             'height',
+            'placeholder',
             'emptyColor',
             'filledColor',
             'cautionAtOrAbovePercentage',
@@ -146,6 +153,7 @@ class ProgressBar extends HTMLElement {
     }
 
     updateDisplay() {
+        const isPlaceholder = this.hasAttribute("placeholder");
         const $empty = this.container.querySelector(".empty");
         const $filled = this.container.querySelector(".filled");
         const $label = this.container.querySelector(".label");
@@ -159,8 +167,12 @@ class ProgressBar extends HTMLElement {
         this.container.style.height = height;
         this.container.style.lineHeight = height;
 
-        const filledColor = this.getAttribute('filledColor') || "#090";
-        const emptyColor = this.getAttribute('emptyColor') || "#900";
+        const filledColor = isPlaceholder
+            ? "#1A1A1A"
+            : this.getAttribute('filledColor') || "#090";
+        const emptyColor = isPlaceholder
+            ? "#1A1A1A"
+            : this.getAttribute('emptyColor') || "#900";
         const value = parseFloat(this.#old.value || 0);
         const max = parseFloat(this.getAttribute('max') || 100);
         const oldPercentage = oldMax ? Math.min(Math.ceil((oldValue / oldMax) * 100), 100) : 0;
@@ -181,7 +193,7 @@ class ProgressBar extends HTMLElement {
                 transparent var(--cutoff),
                 transparent 100%
             )`;
-        $label.textContent = `${newValue}/${max}`;
+        $label.textContent = isPlaceholder ? "" : `${newValue}/${max}`;
 
         const startTime = performance.now();
 
