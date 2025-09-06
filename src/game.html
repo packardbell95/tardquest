@@ -9089,10 +9089,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             isAlive: true,
             isActiveOnFloor: false,
             voice: {
-                pitch: 180,
-                speed: 120,
-                mouth: 200,
-                throat: 150,
+                pitch: 89,
+                speed: 70,
+                mouth: 152,
+                throat: 191,
             },
             say: function(str, suppressSpeechSynthesis) {
                 if (!suppressSpeechSynthesis) {
@@ -9947,10 +9947,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     pigeon.isActiveOnFloor = false;
                     MAP.setCell(x, y, "bloodyCrater");
                     playSFX('scream');
-                    pigeon.say('Coo coo... *dies*', true);
+                    pigeon.say('I WAS ONLY THE MESSENGERRRRRrrrrrrrr... *fucking dies*', true);
                     updateBattleLog(
                         'The <span class="pigeon">carrier pigeon</span> has been ' +
-                        '<span class="action">blown to bits</span>! Feathers everywhere!'
+                        '<span class="action">blown into a cloud of feathers stained a dark red</span>! He was your only link to the outside world above the TardSpire...'
                     );
                 },
             },
@@ -13622,9 +13622,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onOpen: () => {
                     Portrait.show('pigeon');
                     if (pigeon.checkForMessages()) {
-                        pigeon.say('Coo coo! I have messages for you!');
+                        pigeon.say('Coo coo! You have a message from another adventurer!');
                     } else {
-                        pigeon.say('Coo coo! No messages today.');
+                        pigeon.say('Coo coo! No adventurers have sent out any messages...');
                     }
                 },
                 onClose: () => {
@@ -13637,8 +13637,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 landingHtml: () => {
                     return pigeon.checkForMessages() 
-                        ? `A carrier pigeon has arrived with messages!`
-                        : `A carrier pigeon sits here, but has no messages.`;
+                        ? `You see a sealed letter below the carrier pigeon's big stinky feet...`
+                        : `You notice a carrier pigeon... it seems lost.`;
                 },
                 getOptions: () => {
                     const options = [];
@@ -13646,15 +13646,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (pigeon.checkForMessages()) {
                         options.push({
                             id: "readMessages",
-                            displayText: "Read messages",
-                            description: "Read the messages this pigeon brought",
+                            displayText: "Read the letter",
+                            description: "Read the letter sent out by a fellow adventurer",
                         });
                     }
                     
                     options.push({
                         id: "leave",
-                        displayText: "Leave the pigeon alone",
-                        description: "Let the pigeon fly away",
+                        displayText: "Back away from the beast",
+                        description: "Let the beast roam free",
                     });
                     
                     return options;

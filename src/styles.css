@@ -1381,7 +1381,7 @@ a:link {
         background-image: url(assets/interface/items/trombone.png);
     }
     &.items-carrierPigeon .icon {
-        background-image: url(assets/interface/items/carrier-pigeon.png); /* VOCAP: does not exist yet! up to TheMilkMan */
+        background-image: url(assets/interface/items/carrier-pigeon.png);
     }
 
     /** Weapons Section **/
