@@ -9110,7 +9110,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }
             },
             checkForMessages: function() {
-                if (typeof PigeonMessaging !== 'undefined' && PigeonMessaging.hasPendingMessages) {
+                if (typeof PigeonMessaging !== 'undefined' && typeof PigeonMessaging.hasPendingMessages === 'function') {
                     return PigeonMessaging.hasPendingMessages();
                 }
                 return false;
@@ -13635,9 +13635,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 select: (selectedOptionId) => {
                     if (selectedOptionId === "readMessages") {
-                        if (typeof PigeonMessaging !== 'undefined' && PigeonMessaging.playMessages) {
-                            PigeonMessaging.playMessages();
-                            pigeon.say('Message delivered! Coo coo!');
+                        if (typeof PigeonMessaging !== 'undefined' && typeof PigeonMessaging.displayDeliveredMessage === 'function') {
+                            // displayDeliveredMessage() will use the pending delivered message (if any)
+                            PigeonMessaging.displayDeliveredMessage();
                         } else {
                             updateBattleLog('<span class="enemy">Pigeon messaging system not available.</span>');
                         }

@@ -126,8 +126,7 @@
         pendingDeliveredMessage = null; // Message is now handled, allow polling again
         function show(){
             if (typeof updateBattleLog === 'function') {
-                // TODO: Use NPC TTS for delivery (e.g. Pigeon.say(msg))
-                updateBattleLog(`<span class="friendly">&lt;PIGEON&gt;</span> "${msg.replace(/</g,'&lt;')}"`);
+                pigeon.say(`The message reads: "${msg}". Message delivered! Coo coo!`);
                 ensurePolling();
             } else {
                 setTimeout(show, 250);
@@ -151,9 +150,13 @@
             });
             const data = await r.json().catch(()=>({}));
             if (data && data.pigeon_message) {
-                log.info('Delivered pigeon id:', data.pigeon_id || 'n/a');
+                log.info('Delivered, ID:', data.pigeon_id || 'n/a');
                 stopPolling(); // Pause polling until message is displayed
                 pendingDeliveredMessage = data.pigeon_message;
+                if (pigeon && pigeon.isAlive === true) {
+                    pigeon.isActiveOnFloor = true;
+                    pigeon.set();
+                }
             }
         } catch (e){
             log.debug('Delivery request failed', e);
@@ -197,7 +200,9 @@
         pollNow: ()=>requestDeliveryOnce(true),
         isActive: () => pigeonInputMode,
         debug: { haveLocalPigeon, getSessionId, version: VERSION },
-        displayDeliveredMessage
+        displayDeliveredMessage,
+        get pendingDeliveredMessage() { return pendingDeliveredMessage; },
+        hasPendingMessages: () => !!pendingDeliveredMessage
     };
     log.info('Module loaded; autonomous delivery polling active.');
 })();
