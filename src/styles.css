@@ -801,6 +801,10 @@ a:link {
     color: rgb(255, 214, 138);
 }
 
+#portraitArtOverlay.pigeon {
+    color: rgb(79, 194, 146);
+}
+
 .hidden {
     display: none !important;
 }
@@ -1632,7 +1636,7 @@ a:link {
     color: #ffd68a;
 }
 .pigeon {
-    color: #ffffff;
+    color: #4fc292;
     font-weight: bold;
 }
 .muted {

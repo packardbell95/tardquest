@@ -5353,7 +5353,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             pigeon: {
-                relativeColor: { r: 150, g: 150, b: 150 },
+                relativeColor: { r: 79, g: 194, b: 146 },
                 positions: {
                     p0_0: {
                         artIndex: 0,
@@ -5508,29 +5508,45 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     {
                         transparentCharacter: '%',
                         data: `
-                            %%▄▄▄▄%%%%%%%%%%▄▄▄▄
+                               ▄▄▄▄▄%%%%%%%%%%
+                               %█   █%%%%▄▄%%%
+                               %%▀▄  █%▄▀▄ ▀▄▄
+                               %%%█   █    ▄▀%
+                               %%%%█   ▀  █%%%
+                               ▄▀▄▀      █%%%%
+                               ▄▀▄     ▄▀%%%%%
+                               ▀▀%▀█▀▀▀▄%%%%%%
+                               %%%▄▀▄%▀%▀%%%%%
                         `,
                     },
                     {
                         transparentCharacter: '%',
                         data: `
-                            %▄▄▄▄▄▄▄▄▄▄
+                              %%█▄%%%%%%
+                              %%█ ▀▄▀▀▄▄
+                              %%▀▄  ▄▀%%
+                              %%%▄▀▀▄%%%
+                              %%%%%%%%%%
+                              %%%%%%%%%%
                         `,
                     },
                     {
                         transparentCharacter: '%',
                         data: `
-                            %%▀▀▀
+                              %▄%%%
+                              %%▀▄▀
+                              %%%▀%
+                              %%%%%
                         `,
                     },
                     {
                         data: `
-                            ♦
+                            >▄  
                         `,
                     },
                     {
                         data: `
-                            ♦
+                            ƒ  
                         `,
                     },
                 ],
@@ -11725,10 +11741,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
 
             if (cmd === "/spawn p") {
-                pigeon.isAlive = true;
-                pigeon.isActiveOnFloor = true;
-                pigeon.set();
-                updateBattleLog('<span class="pigeon">CHEAT: Pigeon spawned</span>');
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (MAP.getCell(nx, ny)?.type === 'floor') {
+                        pigeon.isAlive = true;
+                        pigeon.isActiveOnFloor = true;
+                        MAP.setCell(nx, ny, 'pigeon');
+                        pigeon.set();
+                        updateBattleLog('<span class="pigeon">CHEAT: Pigeon spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="pigeon">CHEAT: Pigeon not spawned. Try a different spot.</span>');
+                }
                 render();
                 return;
             }
