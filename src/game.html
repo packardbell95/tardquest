@@ -929,7 +929,7 @@
         #stats          { grid-area: stats; }
         #controls       { grid-area: controls; }
         #viewport       { grid-area: viewport; }
-        #party          { grid-area: party; }
+        #party          { grid-area: party; overflow: hidden; }
         #inventory      { grid-area: inventory; }
         #playerInput    { grid-area: playerInput; }
         #nowPlaying     {
@@ -1039,15 +1039,6 @@
             margin-top: 2px;
         }
 
-        #partyMembers:empty::after {
-            content: "You ain't got no party. Go persuade some fools!";
-            display: block;
-            margin-top: 50px;
-            text-align: center;
-            color: #fff6;
-            font-style: italic;
-        }
-
         #partyMembers > [data-partyMemberId] {
             background-color: #000;
             clip-path: rect(0 100% 100% 0);
@@ -1062,7 +1053,6 @@
         }
 
         #partyMembers > [data-partyMemberId].sweepItUp {
-            background-color: #900;
             clip-path: rect(0 0% 100% 0);
             height: 0;
             margin-bottom: 0;
@@ -1584,6 +1574,19 @@
             gap: 2px;
             display: flex;
             flex-direction: column;
+
+            &.placeholder {
+                & .name {
+                    color: transparent;
+                }
+
+                & .info button.talk,
+                & .info button.release {
+                    cursor: default;
+                    color: transparent;
+                    border-color: #262626 #1A1A1A #1A1A1A #262626;
+                }
+            }
         }
 
         .party-member > .info {
@@ -2559,7 +2562,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         <div id="party">
             <div class="ui-header">
                 Party
-                (<span id="totalPartyMembers">0</span>/<span id="maxPartyMembers">3</span>)
+                (
+                    <span id="totalPartyMembers">0</span>
+                    /
+                    <span id="maxPartyMembers">3</span>
+                )
             </div>
             <div id="partyMembers"></div>
         </div>
@@ -10144,9 +10151,69 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 members: [],
                 isFull: () =>
                     player.party.members.length >= player.party.maxMembers,
-                add: (enemyId, name, hp, maxHp) => {
-                    const partyMemberId = player.party.seenMembers;
+                initializePartySection: () => {
+                    const $partyMembers =
+                        document.getElementById("partyMembers");
 
+                    const placeholders = [];
+
+                    for (let i=0; i<player.party.maxMembers; i++) {
+                        $placeholder = player.party.getPartyMemberPlaceholder();
+                        placeholders.push($placeholder);
+                    }
+
+                    $partyMembers.replaceChildren(...placeholders);
+                },
+                getPartyMemberPlaceholder: () => {
+                    const $placeholder = document.createElement("div");
+                    $placeholder.className = "party-member placeholder";
+                    $placeholder.setAttribute('data-partyMemberId', "???");
+
+                    const $name = document.createElement("div");
+                    $name.className = "name";
+                    $name.innerText = "Gabe Newell";
+                    $placeholder.appendChild($name);
+
+                    const $info = document.createElement("div");
+                    $info.className = "info";
+
+                    const $healthBar = document.createElement('progress-bar');
+                    $healthBar.className = "health-bar";
+                    $healthBar.setAttribute("placeholder", true);
+                    $healthBar.setAttribute("height", 20);
+                    $healthBar.setAttribute("value", 0);
+                    $healthBar.setAttribute("max", 0);
+                    $healthBar.setAttribute("cautionAtOrBelowPercentage", 25);
+                    $healthBar.setAttribute("dangerAtOrBelowPercentage", 10);
+                    $info.appendChild($healthBar);
+
+                    const $talkButton = document.createElement("button");
+                    $talkButton.disabled = true;
+                    $talkButton.className = "talk";
+                    $talkButton.textContent = "Talk";
+                    $info.appendChild($talkButton);
+
+                    const $releaseButton = document.createElement("button");
+                    $releaseButton.disabled = true;
+                    $releaseButton.className = "release";
+                    $releaseButton.textContent = "Release";
+                    $info.appendChild($releaseButton);
+
+                    $placeholder.appendChild($info);
+                    return $placeholder;
+                },
+                addPartyMemberPlaceholders: (totalNewPlaceholders) => {
+                    const $partyMembers =
+                        document.getElementById("partyMembers");
+
+                    for (let i=0; i<totalNewPlaceholders; i++) {
+                        $placeholder = player.party.getPartyMemberPlaceholder();
+                        $partyMembers.appendChild($placeholder);
+                    }
+                },
+                add: (enemyId, name, hp, maxHp) => {
+                    const index = player.party.members.length;
+                    const partyMemberId = player.party.seenMembers;
                     player.party.members.push({
                         id: partyMemberId,
                         enemyId,
@@ -10156,47 +10223,36 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         healedThisBattle: false,
                     });
 
-                    const $partyMember = document.createElement('div');
-                    $partyMember.classList.add('party-member');
+                    const $partyMembers =
+                        document.getElementById("partyMembers");
+                    const $partyMember = $partyMembers.children.item(index);
+
                     $partyMember.setAttribute(
                         'data-partyMemberId',
                         partyMemberId
                     );
 
-                    const $allyName = document.createElement('div');
-                    $allyName.classList.add('name');
-                    $allyName.innerText = name;
-                    $partyMember.appendChild($allyName);
+                    $partyMember.querySelector(".name").textContent = name;
 
-                    const $info = document.createElement('div');
-                    $info.classList.add('info');
-
-                    const $healthBar = document.createElement('progress-bar');
-                    $healthBar.classList.add('health-bar');
-                    $healthBar.setAttribute('height', 20);
+                    const $healthBar =
+                        $partyMember.querySelector("progress-bar");
                     $healthBar.setAttribute('value', hp);
                     $healthBar.setAttribute('max', maxHp);
-                    $healthBar.setAttribute('cautionBelowPercentage', 26);
-                    $healthBar.setAttribute('dangerBelowPercentage', 11);
+                    $healthBar.removeAttribute("placeholder");
 
-                    $info.appendChild($healthBar);
+                    const $talkButton =
+                        $partyMember.querySelector("button.talk");
+                    $talkButton.disabled = false;
+                    $talkButton.onclick =
+                        () => player.party.talk(partyMemberId);
 
-                    const $talkButton = document.createElement('button');
-                    $talkButton.classList.add('talk');
-                    $talkButton.innerText = 'Talk';
-                    $talkButton.onclick = () => player.party.talk(partyMemberId);
-                    $info.appendChild($talkButton);
+                    const $releaseButton =
+                        $partyMember.querySelector("button.release");
+                    $releaseButton.disabled = false;
+                    $releaseButton.onclick =
+                        () => player.party.release(partyMemberId);
 
-                    const $releaseButton = document.createElement('button');
-                    $releaseButton.classList.add('release');
-                    $releaseButton.innerText = 'Release';
-                    $releaseButton.onclick = () => player.party.release(partyMemberId);
-                    $info.appendChild($releaseButton);
-
-                    $partyMember.appendChild($info);
-
-                    document.getElementById('partyMembers').appendChild($partyMember);
-
+                    $partyMember.classList.remove("placeholder");
                     player.party.seenMembers++;
                 },
                 refresh: () => {
@@ -10228,8 +10284,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     player.party.refreshPartyCount();
                 },
                 purgeDeadMembers: () => {
+                    const $partyMembers =
+                        document.getElementById("partyMembers");
                     const aliveMembers = [];
-                    for (let i=0; i<player.party.members.length; i++) {
+                    const totalMembers = player.party.members.length;
+
+                    for (let i=0; i<totalMembers; i++) {
                         const partyMember = player.party.members[i];
 
                         if (partyMember.hp > 0) {
@@ -10238,10 +10298,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         }
 
                         const id = partyMember.id;
-                        const selector =
-                            `#partyMembers [data-partyMemberId="${id}"]`;
+                        const selector = `[data-partyMemberId="${id}"]`;
 
-                        const $partyMember = document.querySelector(selector);
+                        const $partyMember =
+                            $partyMembers.querySelector(selector);
                         $partyMember.classList.add('sweepItUp');
 
                         $partyMember.addEventListener('transitionend', function onTransitionEnd(e) {
@@ -10252,6 +10312,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         });
                     }
 
+                    const newPlaceholders = totalMembers - aliveMembers.length;
+                    player.party.addPartyMemberPlaceholders(newPlaceholders);
                     player.party.members = aliveMembers;
                     player.party.refreshPartyCount();
                 },
@@ -10447,6 +10509,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                         `#partyMembers [data-partyMemberId="` +
                                         `${partyMemberId}"]`;
                                     document.querySelector(selector).remove();
+                                    player.party.addPartyMemberPlaceholders(1);
                                     player.party.refreshPartyCount();
                                 },
                             },
@@ -16913,10 +16976,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         } else {
             showTitleScreen();
         }
-        
+
+        player.party.initializePartySection();
         GameControl.update();
-
     </script>
-
-
 </body></html>
