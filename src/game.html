@@ -12,9 +12,6 @@
                 navigator.serviceWorker.register('scripts/sw.js').catch(()=>{});
             }
         </script>
-    <style>
-
-    </style>
 </head>
 <body>
 
@@ -10100,6 +10097,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             });
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
 
+            if (pigeon.checkForMessages()) {
+                pigeon.isActiveOnFloor = true;
+                pigeon.set();
+            } else {
+                pigeon.isActiveOnFloor = false;
+            }
+            
             if (floor === 1) {
                 placeWelcomeBanner();
             }
@@ -10124,13 +10128,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             erok.isActiveOnFloor = erok.isAlive; // Spawns on every floor because he is a good boy
             if (erok.isActiveOnFloor) {
                 erok.set();
-            }
-
-            if (pigeon.checkForMessages()) {
-                pigeon.isActiveOnFloor = true;
-                pigeon.set();
-            } else {
-                pigeon.isActiveOnFloor = false;
             }
             spawnTreasureChests();
             spawnHealingTiles();
