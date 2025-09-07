@@ -283,6 +283,7 @@ a:link {
     );
     */
     background: linear-gradient(180deg,rgba(97, 0, 10, 1) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 70%, rgba(117, 62, 0, 1) 100%);
+    overflow: hidden;
 }
 
 #game.terrain_iceCavern {
@@ -919,7 +920,7 @@ a:link {
 #stats          { grid-area: stats; }
 #controls       { grid-area: controls; }
 #viewport       { grid-area: viewport; }
-#party          { grid-area: party; }
+#party          { grid-area: party; overflow: hidden; }
 #inventory      { grid-area: inventory; }
 #playerInput    { grid-area: playerInput; }
 #nowPlaying     {
@@ -1577,6 +1578,19 @@ a:link {
     gap: 2px;
     display: flex;
     flex-direction: column;
+
+    &.placeholder {
+        & .name {
+            color: transparent;
+        }
+
+        & .info button.talk,
+        & .info button.release {
+            cursor: default;
+            color: transparent;
+            border-color: #262626 #1A1A1A #1A1A1A #262626;
+        }
+    }
 }
 
 .party-member > .info {
