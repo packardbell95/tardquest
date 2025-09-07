@@ -42,6 +42,7 @@ body {
     user-select: none;
     -webkit-user-select: none;
     overflow: hidden;
+    image-rendering: pixelated;
 }
 
 button {
