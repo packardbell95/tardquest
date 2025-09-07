@@ -6221,12 +6221,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             speak: (sentence, voiceOptions, onEnded) => {
-                if (!speechEnabled || SpeechSynthesizer.isSpeaking) {
-                    onEnded?.();
+                // If already speaking, queue the next request
+                if (SpeechSynthesizer.isSpeaking) {
+                    SpeechSynthesizer.queue.push([sentence, voiceOptions, onEnded]);
                     return;
                 }
-                if (!voiceOptions) {
-                    console.error("No voice options provided", { sentence });
+                if (!speechEnabled) {
+                    onEnded?.();
                     return;
                 }
 
