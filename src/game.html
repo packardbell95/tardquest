@@ -6221,6 +6221,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             speak: (sentence, voiceOptions, onEnded) => {
+                SpeechSynthesizer.queue = SpeechSynthesizer.queue.filter(
+                    ([queuedSentence]) => queuedSentence !== sentence
+                );
                 // If already speaking, queue the next request
                 if (SpeechSynthesizer.isSpeaking) {
                     SpeechSynthesizer.queue.push([sentence, voiceOptions, onEnded]);
@@ -8503,6 +8506,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 // Purchase limit and inventory count is enforced server-side.
                 // So even if you cheat the client, it won't be usable without a valid server purchase.
                 if (category === "items" && id === "carrierPigeon") {
+                    // === LIMIT TO 10 PIGEONS LOCALLY, ENFORCED SERVER SIDE ===
+                    const pigeonCount = player.inventory.getItemCount("carrierPigeon");
+                    if (pigeonCount >= 10) {
+                        merchant.say("You've run out of space in your Pigeon Pouch!");
+                        return;
+                    }
                     const sessionId = sessionStorage.getItem("vocaguardSessionId");
                     if (!sessionId) {
                         merchant.say("Can't buy pigeons without an ID, kid.");
@@ -13183,15 +13192,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 getOptions: () => {
                     const items = InventoryObjectDefinitions.items;
-                    const options = merchant.items.map((itemId) => ({
-                        id: itemId,
-                        displayText: items[itemId].name,
-                        description: items[itemId].description,
-                        trailText: `₿ ${items[itemId].price}`,
-                        className: items[itemId].price > player.bitcoins
+                    const options = merchant.items.map((itemId) => {
+                        let displayText = items[itemId].name;
+                        let className = items[itemId].price > player.bitcoins
                             ? 'tooExpensive'
-                            : undefined,
-                    }));
+                            : undefined;
+                        if (itemId === "carrierPigeon" && player.inventory.getItemCount("carrierPigeon") >= 10) {
+                            displayText = `${displayText}`;
+                            className = "muted";
+                        }
+                        return {
+                            id: itemId,
+                            displayText,
+                            description: items[itemId].description,
+                            trailText: `₿ ${items[itemId].price}`,
+                            className,
+                        };
+                    });
 
                     options.push({
                         id: "_back",
