@@ -16,6 +16,7 @@
     const DELIVERY_MIN_INTERVAL_MS = 5000;   // min gap between forced polls
     let lastDeliveryAttempt = 0;
     const LS_PENDING_KEY = 'pigeonPendingMessage';
+    const inp = document.getElementById('persuadeInput');
     // Load any pending message from storage (persist across reloads)
     let pendingDeliveredMessage = (function(){
         try { return localStorage.getItem(LS_PENDING_KEY) || null; } catch { return null; }
@@ -58,7 +59,6 @@
         }
         pigeonInputMode = true;
         GameControl.openPersuasionInputBox();
-        const inp = document.getElementById('persuadeInput');
         if (inp) inp.placeholder = PLACEHOLDER_PIGEON;
         log.info('Compose opened');
     }
@@ -89,6 +89,7 @@
                 log.info('Sent successfully!', j.id || 'Queue:', j.queue_length, 'Remaining carrierPigeon:', j.carrierPigeon_remaining);
                 if (typeof GameControl?.closePersuasionInputBox === "function") {
                     pigeonInputMode = false;
+                    if (inp) inp.placeholder = "Say your piece...";
                     GameControl.closePersuasionInputBox();
                     render();
                 }
