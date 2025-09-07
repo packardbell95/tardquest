@@ -3,6 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
     <link rel="preload" href="scripts/preloader-v2.js" as="script">
     <title>TARDQUEST</title>
         <script>
@@ -11,2327 +12,6 @@
                 navigator.serviceWorker.register('scripts/sw.js').catch(()=>{});
             }
         </script>
-    <style>
-        /* ===== Scrollbar CSS ===== */
-        /* Firefox */
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #fff #000;
-        }
-
-        /* Chrome, Edge, and Safari */
-        *::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        *::-webkit-scrollbar-track {
-            background: #000;
-        }
-
-        *::-webkit-scrollbar-thumb {
-            background-color: #000;
-            border-radius: 0px;
-            border: 0px solid #fff;
-        }
-
-        @font-face {
-            font-family: 'DejaVuSansMono';
-            src: url('fonts/DejaVuSansMono.woff') format('woff');
-        }
-
-        * {
-            font-family: "DejaVuSansMono", monospace;
-        }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background: #000;
-            color: #fff;
-            font-size: 10px;
-            display: flex;
-            box-sizing: content-box;
-            user-select: none;
-            -webkit-user-select: none;
-            overflow: hidden;
-        }
-
-        button {
-            color: #fff;
-            background-color: #000;
-            cursor: pointer;
-            height: 20px;
-            border: 2px solid #e3e3e3 #979797 #979797 #e3e3e3;
-        }
-
-        button:not(:disabled):hover {
-            background-color: #fff;
-            color: #000;
-        }
-
-        button.release:not(:disabled):hover {
-            background-color: #f00;
-            color: #fff;
-        }
-
-        button:disabled,
-        button:disabled:hover {
-            color: #999;
-            border-color: #999;
-            cursor: not-allowed;
-        }
-
-        .strikethrough {
-            text-decoration: line-through;
-        }
-
-        .upside-down {
-            display: inline-block;
-            transform: scaleY(-1);
-        }
-
-        .ch {
-            width: 1ch;
-        }
-
-        a:visited,
-        a:link {
-            color: #fff;
-        }
-
-        #ui {
-            display: flex;
-        }
-
-        @keyframes darken {
-            from {
-                filter: brightness(1);
-            }
-
-            to {
-                filter: brightness(0);
-            }
-        }
-
-        @keyframes lighten {
-            from {
-                filter: brightness(0);
-            }
-
-            to {
-                filter: brightness(1);
-            }
-        }
-
-        #titleScreen {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            color: #fff;
-            z-index: 999;
-            font-family: monospace;
-            font-size: 15px;
-            white-space: pre;
-            user-select: none;
-            -webkit-user-select: none;
-            padding: 5px;
-        }
-        #titleScreen .content{
-            position: absolute;
-            left: 0px;
-            top: 0px;
-
-        }
-        #titleScreen a:link, #titleScreen a:visited {
-            color: #fff;
-            text-decoration: underline;
-        }
-        #titleScreen .logo {
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            padding: 3px;
-            font-size: 9px;
-        }
-
-        #titleScreen .startgame {
-            cursor: pointer;
-            position: absolute;
-            left: 50px;
-            top: 170px;
-            padding: 8px;
-            text-align: center;
-            line-height: 0%;
-            white-space: nowrap;
-            align-content: center;
-            border-style: solid;
-            border-width: 2px;
-            border-top-width: 10px;
-            border-color: #ffffff;
-            background-color: #000000;
-            z-index: 999;
-
-            &:hover {
-                border-color: #090;
-                color: #0f0;
-            }
-        }
-
-        #titleScreen .preloaderStatus {
-            cursor: pointer;
-            position: absolute;
-            left: 50px;
-            top: 250px;
-            width: 190px;
-            height: 54px;
-            padding: 8px;
-            text-align: center;
-            line-height: 0%;
-            border-style: solid;
-            border-width: 2px;
-            border-top-width: 10px;
-            border-color: #ffffff;
-            background-color: #000000;
-            z-index: 999;
-        }
-
-        #titleScreen .loadingBarContainer {
-            width: 190px;
-            height: 22px;
-            background: #090;
-            border: 2px solid #0f0;
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin: auto;
-        }
-
-        #titleScreen .skipPreloaderBtn {
-            position: absolute;
-            left: -2px;
-            top: 28px;
-            width: 194px;
-            height: 26px;
-            background: #000;
-            border: 2px solid #fff;
-            color: #fff;
-            font-weight: bold;
-
-            &:hover {
-                background-color: #fff;
-                color: #000;
-            }
-        }
-
-
-        #titleScreen .artwork {
-            position: absolute;
-            left: 270px;
-            top: 220px;
-            font-size: 9px;
-        }
-
-        #titleScreen .credits {
-            position: absolute;
-            top: 540px;
-            left: 30px;
-            border-style: solid;
-            border-width: 2px;
-            border-top-width: 10px;
-            border-color: #ffffff;
-            background-color: #000000;
-            padding: 9px;
-            z-index: 999;
-        }
-
-        #screenWipe {
-            position: fixed;
-            left: 0; bottom: 0; top: auto;
-            width: 100vw;
-            height: 0vh;
-            background: #000;
-            z-index: 10000;
-            pointer-events: none;
-            transition: height 0.5s cubic-bezier(.77,0,.18,1);
-        }
-        #screenWipe.active {
-            height: 100vh;
-            transition: height 0.5s cubic-bezier(.77,0,.18,1);
-        }
-        #screenWipe.reveal {
-            height: 0vh;
-            transition: height 0.5s cubic-bezier(.77,0,.18,1);
-        }
-
-        #game {
-            width: 100%;
-            height: 100%;
-            white-space: pre;
-            margin-bottom: auto;
-            align-content: center;
-
-            font-size: unset;
-            margin-top: unset;
-            /* Blue sky, dirt ground */
-            /*
-            background: linear-gradient(
-                180deg,
-                rgb(48, 89, 105) 0%,
-                rgb(48, 89, 105) 50%,
-                rgb(71, 54, 19) 50%,
-                rgb(71, 54, 19) 100%
-            );*/
-            /* Bruised sky, gradient dirt ground */
-            /*
-            background: linear-gradient(
-                180deg,
-                #950913 0%,
-                #060d40 50%,
-                #000 50%,
-                #513805 100%
-            );
-            */
-            background: linear-gradient(180deg,rgba(97, 0, 10, 1) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 70%, rgba(117, 62, 0, 1) 100%);
-            overflow: hidden;
-        }
-
-        #game.terrain_iceCavern {
-            background: linear-gradient(
-                180deg,
-                rgb(100, 113, 182) 0%,
-                rgb(0, 0, 0) 30%,
-                rgb(0, 0, 0) 70%,
-                rgb(49, 41, 106) 100%
-            );
-        }
-
-        @keyframes torchFlicker {
-            0%, 100% {
-                opacity: 0.3;
-                transform: scale(1.14);
-            }
-            25%, 86% {
-                opacity: 0.25;
-                transform: scale(1.31);
-            }
-            50% {
-                opacity: 0.325;
-                transform: scale(1);
-            }
-            17%, 75% {
-                opacity: 0.275;
-                transform: scale(1.22);
-            }
-        }
-
-        #game.torch::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            pointer-events: none;
-            background: radial-gradient(circle, #fff0 30%, #f2bb20cc 80%);
-            mix-blend-mode: screen;
-            animation: torchFlicker 3s infinite ease-in-out;
-        }
-
-        #game:not(.sightliness) {
-            filter: saturate(0.6);
-        }
-
-        #game > .layer {
-            position: absolute;
-            margin-left: 3.5px;
-            top: 0;
-            left: 0;
-        }
-
-        #game > .layer.dark {
-            filter: brightness(0);
-        }
-
-        #game > .layer.darkening,
-        #game > .layer.lightening {
-            animation-name: darken;
-            animation-duration: .5s;
-            animation-fill-mode: forwards;
-            animation-timing-function: ease;
-        }
-
-        #game > .layer.lightening {
-            animation-name: lighten;
-        }
-
-        #game > .layer.enemy > span {
-            color: #fff;
-        }
-
-        .layer.enemy {
-            position: absolute !important;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 10;
-        }
-        .layer.enemy pre {
-            margin: 0;
-            line-height: 1;
-            display: inline-block;
-            font-size: 12px;
-            transform: scale(0.5);
-            transform-origin: center center;
-            color: #fff;
-        }
-
-        @keyframes layerHealingAnimation {
-            from { transform: translateY(0); }
-            to { transform: translateY(-100%) };
-        }
-
-        #game > .layer.healing {
-            background: linear-gradient(
-                0deg,
-                #0b00 0%,
-                #0b00 10%,
-                #0b0f 50%,
-                #ffff 55%,
-                #080f 60%,
-                #0800 90%,
-                #0800 100%
-            );
-            animation-name: layerHealingAnimation;
-            animation-duration: 0.76s;
-            animation-fill-mode: forwards;
-            animation-timing-function: ease;
-            mix-blend-mode: screen;
-            width: 100%;
-            height: 1000%;
-        }
-
-        #game .layer,
-        #game span {
-            display: inline-block;
-            font-size: 12px;
-            line-height: 12px;
-        }
-
-        #animBattleTransition {
-            position: absolute;
-            background-repeat: no-repeat;
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated;
-            left: 0;
-            top: 0;
-            background-image: url(assets/transitions/battle-transition.gif);
-            background-size: cover;
-            background-position: bottom;
-            transform: translateY(-100%);
-            transition: transform 0.3s ease-in-out;
-            z-index: 15;
-        }
-
-        #animBattleTransition.active {
-            transform: translateY(0);
-        }
-
-        #animBattleTransition.reveal {
-            transform: translateY(-100%);
-        }
-
-        #animTorch {
-            width: 110px;
-            height: 256px;
-            image-rendering: pixelated;
-            left: 0;
-            bottom: 0;
-            background-image: url(assets/fp-anim/fp-torch.gif);
-            transform: translate(-55px, 256px);
-            transition: transform .5s steps(8, jump-end);
-        }
-
-        #animTorch.onscreen {
-            transform: translate(0, 0);
-        }
-
-        #animTrombone {
-            position: absolute;
-            background-repeat: no-repeat;
-            width: 300px;
-            height: 300px;
-            image-rendering: pixelated;
-            left: 0;
-            bottom: 0;
-            background-image: url(assets/fp-anim/fp-trombone.gif);
-            transform: translate(250px, 356px);
-            transition: transform .5s steps(8, jump-end);
-        }
-
-        #animTrombone.onscreen {
-            transform: translate(200px, 100px);
-        }
-
-        #viewport #mouseControl {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-        }
-
-        #mouseControl * {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        #mouseControl .turn-left {
-            clip-path: polygon(0 0, 25% 25%, 25% 75%, 0 75%);
-            cursor: url(assets/cursors/turn-left.cur), nw-resize;
-        }
-
-        #mouseControl .forward {
-            clip-path: polygon(0 0, 100% 0, 100% 75%, 0 75%);
-            cursor: url(assets/cursors/up.cur), n-resize;
-        }
-
-        #mouseControl .turn-right {
-            clip-path: polygon(75% 25%, 100% 0, 100% 75%, 75% 75%);
-            cursor: url(assets/cursors/turn-right.cur), ne-resize;
-        }
-
-        #mouseControl .strafe-left {
-            clip-path: polygon(0 75%, 25% 75%, 25% 85%, 0 100%);
-            cursor: url(assets/cursors/left.cur), w-resize;
-        }
-
-        #mouseControl .backward {
-            clip-path: polygon(25% 85%, 25% 75%, 75% 75%, 75% 85%, 100% 100%, 0 100%);
-            cursor: url(assets/cursors/down.cur), s-resize;
-        }
-
-        #mouseControl .strafe-right {
-            clip-path: polygon(75% 75%, 100% 75%, 100% 100%, 75% 85%);
-            cursor: url(assets/cursors/right.cur), e-resize;
-        }
-
-        #mouseControl .touch {
-            clip-path: polygon(10% 15%, 90% 15%, 90% 85%, 10% 85%);
-            cursor: url(assets/cursors/touch.cur), grab;
-        }
-
-        #mouseControl .touch:active {
-            cursor: url(assets/cursors/grab.cur), grabbing;
-        }
-
-        #mouseControl .attack {
-            cursor: url(assets/cursors/attack.cur), crosshair;
-        }
-
-        /** Menu Styles **/
-        #menu:not(.hidden) {
-            background: #000;
-            height: 315px;
-            width: 360px;
-            white-space: pre-wrap;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            border: 4px solid #000;
-            padding-bottom: 10px;
-            z-index: 9;
-        }
-
-        #menu .landing {
-            display: flex;
-            flex-direction: column;
-        }
-
-        #menu .title {
-            display: none !important;
-        }
-
-        #menu .list {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 2;
-            margin-bottom: auto;
-            padding-left: 1em;
-            min-height: 150px;
-            z-index: 9;
-        }
-
-        #menu .option {
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        #menu .option.selected {
-            background-color: #003;
-        }
-
-        #menu .option:not(.selected)::before {
-            content: "  ";
-        }
-
-        #menu .option.selected::before {
-            content: "▶ ";
-        }
-
-        #menu .selectionDescription {
-            flex-grow: 1;
-        }
-
-        #menu .escapeMessage {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            text-align: end;
-        }
-        /** End of Menu Styles **/
-
-        #animation:not(.hidden) {
-            white-space: pre;
-            overflow: hidden;
-            text-align: initial;
-            width: 100%;
-            background: #000;
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9;
-        }
-
-        @keyframes explosionColors {
-            0% {
-                background-color: #FFF5AD;
-                opacity: 1;
-            }
-
-            32% {
-                background-color: #F00;
-                opacity: 1;
-            }
-
-            38% {
-                background-color: #FFBC14;
-                opacity: 1;
-            }
-
-            45% {
-                background-color: #FFF;
-                opacity: 1;
-            }
-
-            50% {
-                background-color: #464FFC;
-                opacity: 1;
-            }
-
-            100% {
-                background-color: #000;
-                opacity: 0;
-            }
-        }
-
-        #animation.explosion {
-            font-size: 12px;
-            mix-blend-mode: lighten;
-            animation-name: explosionColors;
-            animation-duration: 240ms;
-            animation-iteration-count: 1;
-            animation-direction: forwards;
-            animation-timing-function: linear;
-        }
-
-        @keyframes fadeGradient {
-            0% {
-                opacity: 0;
-            }
-            1% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-            }
-        }
-
-        #viewport.playerFellIntoAPitAndDied::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, #900 40%, #0000 100%);
-            opacity: 0;
-            pointer-events: none;
-            animation: fadeGradient 1s ease-out forwards;
-            animation-delay: 2s;
-        }
-
-        #sidePanel {
-            margin-left: 0px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #battleLog {
-            padding: 10px;
-            text-overflow: ellipsis;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            overflow-y: scroll;
-        }
-
-        #battleLog > * {
-            filter: brightness(.5) saturate(.5);
-        }
-
-        #battleLog > :nth-child(1) {
-            filter: brightness(1) saturate(1);
-        }
-
-        #battleLog > :nth-child(2) {
-            filter: brightness(.8) saturate(.8);
-        }
-
-        #battleLog > :nth-child(3) {
-            filter: brightness(.7) saturate(.7);
-        }
-
-        #battleLog > :nth-child(4) {
-            filter: brightness(.6) saturate(.6);
-        }
-
-        #minimap,
-        #portraitArtOverlay {
-            padding: 2px;
-            white-space: pre;
-            font-size: 12px;
-        }
-
-        #minimap {
-            border-top: 0;
-        }
-
-        #minimap > span {
-            cursor: help;
-        }
-
-        #minimap > span:hover {
-            color: #000;
-            background-color: #fff;
-        }
-
-        #minimap .crackedFloorSlight,
-        #minimap .crackedFloor,
-        #minimap .crackedFloorSevere {
-            color: #f00;
-        }
-
-        #minimap .vampire,
-        .mapCellDetails .enlargedTile.vampire {
-            position: relative;
-
-            &::before {
-                position: absolute;
-                left: calc(50% - (1ch / 2));
-                top: 0;
-                width: 1ch;
-                overflow: hidden;
-                content: " ";
-                display: inline-block;
-                animation: minimapVampireFlap 0.6s infinite;
-                color: #f0f;
-            }
-        }
-
-        #minimap .vampire {
-            width: 1ch;
-        }
-
-        @keyframes minimapVampireFlap {
-            0%, 25% {
-                content: "v";
-                transform: translateY(1px) scaleY(1);
-            }
-
-            25.01%, 50% {
-                content: "m";
-                transform: translateY(0) scaleY(1);
-            }
-
-            50.01%, 75% {
-                content: "w";
-                transform: translateY(-1px) scaleY(-1);
-            }
-
-            75.01%, 100% {
-                content: "m";
-                transform: translateY(-1px) scaleY(1);
-            }
-        }
-
-        #portraitArtOverlay.portrait-art {
-            position: absolute;
-            top: 107px;
-            pointer-events: none;
-            font-size: 5px;
-            line-height: 1;
-        }
-
-        #portraitArtOverlay.chest {
-            color: #FAEB4A;
-        }
-
-        #portraitArtOverlay.settings {
-            color: #eef;
-        }
-
-        #portraitArtOverlay.inventory {
-            color: #fc8;
-        }
-
-        #portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
-            color: rgb(255, 214, 138);
-            top: 104px; /* lazy fix for clipping over border */
-        }
-
-        #portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
-            color: rgb(255, 214, 138);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .invisible {
-            visibility: hidden !important;
-        }
-
-        #inputBox {
-            display: none;
-            position: absolute;
-            top: 89px;
-            left: 0px;
-            width: 692px;
-            height: 2px;
-            border: 2px solid #fff;
-            z-index: 9;
-        }
-
-        #inputBox input {
-            flex-grow: 1;
-            color: #fff;
-            background-color: #000;
-            font-size: 13px;
-            padding: 10px;
-            font-size: 16px;
-            text-align: left;
-            outline: none;
-            border: unset;
-        }
-
-        #inputBox input::placeholder {
-            color: #d8d8d8;
-        }
-
-        #confirmInputBox,
-        #closeInputBox {
-            border-color: transparent;
-
-            &:hover {
-                color: #fff;
-                background-color: #090;
-                border-color: #3c3 #090 #090 #3c3;
-            }
-
-            &:not(:disabled):active {
-                background-position: calc(50% + 2px) calc(50% + 2px);
-                &::after {
-                    top: 1px;
-                    left: 1px;
-                }
-            }
-
-            &::after {
-                content: "✔";
-                position: relative;
-            }
-        }
-
-        #closeInputBox {
-            &:hover {
-                background-color: #f00;
-                border-color: #f99 #c00 #c00 #f99;
-            }
-
-            &::after {
-                content: "×";
-            }
-        }
-
-        #interface {
-            display: grid;
-            width: 692px;
-            height: 642px;
-            gap: 2px;
-            padding: 2px;
-            background: white;
-
-            grid-template-columns: 220px 368px 100px;
-            grid-template-rows: 110px 184px 162px 148px 30px;
-            grid-template-areas:
-                "battleLog  battleLog   battleLog"
-                "topLeft    viewport    inventory"
-                "stats      viewport    inventory"
-                "controls   party       playerInput"
-                "nowPlaying nowPlaying  controller";
-        }
-
-        #interface > div {
-            background-color: #000;
-        }
-
-        .ui-header {
-            display: flex;
-            flex-direction: row;
-            background-color: #fff;
-            color: #000;
-            margin: 1px;
-            padding: 0 4px;
-        }
-
-        .ui-header.space-between {
-            justify-content: space-between;
-        }
-
-        .ui-header.space-around {
-            justify-content: space-around;
-        }
-
-        #battleLog      { grid-area: battleLog; }
-        #topLeft        { grid-area: topLeft; }
-        #stats          { grid-area: stats; }
-        #controls       { grid-area: controls; }
-        #viewport       { grid-area: viewport; }
-        #party          { grid-area: party; overflow: hidden; }
-        #inventory      { grid-area: inventory; }
-        #playerInput    { grid-area: playerInput; }
-        #nowPlaying     {
-            grid-area: nowPlaying;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #nowPlaying .track-info {
-            flex-grow: 1;
-            padding: 4px 8px;
-            align-items: center;
-            display: flex;
-            background-image: url('assets/interface/ui/tile1.gif');
-            background-repeat: repeat;
-            background-size: 25px;
-            font-size: 13px;
-        }
-
-        #nowPlaying .music-icon {
-            margin-right: 8px;
-            color: #0ff;
-        }
-
-        #controller {
-            grid-area: controller;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            background-image: url('assets/interface/ui/tile1.gif');
-            background-repeat: repeat;
-            background-size: 25px;
-        }
-
-        #controller .controller-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        #controller .controller-icon {
-            width: 20px;
-            height: 16px;
-            vertical-align: middle;
-        }
-
-        #controllerStatusText.connected {
-            color: #0f0;
-        }
-
-        #controllerStatusText.disconnected {
-            color: #ff0000;
-        }
-
-        #viewport {
-            position: relative;
-            overflow: hidden;
-        }
-
-        #infoContainer {
-            display: grid;
-            gap: 2px;
-            padding: 4px;
-            grid-template-columns: 1fr 3fr;
-            margin-bottom: 2px;
-        }
-
-        #infoContainer > *,
-        #statContainer > * {
-            height: 14px;
-            line-height: 14px;
-        }
-
-        #infoContainer > :nth-child(2n) {
-            text-align: right;
-        }
-
-        #infoContainer > .BTC {
-            padding-right: 1em;
-        }
-
-        #statContainer {
-            display: grid;
-            gap: 4px;
-            padding: 4px;
-
-            grid-template-columns: 3fr 1fr 3fr 1fr;
-        }
-
-        #statContainer > div {
-            width: 50%;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-        }
-
-        #statContainer > :nth-child(2n) {
-            justify-content: right;
-        }
-
-        #partyMembers {
-            display: flex;
-            flex-direction: column;
-            padding: 4px;
-            margin-top: 2px;
-        }
-
-        #partyMembers > [data-partyMemberId] {
-            background-color: #000;
-            clip-path: rect(0 100% 100% 0);
-            height: 35px;
-            margin-bottom: 8px;
-            overflow: hidden;
-            transition:
-                background-color .5s linear,
-                clip-path .5s linear,
-                height .5s linear .5s,
-                margin-bottom .5s linear .5s;
-        }
-
-        #partyMembers > [data-partyMemberId].sweepItUp {
-            clip-path: rect(0 0% 100% 0);
-            height: 0;
-            margin-bottom: 0;
-        }
-
-        #viewport > .layer,
-        #viewport > #animation,
-        #viewport > #animTorch,
-        #viewport > #menu,
-        #viewport > #mouseControl {
-            position: absolute;
-        }
-
-        #controls {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .control-list:not(.hidden) {
-            display: grid;
-            gap: 4px;
-            padding: 4px;
-            grid-template-columns: 1fr 2fr;
-            margin: 4px 2px;
-        }
-
-        #controlsMenu .control-list {
-            grid-template-columns: 1fr 1fr;
-        }
-
-        #playerInput {
-            background: orange;
-        }
-
-        #playerInput .section {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .grid-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #navigationInput {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-        }
-
-        #battleInput {
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: 1fr;
-            grid-template-rows: 1fr 1fr 1fr;
-        }
-
-        #playerInput button {
-            background-position: 50% 50%;
-            background-size: contain;
-            background-repeat: no-repeat;
-            border-width: 2px;
-            min-width: 30px;
-            min-height: 30px;
-
-            &:disabled:hover {
-                background-color: unset;
-            }
-
-            &:not(:disabled):hover {
-                background-color: #00f;
-                border-color: #99f #00c #00c #99f;
-            }
-
-            &:not(:disabled):active {
-                background-position: calc(50% + 2px) calc(50% + 2px);
-            }
-
-            &:disabled {
-                opacity: 0.25;
-            }
-        }
-
-        #navigationInput button {
-            image-rendering: pixelated;
-        }
-
-        #battleInput button {
-            width: initial;
-            height: initial;
-        }
-
-        #playerInput button[name="turn-left"] {
-            background-image: url(assets/interface/ui/turn-left.png);
-        }
-
-        #playerInput button[name="forward"] {
-            background-image: url(assets/interface/ui/up.png);
-        }
-
-        #playerInput button[name="turn-right"] {
-            background-image: url(assets/interface/ui/turn-right.png);
-        }
-
-        #playerInput button[name="strafe-left"] {
-            background-image: url(assets/interface/ui/left.png);
-        }
-
-        #playerInput button[name="backward"] {
-            background-image: url(assets/interface/ui/down.png);
-        }
-
-        #playerInput button[name="strafe-right"] {
-            background-image: url(assets/interface/ui/right.png);
-        }
-
-        #playerInput button[name="attack"] {
-            background-image: url(assets/interface/ui/attack.gif);
-
-            &:not(:disabled):hover {
-                background-color: #f00;
-                border-color: #f99 #c00 #c00 #f99;
-            }
-
-            &:not(:disabled):active {
-                background-color: #f00;
-                border-color: #c00 #f99 #f99 #c00;
-            }
-        }
-
-        #playerInput button[name="persuade"] {
-            background-image: url(assets/interface/ui/persuade.gif);
-
-            &:not(:disabled):hover {
-                background-color: #A23AB4;
-                border-color: #d6f #90c #90c #d6f;
-            }
-
-            &:not(:disabled):active {
-                background-color: #A23AB4;
-                border-color: #90c #d6f #d6f #90c;
-            }
-        }
-
-        #playerInput button[name="run"] {
-            background-image: url(assets/interface/ui/run.gif);
-
-            &:not(:disabled):hover {
-                background-color: #00f;
-                border-color: #99f #00c #00c #99f;
-            }
-
-            &:not(:disabled):active {
-                background-color: #00f;
-                border-color: #00c #99f #99f #00c;
-            }
-        }
-
-        /** @TODO: Simplify/specify this */
-        #playerInput .section.menu .grid-container {
-            & > * {
-                flex-grow: 1;
-            }
-
-            & > div {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-
-                & button {
-                    flex-grow: 1;
-                }
-
-                & button[name="up"] {
-                    background-image: url(assets/interface/ui/up.png);
-                }
-
-                & button[name="confirm"] {
-                    background-image: url(assets/interface/ui/confirm.png);
-
-                    &:not(:disabled):hover {
-                        background-color: #090;
-                        border-color: #3c3 #090 #090 #3c3;
-                    }
-
-                    &:not(:disabled):active {
-                        background-color: #090;
-                        border-color: #090 #3c3 #3c3 #090;
-                    }
-                }
-
-                & button[name="down"] {
-                    background-image: url(assets/interface/ui/down.png);
-                }
-            }
-        }
-
-        #playerInput button[name="previous-page"] {
-            height: 100%;
-            background-image: url(assets/interface/ui/previous.png);
-        }
-
-        #playerInput button[name="next-page"] {
-            height: 100%;
-            background-image: url(assets/interface/ui/next.png);
-        }
-
-        #inventorySidebarCloseButton {
-            width: 100%;
-
-            &:hover {
-                color: #fff;
-                background-color: #f00;
-                border-color: #f99 #c00 #c00 #f99;
-            }
-
-            &:not(:disabled):active {
-                background-position: calc(50% + 2px) calc(50% + 2px);
-                &::after {
-                    top: 1px;
-                    left: 1px;
-                }
-            }
-
-            &::after {
-                content: "Close";
-                position: relative;
-            }
-        }
-
-        #inventorySidebarScrollUp,
-        #inventorySidebarScrollDown {
-            width: 100%;
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-
-            &:hover:not(:disabled) {
-                border-color: #99f #00c #00c #99f;
-            }
-
-            &:active:not(:disabled) {
-                background-position: calc(50% + 2px) calc(50% + 2px);
-            }
-        }
-
-        #inventorySidebarScrollUp {
-            background-image: url(assets/interface/ui/scroll-up.png);
-        }
-
-        #inventorySidebarScrollDown {
-            background-image: url(assets/interface/ui/scroll-down.png);
-        }
-
-        #inventory > [name] {
-            display: flex;
-            flex-direction: column;
-            height: 273px;
-            overflow: hidden;
-        }
-
-        #inventory > [name="main"] {
-            height: 333px;
-        }
-
-        #inventory > [name] button {
-            background-image:
-                url(assets/interface/ui/item-border-small-top-left.png),
-                url(assets/interface/ui/item-border-small-top-right.png),
-                url(assets/interface/ui/item-border-small-bottom-right.png),
-                url(assets/interface/ui/item-border-small-bottom-left.png);
-            background-repeat: no-repeat;
-            background-position:
-                top left,
-                top right,
-                bottom right,
-                bottom left;
-            background-size: 32px;
-            width: 100%;
-            height: 105px;
-            flex: 0 0 auto;
-            position: relative;
-            display: flex;
-
-            /** Main Inventory Sidebar Menu **/
-            &.items .icon {
-                background-image: url(assets/interface/ui/items.png);
-            }
-            &.weapons .icon {
-                background-image: url(assets/interface/ui/weapons.png);
-            }
-            &.armor .icon {
-                background-image: url(assets/interface/ui/armor.png);
-            }
-            &.rings .icon {
-                background-image: url(assets/interface/ui/rings.png);
-            }
-
-            /** Items Section **/
-            &.items-canOfHamms .icon {
-                background-image: url(assets/interface/items/hamms.png);
-            }
-            &.items-cupOfLean .icon {
-                background-image: url(assets/interface/items/lean.png);
-            }
-            &.items-glassOfToiletWater .icon {
-                background-image: url(assets/interface/items/toilet-water.png);
-            }
-            &.items-alaskaRaisins .icon {
-                background-image: url(assets/interface/items/raisins.png);
-            }
-            &.items-dowsingRod .icon {
-                background-image: url(assets/interface/items/dowsing-rod.png);
-            }
-            &.items-torch .icon {
-                background-image: url(assets/interface/items/torch.png);
-            }
-            &.items-brickOfC4 .icon {
-                background-image: url(assets/interface/items/c4.png);
-            }
-            &.items-tromBone .icon {
-                background-image: url(assets/interface/items/trombone.png);
-            }
-
-            /** Weapons Section **/
-            &.weapons-fingerNail .icon {
-                background-image: url(assets/interface/weapons/fingernail.png);
-            }
-            &.weapons-pointyStick .icon {
-                background-image: url(assets/interface/weapons/pointy-stick.png);
-            }
-            &.weapons-wiffleBallBat .icon {
-                background-image: url(assets/interface/weapons/wiffle-ball-bat.png);
-            }
-            &.weapons-nunchucks .icon {
-                background-image: url(assets/interface/weapons/nunchucks.png);
-            }
-            &.weapons-atlatlSpear .icon {
-                background-image: url(assets/interface/weapons/atlatl-spear.png);
-            }
-            &.weapons-bludgeoningMace .icon {
-                background-image: url(assets/interface/weapons/bludgeon-mace.png);
-            }
-            &.weapons-danceClub .icon {
-                background-image: url(assets/interface/weapons/dance-club.png);
-            }
-            &.weapons-cathodeRayTubeMonitor .icon {
-                background-image: url(assets/interface/weapons/crt.png);
-            }
-            &.weapons-magicPencil .icon {
-                background-image: url(assets/interface/weapons/magic-pencil.gif);
-            }
-            &.weapons-goldenWang .icon {
-                background-image: url(assets/interface/weapons/golden-wang.gif);
-            }
-
-            /** Armor Section **/
-            &.armor-pectoralMass .icon {
-                background-image: url(assets/interface/armor/pectoral-mass.png);
-            }
-            &.armor-graphicTee .icon {
-                background-image: url(assets/interface/armor/graphic-tee.png);
-            }
-            &.armor-barrelWithSuspenders .icon {
-                background-image: url(assets/interface/armor/barrel.png);
-            }
-            &.armor-leatherArmor .icon {
-                background-image: url(assets/interface/armor/leather-armor.png);
-            }
-            &.armor-milaneseArmor .icon {
-                background-image: url(assets/interface/armor/milanese-armor.png);
-            }
-            &.armor-blackPlateArmor .icon {
-                background-image: url(assets/interface/armor/black-plate-armor.png);
-            }
-            &.armor-nokiaMail .icon {
-                background-image: url(assets/interface/armor/nokia-mail.png);
-            }
-
-            /** Rings Section **/
-            &.rings-ringOfSexyUnderwear .icon {
-                background-image: url(assets/interface/rings/underwear.png);
-            }
-            &.rings-ringOfFrenchAccent .icon {
-                background-image: url(assets/interface/rings/french.png);
-            }
-            &.rings-ringValentines .icon {
-                background-image: url(assets/interface/rings/valentine.png);
-            }
-            &.rings-ringBloodstream .icon {
-                background-image: url(assets/interface/rings/bloodstream-nosering.png);
-            }
-            &.rings-ringOfHardening .icon {
-                background-image: url(assets/interface/rings/cockring.png);
-            }
-            &.rings-ringPectoralPiercing .icon {
-                background-image: url(assets/interface/rings/pectoral-piercing.png);
-            }
-            &.rings-ringPinkyToe .icon {
-                background-image: url(assets/interface/rings/pinkytoe.png);
-            }
-            &.rings-ringCrack .icon {
-                background-image: url(assets/interface/rings/crack.png);
-            }
-            &.rings-ringGamble .icon {
-                background-image: url(assets/interface/rings/gambler.png);
-            }
-            &.rings-ringEscobar .icon {
-                background-image: url(assets/interface/rings/escobar.png);
-            }
-            &.rings-ringOfSightliness .icon {
-                background-image: url(assets/interface/rings/sightliness.png);
-            }
-            &.rings-ringOfStinky .icon {
-                background-image: url(assets/interface/rings/stinky.png);
-            }
-            &.rings-ringOfAmplifiedAudio .icon {
-                background-image: url(assets/interface/rings/amp-audio.png);
-            }
-        }
-
-        #inventory > [name="main"] button {
-            height: 83px;
-        }
-
-        #inventory > [name] button .container {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            position: relative;
-        }
-
-        #inventory > [name] button .icon {
-            width: 86px;
-            height: 81px;
-            background-repeat: no-repeat;
-            background-position: center;
-            margin-left: auto;
-            margin-right: auto;
-            position: relative;
-            top: 10px;
-        }
-
-        #inventory > [name="items"] button .icon {
-            top: 4px;
-        }
-
-        #inventory > [name="rings"] button .icon {
-            top: 12px;
-        }
-
-        #inventory > [name="main"] button .icon {
-            top: 4px;
-            width: 58px;
-            height: 58px;
-        }
-
-        #inventory > [name] button .label {
-            margin-left: auto;
-            margin-right: 1ch;
-            position: relative;
-            top: -8px;
-            color: #fff;
-            background-color: #0009;
-        }
-
-        #inventory > [name="main"] button .label {
-            margin-right: auto;
-        }
-
-        #inventory > [name] button.equipped {
-            background-color: #009;
-            border-color: #33a #003 #003 #33a;
-        }
-
-        #inventory > [name] button:not(:disabled):hover {
-            background-color: #00f;
-            border-color: #99f #00c #00c #99f;
-
-            & .label {
-                background-color: transparent;
-            }
-
-            & .icon {
-                filter: invert();
-            }
-        }
-
-        #inventory > [name] button:not(:disabled):active {
-            background-position:
-                top 2px left 2px,
-                top 2px right -2px,
-                bottom -2px right -2px,
-                bottom -2px left 2px;
-
-            & .container {
-                top: 2px;
-                left: 2px;
-
-                & .label {
-                   background-color: transparent;
-                }
-
-                & .icon {
-                    filter: invert();
-                }
-            }
-        }
-
-        #inventory button:disabled {
-            opacity: 0.25;
-        }
-
-        .party-member {
-            gap: 2px;
-            display: flex;
-            flex-direction: column;
-
-            &.placeholder {
-                & .name {
-                    color: transparent;
-                }
-
-                & .info button.talk,
-                & .info button.release {
-                    cursor: default;
-                    color: transparent;
-                    border-color: #262626 #1A1A1A #1A1A1A #262626;
-                }
-            }
-        }
-
-        .party-member > .info {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .party-member > .info > progress-bar {
-            flex-grow: 1;
-        }
-
-        .party-member > .info > .buttons {
-            display: flex;
-            flex-direction: row;
-            gap: 4px;
-        }
-
-        #animEatRat {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            z-index: 9;
-        }
-
-        .player {
-            color: #2aff00;
-        }
-        .healingTile {
-            color: #6cff74;
-        }
-        .treasureChest {
-            color: #f19b32;
-        }
-        .wall,
-        .gloryWall,
-        .noboWall {
-            color: #e9ff00;
-        }
-        .floor {
-            color: #fff;
-        }
-        .unexplored {
-            color: #545454;
-        }
-        .exit {
-            color: #f00;
-        }
-        .merchant {
-            color: #f7f;
-        }
-        .gambler {
-            color: #ffd700;
-        }
-        .erok {
-            color: #ffd68a;
-        }
-        .muted {
-            color: #666;
-            text-decoration: line-through;
-        }
-        .tooExpensive {
-            color: #f00;
-        }
-
-        .alignRight {
-            text-align: right;
-        }
-        .friendly {
-            color: #61C9F6;
-        }
-        .enemy {
-            color: #EC4134;
-        }
-        .EXP {
-            color: #6EBD70;
-        }
-        .LV {
-            color: #6EBD70;
-        }
-        .BTC {
-            color: #FAEB4A;
-        }
-        .HP {
-            color: #F1483D;
-        }
-        .DEF {
-            color: #0ff;
-        }
-        .STR {
-            color: #f7603b;
-        }
-        .PRS {
-            color: #A23AB4;
-        }
-        .END {
-            color: #89f39a;
-        }
-        .SPD {
-            color: #7ec5ee;
-        }
-        .LUK {
-            color: #f5b609;
-        }
-        .LOAD {
-            color: #f8d46f;
-        }
-        .action {
-            color: #EC4134;
-        }
-
-        /**
-         * Rendered scene class names
-         * These are derived from the names in sceneRenderer.getEntityName()
-         * which is also used to identify specific pieces of sceneArt
-         *
-         * The renderer adds <span> elements around each rendered character with
-         * a "scene_character_" prefix. So for example, a "wall"
-         */
-        .scene_character_darkness {
-            color: #0009 !important;
-            filter: blur(2px);
-        }
-
-        .scene_character_void {
-            color: #000 !important;
-        }
-
-        .scene_character_iceWall {
-            color: #e8e8ff !important;
-            opacity: .8;
-        }
-
-        .scene_character_crackedFloorSlight,
-        .scene_character_crackedFloor,
-        .scene_character_crackedFloorSevere {
-            color: #000;
-        }
-
-        .layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble1,
-        .layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble2 {
-            display: initial;
-        }
-
-        .scene_character_rubble1,
-        .scene_character_rubble2 {
-            display: none;
-            background-color: transparent !important;
-            mix-blend-mode: lighten;
-            opacity: .2;
-        }
-
-        @keyframes scene_healingTileGlow {
-            0% {
-                color: #6CFF74;
-            }
-            25% {
-                color: #02B60E;
-            }
-            50% {
-                color: #02868C;
-            }
-            75% {
-                color: #00920A;
-            }
-            100% {
-                color: #8DD702;
-            }
-        }
-
-        .scene_character_healingTile {
-            animation-name: scene_healingTileGlow;
-            animation-duration: 5s;
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
-            animation-timing-function: linear;
-        }
-
-        @keyframes scene_exitGlow {
-            0% {
-                color: #FFF000;
-            }
-            25% {
-                color: #FF7400;
-            }
-            50% {
-                color: #FFF000;
-            }
-            75% {
-                color: #CD0074;
-            }
-            100% {
-                color: #FF0000;
-            }
-        }
-
-        .scene_character_exit {
-            animation-name: scene_exitGlow;
-            animation-duration: 5s;
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
-            animation-timing-function: linear;
-        }
-
-        @keyframes scene_treasureChestGlow {
-            0% {
-                color: #FFD700;
-            }
-            100% {
-                color: #FFF;
-            }
-        }
-
-        .scene_character_treasureChest {
-            animation-name: scene_treasureChestGlow;
-            animation-duration: 2s;
-            animation-iteration-count: infinite;
-            animation-direction: alternate;
-            animation-timing-function: ease-out;
-            background-color: #793311;
-            color: #ffd700;
-        }
-
-        .scene_character_tardspireBanner {
-            color: #edc949 !important;
-            background: #000;
-            mix-blend-mode: luminosity;
-        }
-
-        .scene_character_crater {
-            color: #0009 !important;
-            background-color: transparent !important;
-        }
-
-        .scene_character_bloodyCrater {
-            color: #9009 !important;
-            background-color: #3003 !important;
-        }
-
-        /* Tooltip styles */
-        [role="tooltip"] {
-            pointer-events: none;
-            min-height: 25px;
-            line-height: 25px;
-            font-size: 1rem;
-            background-color: #000d;
-            color: #fff;
-            padding: 4px;
-            box-shadow: 10px 10px 0 #0006;
-        }
-
-        .mapCellDetails {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-            padding: 10px;
-            border: 2px solid #fff;
-        }
-
-        .mapCellDetails .enlargedTile {
-            width: 40px;
-            height: 40px;
-            aspect-ratio: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 36px;
-            border: 2px solid #fff;
-
-            &.vampire::before {
-                width: 40px;
-                line-height: 42px;
-            }
-        }
-
-        .mapCellDetails .details {
-            display: flex;
-            flex-direction: column;
-            height: 44px;
-        }
-
-        .mapCellDetails .details .coordinates {
-            font-size: 12px;
-            font-style: italic;
-            line-height: 16px;
-        }
-
-        .mapCellDetails .details .name {
-            font-size: 18px;
-        }
-
-        @keyframes letsGo {
-            0%      { transform: scaleX(1) translateY(2px); }
-            24.9%   { transform: scaleX(1) translateY(2px); }
-
-            25%     { transform: scaleX(1) translateY(-2px); }
-            49.9%   { transform: scaleX(1) translateY(-2px); }
-
-            50%     { transform: scaleX(-1) translateY(2px); }
-            74.9%   { transform: scaleX(-1) translateY(2px); }
-
-            75%     { transform: scaleX(-1) translateY(-2px); }
-            99.9%   { transform: scaleX(-1) translateY(-2px); }
-
-            100%    { transform: scaleX(1) translateY(2px); }
-        }
-
-        .player.lets-go {
-            display: inline-block;
-            animation: letsGo .8s linear infinite;
-        }
-
-        .inventoryTooltip {
-            display: flex;
-            flex-direction: column;
-            padding: 10px;
-            border: 2px solid #fff;
-            max-width: 500px;
-        }
-
-        .inventoryTooltip .name {
-            font-size: 1.2em;
-        }
-
-        .inventoryTooltip .details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .playerInputTooltip {
-            padding: 0 1ch;
-            max-width: 500px;
-            border: 0;
-            color: #000;
-            background: #fff;
-
-            &.warning {
-                background: #ff0;
-            }
-        }
-
-        dialog.modal {
-            font-size: 14px;
-            min-width: 400px;
-            min-height: 150px;
-            background: #fff;
-            color: #fff;
-            padding: 0;
-            border: 2px solid #fff;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-
-            & > .header {
-                background-color: #fff;
-                color: #000;
-                border: 1px solid #000;
-                display: flex;
-                height: 20px;
-
-                & > .title {
-                    user-select: none;
-                    pointer-events: none;
-                    padding-left: 20px;
-                    text-align: center;
-                    flex-grow: 1;
-                    line-height: 22px;
-                }
-
-                & > button.close {
-                    color: #000;
-                    background-color: #fff;
-                    border-width: 1px;
-                    border-color: transparent;
-                    border-style: solid;
-                    border-left-color: #000;
-                    border-bottom: 1px solid linear-gradient(
-                        90deg, #000 0%, #000 10%,
-                        transparent 10%, transparent 100%
-                    );
-                    width: 20px;
-                    height: 20px;
-
-                    &:hover {
-                        color: #fff;
-                        background-color: #f00;
-                        border-color: #f99 #c00 #c00 #f99;
-                    }
-
-                    &:not(:disabled):active {
-                        background-position: calc(50% + 2px) calc(50% + 2px);
-                        &::after {
-                            top: 1px;
-                            left: 1px;
-                        }
-                    }
-
-                    &::after {
-                        content: "×";
-                        position: relative;
-                    }
-                }
-            }
-
-            & > .bodyContainer {
-                display: flex;
-                flex-direction: column;
-                background-color: #000;
-                flex-grow: 1;
-                padding: 1em 2ch;
-
-                & > .body {
-                    flex-grow: 1;
-                }
-
-                & > .footer {
-                    display: flex;
-                    justify-content: space-between;
-
-                    & > button {
-                        height: 3em;
-                        padding: .5em 4ch;
-
-                        &:not(:disabled):active {
-                            padding:
-                                calc(.5em + 2px)
-                                calc(4ch  - 2px)
-                                calc(.5em - 2px)
-                                calc(4ch  + 2px);
-                        }
-
-                        &.primary {
-                            color: #fff;
-
-                            &:not(:disabled):hover {
-                                background-color: #090;
-                                border-color: #3c3 #090 #090 #3c3;
-                            }
-
-                            &:not(:disabled):active {
-                                background-color: #090;
-                                border-color: #090 #3c3 #3c3 #090;
-                            }
-                        }
-
-                        &.danger {
-                            color: #fff;
-
-                            &:not(:disabled):hover {
-                                background-color: #f00;
-                                border-color: #f99 #c00 #c00 #f99;
-                            }
-
-                            &:not(:disabled):active {
-                                background-color: #f00;
-                                border-color: #c00 #f99 #f99 #c00;
-                            }
-                        }
-
-                        &.ghost {
-                            border-color: transparent;
-                        }
-                    }
-                }
-            }
-        }
-
-        dialog.modal::backdrop {
-            background-color: #000;
-            opacity: 0.8;
-        }
-
-        .layer.enemy.damaged {
-            animation: enemyDamaged 0.168s; /* VOCAP: 168ms is how long attack.mp3 is. */
-        }
-
-        .layer.enemy.damaged pre {
-            color: red !important;
-        }
-
-        @keyframes enemyDamaged {
-            0%   { transform: translate(0,0) skewX(0deg) rotate(0deg); }
-            20%  { transform: translate(-4px,0) skewX(-6deg) rotate(-2deg); }
-            40%  { transform: translate(4px,0) skewX(6deg) rotate(2deg); }
-            60%  { transform: translate(-4px,0) skewX(-8deg) rotate(-3deg); }
-            80%  { transform: translate(4px,0) skewX(8deg) rotate(3deg); }
-            100% { transform: translate(0,0) skewX(0deg) rotate(0deg); }
-        }
-
-        @keyframes PlayerDamaged {
-            0% { transform: translate(0, 0); }
-            20% { transform: translate(-6px, 0); }
-            40% { transform: translate(6px, 0); }
-            60% { transform: translate(-4px, 0); }
-            80% { transform: translate(4px, 0); }
-            100% { transform: translate(0, 0); }
-        }
-
-        #interface.shake {
-            animation: PlayerDamaged 0.168s;
-        }
-
-        #animDamageTaken {
-            position: absolute;
-            width: 692px;
-            height: 642px;
-            padding: -4px;
-            background: rgba(255,0,0,0.33) !important;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 69420;
-            transition: opacity 0.168s;
-        }
-
-        #animDamageTaken.active {
-            opacity: 1;
-            animation: PlayerDamaged 0.168s;
-        }
-
-        .control-list span[data-control] img {
-            padding: 1px;
-            aspect-ratio: 1;
-            vertical-align: middle;
-        }
-
-        .gay {
-            background: linear-gradient(
-                90deg,
-                #E60000  0%, #E60000  8%,
-                #FF8E00  8%, #FF8E00 16%,
-                #FFEF00 16%, #FFEF00 25%,
-                #00821B 25%, #00821B 33%,
-                #004BFF 33%, #004BFF 42%,
-                #780089 42%, #780089 50%,
-                #E60000 50%, #E60000 58%,
-                #FF8E00 58%, #FF8E00 67%,
-                #FFEF00 67%, #FFEF00 75%,
-                #00821B 75%, #00821B 83%,
-                #004BFF 83%, #004BFF 92%,
-                #780089 92%, #780089 100%
-            );
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-
-            animation: gayness 1s linear infinite;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-        }
-
-        @keyframes gayness {
-            from {
-                background-position: 0% 50%;
-            }
-            to {
-                background-position: 100% 50%;
-            }
-        }
-
-        /* Wave text */
-        @property --waveTextPhase {
-            syntax: "<angle>";
-            initial-value: 0deg;
-            inherits: true;
-        }
-
-        /* Optional: declare percentage custom properties for nicer interpolation */
-        @property --brightnessMaxPct {
-            syntax: "<percentage>";
-            initial-value: 140%;
-            inherits: true;
-        }
-
-        @property --contrastMaxPct {
-            syntax: "<percentage>";
-            initial-value: 120%;
-            inherits: true;
-        }
-
-        .waveText {
-            display: inline-block;
-
-            /* Wave geometry and timing */
-            --amplitudePx: 2px;
-            --stepAngle: 22.5deg;
-            --speedSec: 1.2s;
-
-            /* Animation phase accumulator */
-            --waveTextPhase: 0deg;
-
-            /* Filter maxima (tweak to taste) */
-            --brightnessMaxPct: 140%;
-            --contrastMaxPct: 120%;
-
-            animation: wave-text-phase var(--speedSec) linear infinite;
-        }
-
-        /* Each letter sits on its own phase offset via --i (we set this in markup) */
-        .waveText > span {
-            display: inline-block;
-
-            /* We compute the instantaneous angle and its sine once, then reuse it */
-            --angleNow: calc(
-                var(--waveTextPhase) + var(--i) * var(--stepAngle)
-            );
-            --sineNow: sin(var(--angleNow));
-
-            /* Positive-only component: 0 when at/below baseline, 0..1 when above */
-            --sinePositive: max(var(--sineNow), 0);
-
-            /* Vertical wobble */
-            transform: translateY(
-                calc(var(--amplitudePx) * var(--sineNow))
-            );
-
-            /* Filter modulation:
-               - At/below baseline: brightness/contrast are 100%.
-               - Above baseline: ease up to the configured maxima. */
-            color: oklch(
-                from currentColor
-                calc(l + 0.5 * var(--sinePositive))
-                calc(c + 0.2 * var(--sinePositive))
-                h
-            );
-
-            /* We hint the browser since we animate transform and filter */
-            will-change: transform, filter;
-        }
-
-        @keyframes wave-text-phase {
-            to {
-                --waveTextPhase: 360deg;
-            }
-        }
-
-        #vampireFocalPoint {
-            position: fixed;
-            z-index: 10;
-            inset: 0;
-            pointer-events: none;
-            background: #f00;
-
-            --center-x: 50%;
-            --center-y: 50%;
-            --radius-start: 240px;
-            --radius-end: 16px;
-
-            clip-path:
-                circle(var(--radius-start) at var(--center-x) var(--center-y));
-            opacity: 0;
-
-            will-change: clip-path, opacity;
-        }
-
-        @keyframes vampireFocalPointShrinkFade {
-            0% {
-                clip-path: circle(var(--radius-start)
-                    at var(--center-x) var(--center-y));
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-            65% {
-                clip-path: circle(var(--radius-end)
-                    at var(--center-x) var(--center-y));
-                opacity: 1;
-            }
-            100% {
-                clip-path: circle(var(--radius-end)
-                    at var(--center-x) var(--center-y));
-                opacity: 0;
-            }
-        }
-
-        /* We add this class from JS to play the animation. */
-        #vampireFocalPoint.is-animating {
-            animation-name: vampireFocalPointShrinkFade;
-            animation-duration: 700ms;
-            animation-timing-function: cubic-bezier(0.22, 1, 0.66, 1);
-            animation-fill-mode: forwards;
-        }
-
-        @property --hole-radius {
-            syntax: '<length>';
-            inherits: false;
-            initial-value: 240px;
-        }
-
-        #vampireFocalPointDesaturationOverlay {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 9;
-
-            backdrop-filter: saturate(0);
-            background: rgba(0, 0, 0, 0.1);
-
-            --center-x: 50%;
-            --center-y: 50%;
-            --radius-start: 240px;
-            --radius-end: 16px;
-            --hole-radius: var(--radius-start);
-
-            -webkit-mask: radial-gradient(
-                circle var(--hole-radius) at var(--center-x) var(--center-y),
-                transparent 0 calc(var(--hole-radius) + 1px),
-                #000 calc(var(--hole-radius) + 1px) 100%
-            );
-            mask: radial-gradient(
-                circle var(--hole-radius) at var(--center-x) var(--center-y),
-                transparent 0 calc(var(--hole-radius) + 1px),
-                #000 calc(var(--hole-radius) + 1px) 100%
-            );
-
-            opacity: 0;
-            will-change: opacity, mask, -webkit-mask;
-        }
-
-        /* Shrink the hole, then fade the overlay away. */
-        @keyframes vampireFocalPointDesaturationOverlayShrinkFade {
-            0% {
-                --hole-radius: var(--radius-start);
-                opacity: 1;
-            }
-            70% {
-                --hole-radius: var(--radius-end);
-                opacity: 1;
-            }
-            100% {
-                --hole-radius: var(--radius-end);
-                opacity: 0;
-            }
-        }
-
-        /* We add this class from JS to trigger the animation. */
-        #vampireFocalPointDesaturationOverlay.is-animating {
-            animation-name: vampireFocalPointDesaturationOverlayShrinkFade;
-            animation-duration: 700ms;
-            animation-timing-function: cubic-bezier(0.22, 1, 0.66, 1);
-            animation-fill-mode: forwards;
-        }
-    </style>
 </head>
 <body>
 
@@ -2820,6 +500,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
     <script src="scripts/preloader-v2.js"></script>
     <script src="https://vocapepper.com/tardquest/mods/tardboard.js"></script>
+    <script src="scripts/pigeon.js"></script>
     <script src="scripts/no-arrow-key-scroll.js"></script>
     <script src="scripts/progress-bar.js"></script>
     <script src="scripts/Inventory.js"></script>
@@ -7675,6 +5356,206 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 ],
             },
 
+            pigeon: {
+                relativeColor: { r: 79, g: 194, b: 146 },
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 14 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 14 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -13, y: 12 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 16, y: 10 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 33, y: 10 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 11 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 4, y: 10 },
+                    },
+                    p2_2: {
+                        artIndex: 1,
+                        drawAt: { x: 20, y: 10 },
+                    },
+                    p2_3: {
+                        artIndex: 1,
+                        drawAt: { x: 32, y: 10 },
+                    },
+                    p2_4: {
+                        artIndex: 1,
+                        drawAt: { x: 43, y: 11 },
+                    },
+                    p3_0: {
+                        artIndex: 2,
+                        drawAt: { x: -5, y: 13 },
+                    },
+                    p3_1: {
+                        artIndex: 2,
+                        drawAt: { x: 0, y: 12 },
+                    },
+                    p3_2: {
+                        artIndex: 2,
+                        drawAt: { x: 11, y: 12 },
+                    },
+                    p3_3: {
+                        artIndex: 2,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p3_4: {
+                        artIndex: 2,
+                        drawAt: { x: 27, y: 12 },
+                    },
+                    p3_5: {
+                        artIndex: 2,
+                        drawAt: { x: 34, y: 12 },
+                    },
+                    p3_6: {
+                        artIndex: 2,
+                        drawAt: { x: 46, y: 14 },
+                    },
+                    p4_0: {
+                        artIndex: 3,
+                        drawAt: { x: 4, y: 13 },
+                    },
+                    p4_1: {
+                        artIndex: 3,
+                        drawAt: { x: 9, y: 13 },
+                    },
+                    p4_2: {
+                        artIndex: 3,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p4_3: {
+                        artIndex: 3,
+                        drawAt: { x: 19, y: 13 },
+                    },
+                    p4_4: {
+                        artIndex: 3,
+                        drawAt: { x: 24, y: 13 },
+                    },
+                    p4_5: {
+                        artIndex: 3,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p4_6: {
+                        artIndex: 3,
+                        drawAt: { x: 32, y: 13 },
+                    },
+                    p4_7: {
+                        artIndex: 3,
+                        drawAt: { x: 37, y: 13 },
+                    },
+                    p4_8: {
+                        artIndex: 3,
+                        drawAt: { x: 42, y: 13 },
+                    },
+                    p5_0: {
+                        artIndex: 4,
+                        drawAt: { x: 14, y: 14 },
+                    },
+                    p5_1: {
+                        artIndex: 4,
+                        drawAt: { x: 16, y: 14 },
+                    },
+                    p5_2: {
+                        artIndex: 4,
+                        drawAt: { x: 18, y: 14 },
+                    },
+                    p5_3: {
+                        artIndex: 4,
+                        drawAt: { x: 20, y: 14 },
+                    },
+                    p5_4: {
+                        artIndex: 4,
+                        drawAt: { x: 22, y: 14 },
+                    },
+                    p5_5: {
+                        artIndex: 4,
+                        drawAt: { x: 24, y: 14 },
+                    },
+                    p5_6: {
+                        artIndex: 4,
+                        drawAt: { x: 26, y: 14 },
+                    },
+                    p5_7: {
+                        artIndex: 4,
+                        drawAt: { x: 28, y: 14 },
+                    },
+                    p5_8: {
+                        artIndex: 4,
+                        drawAt: { x: 30, y: 14 },
+                    },
+                    p5_9: {
+                        artIndex: 4,
+                        drawAt: { x: 32, y: 14 },
+                    },
+                    p5_10: {
+                        artIndex: 4,
+                        drawAt: { x: 34, y: 14 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                               ▄▄▄▄▄%%%%%%%%%%
+                               %█   █%%%%▄▄%%%
+                               %%▀▄  █%▄▀▄ ▀▄▄
+                               %%%█   █    ▄▀%
+                               %%%%█   ▀  █%%%
+                               ▄▀▄▀      █%%%%
+                               ▄▀▄     ▄▀%%%%%
+                               ▀▀%▀█▀▀▀▄%%%%%%
+                               %%%▄▀▄%▀%▀%%%%%
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                              %%█▄%%%%%%
+                              %%█ ▀▄▀▀▄▄
+                              %%▀▄  ▄▀%%
+                              %%%▄▀▀▄%%%
+                              %%%%%%%%%%
+                              %%%%%%%%%%
+                        `,
+                    },
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                              %▄%%%
+                              %%▀▄▀
+                              %%%▀%
+                              %%%%%
+                        `,
+                    },
+                    {
+                        data: `
+                            >▄  
+                        `,
+                    },
+                    {
+                        data: `
+                            ƒ  
+                        `,
+                    },
+                ],
+            },
+
             vampire: {
                 relativeColor: { r: 247, g: 119, b: 247 },
                 positions: {
@@ -8323,6 +6204,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
         const SpeechSynthesizer = {
             isSpeaking: false,
+            queue: [],
             pronunciationOverrides: {
                 "gauge": "gayge",
                 "PS2": "pee ess two",
@@ -8332,15 +6214,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 "tasty": "tay stee",
                 "consent": "cun sent",
                 "date": "daytt",
+                "ID": "eye dee",
+                "delivered": "deliv urd",
+                "adventurer": "advent ur rar",
+                "motorcycles": "motor psy culls",
             },
 
             speak: (sentence, voiceOptions, onEnded) => {
-                if (!speechEnabled || SpeechSynthesizer.isSpeaking) {
-                    onEnded?.();
+                SpeechSynthesizer.queue = SpeechSynthesizer.queue.filter(
+                    ([queuedSentence]) => queuedSentence !== sentence
+                );
+                // If already speaking, queue the next request
+                if (SpeechSynthesizer.isSpeaking) {
+                    SpeechSynthesizer.queue.push([sentence, voiceOptions, onEnded]);
                     return;
                 }
-                if (!voiceOptions) {
-                    console.error("No voice options provided", { sentence });
+                if (!speechEnabled) {
+                    onEnded?.();
                     return;
                 }
 
@@ -8362,6 +6252,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 options.onEnded = () => {
                     SpeechSynthesizer.isSpeaking = false;
                     onEnded?.();
+                    // Play next in queue if present
+                    if (SpeechSynthesizer.queue.length > 0) {
+                        const [nextSentence, nextVoiceOptions, nextOnEnded] = SpeechSynthesizer.queue.shift();
+                        SpeechSynthesizer.speak(nextSentence, nextVoiceOptions, nextOnEnded);
+                    }
                 };
 
                 new SamJs(options).speak(normalizedSentence);
@@ -9460,6 +7355,29 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     merchantStockChance: 1.0,
                     weight: 1.3,
                     price: 5,
+                },
+
+                carrierPigeon: {
+                    article: 'a',
+                    name: "CARRIER PIGEON",
+                    description: "A pigeon trained to carry messages. Sends a message to the next adventurer. +1 LOAD",
+                    use: () => {
+                        if (player.inCombat) {
+                            updateBattleLog('<span class="enemy">You cannot send a carrier pigeon during combat.</span>');
+                            return false;
+                        }
+                        if (typeof PigeonMessaging !== 'undefined' && PigeonMessaging.open) {
+                            PigeonMessaging.open();
+                            // Returning false prevents immediate consumption; item is removed after successful send (see pigeon.js)
+                            return false;
+                        }
+                        updateBattleLog('<span class="enemy">Pigeon messaging module not loaded.</span>');
+                        return false;
+                    },
+                    merchantStockChance: 1,
+                    chestChance: 0,
+                    weight: 1,
+                    price: 10,
                 },
             }),
 
@@ -10584,6 +8502,69 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     return;
                 }
 
+                // Special handling for carrier pigeon: defer local grant until server approves
+                // Purchase limit and inventory count is enforced server-side.
+                // So even if you cheat the client, it won't be usable without a valid server purchase.
+                if (category === "items" && id === "carrierPigeon") {
+                    // === LIMIT TO 10 PIGEONS LOCALLY, ENFORCED SERVER SIDE ===
+                    const pigeonCount = player.inventory.getItemCount("carrierPigeon");
+                    if (pigeonCount >= 10) {
+                        merchant.say("You've run out of space in your Pigeon Pouch!");
+                        return;
+                    }
+                    const sessionId = sessionStorage.getItem("vocaguardSessionId");
+                    if (!sessionId) {
+                        merchant.say("Can't buy pigeons without an ID, kid.");
+                        return;
+                    }
+
+                    // Inform player we're attempting a server purchase
+                    merchant.say("Hold on, checking the coop...");
+
+                    fetch('https://vocapepper.com:9601/api/pigeon/purchase', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sessionId })
+                    })
+                        .then(r => r.json().catch(()=>({})).then(data => ({ ok: r.ok, status: r.status, data })))
+                        .then(({ ok, data }) => {
+                            if (!ok || !data?.purchased) {
+                                console.warn('🐦 Pigeon: Purchase rejected', { ok, data });
+                                merchant.say(data?.error || "No pigeons for you right now!");
+                                return;
+                            }
+
+                            // Only deduct bitcoins if there is a non-zero price
+                            if (merchandise.price > 0) {
+                                player.takeBitcoins(merchandise.price);
+                                playSFX('kaching');
+                            }
+
+                            player.inventory.addItem(id);
+
+                            merchant.say(randomEntry([
+                                "Fresh from the loft!",
+                                "Don't eat it all at once!",
+                                "Treat it nice, it carries words.",
+                            ]));
+
+                            merchant.printTransactionMessage(
+                                "bought",
+                                merchandise,
+                                merchandise.price
+                            );
+
+                            render();
+                        })
+                        .catch(err => {
+                            console.error('🐦 Pigeon: Purchase error', err);
+                            merchant.say("The coop collapsed. Try later.");
+                        });
+
+                    // Exit early; normal flow handled in async chain
+                    return;
+                }
+
                 // Prevent buying equipment you already own
                 const alreadyOwnedEquippable =
                     category !== "items" &&
@@ -11169,6 +9150,103 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                 if (points) {
                     MAP.setCell(points.x, points.y, "erok");
+                }
+            }
+        };
+
+        const pigeon = {
+            isAlive: true,
+            isActiveOnFloor: false,
+            // Homing state
+            x: null,
+            y: null,
+            steps: [],
+            voice: {
+                pitch: 89,
+                speed: 70,
+                mouth: 152,
+                throat: 191,
+            },
+            say(str, suppressSpeechSynthesis) {
+                if (!suppressSpeechSynthesis) {
+                    SpeechSynthesizer.speak(str, pigeon.voice);
+                }
+                updateBattleLog(
+                    `<span class="pigeon">&lt;CARRIER PIGEON&gt;</span> "${str}"`
+                );
+            },
+            isDoneMoving() {
+                return this.steps.length === 0;
+            },
+            isAt(x, y) {
+                return (
+                    pigeon.isAlive &&
+                    pigeon.isActiveOnFloor &&
+                    this.x === x &&
+                    this.y === y
+                );
+            },
+            location() {
+                return pigeon.isAlive && pigeon.isActiveOnFloor
+                    ? { x: this.x, y: this.y }
+                    : null;
+            },
+            checkForMessages() {
+                if (typeof PigeonMessaging !== 'undefined' &&
+                    typeof PigeonMessaging.hasPendingMessages === 'function') {
+                    return PigeonMessaging.hasPendingMessages();
+                }
+                return false;
+            },
+            prepareMovement() {
+                if (!this.isActiveOnFloor) return;
+                if (!this.checkForMessages()) return;
+                if (this.x == null || this.y == null) return;
+                // One step per player move toward player
+                const path = MAP.findPath([this.x, this.y], [player.x, player.y]) || [];
+                this.steps = path.slice(1, 2); // take only the next step
+            },
+            move() {
+                if (!this.isActiveOnFloor || this.steps.length === 0) return null;
+                const [nx, ny] = this.steps.shift();
+                // Clear old tile (if still pigeon)
+                if (this.x != null && this.y != null && MAP.getCell(this.x, this.y)?.type === 'pigeon') {
+                    MAP.setCell(this.x, this.y); // revert to floor
+                }
+                this.x = nx;
+                this.y = ny;
+                MAP.setCell(this.x, this.y, 'pigeon');
+                if (this.x === player.x && this.y === player.y) {
+                    return () => this.encounter();
+                }
+                return null;
+            },
+            encounter() {
+                // Despawn to avoid re-trigger
+                if (MAP.getCell(this.x, this.y)?.type === 'pigeon') {
+                    MAP.setCell(this.x, this.y);
+                }
+                this.isActiveOnFloor = false;
+                // Open pigeon menu then display message
+                if (typeof menu?.open === 'function') {
+                    setTimeout(() => {
+                        menu.open('pigeon', () => npcMove());
+                    }, 75);
+                }
+            },
+            set() {
+                // Clear previous placement to avoid leaving a stale static pigeon
+                if (this.x != null && this.y != null) {
+                    const prev = MAP.getCell(this.x, this.y);
+                    if (prev?.type === 'pigeon') {
+                        MAP.setCell(this.x, this.y); // revert to floor
+                    }
+                }
+                const point = shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
+                if (point) {
+                    this.x = point.x;
+                    this.y = point.y;
+                    MAP.setCell(point.x, point.y, "pigeon");
                 }
             }
         };
@@ -11973,6 +10051,30 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     );
                 },
             },
+            pigeon: {
+                displayName: "Carrier Pigeon",
+                mapCharacter: "P",
+                onEnter: async function(x, y) {
+                    menu.open('pigeon', () => npcMove());
+                },
+                isVisible: function() {
+                    return (
+                        pigeon.isAlive &&
+                        pigeon.isActiveOnFloor
+                    );
+                },
+                onExplode: function (x, y) {
+                    pigeon.isAlive = false;
+                    pigeon.isActiveOnFloor = false;
+                    MAP.setCell(x, y, "bloodyCrater");
+                    playSFX('scream');
+                    pigeon.say('I WAS ONLY THE MESSENGERRRRRrrrrrrrr... *fucking dies*', true);
+                    updateBattleLog(
+                        'The <span class="pigeon">carrier pigeon</span> has been ' +
+                        '<span class="action">blown into a cloud of feathers stained a dark red</span>! He was your only link to the outside world above the TardSpire...'
+                    );
+                },
+            },
             erok: {
                 displayName: "Erok",
                 mapCharacter: "D",
@@ -12132,6 +10234,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             });
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
 
+            if (pigeon.checkForMessages()) {
+                pigeon.isActiveOnFloor = true;
+                pigeon.set();
+            } else {
+                pigeon.isActiveOnFloor = false;
+                pigeon.x = pigeon.y = null;
+            }
+            
             if (floor === 1) {
                 placeWelcomeBanner();
             }
@@ -12696,34 +10806,39 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         async function npcMove() {
             render();
 
-            if (! vampire.isActiveOnFloor) {
+            // VOCAP: unchanged logic, but do not early-return so pigeon can still act
+            if (!vampire.isActiveOnFloor) {
                 vampire.checkForActivation();
-                return;
+            } else {
+                vampire.prepareMovement();
+
+                const stepsThisTurn = vampire.steps.length;
+                const stepDurationMs = 120;
+                const callables = [];
+
+                for (let i = 0; i < stepsThisTurn; i++) {
+                    await sleepMs(stepDurationMs);
+                    const result = vampire.move();
+                    if (typeof result === "function") {
+                        callables.push(result);
+                    }
+                    render();
+                    if (vampire.isDoneMoving()) break;
+                }
+                for (let i = 0; i < callables.length; i++) {
+                    callables[i]();
+                }
             }
 
-            vampire.prepareMovement();
-
-            const stepsThisTurn = vampire.steps.length;
-            const stepDurationMs = 120;
-            const callables = [];
-
-            for (let i=0; i<stepsThisTurn; i++) {
-                // In the real version we would move the vampire here and
-                // update the minimap / scene between frames.
-                await sleepMs(stepDurationMs);
-                const result = vampire.move();
-                if (typeof result === "function") {
-                    callables.push(result);
-                }
+            // PIGEON HOMING (one step per player move if a message is pending)
+            if (pigeon.isActiveOnFloor && pigeon.checkForMessages()) {
+                pigeon.prepareMovement();
+                const result = pigeon.move();
                 render();
-
-                if (vampire.isDoneMoving()) {
-                    break;
+                if (typeof result === 'function') {
+                    result();
+                    render();
                 }
-            }
-
-            for (let i=0; i<callables.length; i++) {
-                callables[i]();
             }
         }
 
@@ -13357,6 +11472,20 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return;
             }
 
+            // === Carrier Pigeon message mode ===
+            if (typeof PigeonMessaging !== "undefined" && PigeonMessaging.isActive && PigeonMessaging.isActive()) {
+                $input.value = "";
+                GameControl.closePersuasionInputBox();
+                // Only send if not empty
+                if (message.trim().length === 0) {
+                    updateBattleLog('<span class="enemy">Empty pigeon message aborted.</span>');
+                    return;
+                }
+                // Send via pigeon.js
+                PigeonMessaging.send(message.trim());
+                return;
+            }
+
             $input.value = "";
             GameControl.closePersuasionInputBox();
 
@@ -13736,6 +11865,28 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 } else {
                     updateBattleLog(`<span class="action">Try an actual floor number, retard.</span>`);
                 }
+                return;
+            }
+
+            if (cmd === "/spawn p") {
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (MAP.getCell(nx, ny)?.type === 'floor') {
+                        pigeon.isAlive = true;
+                        pigeon.isActiveOnFloor = true;
+                        MAP.setCell(nx, ny, 'pigeon');
+                        pigeon.set();
+                        updateBattleLog('<span class="pigeon">CHEAT: Pigeon spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="pigeon">CHEAT: Pigeon not spawned. Try a different spot.</span>');
+                }
+                render();
                 return;
             }
 
@@ -14191,6 +12342,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             generateMap();
             animTorchEnd();
             playRandomExplorationMusic();
+            PigeonMessaging.ensurePolling();
         }
 
 
@@ -15040,15 +13192,23 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 },
                 getOptions: () => {
                     const items = InventoryObjectDefinitions.items;
-                    const options = merchant.items.map((itemId) => ({
-                        id: itemId,
-                        displayText: items[itemId].name,
-                        description: items[itemId].description,
-                        trailText: `₿ ${items[itemId].price}`,
-                        className: items[itemId].price > player.bitcoins
+                    const options = merchant.items.map((itemId) => {
+                        let displayText = items[itemId].name;
+                        let className = items[itemId].price > player.bitcoins
                             ? 'tooExpensive'
-                            : undefined,
-                    }));
+                            : undefined;
+                        if (itemId === "carrierPigeon" && player.inventory.getItemCount("carrierPigeon") >= 10) {
+                            displayText = `${displayText}`;
+                            className = "muted";
+                        }
+                        return {
+                            id: itemId,
+                            displayText,
+                            description: items[itemId].description,
+                            trailText: `₿ ${items[itemId].price}`,
+                            className,
+                        };
+                    });
 
                     options.push({
                         id: "_back",
@@ -15593,6 +13753,60 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 },
             },
+            
+            pigeon: {
+                title: "CARRIER PIGEON",
+                onOpen: () => {
+                    Portrait.show('pigeon');
+                    if (pigeon.checkForMessages()) {
+                        pigeon.say('Coo coo! You have a message from another adventurer!');
+                    } else {
+                        pigeon.say('Coo coo! No adventurers have sent out any messages...');
+                    }
+                },
+                onClose: () => {
+                    Portrait.hide();
+                    pigeon.isActiveOnFloor = false;
+                    const pigeonPosition = pigeon.location();
+                    if (pigeonPosition) {
+                        MAP.setCell(pigeonPosition.x, pigeonPosition.y);
+                    }
+                },
+                landingHtml: () => pigeon.checkForMessages() 
+                    ? `You see a sealed letter below the carrier pigeon's big stinky feet...`
+                    : `You notice a carrier pigeon... it seems lost.`,
+                getOptions: () => {
+                    const options = [];
+                    
+                    if (pigeon.checkForMessages()) {
+                        options.push({
+                            id: "readMessages",
+                            displayText: "Read the letter",
+                            description: "Read the letter sent out by a fellow adventurer",
+                        });
+                    }
+                    
+                    options.push({
+                        id: "leave",
+                        displayText: "Back away from the beast",
+                        description: "Let the beast roam free",
+                    });
+                    
+                    return options;
+                },
+                select: (selectedOptionId) => {
+                    if (selectedOptionId === "readMessages") {
+                        if (typeof PigeonMessaging !== 'undefined' && typeof PigeonMessaging.displayDeliveredMessage === 'function') {
+                            // displayDeliveredMessage() will use the pending delivered message (if any)
+                            PigeonMessaging.displayDeliveredMessage();
+                        } else {
+                            updateBattleLog('<span class="enemy">Pigeon messaging system not available.</span>');
+                        }
+                    }
+                    menu.close();
+                },
+            },
+            
             chest: {
                 title: "TREASURE CHEST",
                 defaultCloseOption: "resistTemptation",
@@ -16984,7 +15198,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         } else {
             showTitleScreen();
         }
-
+        
         player.party.initializePartySection();
         GameControl.update();
     </script>
