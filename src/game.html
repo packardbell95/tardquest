@@ -13755,11 +13755,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         MAP.setCell(pigeonPosition.x, pigeonPosition.y);
                     }
                 },
-                landingHtml: () => {
-                    return pigeon.checkForMessages() 
-                        ? `You see a sealed letter below the carrier pigeon's big stinky feet...`
-                        : `You notice a carrier pigeon... it seems lost.`;
-                },
+                landingHtml: () => pigeon.checkForMessages() 
+                    ? `You see a sealed letter below the carrier pigeon's big stinky feet...`
+                    : `You notice a carrier pigeon... it seems lost.`,
                 getOptions: () => {
                     const options = [];
                     
