@@ -88,6 +88,7 @@
                 pigeon.say("Your message has been sent! Coo coo!");
                 log.info('Sent successfully!', j.id || 'Queue:', j.queue_length, 'Remaining carrierPigeon:', j.carrierPigeon_remaining);
                 if (typeof GameControl?.closePersuasionInputBox === "function") {
+                    pigeonInputMode = false;
                     GameControl.closePersuasionInputBox();
                     render();
                 }
@@ -142,7 +143,6 @@
         function show(){
             if (typeof updateBattleLog === 'function') {
                 pigeon.say(`The message says: "${msg}" Message delivered! Coo coo!`);
-                ensurePolling();
             } else {
                 setTimeout(show, 250);
             }
@@ -223,7 +223,8 @@
         debug: { haveLocalPigeon, getSessionId, version: VERSION },
         displayDeliveredMessage,
         get pendingDeliveredMessage() { return pendingDeliveredMessage; },
-        hasPendingMessages: () => !!pendingDeliveredMessage
+        hasPendingMessages: () => !!pendingDeliveredMessage,
+        ensurePolling
     };
     log.info('Module loaded; autonomous delivery polling active.');
 })();
