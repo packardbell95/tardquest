@@ -6514,10 +6514,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         );
 
                         // NPC check
-                        // Only the vampire is here for now until we get the
-                        // other NPCs organized together
                         if (vampire.isAt(tx, ty)) {
                             gridCell.push({ type: "vampire" });
+                        } else if (pigeon.isAt(tx, ty)) {
+                            gridCell.push({ type: "pigeon" });
                         }
 
                         row.push(gridCell);
@@ -7300,6 +7300,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                             cell?.onExplode?.(x, y);
                                         }
                                         cell.isExplored = true;
+
+                                        // Temporary NPC hack until we handle
+                                        // NPCs collectively
+                                        if (pigeon.isAt(x, y)) {
+                                            pigeon.onExplode(x, y);
+                                        }
                                     }
                                 }
 
@@ -9155,7 +9161,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         };
 
         const pigeon = {
-            isAlive: true,
+            displayName: "Carrier Pigeon",
             isActiveOnFloor: false,
             // Homing state
             x: null,
@@ -9179,53 +9185,44 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 return this.steps.length === 0;
             },
             isAt(x, y) {
-                return (
-                    pigeon.isAlive &&
-                    pigeon.isActiveOnFloor &&
-                    this.x === x &&
-                    this.y === y
-                );
+                return pigeon.isActiveOnFloor && this.x === x && this.y === y;
             },
             location() {
-                return pigeon.isAlive && pigeon.isActiveOnFloor
-                    ? { x: this.x, y: this.y }
-                    : null;
+                return pigeon.isActiveOnFloor ? { x: this.x, y: this.y } : null;
             },
             checkForMessages() {
-                if (typeof PigeonMessaging !== 'undefined' &&
-                    typeof PigeonMessaging.hasPendingMessages === 'function') {
-                    return PigeonMessaging.hasPendingMessages();
-                }
-                return false;
+                return typeof PigeonMessaging?.hasPendingMessages === 'function'
+                    ? PigeonMessaging.hasPendingMessages()
+                    : false;
             },
             prepareMovement() {
-                if (!this.isActiveOnFloor) return;
-                if (!this.checkForMessages()) return;
-                if (this.x == null || this.y == null) return;
+                if (!this.isActiveOnFloor || this.x == null || this.y == null) {
+                    return;
+                }
+
+                if (!this.checkForMessages()) {
+                    return;
+                }
+
                 // One step per player move toward player
-                const path = MAP.findPath([this.x, this.y], [player.x, player.y]) || [];
+                const path =
+                    MAP.findPath([this.x, this.y], [player.x, player.y]) || [];
                 this.steps = path.slice(1, 2); // take only the next step
             },
             move() {
-                if (!this.isActiveOnFloor || this.steps.length === 0) return null;
-                const [nx, ny] = this.steps.shift();
-                // Clear old tile (if still pigeon)
-                if (this.x != null && this.y != null && MAP.getCell(this.x, this.y)?.type === 'pigeon') {
-                    MAP.setCell(this.x, this.y); // revert to floor
+                if (!this.isActiveOnFloor || this.steps.length === 0) {
+                    return null;
                 }
+
+                const [nx, ny] = this.steps.shift();
                 this.x = nx;
                 this.y = ny;
-                MAP.setCell(this.x, this.y, 'pigeon');
-                if (this.x === player.x && this.y === player.y) {
-                    return () => this.encounter();
-                }
-                return null;
+
+                return this.x === player.x && this.y === player.y
+                    ? () => this.encounter()
+                    : null;
             },
             encounter() {
-                // Despawn to avoid re-trigger
-                if (MAP.getCell(this.x, this.y)?.type === 'pigeon') {
-                    MAP.setCell(this.x, this.y);
-                }
                 this.isActiveOnFloor = false;
                 // Open pigeon menu then display message
                 if (typeof menu?.open === 'function') {
@@ -9235,20 +9232,41 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 }
             },
             set() {
-                // Clear previous placement to avoid leaving a stale static pigeon
-                if (this.x != null && this.y != null) {
-                    const prev = MAP.getCell(this.x, this.y);
-                    if (prev?.type === 'pigeon') {
-                        MAP.setCell(this.x, this.y); // revert to floor
-                    }
-                }
-                const point = shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
+                const point =
+                    shuffle(MAP.getMapDissolvePoints()).slice(0, 1)?.[0];
+
                 if (point) {
+                    MAP.setCell(point.x, point.y);
                     this.x = point.x;
                     this.y = point.y;
-                    MAP.setCell(point.x, point.y, "pigeon");
                 }
-            }
+            },
+            onExplode: function (x, y) {
+                pigeon.isActiveOnFloor = false;
+
+                const writableCellTypes = [
+                    "floor", "rubble1", "rubble2", "crater", "tardspireBanner"
+                ];
+
+                const overwriteCell = writableCellTypes.includes(
+                    MAP.getCell(x, y)?.type
+                );
+
+                if (overwriteCell) {
+                    MAP.setCell(x, y, "bloodyCrater");
+                }
+
+                playSFX('scream');
+                pigeon.say(
+                    'I WAS ONLY THE MESSENGERRRRRrrrrrrrr... *fucking dies*',
+                    true
+                );
+                updateBattleLog(
+                    `The <span class="pigeon">carrier pigeon</span> has been ` +
+                    `<span class="action">blown into a cloud of feathers ` +
+                    `stained a dark red!</span>`
+                );
+            },
         };
 
         const enemies = [
@@ -10051,30 +10069,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     );
                 },
             },
-            pigeon: {
-                displayName: "Carrier Pigeon",
-                mapCharacter: "P",
-                onEnter: async function(x, y) {
-                    menu.open('pigeon', () => npcMove());
-                },
-                isVisible: function() {
-                    return (
-                        pigeon.isAlive &&
-                        pigeon.isActiveOnFloor
-                    );
-                },
-                onExplode: function (x, y) {
-                    pigeon.isAlive = false;
-                    pigeon.isActiveOnFloor = false;
-                    MAP.setCell(x, y, "bloodyCrater");
-                    playSFX('scream');
-                    pigeon.say('I WAS ONLY THE MESSENGERRRRRrrrrrrrr... *fucking dies*', true);
-                    updateBattleLog(
-                        'The <span class="pigeon">carrier pigeon</span> has been ' +
-                        '<span class="action">blown into a cloud of feathers stained a dark red</span>! He was your only link to the outside world above the TardSpire...'
-                    );
-                },
-            },
             erok: {
                 displayName: "Erok",
                 mapCharacter: "D",
@@ -10489,6 +10483,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     isVisible: true,
                     mapCharacter: " ", // Handled by the #minimap .vampire class
                     type: "vampire",
+                };
+            }
+
+            if (pigeon.isActiveOnFloor) {
+                entities.pigeon = {
+                    x: pigeon.x,
+                    y: pigeon.y,
+                    displayName: pigeon.displayName,
+                    isVisible: true,
+                    mapCharacter: "P",
+                    type: "pigeon",
                 };
             }
 
@@ -13746,16 +13751,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     }
                 },
             },
-            
+
             pigeon: {
                 title: "CARRIER PIGEON",
                 onOpen: () => {
                     Portrait.show('pigeon');
-                    if (pigeon.checkForMessages()) {
-                        pigeon.say('Coo coo! You have a message from another adventurer!');
-                    } else {
-                        pigeon.say('Coo coo! No adventurers have sent out any messages...');
-                    }
+                    pigeon.say("Coo coo! " + (
+                        pigeon.checkForMessages()
+                            ? 'You have a message from another adventurer!'
+                            : 'No adventurers have sent out any messages...'
+                        )
+                    );
                 },
                 onClose: () => {
                     Portrait.hide();
@@ -13770,7 +13776,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     : `You notice a carrier pigeon... it seems lost.`,
                 getOptions: () => {
                     const options = [];
-                    
+
                     if (pigeon.checkForMessages()) {
                         options.push({
                             id: "readMessages",
@@ -13778,13 +13784,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             description: "Read the letter sent out by a fellow adventurer",
                         });
                     }
-                    
+
                     options.push({
                         id: "leave",
                         displayText: "Back away from the beast",
                         description: "Let the beast roam free",
                     });
-                    
+
                     return options;
                 },
                 select: (selectedOptionId) => {
