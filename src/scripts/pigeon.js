@@ -170,9 +170,9 @@
                 stopPolling(); // Pause polling until message is displayed
                 pendingDeliveredMessage = data.pigeon_message;
                 try { localStorage.setItem(LS_PENDING_KEY, pendingDeliveredMessage); } catch {}
-                if (pigeon && pigeon.isAlive === true) {
+                if (pigeon) {
                     pigeon.isActiveOnFloor = true;
-                    // Only place if not already on the map (prevents second static spawn)
+                    // Only place if not already on the map
                     if (pigeon.x == null || pigeon.y == null) {
                         pigeon.set();
                     } else {
