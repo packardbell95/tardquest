@@ -14,7 +14,109 @@
   let partyTalkLocked = false;
   let talkHoldStart = 0;
 
+  // --- TardBoard Handling ---
+  const TARDBOARD_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
+  function tardboardDialogActive() {
+    return !!document.getElementById('tardboard-dialog-backdrop') && !!document.getElementById('tardboard-initials-input');
+  }
+
+  function tbEdge(dir, pressed) {
+    if (!pressed) { lastMenuDpad[dir] = 0; return false; }
+    const t = now();
+    if (t - lastMenuDpad[dir] > INPUT_REPEAT_MS) { lastMenuDpad[dir] = t; return true; }
+    return false;
+  }
+
+  function handleTardBoardDialog(gp, axes) {
+    if (!tardboardDialogActive()) return false;
+    const input = document.getElementById('tardboard-initials-input');
+    if (!input) return false;
+    const hat = hatToDpad(axes[9]);
+    const sticks = sticksToDpad(axes);
+    const dUp = gp.buttons[12]?.pressed || hat.up || sticks.up;
+    const dDown = gp.buttons[13]?.pressed || hat.down || sticks.down;
+    const dLeft = gp.buttons[14]?.pressed || hat.left || sticks.left;
+    const dRight = gp.buttons[15]?.pressed || hat.right || sticks.right;
+
+    let val = input.value.toUpperCase();
+    // Clamp to maxlength attribute
+    const maxLen = parseInt(input.getAttribute('maxlength') || '5', 10);
+    if (val.length > maxLen) val = val.slice(0, maxLen);
+    let caret = input.selectionStart ?? val.length;
+
+    function setVal(newVal, newCaret = null) {
+      input.value = newVal;
+      const pos = Math.max(0, Math.min(newVal.length, newCaret === null ? newVal.length : newCaret));
+      input.setSelectionRange(pos, pos);
+    }
+
+    function cycleChar(delta) {
+      // If caret at end (insertion point) and we still have capacity, start new char at 'A'
+      if (caret === val.length && val.length < maxLen) {
+        val += 'A';
+        caret = val.length - 1;
+      }
+      if (!val.length) return; // nothing to cycle
+      if (caret >= val.length) caret = val.length - 1;
+      const current = val[caret];
+      const idx = TARDBOARD_CHARSET.indexOf(current);
+      let nextIdx;
+      if (idx === -1) {
+        nextIdx = 0;
+      } else {
+        nextIdx = (idx + delta + TARDBOARD_CHARSET.length) % TARDBOARD_CHARSET.length;
+      }
+      val = val.substring(0, caret) + TARDBOARD_CHARSET[nextIdx] + val.substring(caret + 1);
+      setVal(val, caret);
+    }
+
+    // Navigation / editing
+    if (tbEdge('left', dLeft)) {
+      if (caret > 0) { caret--; setVal(val, caret); }
+    }
+    if (tbEdge('right', dRight)) {
+      if (caret < val.length) { caret++; setVal(val, caret); }
+    }
+    if (tbEdge('up', dUp)) {
+      cycleChar(1);
+    }
+    if (tbEdge('down', dDown)) {
+      cycleChar(-1);
+    }
+
+    // A -> Submit
+    if (edgePressed(gp, 0)) {
+      const okBtn = document.getElementById('tardboard-dialog-ok');
+      okBtn && okBtn.click();
+    }
+    // B -> Cancel
+    if (edgePressed(gp, 1)) {
+      const cancelBtn = document.getElementById('tardboard-dialog-cancel');
+      cancelBtn && cancelBtn.click();
+    }
+    // X (button 2) -> Delete char before caret (like backspace)
+    if (edgePressed(gp, 2)) {
+      if (caret > 0 && val.length) {
+        val = val.slice(0, caret - 1) + val.slice(caret);
+        caret--;
+        setVal(val, caret);
+      }
+    }
+    // Y (button 3) -> Delete char at caret
+    if (edgePressed(gp, 3)) {
+      if (caret < val.length && val.length) {
+        val = val.slice(0, caret) + val.slice(caret + 1);
+        setVal(val, caret);
+      }
+    }
+
+    // Prevent other handlers while dialog active
+    return true;
+  }
+
+  // --- Main Gamepad Handling ---
+  
   /**
    * Returns an array of valid gamepad devices, filtering out audio devices and requiring at least 4 buttons and 2 axes.
    */
@@ -354,6 +456,11 @@
     const axes = gp.axes || [];
     // Prepare previous button/axis states
     if (!prevButtons.length) prevButtons = gp.buttons.map(b => !!b.pressed);
+
+    // If TardBoard initials dialog is open, handle exclusively
+    if (handleTardBoardDialog(gp, axes)) {
+      return;
+    }
 
     // UI input device activity detection
     (function detectActivity(){
