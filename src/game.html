@@ -9540,7 +9540,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 Object.assign(new Audio("audio/battle6.mp3"), { trackName: "Stab Quest - Kirbydogs" }),
             ],
             vampireBattle:
-                Object.assign(new Audio("audio/vampire-battle-theme.mp3"), { trackName: "Vengeful Fruit - Xx_TheMilkMan69_xX" }),
+                Object.assign(new Audio("audio/vampire-vengeful-fruit-intro.mp3"), { trackName: "Vengeful Fruit - Xx_TheMilkMan69_xX" }),
+            vampireBattleMainLoop:
+                Object.assign(new Audio("audio/vampire-vengeful-fruit-main-loop.mp3"), { trackName: "Vengeful Fruit - Xx_TheMilkMan69_xX" }),
             vampireLurking:
                 Object.assign(new Audio("audio/lurking.ogg"), { trackName: "Lurking - Packard Bell 95" }),
             merchantTrack:
@@ -9556,12 +9558,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         music.titleTrack.loop = true;
         music.gamblersTheme.loop = true;
         music.erokTheme.loop = true;
-        music.vampireBattle.addEventListener("timeupdate", () => {
-            const loopEnd = music.vampireBattle.duration - 0.053;
-            if (music.vampireBattle.currentTime >= loopEnd) {
-                music.vampireBattle.currentTime = 16.5;
-                music.vampireBattle.play();
-            }
+        music.vampireBattleMainLoop.loop = true;
+        music.vampireBattle.addEventListener("ended", () => {
+            music.vampireBattleMainLoop.currentTime = 0;
+            music.vampireBattleMainLoop.play();
         });
         music.vampireLurking.loop = true;
 
@@ -9574,6 +9574,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 music.titleTrack,
                 music.erokTheme,
                 music.vampireBattle,
+                music.vampireBattleMainLoop,
                 music.vampireLurking,
             ].forEach(track => {
                 track.pause();
@@ -9759,7 +9760,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         }
 
         function stopVampireBattleTheme() {
-            if (currentMusic !== music.vampireBattle) {
+            const isPlayingVampireBattleTheme =
+                currentMusic === music.vampireBattle ||
+                currentMusic === music.vampireBattleMainLoop;
+
+            if (! isPlayingVampireBattleTheme) {
                 return;
             }
 
@@ -9805,6 +9810,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (currentMusic === music.erokTheme) {
                 return "A Dog Named Erok - Xx_TheMilkMan69_xX";
             }
+
+            const isPlayingVampireBattleTheme =
+                currentMusic === music.vampireBattle ||
+                currentMusic === music.vampireBattleMainLoop;
 
             if (currentMusic === music.vampireBattle) {
                 return "Vengeful Fruit - Xx_TheMilkMan69_xX";
