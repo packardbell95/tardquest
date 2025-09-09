@@ -40,7 +40,7 @@ A Javascript game by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?
 
 [Kirbydogs](https://kirbydogs.neocities.org/)
 
-### LEADERBOARD API HOSTING
+### API HOSTING
 [VocaPepper](https://vocapepper.com/)
 
 ### LEADERBOARD STYLING
@@ -86,7 +86,11 @@ During battle, you can try to persuade an enemy to join you in your quest. To pe
 
 After an enemy has been successfully persuaded to join you in your quest, they will become an ally. Allies will help you in battle and will fight for you to the bitter death. During a given battle, an ally may use one of their turns to heal your character up to one time per fight maximum.
 
-# Notable Forks
+# Notable Forks + Related Repositories
+### TheMilkMan6669's Tardquest Standalone build
+This is a desktop application build for TardQuest, which includes neat features such as a background artwork selector and a retro filter toggler.
+▶[tardquest-standalone](https://github.com/TheMilkMan6669/tardquest-standalone)
+
 ### VocaPepper
 VocaPepper's 1.10.0 build most notably includes an online multiplayer mode (discontinued - for now).
 
