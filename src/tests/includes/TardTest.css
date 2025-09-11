@@ -139,6 +139,11 @@
     user-select: none;
 }
 
+.no-tests {
+    padding: 20px;
+    background: color-mix(in oklab, var(--row-alt) 65%, transparent);
+}
+
 html {
     min-width: 100vw;
     min-height: 100vh;

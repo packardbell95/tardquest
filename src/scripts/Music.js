@@ -320,10 +320,11 @@ class Music {
      * Plays a specific track
      *
      * @param trackId string ID of the track to play
-     * @param tag string|null The tag resulting in the track being played. Only
-     *                        intended for use within this class, so ignore it
+     * @param tag string|null The tag that was called to play this track, if any
      */
     play(trackId, tag = null) {
+        this.#lastTagged[tag] = trackId;
+
         if (! this.#enabled) {
             return;
         }
@@ -420,6 +421,21 @@ class Music {
         this.#lastTagged?.[tag]
             ? this.play(this.#lastTagged?.[tag], tag)
             : this.playRandom(tag);
+    }
+
+    /**
+     * Returns the ID of the last track that was played with a given tag
+     *
+     * @param tag string Tag with the last track's ID to retrieve
+     * @return string|null The ID of the last track played with the tag, or null
+     */
+    getLastTaggedTrackId(tag) {
+        if (typeof tag !== "string") {
+            console.warn("Supplied tag is not a string", { tag });
+            return;
+        }
+
+        return this.#lastTagged[tag] || null;
     }
 
     /**
@@ -603,7 +619,7 @@ class Music {
             return;
         }
 
-        this.#tagDisabled = settings;
+        this.#tagDisabled = structuredClone(settings);
     }
 
     /**
@@ -636,6 +652,11 @@ class Music {
      * @return array of details of tracks matching the tag
      */
     getTracks(tag) {
+        if (typeof tag !== "string") {
+            console.warn("Supplied tag is not a string", { tag });
+            return [];
+        }
+
         const tracks = [];
 
         const ids = Object.keys(this.#collection);

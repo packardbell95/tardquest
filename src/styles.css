@@ -50,7 +50,8 @@ button {
     background-color: #000;
     cursor: pointer;
     height: 20px;
-    border: 2px solid #e3e3e3 #979797 #979797 #e3e3e3;
+    border: 2px solid;
+    border-color: #e3e3e3 #979797 #979797 #e3e3e3;
 }
 
 button:not(:disabled):hover {
@@ -931,10 +932,11 @@ a:link {
 }
 
 @keyframes nowPlaying_notes {
-    0%   { content: "♪"; }
-    25%  { content: "♩"; }
-    50%  { content: "♫"; }
-    75%  { content: "♬"; }
+    0%   { content: "♬"; }
+    25%  { content: "♪"; }
+    50%  { content: "♩"; }
+    75%  { content: "♫"; }
+    100% { content: "♬"; }
 }
 
 #bottomBar {
@@ -975,7 +977,7 @@ a:link {
     }
 
     &:not(.stopped) .icon::before {
-        animation: nowPlaying_notes 4s linear infinite;
+        animation: nowPlaying_notes 4s steps(4, jump-both) infinite;
     }
 
     &.stopped .icon {
