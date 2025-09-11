@@ -1,3 +1,66 @@
+/**
+ * Music handling system for TardQuest
+ *
+ * CONCEPTS
+ * To make it easy to (randomly) select music for the game, all music is
+ * registered at once with a set of required information. Any given track can
+ * be called directly by its unique ID, or through tags that match against the
+ * registered music
+ *
+ * Even if audio is disabled, this system still tracks what should have been
+ * played. This is because the player might decide to disable individual tracks
+ * or even the system itself. When they resume, the system will know what audio
+ * should be played, and will start operating appropriately
+ *
+ * BASIC USAGE
+ * Instantiate the music system by calling it with a `collection` containing
+ * the details of the audio that will be played in game along with an optional
+ * set of callbacks:
+ *
+ * ```
+ * const music = new Music({
+ *     example: {
+ *         audio: new Audio("my/example.mp3"),
+ *         playback: {
+ *             looped: true,
+ *         },
+ *         info: {
+ *             title: "Title",
+ *             artist: "Xx_TheMilkMan69_xX"
+ *         },
+ *         tags: ["sweet tunes"],
+ *     }, {
+ *         play: (trackId, trackInfo, tag) =>
+ *             console.log("Playing", { trackId, trackInfo, tag }),
+ *         stop: () => console.log("Music stopped"),
+ *     }
+ * });
+ * ```
+ *
+ * Now any audio in the object can be played easily:
+ * ```
+ * // Play a specific track
+ * music.play("example");
+ *
+ * // Play a random track by tag
+ * music.play("sweet tunes");
+ *
+ * // Stop music
+ * music.stop();
+ *
+ * CALLBACKS
+ * Callbacks can be registered to know when a piece of music plays or when all
+ * music is stopped:
+ *  - play: (trackId, trackInfo, tag): Called when a track starts playing
+ *    - trackId (string): The unique identifier of the track that's being played
+ *    - trackInfo (object): Informational details about the track
+ *      - title (string): The name of the track
+ *      - artist (string): The name of the track's composer
+ *    - tag (string|null): The tag that was used to call the track, or null if
+ *                         no tag was used
+ *  - stop: (): Called when all music stops playing (not when the track changes)
+ *
+ */
 class Music {
     #collection = {};
     #lastTagged = {};
@@ -10,6 +73,12 @@ class Music {
         stop: null,
     };
 
+    /**
+     * Creates an instance of the music system
+     *
+     * @param collection object describing all music in the game
+     * @param callbacks object of callbacks that fire after playback changes
+     */
     constructor(collection, callbacks) {
         if (! this.#validate(collection)) {
             return;
@@ -20,9 +89,16 @@ class Music {
         this.#setCallbacks(callbacks);
     }
 
+    /**
+     * Performs validation against the music collection object
+     * Prints console messages that describe any errors that are found
+     *
+     * @param collection object describing all music in the game
+     * @return bool true if the music object is properly formed
+     */
     #validate(collection) {
         if (! typeof collection === "object") {
-            console.error("Collection music be an object", { collection });
+            console.error("Collection must be an object", { collection });
             return false;
         }
 
@@ -115,6 +191,9 @@ class Music {
         return true;
     }
 
+    /**
+     * Wires up settings and event handlers for the audio collection
+     */
     #initialize() {
         const ids = Object.keys(this.#collection);
 
@@ -141,6 +220,11 @@ class Music {
         });
     }
 
+    /**
+     * Validates and registers any callbacks that were provided
+     *
+     * @param callbacks object of callbacks, including `play` and `stop`
+     */
     #setCallbacks(callbacks) {
         const keys = Object.keys(this.#callbacks);
 
@@ -150,7 +234,7 @@ class Music {
                     this.#callbacks[key] = callbacks[key];
                 } else {
                     console.warn(
-                        "The supplied play callback is not a function, so it " +
+                        "The supplied callback is not a function, so it " +
                         "will be ignored",
                         { key, callback: callbacks[key] }
                     );
@@ -159,24 +243,44 @@ class Music {
         });
     }
 
+    /**
+     * Enables the audio system
+     * When enabled, requested audio tracks will be played
+     */
     enable() {
         this.#enabled = true;
         this.#refreshCurrentlyPlayingTag();
     }
 
+    /**
+     * Disables the audio system
+     * When disabled, no requested audio will be played
+     */
     disable() {
         this.#enabled = false;
         this.stop();
     }
 
+    /**
+     * Determines if the audio system has been enabled
+     *
+     * @return bool true if the system is enabled
+     */
     isEnabled() {
         return this.#enabled;
     }
 
+    /**
+     * Turns the audio system off if it's on, and vice-versa
+     */
     toggle() {
         this.isEnabled() ? this.disable() : this.enable();
     }
 
+    /**
+     * Stops audio playback of the current piece of music
+     * If music was stopped, the stop() callback will be fired
+     */
     stop() {
         const fireCallback = this.#currentlyPlayingTrackId !== null;
         if (this.#enabled) {
@@ -189,6 +293,10 @@ class Music {
         }
     }
 
+    /**
+     * Internal handler for stopping music
+     * This is separated from stop() to avoid unintentionally firing callbacks
+     */
     #stop() {
         if (this.#currentlyPlayingTrackId === null) {
             return;
@@ -208,6 +316,13 @@ class Music {
         this.#currentlyPlayingTrackId = null;
     }
 
+    /**
+     * Plays a specific track
+     *
+     * @param trackId string ID of the track to play
+     * @param tag string|null The tag resulting in the track being played. Only
+     *                        intended for use within this class, so ignore it
+     */
     play(trackId, tag = null) {
         if (! this.#enabled) {
             return;
@@ -228,6 +343,12 @@ class Music {
         this.#callbacks?.play(trackId, track.info, tag);
     }
 
+    /**
+     * Selects a random entry from an array
+     *
+     * @param list Array of random items
+     * @return Any randomly-selected result from the list
+     */
     #randomEntry(list) {
         if (! Array.isArray(list)) {
             console.error(
@@ -241,6 +362,14 @@ class Music {
         return list[index];
     }
 
+    /**
+     * Plays a random track related to a given tag
+     *
+     * Will not play tracks that have been disabled for the tag
+     * @see tagEnable()
+     *
+     * @param tag string used to identify a subset of tracks to select from
+     */
     playRandom(tag) {
         this.#currentlyPlayingTag = tag;
         const matchingTrackIds = [];
@@ -277,6 +406,11 @@ class Music {
         this.play(selectedId, tag);
     }
 
+    /**
+     * Resumes a paused track that was first started with a tag
+     *
+     * @param tag string tag to resume playing
+     */
     resumeTag(tag) {
         if (typeof tag !== "string") {
             console.warn("Supplied tag is not a string", { tag });
@@ -288,10 +422,23 @@ class Music {
             : this.playRandom(tag);
     }
 
+    /**
+     * Checks to see if a track has a specific tag
+     *
+     * @param trackId string ID of the track to check
+     * @param tag string Tag to check for on the specified track
+     * @return bool True if the track has the requested tag
+     */
     #hasTag(trackId, tag) {
         return Boolean(this.#collection[trackId]?.tags.includes(tag));
     }
 
+    /**
+     * Enables a track that has been disabled for a specific tag
+     *
+     * @param tag string The tag with the track to re-enable
+     * @param trackId string The ID of the track to re-enable
+     */
     tagEnable(tag, trackId) {
         if (typeof tag !== "string") {
             console.warn("Supplied tag is not a string", { tag });
@@ -325,6 +472,12 @@ class Music {
         this.#refreshCurrentlyPlayingTag();
     }
 
+    /**
+     * Disables a specific track from selection when playing random tagged music
+     *
+     * @param tag string Tag to exclude the track from during random selection
+     * @param trackId string ID of the track to disable
+     */
     tagDisable(tag, trackId) {
         if (typeof tag !== "string") {
             console.warn("Supplied tag is not a string", { tag });
@@ -355,6 +508,9 @@ class Music {
         this.#refreshCurrentlyPlayingTag();
     }
 
+    /**
+     * Checks to see if tagged music should be playing and will resume/select it
+     */
     #refreshCurrentlyPlayingTag() {
         const tag = this.#currentlyPlayingTag;
         if (! tag) {
@@ -372,22 +528,48 @@ class Music {
         }
     }
 
+    /**
+     * Checks to see if a track is enabled for selection under a specific tag
+     *
+     * @param tag string Tag that the track belongs to
+     * @param trackId string ID of the track whose status to check
+     * @return bool True if the track is enabled for the tag
+     */
     isTagEnabled(tag, trackId) {
         return Boolean(! this.#tagDisabled?.[tag]?.includes(trackId));
     }
 
+    /**
+     * Toggles a track for random selection under a given tag
+     *
+     * @param tag string Tag that the track belongs to
+     * @param trackId string ID of the track to toggle for the given tag
+     */
     tagToggle(tag, trackId) {
         this.isTagEnabled(tag, trackId)
             ? this.tagDisable(tag, trackId)
             : this.tagEnable(tag, trackId);
     }
 
+    /**
+     * Returns all disabled tracks, specific to a given tag if one is supplied
+     *
+     * @param tag string|null Optional tag to return
+     * @return Array|object All disabled track IDs keyed by tag, or a list of
+     *                      all disabled tracks for a tag if one is supplied
+     */
     getDisabledTracks(tag = null) {
         return tag === null
             ? this.#tagDisabled
             : this.#tagDisabled[tag];
     }
 
+    /**
+     * Performs validation for a supplied set of disabled tracks
+     *
+     * @param settings Any value to validate
+     * @return bool True if the settings are valid
+     */
     #validateTrackSettings(settings) {
         if (typeof settings !== "object") {
             console.error(
@@ -411,6 +593,11 @@ class Music {
         return true;
     }
 
+    /**
+     * Sets a collection of disabled tracks by tag all at once
+     *
+     * @param settings object A collection of tagged tracks to disable
+     */
     setDisabledTracks(settings = {}) {
         if (! this.#validateTrackSettings(settings)) {
             return;
@@ -419,6 +606,12 @@ class Music {
         this.#tagDisabled = settings;
     }
 
+    /**
+     * Returns basic track details, including the ID of the track itself
+     *
+     * @param trackId string ID of the track
+     * @return object|null Details about the track if matched, or null
+     */
     #getTrackInfo(trackId) {
         const entry = this.#collection[trackId];
         return entry ? {
@@ -427,10 +620,21 @@ class Music {
         } : null;
     }
 
+    /**
+     * Returns information about the current track that's playing
+     *
+     * @return object|null Object of details if music is playing, or null
+     */
     getCurrentlyPlayingTrack() {
         return this.#getTrackInfo(this.#currentlyPlayingTrackId);
     }
 
+    /**
+     * Returns a list of details related to all tracks with a given tag
+     *
+     * @param tag string Tag that tracks belong to
+     * @return array of details of tracks matching the tag
+     */
     getTracks(tag) {
         const tracks = [];
 

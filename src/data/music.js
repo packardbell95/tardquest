@@ -1,3 +1,23 @@
+/**
+ * Definitions for all of the music tracks available in the game
+ *
+ * Key
+ * Track's unique identifier, used to specifically call the track in game, eg:
+ * `music.play("vampireLurking");`
+ *
+ * Object
+ * - audio (HTMLAudioElement): The instance that contains the audio to play
+ * - playback (object): May take the following options:
+ *   - looped (boolean): If true, the track will automatically loop
+ *   - nextTrackId (string): The key that points to the next piece of music
+ *                           to play after the current one finishes. Cannot be
+ *                           used when `looped` is set to `true`
+ * - info (object): Track details intended to be displayed to the player
+ *   - title (string): The name of the track
+ *   - artist (string): The name of the track's author
+ * - tags (array): A collection of string tags, used to randomly select and
+ *                 play music, eg: `music.playRandom(tagName);`
+ */
 const TARDQUEST_MUSIC_TRACKS = Object.freeze({
     title: {
         audio: new Audio("audio/title.mp3"),
@@ -142,7 +162,6 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         playback: {
             looped: false,
             nextTrackId: "vampireBattleMainLoop"
-
         },
         info: {
             title: "Vengeful Fruit",
