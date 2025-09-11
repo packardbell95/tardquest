@@ -2,12 +2,44 @@
 // TardBoard (Leaderboard + Anti-Cheat / Captcha Integration)
 // ============================================================================
 
-// --- Constants (DO NOT ALTER FOR PROD) --------------------------------------
-let _turnstileReadyPromise = null;
-const API_BASE = 'https://vocapepper.com:9601';           // API base URL
-const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW';    // Cloudflare Turnstile site key (public, secret is server-side)
+/**
+ * @fileoverview TardBoard - Leaderboard and Anti-Cheat Integration System for TardQuest
+ *
+ * This module provides a comprehensive leaderboard system with anti-cheat protection
+ * and captcha verification for highscore submissions. It includes:
+ *
+ * - Cloudflare Turnstile captcha integration for bot protection
+ * - VocaGuard anti-cheat system with session-based validation
+ * - Modal dialog system for user interaction
+ * - Automatic game state monitoring and reporting
+ * - Highscore submission with validation
+ * - Game reset interception for leaderboard entry
+ *
+ * The system works by:
+ * 1. Creating anti-cheat sessions when the game loads
+ * 2. Monitoring game progress (floor/level changes)
+ * 3. Intercepting game resets to show leaderboard submission dialog
+ * 4. Validating sessions before allowing highscore submissions
+ * 5. Using captcha to prevent automated submissions
+ *
+ * @author VocaPepper
+ */
 
-// --- Script Loader: Loads Cloudflare Turnstile Captcha script if needed ------
+// --- Constants --------------------------------------
+
+/** @type {Promise|null} Promise that resolves when Turnstile script is loaded */
+let _turnstileReadyPromise = null;
+
+/** @const {string} Base URL for the TardBoard API endpoints */
+const API_BASE = 'https://vocapepper.com:9601';
+
+/** @const {string} Cloudflare Turnstile site key for captcha verification */
+const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW';
+
+/**
+ * Ensures the Cloudflare Turnstile captcha script is loaded and ready
+ * @returns {Promise} Promise that resolves when Turnstile is available
+ */
 function ensureTurnstileScript() {
     if (_turnstileReadyPromise) return _turnstileReadyPromise;
     _turnstileReadyPromise = new Promise((resolve, reject) => {
@@ -33,19 +65,34 @@ function ensureTurnstileScript() {
 }
 
 // --- State ------------------------------------------------------------------
-let vocaguardSessionId = sessionStorage.getItem('vocaguardSessionId') || null; // Anti-cheat session ID
-let lastFloor = 1; // Last known floor (for periodic monitor)
-let lastLevel = 1; // Last known level (for periodic monitor)
+
+/** @type {string|null} Current VocaGuard anti-cheat session ID */
+let vocaguardSessionId = sessionStorage.getItem('vocaguardSessionId') || null;
+
+/** @type {number} Last known floor number for change detection */
+let lastFloor = 1;
+
+/** @type {number} Last known level number for change detection */
+let lastLevel = 1;
 
 // --- Utilities --------------------------------------------------------------
-// Returns current game state (floor, level) or defaults if unavailable
+
+/**
+ * Retrieves the current game state (floor and level)
+ * @returns {Object} Game state object with floor and level properties
+ * @property {number} floor - Current floor number (defaults to 1)
+ * @property {number} level - Current player level (defaults to 1)
+ */
 function getGameState() {
     const floorNum = (typeof floor !== 'undefined' && typeof floor === 'number' && !isNaN(floor)) ? floor : 1;
     const levelNum = (typeof player !== 'undefined' && typeof player.level === 'number' && !isNaN(player.level)) ? player.level : 1;
     return { floor: floorNum, level: levelNum };
 }
 
-// Checks if the leaderboard API is reachable
+/**
+ * Checks if the leaderboard API is reachable and responding
+ * @returns {Promise<boolean>} True if API is connected, false otherwise
+ */
 async function checkApiStatus() {
     try {
         const res = await fetch(`${API_BASE}/api/leaderboard/status`, { method: 'GET', mode: 'cors' });
@@ -55,7 +102,10 @@ async function checkApiStatus() {
     }
 }
 
-// Updates the API status indicator in the dialog
+/**
+ * Updates the API status indicator in the dialog
+ * @param {Document|Element} [root=document] - Root element to search for status indicator
+ */
 function updateApiIndicator(root = document) {
     checkApiStatus().then(connected => {
         const status = root.querySelector('#tardboard-api-status');
@@ -70,7 +120,10 @@ function updateApiIndicator(root = document) {
     });
 }
 
-// Inject minimal shared styles for dialogs (should be moved to main CSS)
+/**
+ * Injects shared CSS styles for TardBoard dialogs
+ * Only injects once to avoid duplicate styles
+ */
 function injectSharedStyles() {
     if (document.getElementById('tardboard-shared-styles')) return;
     const style = document.createElement('style');
@@ -96,7 +149,15 @@ function injectSharedStyles() {
     document.head.appendChild(style);
 }
 
-// Creates and displays a modal dialog for TardBoard
+/**
+ * Creates and displays a modal dialog for TardBoard
+ * @param {Object} options - Dialog configuration options
+ * @param {string} options.bodyHtml - HTML content for the dialog body
+ * @param {boolean} [options.showApi=true] - Whether to show API status indicator
+ * @param {Array} [options.buttons=[]] - Array of button configurations
+ * @param {Function} [options.afterRender] - Callback function called after dialog is rendered
+ * @returns {HTMLElement} The dialog wrapper element
+ */
 function createDialog({ bodyHtml, showApi = true, buttons = [], afterRender }) {
     injectSharedStyles();
     const wrap = document.createElement('div');
@@ -126,13 +187,20 @@ function createDialog({ bodyHtml, showApi = true, buttons = [], afterRender }) {
     return wrap;
 }
 
-// Removes the TardBoard dialog from the DOM
+/**
+ * Removes the TardBoard dialog from the DOM
+ */
 function removeDialog() {
     const el = document.getElementById('tardboard-dialog-backdrop');
     if (el) el.remove();
 }
 
-// Starts a new anti-cheat session and stores the session ID
+// --- Anti-Cheat Session Management ------------------------------------------
+
+/**
+ * Starts a new VocaGuard anti-cheat session
+ * Creates a session ID and stores it in sessionStorage
+ */
 function startVocaGuardSession() {
     fetch(`${API_BASE}/api/vocaguard/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
         .then(res => res.json())
@@ -145,7 +213,10 @@ function startVocaGuardSession() {
         .catch(err => console.warn('⚠️ VocaGuard: Could not create session!', err));
 }
 
-// Periodically updates anti-cheat session with current game state
+/**
+ * Starts the periodic anti-cheat monitoring system
+ * Monitors game state changes and reports them to the server
+ */
 function startVocaGuard() {
     checkApiStatus().then(on => console[on ? 'log' : 'warn'](`🛡️ VocaGuard: Anti-Cheat is ${on ? 'ON' : 'OFF'}.`));
     let lf = (typeof floor !== 'undefined') ? floor : null;
@@ -162,11 +233,15 @@ function startVocaGuard() {
     }, 1000);
 }
 
-// Start or resume anti-cheat session on script load
+// Initialize anti-cheat session on script load
 if (!vocaguardSessionId) startVocaGuardSession(); else startVocaGuard();
 
 // --- Dialog / Submission Flow ----------------------------------------------
-// Shows the initials entry dialog and handles captcha verification and submission
+
+/**
+ * Shows the initials entry dialog with captcha verification
+ * @param {Function} submitCallback - Callback function called with submission data or null
+ */
 function showInitialsDialog(submitCallback) {
     let widgetId = null;
     let captchaToken = null;
@@ -183,7 +258,6 @@ function showInitialsDialog(submitCallback) {
         ],
                 afterRender: (root) => {
                         setTimeout(() => root.querySelector('#tardboard-initials-input')?.focus(), 50);
-                        // Move gamepad hints below buttons
                         const btns = root.querySelector('.tardboard-buttons');
                         if (btns) {
                                 const hints = document.createElement('div');
@@ -237,7 +311,7 @@ function showInitialsDialog(submitCallback) {
         .catch(err => { console.warn('Turnstile load failure', err); console.log('🏆 TardBoard: Captcha load failed'); });
 
     const input = document.getElementById('tardboard-initials-input');
-    // Build slot overlay
+    // Build slot overlay for visual feedback
     const slotContainer = document.getElementById('tardboard-initials-slots');
     if (slotContainer && slotContainer.childElementCount === 0) {
         for (let i = 0; i < 5; i++) {
@@ -283,7 +357,7 @@ function showInitialsDialog(submitCallback) {
         const val = input.value.trim();
         if (!val) { alert('Enter initials first.'); return; }
         pendingSubmit = true;
-        // Grey out the Submit button
+        // Grey out the Submit button if validation is pending
         const okBtn = document.getElementById('tardboard-dialog-ok');
         if (okBtn) {
             okBtn.disabled = true;
@@ -304,7 +378,12 @@ function showInitialsDialog(submitCallback) {
     }
 }
 
-// Shows an informational dialog (optionally auto-closing)
+/**
+ * Shows an informational dialog with optional auto-close
+ * @param {string} message - HTML message to display
+ * @param {Function} [onOk] - Callback function called when OK is clicked or auto-close occurs
+ * @param {number} [autoCloseMs] - Auto-close delay in milliseconds (no buttons if specified)
+ */
 function showInfoDialog(message, onOk, autoCloseMs) {
     createDialog({
         bodyHtml: message,
@@ -315,7 +394,10 @@ function showInfoDialog(message, onOk, autoCloseMs) {
     }
 }
 
-// Shows a dialog if anti-cheat validation fails
+/**
+ * Shows a dialog when anti-cheat validation fails
+ * @param {string} [reason] - Reason for validation failure
+ */
 function showValidationFailDialog(reason) {
     createDialog({
         bodyHtml: `Anti-cheat validation failed:<br><span style="color:#f55;">${reason || 'Unknown reason'}</span><br>The game will reset as normal.`,
@@ -323,7 +405,11 @@ function showValidationFailDialog(reason) {
     });
 }
 
-// Validates anti-cheat session and submits highscore to leaderboard
+/**
+ * Validates anti-cheat session and submits highscore to leaderboard
+ * @param {string} playerInitials - Player's initials (max 5 characters)
+ * @param {string} captchaToken - Captcha verification token
+ */
 function submitHighscore(playerInitials, captchaToken) {
     const { floor: floorNum, level: levelNum } = getGameState();
     fetch(`${API_BASE}/api/vocaguard/validate`, {
@@ -352,7 +438,12 @@ function submitHighscore(playerInitials, captchaToken) {
         });
 }
 
-// Override setTimeout to intercept game reset and show initials dialog
+// --- Game Integration Hooks ------------------------------------------------
+
+/**
+ * Intercepts setTimeout calls to catch game reset events (death)
+ * Shows leaderboard dialog when game is about to reset
+ */
 (function interceptReset() {
     const originalSetTimeout = window.setTimeout;
     window.setTimeout = function(cb, delay) {
@@ -369,19 +460,6 @@ function submitHighscore(playerInitials, captchaToken) {
         return originalSetTimeout.apply(this, arguments);
     };
 })();
-
-// Hook descend to force an immediate VocaGuard update on floor change
-if (typeof window.descend === 'function') {
-    const originalDescend = window.descend;
-    window.descend = function(...args) {
-        const result = originalDescend.apply(this, args);
-        const { floor: floorNum, level: levelNum } = getGameState();
-        if (typeof floorNum === 'number' && !isNaN(floorNum) && typeof levelNum === 'number' && !isNaN(levelNum)) {
-            fetch(`${API_BASE}/api/vocaguard/update`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: vocaguardSessionId, floor: floorNum, level: levelNum }) });
-        }
-        return result;
-    };
-}
 
 // --- End of TardBoard script ---
 console.log('🏆 TardBoard: Script loaded successfully!');
