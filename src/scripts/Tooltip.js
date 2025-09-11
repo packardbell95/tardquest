@@ -9,39 +9,47 @@
  * the element must be used to call Tooltip.initialize()
  *
  * Tooltip Data Attributes
- * - tooltipHtml:       The HTML contents of the tooltip. This is required in
- *                      order for the tooltip to work
+ * - tooltipHtml:           The HTML contents of the tooltip. This is required
+ *                          in order for the tooltip to work
  *
- * - tooltipPosition:   Where the tooltip should appear relative to the target
- *                      element that's being hovered. Defaults to "right"
+ * - tooltipPosition:       Where the tooltip should appear relative to the
+ *                          target element that's being hovered
+ *                          Defaults to "right"
  *
- *                      The orthogonal positions have "start" and "end" variants
- *                      which basically set the alignment of the tooltip in line
- *                      with the triggering element. Otherwise, these are
- *                      centered
+ *                          The orthogonal positions have "start" and "end"
+ *                          variants which basically set the alignment of the
+ *                          tooltip in line with the triggering element.
+ *                          Otherwise, these are centered
  *
- *                      Acceptable values:
- *                       - "right start"
- *                       - "right"
- *                       - "right end"
- *                       - "left start"
- *                       - "left"
- *                       - "left end"
- *                       - "top start"
- *                       - "top"
- *                       - "top end"
- *                       - "bottom start"
- *                       - "bottom"
- *                       - "bottom end"
- *                       - "top left"
- *                       - "top right"
- *                       - "bottom left"
- *                       - "bottom right"
+ *                          Acceptable values:
+ *                           - "right start"
+ *                           - "right"
+ *                           - "right end"
+ *                           - "left start"
+ *                           - "left"
+ *                           - "left end"
+ *                           - "top start"
+ *                           - "top"
+ *                           - "top end"
+ *                           - "bottom start"
+ *                           - "bottom"
+ *                           - "bottom end"
+ *                           - "top left"
+ *                           - "top right"
+ *                           - "bottom left"
+ *                           - "bottom right"
  *
- * - tooltipGroupId:    Name of an optional group that the tooltip belongs to.
- *                      If a user activates two tooltips from the same group,
- *                      the first one would be closed immediately and the second
- *                      would appeaer immediately without fading out or in first
+ * - tooltipGroupId:        Name of an optional group that the tooltip belongs
+ *                          to. If a user activates two tooltips from the same
+ *                          group, the first one would be closed immediately and
+ *                          the second would appeaer immediately without fading
+ *                          out or in first
+ *
+ *  - hideAfterInteraction: A boolean flag that, when set to true, will suppress
+ *                          the tooltip for that group if the element has been
+ *                          clicked. This is used to minimize redundant tooltips
+ *                          for common interactions
+ *                          Default: false
  *
  *
  * Tooltip Group Settings
@@ -55,10 +63,7 @@
  *                          to appear
  *                          Default: 0
  *
- *  - hideAfterInteraction: A boolean flag that, when set to true, will suppress
- *                          the tooltip for that group if the element has been
- *                          clicked. This is used to minimize redundant tooltips
- *                          for common interactions
+ *  - hideAfterInteraction: See hideAfterInteraction above
  *                          Default: false
  *
  *  - position:             The display position of the tooltip relative to its
@@ -226,13 +231,29 @@ const Tooltip = {
     },
 
     _checkInteraction: (e) => {
-        const groupId = e.target.dataset?.tooltipgroupid;
-        if (! Tooltip.groupSettings?.[groupId]?.hideAfterInteraction) {
+        if (! Tooltip._shouldHideAfterInteraction(e)) {
             return;
         }
 
-        Tooltip._dismissedGroups[groupId] = true;
+        const groupId = e.target.dataset?.tooltipgroupid;
+        if (groupId) {
+            Tooltip._dismissedGroups[groupId] = true;
+        }
+
         Tooltip._hide(e);
+    },
+
+    _shouldHideAfterInteraction: (e) => {
+        if (e.target.dataset?.hideafterinteraction) {
+            return true;
+        }
+
+        const groupId = e.target.dataset?.tooltipgroupid;
+        if (Tooltip.groupSettings?.[groupId]?.hideAfterInteraction) {
+            return true;
+        }
+
+        return false;
     },
 
     _hide: (e) => {

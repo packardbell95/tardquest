@@ -892,7 +892,7 @@ a:link {
         "topLeft    viewport    inventory"
         "stats      viewport    inventory"
         "controls   party       playerInput"
-        "nowPlaying nowPlaying  controller";
+        "bottomBar  bottomBar   controller";
 }
 
 #interface > div {
@@ -924,26 +924,118 @@ a:link {
 #party          { grid-area: party; overflow: hidden; }
 #inventory      { grid-area: inventory; }
 #playerInput    { grid-area: playerInput; }
-#nowPlaying     {
-    grid-area: nowPlaying;
+#bottomBar     {
+    grid-area: bottomBar;
     display: flex;
     flex-direction: column;
 }
 
-#nowPlaying .track-info {
-    flex-grow: 1;
-    padding: 4px 8px;
-    align-items: center;
+@keyframes nowPlaying_notes {
+    0%   { content: "♪"; }
+    25%  { content: "♩"; }
+    50%  { content: "♫"; }
+    75%  { content: "♬"; }
+}
+
+#bottomBar {
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.5ch;
+    align-items: center;
     background-image: url('assets/interface/ui/tile1.gif');
     background-repeat: repeat;
     background-size: 25px;
     font-size: 13px;
+    color: #fff;
+    text-shadow: 2px 2px 2px #000;
 }
 
-#nowPlaying .music-icon {
-    margin-right: 8px;
-    color: #0ff;
+#nowPlaying {
+    margin-left: 0.5ch;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5ch;
+    align-items: center;
+    font-size: 13px;
+    color: #fff;
+    text-shadow: 2px 2px 2px #000;
+
+    &.stopped .track-info {
+        font-style: oblique;
+    }
+
+    & .icon {
+        font-size: 2em;
+        margin-right: 0.5ch;
+        color: #0ff;
+        &::before {
+            content: "♫";
+        }
+    }
+
+    &:not(.stopped) .icon::before {
+        animation: nowPlaying_notes 4s linear infinite;
+    }
+
+    &.stopped .icon {
+        color: #f0a;
+        &::before {
+            content: "∅";
+        }
+    }
+}
+
+#gameSettingsButtonContainer {
+    width: 32px;
+    height: 30px;
+    background-color: #fff;
+    display: flex;
+    align-content: center;
+    justify-content: end;
+}
+
+@keyframes gameSettingsButton_speen {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#gameSettingsButton {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    background-color: #000;
+    border: 1px solid #000;
+
+    &.opened:not(:active):not(:hover),
+    &:not(.opened):active,
+    &:not(.opened):hover {
+        background-color: #fff;
+        &::after {
+            filter: invert();
+        }
+    }
+
+    &::after {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        top: 4px;
+        left: 4px;
+        background-image: url(assets/interface/ui/settings.png);
+        background-position: center;
+        background-size: 22px;
+        background-repeat: no-repeat;
+    }
+
+    &:hover::after {
+        animation: gameSettingsButton_speen 560ms steps(4, end) infinite;
+    }
 }
 
 #controller {
@@ -1926,7 +2018,7 @@ a:link {
     flex-direction: column;
 }
 
-.playerInputTooltip {
+.genericTooltip {
     padding: 0 1ch;
     max-width: 500px;
     border: 0;
