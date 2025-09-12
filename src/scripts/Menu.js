@@ -155,6 +155,10 @@ class Menu {
         return this.#menus[this.#breadcrumbs.at(-1)?.menuName] || undefined;
     }
 
+    isOpenInBreadcrumbs(menuName) {
+        return Boolean(this.#breadcrumbs.find((b) => b.menuName === menuName));
+    }
+
     isOpen() {
         return this.#isOpen;
     }
@@ -213,6 +217,19 @@ class Menu {
         } else {
             this.#onCancel?.();
         }
+    }
+
+    closeThrough(menuName) {
+        while (this.#breadcrumbs.length > 0) {
+            const lastMenu = this.getCurrentMenuId() === menuName;
+            this.close();
+
+            if (lastMenu) {
+                break;
+            }
+        }
+
+        this.render();
     }
 
     closeAll() {
