@@ -71,7 +71,7 @@
         './assets/interface/armor/pectoral-mass.png',
 
         // interface/items
-        './assets/interface/items/c4.png','./assets/interface/items/dowsing-rod.png','./assets/interface/items/hamms.png','./assets/interface/items/lean.png',
+        './assets/interface/items/c4.png','./assets/interface/items/carrier-pigeon.png','./assets/interface/items/dowsing-rod.png','./assets/interface/items/hamms.png','./assets/interface/items/lean.png',
         './assets/interface/items/raisins.png','./assets/interface/items/toilet-water.png','./assets/interface/items/torch.png','./assets/interface/items/trombone.png',
 
         // interface/rings
@@ -87,7 +87,7 @@
         './assets/interface/ui/item-border-small.png','./assets/interface/ui/item-border.png','./assets/interface/ui/items.png',
         './assets/interface/ui/left.png','./assets/interface/ui/next.png','./assets/interface/ui/persuade.gif','./assets/interface/ui/previous.png',
         './assets/interface/ui/right.png','./assets/interface/ui/rings.png','./assets/interface/ui/run.gif','./assets/interface/ui/scroll-down.png',
-        './assets/interface/ui/scroll-up.png','./assets/interface/ui/settings.png','./assets/interface/ui/settings1.png','./assets/interface/ui/settings2.png',
+        './assets/interface/ui/scroll-up.png','./assets/interface/ui/settings.png',
         './assets/interface/ui/tardpad.png','./assets/interface/ui/tile1.gif','./assets/interface/ui/tile1.png','./assets/interface/ui/turn-left.png',
         './assets/interface/ui/turn-right.png','./assets/interface/ui/up.png','./assets/interface/ui/weapons.png',
 
@@ -101,13 +101,13 @@
         './assets/transitions/battle-transition.gif',
 
         // audio
-        './audio/ash.mp3','./audio/attack.mp3','./audio/attacked.mp3','./audio/battle1.mp3','./audio/battle2.mp3','./audio/battle3.mp3','./audio/battle4.mp3',
-        './audio/battle5.mp3','./audio/battleEnd.mp3','./audio/battleStart.mp3','./audio/breathe1.mp3','./audio/breathe2.mp3', './audio/erok.mp3',
-        './audio/explore2.mp3','./audio/explore3.mp3','./audio/explore4.mp3','./audio/explore5.mp3','./audio/explosion.mp3','./audio/floorBreakScreamDie.mp3',
+        './audio/alert.ogg','./audio/ash.mp3','./audio/attack.mp3','./audio/attacked.mp3','./audio/bat-wings-dry.ogg','./audio/bat-wings-wet.ogg','./audio/battle1.mp3','./audio/battle2.mp3','./audio/battle3.mp3','./audio/battle4.mp3',
+        './audio/battle5.mp3','./audio/battle6.mp3','./audio/battleEnd.mp3','./audio/battleStart.mp3','./audio/breathe1.mp3','./audio/breathe2.mp3','./audio/erok.mp3',
+        './audio/explore1.mp3','./audio/explore2.mp3','./audio/explore3.mp3','./audio/explore4.mp3','./audio/explore5.mp3','./audio/explosion.mp3','./audio/floorBreakScreamDie.mp3',
         './audio/floorCrackSlight.mp3','./audio/footsteps.mp3','./audio/gamble.mp3','./audio/gamblers-theme.mp3','./audio/healTile.mp3','./audio/inventoryOpen.mp3',
-        './audio/kaching.mp3','./audio/merchant.mp3','./audio/persuade.mp3','./audio/raisins.mp3','./audio/run.mp3',
+        './audio/kaching.mp3','./audio/lurking.ogg','./audio/merchant.mp3','./audio/persuade.mp3','./audio/raisins.mp3','./audio/run.mp3',
         './audio/scream.mp3','./audio/title.mp3','./audio/torch.mp3','./audio/tromBONE.mp3','./audio/turn.mp3',
-        './audio/uiCancel.mp3','./audio/uiOption.mp3','./audio/uiSelect.mp3'
+        './audio/uiCancel.mp3','./audio/uiOption.mp3','./audio/uiSelect.mp3','./audio/vampire-vengeful-fruit-intro.mp3','./audio/vampire-vengeful-fruit-main-loop.mp3'
     ];
 
     /* --------------------------------------------------------------------- *
