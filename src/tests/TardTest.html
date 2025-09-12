@@ -11,6 +11,7 @@
 
     <!-- Libraries to test -->
     <script src="../scripts/Map.js"></script>
+    <script src="../scripts/Music.js"></script>
 
     <!-- Test Suites -->
     <script src="suites/GameMap/helpers/renderGameMapContext.js"></script>
@@ -20,6 +21,9 @@
     <script src="suites/GameMap/findPath-around-spiral.js"></script>
     <script src="suites/GameMap/findPath-around-object.js"></script>
     <script src="suites/GameMap/findNextStep.js"></script>
+
+    <script src="suites/Music/helpers/generateSilentAudioUrl.js"></script>
+    <script src="suites/Music/allTests.js"></script>
 </head>
 <body>
     <section>
@@ -43,6 +47,8 @@
     </section>
 
     <script>
+        // START OF TESTS
+
         const testMap = new GameMap();
 
         testGroup("Map: Initialization");
@@ -79,6 +85,11 @@
         GameMap_findPathAroundSpiral();
         GameMap_findPathAroundObject();
         GameMap_findNextStep();
+
+        testGroup("Music Handling System");
+        Music_allTests();
+
+        // END OF TESTS
 
         printResults();
 

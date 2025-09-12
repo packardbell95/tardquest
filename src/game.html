@@ -319,7 +319,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             data-tooltipgroupid="playerInput"
                             data-tooltipposition="top end"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Turn Left
                                 </div>
                             '
@@ -330,7 +330,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             data-tooltipgroupid="playerInput"
                             data-tooltipposition="top end"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Move Forward
                                 </div>
                             '
@@ -341,7 +341,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             data-tooltipgroupid="playerInput"
                             data-tooltipposition="top end"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Turn Right
                                 </div>
                             '
@@ -352,7 +352,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             data-tooltipgroupid="playerInput"
                             data-tooltipposition="bottom end"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Strafe Left
                                 </div>
                             '
@@ -363,7 +363,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             data-tooltipgroupid="playerInput"
                             data-tooltipposition="bottom end"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Move Backward
                                 </div>
                             '
@@ -374,7 +374,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             data-tooltipgroupid="playerInput"
                             data-tooltipposition="bottom end"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Strafe Right
                                 </div>
                             '
@@ -391,7 +391,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             name="attack"
                             data-tooltipgroupid="playerInput"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     KILL THAT SUCKA!
                                 </div>
                             '
@@ -401,7 +401,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             name="persuade"
                             data-tooltipgroupid="playerInput"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Persuade the enemy to join your party
                                 </div>
                             '
@@ -411,7 +411,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             name="run"
                             data-tooltipgroupid="playerInput"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Run away like a coward
                                 </div>
                             '
@@ -427,7 +427,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         name="previous-page"
                         data-tooltipgroupid="playerInput"
                         data-tooltiphtml='
-                            <div class="playerInputTooltip">
+                            <div class="genericTooltip">
                                 Previous Page
                             </div>
                         '
@@ -439,7 +439,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             name="up"
                             data-tooltipgroupid="playerInput"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Previous Option
                                 </div>
                             '
@@ -449,7 +449,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             name="confirm"
                             data-tooltipgroupid="playerInput"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Confirm Selection
                                 </div>
                             '
@@ -459,7 +459,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             name="down"
                             data-tooltipgroupid="playerInput"
                             data-tooltiphtml='
-                                <div class="playerInputTooltip">
+                                <div class="genericTooltip">
                                     Next Option
                                 </div>
                             '
@@ -470,7 +470,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         name="next-page"
                         data-tooltipgroupid="playerInput"
                         data-tooltiphtml='
-                            <div class="playerInputTooltip">
+                            <div class="genericTooltip">
                                 Next Page
                             </div>
                         '
@@ -481,10 +481,25 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             </div>
         </div>
 
-        <div id="nowPlaying">
-            <div class="track-info">
-                <span class="music-icon">♫</span>
-                <span id="currentTrackName">No music playing</span>
+        <div id="bottomBar">
+            <div id="nowPlaying" class="stopped">
+                <div class="icon"></div>
+                <div class="track-info">
+                    No music playing
+                </div>
+            </div>
+            <div id="gameSettingsButtonContainer">
+                <button
+                    id="gameSettingsButton"
+                    onclick="GameSettingsButton.toggle()"
+                    data-tooltipPosition="top"
+                    data-hideAfterInteraction="true"
+                    data-tooltipHtml='
+                        <div class="genericTooltip">
+                            Open Game Settings
+                        </div>
+                    '
+                ></button>
             </div>
         </div>
 
@@ -507,8 +522,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <script src="scripts/Map.js"></script>
     <script src="scripts/Menu.js"></script>
     <script src="scripts/Modal.js"></script>
+    <script src="scripts/Music.js"></script>
     <script src="scripts/sam.js"></script>
     <script src="scripts/Tooltip.js"></script>
+    <script src="data/music.js"></script>
     <script src="data/portraits.js"></script>
     <script src="data/enemyart.js"></script>
     <script src="scripts/gamepad.js"></script>
@@ -520,7 +537,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 position: "left",
             },
         };
-        document.querySelectorAll("#playerInput [data-tooltiphtml]")
+        document.querySelectorAll("[data-tooltiphtml]")
             .forEach(($e) => Tooltip.initialize($e));
 
         /**
@@ -6207,16 +6224,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             queue: [],
             pronunciationOverrides: {
                 "gauge": "gayge",
-                "PS2": "pee ess two",
+                "ps2": "pee ess too",
                 "lughead": "lug head",
-                "the": "theee",
+                "the": "thuh",
                 "goodbye": "good bye",
                 "tasty": "tay stee",
                 "consent": "cun sent",
                 "date": "daytt",
-                "ID": "eye dee",
+                "id": "eye dee",
                 "delivered": "deliv urd",
-                "adventurer": "advent ur rar",
+                "adventurer": "advent ur rehr",
                 "motorcycles": "motor psy culls",
             },
 
@@ -6263,7 +6280,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
 
             applyPronunciationOverrides: (text) => {
-                return text.replace(/\b([A-Za-z']+)\b/g, (m, w) => {
+                return text.replace(/\b([\w']+)\b/g, (m, w) => {
                     const lower = w.toLowerCase();
                     if (Object.hasOwn(SpeechSynthesizer.pronunciationOverrides, lower)) {
                         const repl = SpeechSynthesizer.pronunciationOverrides[lower];
@@ -7015,14 +7032,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 enabled = enabled && hasPersuasionAttempts;
                                 if (enabled) {
                                     $button.dataset.tooltiphtml = `
-                                        <div class="playerInputTooltip">
+                                        <div class="genericTooltip">
                                             Persuade the enemy to join your
                                             party
                                         </div>
                                     `;
                                 } else {
                                     $button.dataset.tooltiphtml = `
-                                        <div class="playerInputTooltip warning">
+                                        <div class="genericTooltip warning">
                                             Can't persuade the enemy to join
                                             your party!
                                         </div>
@@ -7033,13 +7050,13 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                                 enabled = enabled && canRunAway;
                                 if (enabled) {
                                     $button.dataset.tooltiphtml = `
-                                        <div class="playerInputTooltip">
+                                        <div class="genericTooltip">
                                             Run away like a coward
                                         </div>
                                     `;
                                 } else {
                                     $button.dataset.tooltiphtml = `
-                                        <div class="playerInputTooltip warning">
+                                        <div class="genericTooltip warning">
                                             Can't run from this enemy!
                                         </div>
                                     `;
@@ -7074,6 +7091,38 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     GameControl.awaitingPersuasionText = false;
                     GameControl.enableControls();
                 }, 200);
+            },
+        };
+
+        const GameSettingsButton = {
+            toggle: () => ! menu.isOpenInBreadcrumbs("gameSettings")
+                ? GameSettingsButton.open()
+                : GameSettingsButton.close(),
+            open: () => {
+                playSFX('uiSelect');
+                menu.open('gameSettings');
+            },
+            close: () => {
+                playSFX('uiCancel');
+                menu.closeThrough('gameSettings');
+            },
+            opened: () => {
+                const $button = document.getElementById("gameSettingsButton");
+                $button.classList.add("opened");
+                $button.dataset.tooltiphtml = `
+                    <div class="genericTooltip">
+                        Close Game Settings
+                    </div>
+                `;
+            },
+            closed: () => {
+                const $button = document.getElementById("gameSettingsButton");
+                $button.classList.remove("opened");
+                $button.dataset.tooltiphtml = `
+                    <div class="genericTooltip">
+                        Open Game Settings
+                    </div>
+                `;
             },
         };
 
@@ -7182,10 +7231,24 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             return false;
                         }
 
+                        const alreadyRevealed = MAP.getCell(
+                            location.x,
+                            location.y
+                        )?.isExplored;
+
+                        if (alreadyRevealed) {
+                            updateBattleLog(
+                                `You should try looking a little bit closer ` +
+                                `at your map, bub. <span class="action">The ` +
+                                `exit is already visible!</span>`
+                            );
+                            return false;
+                        }
+
                         MAP.revealSpot(location.x, location.y, 1);
                         updateBattleLog(
-                            `<span class="action">The exit has been revealed!` +
-                            `</span>`
+                            `<span class="friendly">The exit has been ` +
+                            `revealed!</span>`
                         );
                         render();
 
@@ -7205,12 +7268,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     description: "An unlit torch. Using it will reveal the map of the current floor. +1.2 LOAD",
                     use: () => {
                         if (player.isHoldingTorch) {
-                            updateBattleLog("Uh, do you not SEE the torch that you are already holding?");
+                            updateBattleLog(
+                                `Uh, do you not <em>SEE</em> the torch that ` +
+                                `<span class="action">you are already ` +
+                                `holding?</span>`
+                            );
                             return false;
                         }
                         playSFX('torch');
                         MAP.reveal();
-                        updateBattleLog("Lo, the way has been made clear!");
+                        updateBattleLog(
+                            `<span class="friendly">Lo, the way has been ` +
+                            `made clear!</span>`
+                        );
                         animTorchStart();
                         render();
 
@@ -7330,25 +7400,41 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     name: "TROM-BONE",
                     description: "A trom-BONE. It sounds like a trombone, looks like a trombone, but is somehow... on the bonier side of things. +1.3 LOAD",
                     use: () => {
-                        stopAllMusic();
+                        if (tromboneIsPlaying) {
+                            updateBattleLog(
+                                `<span class="action">You're already playing ` +
+                                `the fucking trom-BONE!</span>`
+                            );
+                            return false;
+                        }
+
                         tromboneIsPlaying = true;
-                        tromboneResumeType = player.inCombat ? "battle" : "exploration";
+                        const tromboneShouldReenableMusic = music.isEnabled();
+                        if (tromboneShouldReenableMusic) {
+                            music.disable();
+                        }
+
                         animTromboneStart();
                         sfx.tromBone.currentTime = 0;
                         sfx.tromBone.play();
                         sfx.tromBone.onended = () => {
                             tromboneIsPlaying = false;
                             animTromboneEnd();
-                            if (musicEnabled) {
-                                if (player.inCombat) {
-                                    playRandomBattleMusic();
-                                } else if (currentExplorationTrack && tromboneResumeType === "exploration") {
-                                    resumeExplorationMusic();
-                                } else {
-                                    playRandomExplorationMusic();
-                                }
+
+                            if (tromboneShouldReenableMusic) {
+                                music.enable();
                             }
-                            tromboneResumeType = null;
+
+                            if (player.inCombat) {
+                                currentEnemy?.id === "vampire"
+                                    ? music.play(
+                                        "vampireBattleMainLoop",
+                                        "battle"
+                                    )
+                                    : music.playRandom("battle");
+                            } else {
+                                music.resumeTag("exploration");
+                            }
                         };
                         updateBattleLog("You play a trom-BONE. It sounds like a trombone, but somehow... bonier. Not very strong bone though. It shatters in your hands after you play your song. It was good while it lasted.");
 
@@ -7864,7 +7950,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 player.leavingCombat = true;
                 player.inCombat = false;
                 currentEnemy = null;
-                resumeExplorationMusic();
+                music.resumeTag("exploration");
                 player.party.purgeDeadMembers();
                 GameControl.update();
                 InventorySidebar.leaveCombat();
@@ -8037,7 +8123,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
             fallThroughFloorAndDie: () => {
                 setTimeout(() => {
-                    stopAllMusic();
+                    music.stop();
                     animTorchEnd();
                     Portrait.show('death');
                     GameControl.disableControls();
@@ -8802,6 +8888,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 throat: 158,
             },
             steps: [],
+            explorationMusicId: null, // Track to resume after the vampire loses
             isDoneMoving: function() {
                 return vampire.steps.length === 0;
             },
@@ -8976,6 +9063,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 const highMod = Math.max((vampire.level - 1) * 10, 0);
 
                 return ({
+                    musicTrackId: "vampireBattleIntro",
                     hp: Math.ceil(
                         vampire.baseHp + (10 * (floor - 1)) +
                         Math.max(Math.round(player.maxHp / 2), 0) +
@@ -8988,6 +9076,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 });
             },
             defeated: function() {
+                // Resume any previously-playing exploration music
+                vampire.explorationMusicId
+                    ? music.play(vampire.explorationMusicId, "exploration")
+                    : music.playRandom("exploration");
+
                 const mapEntrance = MAP.getEntrance();
                 const hasEntrance =
                     Object.hasOwn(mapEntrance, 'x') &&
@@ -9091,9 +9184,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 $desaturationOverlay.offsetWidth; // Force reflow
                 $desaturationOverlay.classList.add('is-animating');
 
-                stopAllMusic();
+                music.stop();
                 playSFX("alert");
-                setTimeout(() => playVampireLurkingTheme(), 2000);
+                setTimeout(
+                    () => {
+                        vampire.explorationMusicId =
+                            music.getLastTaggedTrackId("exploration");
+                        music.play("vampireLurking", "exploration");
+                    },
+                    2000
+                );
 
                 function handleAnimationEnd(event) {
                     if (event.target !== $desaturationOverlay) {
@@ -9521,317 +9621,6 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             batWingFlapWet: new Audio('audio/bat-wings-wet.ogg'),
         };
 
-        const music = {
-            titleTrack:
-                Object.assign(new Audio("audio/title.mp3"), { trackName: "Title - Xx_TheMilkMan69_xX" }),
-            explorationTracks: [
-                Object.assign(new Audio("audio/explore1.mp3"), { trackName: "Into the Tardspire - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/explore2.mp3"), { trackName: "Metal Spoons - endless_self" }),
-                Object.assign(new Audio("audio/explore3.mp3"), { trackName: "Tarded Warrior - endless_self" }),
-                Object.assign(new Audio("audio/explore4.mp3"), { trackName: "Mucal Parasite - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/explore5.mp3"), { trackName: "Into the Tardspire REDUX - Xx_TheMilkMan69_xX" }),
-            ],
-            battleTracks: [
-                Object.assign(new Audio("audio/battle1.mp3"), { trackName: "Tardus Membrane - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/battle2.mp3"), { trackName: "A Dangerous Game of Tag - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/battle3.mp3"), { trackName: "Eek! A Cunt! - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/battle4.mp3"), { trackName: "The Cumdown - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/battle5.mp3"), { trackName: "SURPRISE COCKFIGHT! - Xx_TheMilkMan69_xX" }),
-                Object.assign(new Audio("audio/battle6.mp3"), { trackName: "Stab Quest - Kirbydogs" }),
-            ],
-            vampireBattle:
-                Object.assign(new Audio("audio/vampire-battle-theme.mp3"), { trackName: "Vengeful Fruit - Xx_TheMilkMan69_xX" }),
-            vampireLurking:
-                Object.assign(new Audio("audio/lurking.ogg"), { trackName: "Lurking - Packard Bell 95" }),
-            merchantTrack:
-                Object.assign(new Audio("audio/merchant.mp3"), { trackName: "Welcome to SlobMart! - Xx_TheMilkMan69_xX" }),
-            gamblersTheme:
-                Object.assign(new Audio("audio/gamblers-theme.mp3"), { trackName: "Gambler's Theme - Packard Bell 95" }),
-            erokTheme:
-                Object.assign(new Audio("audio/erok.mp3"), { trackName: "A Dog Named Erok - Xx_TheMilkMan69_xX" }),
-        };
-
-        music.explorationTracks.forEach(track => track.loop = true);
-        music.battleTracks.forEach(track => track.loop = true);
-        music.titleTrack.loop = true;
-        music.gamblersTheme.loop = true;
-        music.erokTheme.loop = true;
-        music.vampireBattle.addEventListener("timeupdate", () => {
-            const loopEnd = music.vampireBattle.duration - 0.053;
-            if (music.vampireBattle.currentTime >= loopEnd) {
-                music.vampireBattle.currentTime = 16.5;
-                music.vampireBattle.play();
-            }
-        });
-        music.vampireLurking.loop = true;
-
-        function stopAllMusic() {
-            [
-                ...music.explorationTracks,
-                ...music.battleTracks,
-                music.gamblersTheme,
-                music.merchantTrack,
-                music.titleTrack,
-                music.erokTheme,
-                music.vampireBattle,
-                music.vampireLurking,
-            ].forEach(track => {
-                track.pause();
-                track.currentTime = 0;
-            });
-            currentMusic = null;
-            updateNowPlaying();
-        }
-        function playTitleMusic() {
-            stopAllMusic();
-            if (!musicEnabled) return;
-            currentMusic = music.titleTrack;
-            currentMusic.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function stopTitleMusic() {
-            if (currentMusic === music.titleTrack) {
-                currentMusic.pause();
-                currentMusic.currentTime = 0;
-                currentMusic = null;
-                updateNowPlaying();
-            }
-        }
-
-        function playRandomExplorationMusic() {
-            stopAllMusic();
-            if (!musicEnabled || tromboneIsPlaying) {
-                return;
-            }
-
-            if (vampire.isActiveOnFloor) {
-                playVampireLurkingTheme();
-                return;
-            }
-
-            const availableTracks = music.explorationTracks.filter((_, index) => enabledExplorationTracks[index]);
-
-            if (availableTracks.length === 0) {
-                currentExplorationTrack = null;
-                currentMusic = null;
-                updateNowPlaying();
-                return;
-            }
-
-            currentExplorationTrack = randomEntry(availableTracks);
-            currentMusic = currentExplorationTrack;
-            currentExplorationTrack.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function getExplorationTrackNames() {
-            return music.explorationTracks.map((track, index) =>
-                track.trackName || `Exploration Track ${index + 1}`
-            );
-        }
-
-        function getBattleTrackNames() {
-            return music.battleTracks.map((track, index) =>
-                track.trackName || `Battle Track ${index + 1}`
-            );
-        }
-
-        function initializeMusicSettings() {
-            if (enabledExplorationTracks.length === 0) {
-                enabledExplorationTracks = new Array(music.explorationTracks.length).fill(true);
-            }
-            if (enabledBattleTracks.length === 0) {
-                enabledBattleTracks = new Array(music.battleTracks.length).fill(true);
-            }
-            while (enabledExplorationTracks.length < music.explorationTracks.length) {
-                enabledExplorationTracks.push(true);
-            }
-            while (enabledBattleTracks.length < music.battleTracks.length) {
-                enabledBattleTracks.push(true);
-            }
-            enabledExplorationTracks = enabledExplorationTracks.slice(0, music.explorationTracks.length);
-            enabledBattleTracks = enabledBattleTracks.slice(0, music.battleTracks.length);
-        }
-        const explorationTrackNames = getExplorationTrackNames();
-        const battleTrackNames = getBattleTrackNames();
-
-        function playRandomBattleMusic() {
-            stopAllMusic();
-            if (!musicEnabled || tromboneIsPlaying) {
-                return;
-            }
-
-            if (currentEnemy?.id === "vampire") {
-                playVampireBattleTheme();
-                return;
-            }
-
-            const availableTracks = music.battleTracks.filter((_, index) => enabledBattleTracks[index]);
-
-            if (availableTracks.length === 0) {
-                currentMusic = null;
-                updateNowPlaying();
-                return;
-            }
-
-            currentMusic = randomEntry(availableTracks);
-            currentMusic.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function resumeExplorationMusic() {
-            stopAllMusic();
-            if (!musicEnabled || !currentExplorationTrack || tromboneIsPlaying) {
-                return;
-            }
-
-            const turnOffVampireTunes =
-                ! vampire.isActiveOnFloor &&
-                currentExplorationTrack === music.vampireLurking;
-            if (turnOffVampireTunes) {
-                playRandomExplorationMusic();
-            }
-
-            currentMusic = currentExplorationTrack;
-            currentExplorationTrack.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function playMerchantMusic() {
-            stopAllMusic();
-            if (!musicEnabled) return;
-            currentMusic = music.merchantTrack;
-            currentMusic.loop = true;
-            currentMusic.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function stopMerchantMusic() {
-            if (currentMusic === music.merchantTrack) {
-                currentMusic.pause();
-                currentMusic.currentTime = 0;
-                currentMusic = null;
-                updateNowPlaying();
-            }
-        }
-
-        function playGamblersTheme() {
-            stopAllMusic();
-            if (!musicEnabled) {
-                return;
-            }
-            currentMusic = music.gamblersTheme;
-            currentMusic.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function playVampireLurkingTheme() {
-            stopAllMusic();
-            if (!musicEnabled) {
-                return;
-            }
-            currentMusic = music.vampireLurking;
-            currentExplorationTrack = currentMusic;
-            currentMusic.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function stopVampireLurkingTheme() {
-            if (currentMusic !== music.vampireLurking) {
-                return;
-            }
-
-            currentMusic.pause();
-            currentMusic.currentTime = 0;
-            currentMusic = null;
-            updateNowPlaying();
-        }
-
-        function playVampireBattleTheme() {
-            stopAllMusic();
-            if (!musicEnabled) {
-                return;
-            }
-            currentMusic = music.vampireBattle;
-            currentMusic.play();
-            updateNowPlaying(getCurrentTrackName());
-        }
-
-        function stopVampireBattleTheme() {
-            if (currentMusic !== music.vampireBattle) {
-                return;
-            }
-
-            currentMusic.pause();
-            currentMusic.currentTime = 0;
-            currentMusic = null;
-            updateNowPlaying();
-        }
-
-        function updateNowPlaying(trackName = null) {
-            const $trackName = document.getElementById('currentTrackName');
-            if (!$trackName) return;
-
-            if (trackName) {
-                $trackName.textContent = trackName;
-                $trackName.style.color = '#fff';
-            } else {
-                $trackName.textContent = 'No music playing';
-                $trackName.style.color = '#666';
-            }
-        }
-
-        function getCurrentTrackName() {
-            if (!musicEnabled || !currentMusic) {
-                return null;
-            }
-
-            // Check if it's the title track
-            if (currentMusic === music.titleTrack) {
-                return "Title - Xx_TheMilkMan69_xX";
-            }
-
-            // Check if it's the merchant track
-            if (currentMusic === music.merchantTrack) {
-                return "Welcome to SlobMart! - Xx_TheMilkMan69_xX";
-            }
-
-            // Check if it's the gambler's theme
-            if (currentMusic === music.gamblersTheme) {
-                return "Gambler's Theme - Packard Bell 95";
-            }
-
-            if (currentMusic === music.erokTheme) {
-                return "A Dog Named Erok - Xx_TheMilkMan69_xX";
-            }
-
-            if (currentMusic === music.vampireBattle) {
-                return "Vengeful Fruit - Xx_TheMilkMan69_xX";
-            }
-
-            if (currentMusic === music.vampireLurking) {
-                return "Lurking - Packard Bell 95";
-            }
-
-            // Check exploration tracks
-            const explorationIndex = music.explorationTracks.indexOf(currentMusic);
-            if (explorationIndex !== -1) {
-                return explorationTrackNames[explorationIndex];
-            }
-
-            // Check battle tracks
-            const battleIndex = music.battleTracks.indexOf(currentMusic);
-            if (battleIndex !== -1) {
-                return battleTrackNames[battleIndex];
-            }
-
-            return "Unknown Track";
-        }
-
-
-        let currentMusic = null;
-        let currentExplorationTrack = null;
         let currentEnemy = null;
         let gameOver = false;
         let persuasionAttempts = 0;
@@ -10014,7 +9803,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 displayName: "Merchant",
                 mapCharacter: "M",
                 onEnter: async function(x, y) {
-                    playMerchantMusic();
+                    music.play("merchantTheme");
                     menu.open('merchant', () => npcMove());
                 },
                 isVisible: function() {
@@ -10153,16 +9942,41 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             },
         });
 
+        const music = new Music(
+            TARDQUEST_MUSIC_TRACKS,
+            {
+                play: (trackId, info) => {
+                    const $nowPlaying = document.getElementById('nowPlaying');
+                    if (! $nowPlaying) {
+                        console.error("Now Playing section not found");
+                        return;
+                    }
+
+                    $nowPlaying.classList.remove("stopped");
+                    $nowPlaying.querySelector(".track-info").textContent =
+                        `${info.title} - ${info.artist}`;
+                },
+
+                stop: () => {
+                    const $nowPlaying = document.getElementById('nowPlaying');
+                    if (! $nowPlaying) {
+                        console.error("Now Playing section not found");
+                        return;
+                    }
+
+                    $nowPlaying.classList.add("stopped");
+                    $nowPlaying.querySelector(".track-info").textContent =
+                        "No music playing";
+                },
+            }
+        );
+
         let tromboneIsPlaying = false;
-        let tromboneResumeType = null;
-        let musicEnabled = true;
         let sfxEnabled = true;
         let speechEnabled = true;
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
         let battleTransitionAnimationsEnabled = true;
-        let enabledExplorationTracks = [];
-        let enabledBattleTracks = [];
 
         // Taken from https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
         function shuffle(array) {
@@ -10235,7 +10049,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 pigeon.isActiveOnFloor = false;
                 pigeon.x = pigeon.y = null;
             }
-            
+
             if (floor === 1) {
                 placeWelcomeBanner();
             }
@@ -10276,8 +10090,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         let preloaderEnabled = true;
 
         function loadSettings() {
-            const music = localStorage.getItem("musicEnabled");
-            if (music !== null) musicEnabled = music === "true";
+            // Music settings
+            JSON.parse(localStorage.getItem("musicEnabled")) ?? true
+                ? music.enable()
+                : music.disable();
+            music.setDisabledTracks(
+                JSON.parse(localStorage.getItem("disabledTracks")) ?? {}
+            );
+
             const eatRat = localStorage.getItem("eatRatAnimationEnabled");
             if (eatRat !== null) eatRatAnimationEnabled = eatRat === "true";
             const sfx = localStorage.getItem("sfxEnabled");
@@ -10292,19 +10112,16 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             if (autoDiceroll !== null) autoDicerollEnabled = autoDiceroll === "true";
             const preloader = localStorage.getItem("preloaderEnabled");
             if (preloader !== null) preloaderEnabled = preloader === "true";
-
-            const explorationTracks = localStorage.getItem("enabledExplorationTracks");
-            if (explorationTracks !== null) {
-                enabledExplorationTracks = JSON.parse(explorationTracks);
-            }
-            const battleTracks = localStorage.getItem("enabledBattleTracks");
-            if (battleTracks !== null) {
-                enabledBattleTracks = JSON.parse(battleTracks);
-            }
         }
 
         function saveSettings() {
-            localStorage.setItem("musicEnabled", musicEnabled);
+            // Music settings
+            localStorage.setItem("musicEnabled", music.isEnabled());
+            localStorage.setItem(
+                "disabledTracks",
+                JSON.stringify(music.getDisabledTracks())
+            );
+
             localStorage.setItem("eatRatAnimationEnabled", eatRatAnimationEnabled);
             localStorage.setItem("sfxEnabled", sfxEnabled);
             localStorage.setItem("speechEnabled", speechEnabled);
@@ -10312,12 +10129,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             localStorage.setItem("battleTransitionAnimationsEnabled", battleTransitionAnimationsEnabled);
             localStorage.setItem("autoDicerollEnabled", autoDicerollEnabled);
             localStorage.setItem("preloaderEnabled", preloaderEnabled);
-            localStorage.setItem("enabledExplorationTracks", JSON.stringify(enabledExplorationTracks));
-            localStorage.setItem("enabledBattleTracks", JSON.stringify(enabledBattleTracks));
         }
 
         loadSettings();
-        initializeMusicSettings();
 
         function placeWelcomeBanner() {
             if (MAP.getCell(player.x, player.y - 1)?.type === 'floor') {
@@ -10476,7 +10290,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     y: vampire.y,
                     displayName: player.hasEncounteredVampire
                         ?
-                            `<span class="${vampire.className}">` +
+                            `<span class="${vampire.displayClassName}">` +
                             `${vampire.displayName}</span>`
                         : `<em>A Menacing... Fruit Bat?</em>`,
                     isExplored: true,
@@ -10564,7 +10378,8 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         function animBattleTransitionStart(
             callback,
             playBattleStartSFX = false,
-            playBattleEndSFX = false
+            playBattleEndSFX = false,
+            musicTrackId = null
         ) {
             refreshMinimap();
             const $battleTransition = document.getElementById('animBattleTransition');
@@ -10593,7 +10408,9 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     // Start battle music and show enemy when curtain begins to roll up
                     if (playBattleStartSFX && !tromboneIsPlaying) {
-                        playRandomBattleMusic();
+                        musicTrackId
+                            ? music.play(musicTrackId, "battle")
+                            : music.playRandom("battle");
                     }
                     if (typeof callback === 'function') {
                         callback();
@@ -11079,14 +10896,19 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             player.inCombat = true;
 
             if (battleTransitionAnimationsEnabled) {
-                animBattleTransitionStart(() => {
-                    startCombat();
-                }, true, false); // battleStart: true, battleEnd: false
+                animBattleTransitionStart(
+                    () => startCombat(),
+                    true, //battleStart
+                    false, // battleEnd
+                    enemyOverrides?.musicTrackId
+                );
             } else {
                 // No animation, start battle immediately
                 playSFX('battleStart');
                 if (!tromboneIsPlaying) {
-                    playRandomBattleMusic();
+                    enemyOverrides?.musicTrackId
+                        ? music.play(enemyOverrides?.musicTrackId, "battle")
+                        : music.playRandom("battle");
                 }
 
                 startCombat();
@@ -12144,7 +11966,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     `<span class="enemy">MIMIC</span>!!!`
                 );
                 player.enterCombat();
-                playRandomBattleMusic();
+                music.playRandom("battle");
             } else if (cellType === 'treasureChest') {
                 // Normal chest, provide loot
                 const lootTypeRoll = Math.random();
@@ -12339,7 +12161,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
             generateMap();
             animTorchEnd();
-            playRandomExplorationMusic();
+            music.playRandom("exploration");
             PigeonMessaging.ensurePolling();
         }
 
@@ -12375,9 +12197,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             gameSettings: {
                 title: "GAME SETTINGS",
                 onOpen: () => {
+                    GameSettingsButton.opened();
                     Portrait.show('settings');
                 },
                 onClose: () => {
+                    GameSettingsButton.closed();
                     Portrait.hide();
                 },
                 getOptions: () => [
@@ -12388,12 +12212,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     },
                     {
                         id: "toggleMusic",
-                        displayText: musicEnabled
+                        displayText: music.isEnabled()
                             ? "Disable music"
                             : "Enable music",
-                        description: musicEnabled
-                            ? "Turn off the in-game music"
-                            : "Turn on the in game music",
+                        description: tromboneIsPlaying
+                            ? "Wait for the trom-BONE to stop playing first"
+                            : `Turn ${music.isEnabled() ? "off" : "on"} the ` +
+                                `in-game music`,
+                        className: tromboneIsPlaying ? "muted" : undefined,
                     },
                     {
                         id: "musicSettings",
@@ -12460,13 +12286,11 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 select: (selectedOptionId) => {
                     switch (selectedOptionId) {
                         case "toggleMusic":
-                            musicEnabled = !musicEnabled;
-                            saveSettings();
-                            if (!musicEnabled) {
-                                stopAllMusic();
-                            } else {
-                                player.inCombat ? playRandomBattleMusic() : playRandomExplorationMusic();
+                            if (tromboneIsPlaying) {
+                                break;
                             }
+                            music.toggle();
+                            saveSettings();
                             menu.render();
                             break;
                         case "musicSettings":
@@ -12507,7 +12331,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             preloaderEnabled = !preloaderEnabled;
                             saveSettings();
                             menu.render();
-                            break;    
+                            break;
                         case "resetGame":
                             menu.open("resetGameConfirmation");
                             break;
@@ -12519,12 +12343,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "GAME SETTINGS > MUSIC SETTINGS",
                 getOptions: () => [
                     {
-                        id: "explorationMusic",
+                        id: "explorationMusicSettings",
                         displayText: "Exploration music",
                         description: "Pick which songs play during exploration",
                     },
                     {
-                        id: "battleMusic",
+                        id: "battleMusicSettings",
                         displayText: "Battle music",
                         description: "Pick which songs play during battle",
                     },
@@ -12534,25 +12358,27 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         description: "Return to game settings",
                     },
                 ],
-                select: (selectedOptionId) => {
-                    if (selectedOptionId === "explorationMusic") {
-                        menu.open("explorationMusicSettings");
-                    } else if (selectedOptionId === "battleMusic") {
-                        menu.open("battleMusicSettings");
-                    }
-                },
+                select: (selectedMenuId) => menu.open(selectedMenuId),
             },
 
             explorationMusicSettings: {
                 title: "GAME SETTINGS > MUSIC SETTINGS > EXPLORATION MUSIC",
-                landingHtml: () => "Select which exploration tracks to include in rotation",
+                landingHtml: () =>
+                    "Select which exploration tracks to include in rotation",
                 getOptions: () => {
-                    const options = explorationTrackNames.map((name, index) => ({
-                        id: `exploration_${index}`,
-                        displayText: name,
-                        description: enabledExplorationTracks[index] ? "Click to disable this track" : "Click to enable this track",
-                        className: enabledExplorationTracks[index] ? undefined : "muted",
-                    }));
+                    const tracks = music.getTracks("exploration");
+                    const options = tracks.map(track => {
+                        const verb = track.enabled ? "disable" : "enable";
+                        const description = `Select to ${verb} this track`
+                        const className = track.enabled ? undefined : "muted";
+
+                        return {
+                            id: track.id,
+                            displayText: `${track.title} - ${track.artist}`,
+                            description,
+                            className,
+                        };
+                    });
 
                     options.push({
                         id: "_back",
@@ -12562,20 +12388,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     return options;
                 },
-                select: (selectedOptionId) => {
-                    if (selectedOptionId.startsWith("exploration_")) {
-                        const index = parseInt(selectedOptionId.split("_")[1]);
-                        enabledExplorationTracks[index] = !enabledExplorationTracks[index];
-                        saveSettings();
-                        if (!player.inCombat && currentMusic && music.explorationTracks.includes(currentMusic)) {
-                            const currentTrackIndex = music.explorationTracks.indexOf(currentMusic);
-                            if (!enabledExplorationTracks[currentTrackIndex]) {
-                                playRandomExplorationMusic();
-                            }
-                        }
-
-                        menu.render();
-                    }
+                select: (trackId) => {
+                    music.tagToggle("exploration", trackId);
+                    saveSettings();
+                    menu.render();
                 },
             },
 
@@ -12583,12 +12399,18 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 title: "GAME SETTINGS > MUSIC SETTINGS > BATTLE MUSIC",
                 landingHtml: () => "Select which battle tracks to include in rotation",
                 getOptions: () => {
-                    const options = battleTrackNames.map((name, index) => ({
-                        id: `battle_${index}`,
-                        displayText: name,
-                        description: enabledBattleTracks[index] ? "Click to disable this track" : "Click to enable this track",
-                        className: enabledBattleTracks[index] ? undefined : "muted",
-                    }));
+                    const options = music.getTracks("battle").map(track => {
+                        const verb = track.enabled ? "disable" : "enable";
+                        const description = `Select to ${verb} this track`
+                        const className = track.enabled ? undefined : "muted";
+
+                        return {
+                            id: track.id,
+                            displayText: `${track.title} - ${track.artist}`,
+                            description,
+                            className,
+                        };
+                    });
 
                     options.push({
                         id: "_back",
@@ -12598,20 +12420,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
 
                     return options;
                 },
-                select: (selectedOptionId) => {
-                    if (selectedOptionId.startsWith("battle_")) {
-                        const index = parseInt(selectedOptionId.split("_")[1]);
-                        enabledBattleTracks[index] = !enabledBattleTracks[index];
-                        saveSettings();
-                        if (player.inCombat && currentMusic && music.battleTracks.includes(currentMusic)) {
-                            const currentTrackIndex = music.battleTracks.indexOf(currentMusic);
-                            if (!enabledBattleTracks[currentTrackIndex]) {
-                                playRandomBattleMusic();
-                            }
-                        }
-
-                        menu.render();
-                    }
+                select: (trackId) => {
+                    music.tagToggle("battle", trackId);
+                    saveSettings();
+                    menu.render();
                 },
             },
 
@@ -13117,12 +12929,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 onClose: () => {
                     merchant.say('Thank you. Come again!');
                     Portrait.hide();
-                    stopMerchantMusic();
-                    if (musicEnabled) {
-                        currentExplorationTrack
-                            ? resumeExplorationMusic()
-                            : playRandomExplorationMusic();
-                    }
+                    music.resumeTag("exploration");
                 },
                 landingHtml: () => {
                     return player.bitcoins > 0
@@ -13640,7 +13447,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                             ? 'Cheesed to meet you!'
                             : 'Place yer bets!'
                     );
-                    playGamblersTheme();
+                    music.play("gamblerTheme");
                 },
                 onClose: () => {
                     gambler.isActiveOnFloor = false;
@@ -13648,7 +13455,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (gamblerPosition) {
                         MAP.setCell(gamblerPosition.x, gamblerPosition.y);
                     }
-                    resumeExplorationMusic();
+                    music.resumeTag("exploration");
                     Portrait.hide();
                 },
                 landingHtml: () => {
@@ -13691,22 +13498,14 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     if (!erok.isPetting) {
                         Portrait.show('erokIdle');
                     }
-                    stopAllMusic();
-                    if (musicEnabled) {
-                        currentMusic = music.erokTheme;
-                        currentMusic.play();
-                        updateNowPlaying(getCurrentTrackName());
-                    }
 
+                    music.play("erokTheme");
                     erok.say('oh my god oh my god hi stranger i love motorcycles');
                 },
                 onClose: () => {
                     erok.say('I am barking happily, stranger!');
                     Portrait.hide();
-                    if (currentMusic === music.erokTheme) {
-                        stopAllMusic();
-                    }
-                    resumeExplorationMusic();
+                    music.resumeTag("exploration");
                     erok.isActiveOnFloor = false;
                     const erokPosition = erok.location();
                     if (erokPosition) {
@@ -13771,7 +13570,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                         MAP.setCell(pigeonPosition.x, pigeonPosition.y);
                     }
                 },
-                landingHtml: () => pigeon.checkForMessages() 
+                landingHtml: () => pigeon.checkForMessages()
                     ? `You see a sealed letter below the carrier pigeon's big stinky feet...`
                     : `You notice a carrier pigeon... it seems lost.`,
                 getOptions: () => {
@@ -13805,7 +13604,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     menu.close();
                 },
             },
-            
+
             chest: {
                 title: "TREASURE CHEST",
                 defaultCloseOption: "resistTemptation",
@@ -14736,8 +14535,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         InventorySidebar.refresh();
         generateMap();
         updateSeenTiles();
-        playRandomExplorationMusic();
-        updateNowPlaying(getCurrentTrackName());
+        music.playRandom("exploration");
         render();
 
         let isLevelUpAllocation = false;
@@ -15130,13 +14928,12 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     const $titleScreen = document.getElementById('titleScreen');
 
         function showTitleScreen() {
-            stopAllMusic();
-            playTitleMusic();
+            music.play("title");
             $titleScreen.style.display = 'flex';
             GameControl.disableControls();
         }
         function hideTitleScreen() {
-            stopTitleMusic();
+            music.stop();
             // Start wipe-in
             const wipe = document.getElementById('screenWipe');
             wipe.classList.add('active');
@@ -15146,7 +14943,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             setTimeout(() => {
                 $titleScreen.style.display = 'none';
                 GameControl.enableControls();
-                playRandomExplorationMusic();
+                music.playRandom("exploration");
                 render();
 
                 // Start wipe-out (reveal)
@@ -15187,17 +14984,15 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         if (skipTitleScreen) {
             if (!preloaderEnabled) {
                 hideTitleScreen();
-                stopAllMusic();
             } else {
                 window.onTardquestLoaded = function() {
                     hideTitleScreen();
-                    stopAllMusic();
                 };
             }
         } else {
             showTitleScreen();
         }
-        
+
         player.party.initializePartySection();
         GameControl.update();
     </script>

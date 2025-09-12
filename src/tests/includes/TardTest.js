@@ -153,9 +153,15 @@ function printResults() {
 
     function getResults(results) {
         if (results.length === 0) {
+            $div = document.createElement("div");
+            $div.className = "no-tests";
+            $icon = document.createTextNode("⛔️ ");
             $em = document.createElement("em");
             $em.textContent = "No tests were executed!";
-            return $em;
+            $div.appendChild($icon);
+            $div.appendChild($em);
+
+            return $div;
         }
 
         const $table = document.createElement("table");
@@ -301,7 +307,7 @@ function printResults() {
         $details.appendChild($summary);
         $details.appendChild(getResults(group.results));
 
-        if (results.total !== results.passed) {
+        if (results.total === 0 || results.total !== results.passed) {
             allTestsPassed = false;
             $details.setAttribute("open", true);
         }
