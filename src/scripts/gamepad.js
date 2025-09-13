@@ -545,6 +545,7 @@
   function loop() {
     const pads = getPads();
     const $controllerBox = document.getElementById('controller');
+    const $controllerStatusButton = document.getElementById('controllerStatusButton');
     if (pads.length && pads[0]) {
       // Patch party.enableButtons every frame if needed
       const player = getPlayer();
@@ -567,8 +568,10 @@
       }
       processGamepad(pads[0]);
       if ($controllerBox) $controllerBox.className = 'connected';
+      if ($controllerStatusButton) $controllerStatusButton.classList.add('connected');
     } else {
       if ($controllerBox) $controllerBox.className = 'disconnected';
+      if ($controllerStatusButton) $controllerStatusButton.classList.remove('connected');
     }  
   }
 

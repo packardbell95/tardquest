@@ -1029,6 +1029,14 @@ a:link {
         background-size: 20px 16px;
         background-repeat: no-repeat;
     }
+
+    &.connected::after {
+        background-image: url(assets/interface/ui/tardpad-connected.png);
+    }
+
+    &:not(.connected)::after {
+        background-image: url(assets/interface/ui/tardpad-disconnected.png);
+    }
 }
 
 #gameSettingsButtonContainer {
