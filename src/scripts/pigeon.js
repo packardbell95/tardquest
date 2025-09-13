@@ -1,5 +1,23 @@
-// Carrier Pigeon Messaging v1.1
+/**
+ * @fileoverview Carrier Pigeon Messaging System for TardQuest
+ * 
+ * This module implements a messaging system that allows players to send and receive
+ * messages using virtual carrier pigeons. Messages are sent to a remote API and
+ * delivered asynchronously. The system includes:
+ * 
+ * - Message composition and sending
+ * - Automatic polling for incoming messages
+ * - LocalStorage persistence for pending messages
+ * - Session-based authentication via VocaGuard
+ * 
+ * @author VocaPepper
+ */
+
 (function(){
+    /**
+     * Logging utility for better console identification
+     * @type {Object}
+     */
     const log = {
         info: (...a)=>console.log('🐦 Pigeon:',...a),
         warn: (...a)=>console.warn('🐦 Pigeon:',...a),
@@ -7,20 +25,45 @@
         debug: (...a)=>console.debug('🐦 Pigeon:',...a)
     };
 
+    /** @const {string} Current version of the messaging system */
     const VERSION = '1.1';
+    
+    /** @const {string} Base URL for the pigeon messaging API */
     const API_BASE = 'https://vocapepper.com:9601';
+    
+    /** @const {string} Placeholder text for the message input field */
     const PLACEHOLDER_PIGEON = "Message for the next adventurer...";
+    
+    /** @type {boolean} Flag indicating if the pigeon input mode is active */
     let pigeonInputMode = false;
+    
+    /** @type {number|null} Timer ID for the delivery polling interval */
     let pollTimer = null;
+    
+    /** @const {number} Interval in milliseconds between automatic delivery polls */
     const DELIVERY_POLL_INTERVAL_MS = 60000; // poll cadence
+    
+    /** @const {number} Minimum interval in milliseconds between forced delivery polls */
     const DELIVERY_MIN_INTERVAL_MS = 5000;   // min gap between forced polls
+    
+    /** @type {number} Timestamp of the last delivery attempt */
     let lastDeliveryAttempt = 0;
+    
+    /** @const {string} Local storage key for pending delivered messages */
     const LS_PENDING_KEY = 'pigeonPendingMessage';
+    
+    /** @type {HTMLInputElement|null} Reference to the persuasion input element */
     const inp = document.getElementById('persuadeInput');
-    // Load any pending message from storage (persist across reloads)
+    
+    /**
+     * Pending delivered message loaded from localStorage
+     * Persists across page reloads to ensure messages aren't lost
+     * @type {string|null}
+     */
     let pendingDeliveredMessage = (function(){
         try { return localStorage.getItem(LS_PENDING_KEY) || null; } catch { return null; }
     })();
+    
     if (pendingDeliveredMessage) {
         log.info('Restored pending message from localStorage.');
         // Re-surface pigeon so user can trigger reading, but don't duplicate if already placed
@@ -34,16 +77,28 @@
         }
     }
 
+    /**
+     * Retrieves the current VocaGuard session ID from sessionStorage
+     * @returns {string|null} The session ID or null if not found
+     */
     function getSessionId(){
         return sessionStorage.getItem('vocaguardSessionId');
     }
 
+    /**
+     * Checks if the player has a carrier pigeon item in their inventory
+     * @returns {boolean} True if the player has a carrier pigeon, false otherwise
+     */
     function haveLocalPigeon(){
         try {
             return player?.inventory?.hasEntry('items','carrierPigeon');
         } catch { return false; }
     }
 
+    /**
+     * Opens the pigeon message composition interface
+     * Checks for required conditions (pigeon item, active session) before opening
+     */
     function openPigeonInput(){
         log.debug('Attempt open compose. LocalHas?', haveLocalPigeon());
         if (!haveLocalPigeon()) {
@@ -63,6 +118,11 @@
         log.info('Compose opened');
     }
 
+    /**
+     * Sends a message via the carrier pigeon API
+     * @param {string} message - The message to send
+     * @returns {Promise<boolean>} True if sent successfully, false otherwise
+     */
     async function sendPigeon(message){
         log.debug('Send attempt len=%d', message?.length||0);
         const sid = getSessionId();
@@ -86,7 +146,7 @@
                     InventorySidebar.refresh('items');
                 }
                 pigeon.say("Your message has been sent! Coo coo!");
-                log.info('Sent successfully!', j.id || 'Queue:', j.queue_length, 'Remaining carrierPigeon:', j.carrierPigeon_remaining);
+                log.info('Sent successfully!', j.id || 'Queue:', j.queue_length_pending, 'Remaining carrierPigeon:', j.carrierPigeon_remaining);
                 if (typeof GameControl?.closePersuasionInputBox === "function") {
                     pigeonInputMode = false;
                     if (inp) inp.placeholder = "Say your piece...";
@@ -106,6 +166,9 @@
         }
     }
 
+    /**
+     * Stops the automatic delivery polling
+     */
     function stopPolling() {
         if (pollTimer) {
             clearInterval(pollTimer);
@@ -114,6 +177,10 @@
         }
     }
 
+    /**
+     * Ensures that delivery polling is active
+     * Starts polling if not already running and no pending message exists
+     */
     function ensurePolling(){
         if (pollTimer || pendingDeliveredMessage) return; // Don't poll if a message is pending
         pollTimer = setInterval(()=>{
@@ -126,7 +193,10 @@
         log.debug('Delivery polling started');
     }
 
-    // Delivery display
+    /**
+     * Displays a delivered message to the player
+     * @param {string} [msg] - The message to display (uses pending message if not provided)
+     */
     function displayDeliveredMessage(msg){
         if (!msg && pendingDeliveredMessage) {
             msg = pendingDeliveredMessage;
@@ -151,6 +221,10 @@
         show();
     }
 
+    /**
+     * Requests delivery of any pending messages from the API
+     * @param {boolean} [force=false] - Whether to force the request regardless of timing
+     */
     async function requestDeliveryOnce(force=false){
         const now = Date.now();
         if (!force && now - lastDeliveryAttempt < DELIVERY_MIN_INTERVAL_MS) return;
@@ -185,6 +259,10 @@
         }
     }
 
+    /**
+     * Checks if the title screen is currently active/visible
+     * @returns {boolean} True if the title screen is active, false otherwise
+     */
     function isTitleScreenActive(){
         const el = document.getElementById('titleScreen');
         if (!el) return false; // removed already
@@ -193,6 +271,10 @@
         return style && style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
     }
 
+    /**
+     * Sets up polling to start after the title screen is hidden
+     * Patches the hideTitleScreen function if available, otherwise polls periodically
+     */
     function armPollingGate(){
         // If title screen already gone, start now
         if (!isTitleScreenActive()) { ensurePolling(); return; }
@@ -215,16 +297,36 @@
     // Defer polling until title screen closes
     armPollingGate();
 
-    // Public API
+    /**
+     * Public API for the Carrier Pigeon Messaging System
+     * @namespace PigeonMessaging
+     */
     window.PigeonMessaging = {
+        /** Opens the message composition interface */
         open: openPigeonInput,
+        
+        /** Sends a message via carrier pigeon */
         send: sendPigeon,
+        
+        /** Forces an immediate delivery check */
         pollNow: ()=>requestDeliveryOnce(true),
+        
+        /** Checks if the input mode is currently active */
         isActive: () => pigeonInputMode,
+        
+        /** Debug utilities and information */
         debug: { haveLocalPigeon, getSessionId, version: VERSION },
+        
+        /** Displays a delivered message */
         displayDeliveredMessage,
+        
+        /** Gets the current pending delivered message */
         get pendingDeliveredMessage() { return pendingDeliveredMessage; },
+        
+        /** Checks if there are any pending messages */
         hasPendingMessages: () => !!pendingDeliveredMessage,
+        
+        /** Ensures delivery polling is active */
         ensurePolling
     };
     log.info('Module loaded; autonomous delivery polling active.');
