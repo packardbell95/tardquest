@@ -566,12 +566,8 @@
         loggedPadInfo = true;
       }
       processGamepad(pads[0]);
-      controllerStatusText.innerHTML = 'TardPad ✓';
-      controllerStatusText.className = 'connected';
       if ($controllerBox) $controllerBox.className = 'connected';
     } else {
-      controllerStatusText.innerHTML = 'TardPad ✗';
-      controllerStatusText.className = 'disconnected';
       if ($controllerBox) $controllerBox.className = 'disconnected';
     }  
   }
@@ -630,7 +626,55 @@
   // Start gamepad support after window load
   window.addEventListener('load', start);
   setInterval(() => { loop(); }, 1000 / 60); // 60 FPS
-})();
+
+// Display connection status modal popup when clicking on the Tardpad icon
+function showControllerStatusModal() {
+  const pads = getPads();
+  const isConnected = pads.length > 0 && pads[0];
+  
+  let content;
+  if (isConnected) {
+    const gp = pads[0];
+    content = `
+      <h3>🎮 Gamepad Connected</h3>
+      <p><strong>Name:</strong> ${gp.id}</p>
+    `;
+  } else {
+    content = `
+      <h3>🎮 No Gamepad Detected</h3>
+      <p>Please connect a gamepad and press any button to activate it.</p>
+    `;
+  }
+
+  // Create modal dialog element
+  const modal = document.createElement('dialog');
+  modal.className = 'modal';
+  
+  modal.innerHTML = `
+    <div class="header">
+      <div class="title">TardPad Status</div>
+      <button class="close" onclick="this.closest('dialog').close()"></button>
+    </div>
+    <div class="bodyContainer">
+      <div class="body">
+        ${content}
+      </div>
+      <div class="footer">
+        <button onclick="this.closest('dialog').close()">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.showModal();
+  modal.addEventListener('close', () => {
+    modal.remove();
+  });
+}
+
+// Make it globally available
+window.showControllerStatusModal = showControllerStatusModal;
 
 // Debugging info to make sure the script is loaded.
 // console.info('🎮 TardPad: Script loaded successfully!');
+})();
