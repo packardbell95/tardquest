@@ -105,6 +105,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
     <div id="screenWipe"></div>
 
 <!-- In-game -->
+    <div id="vampireFocalPoint"></div>
+    <div id="vampireFocalPointDesaturationOverlay"></div>
+    <!-- Note to packardbell95: The vampire focal point stuff was moved up here because after I made changes to the bottombar, the colors for the animation broke -->
+     
     <div id="interface">
         <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
@@ -488,30 +492,33 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                     No music playing
                 </div>
             </div>
-            <div id="gameSettingsButtonContainer">
-                <button
-                    id="gameSettingsButton"
-                    onclick="GameSettingsButton.toggle()"
-                    data-tooltipPosition="top"
-                    data-hideAfterInteraction="true"
-                    data-tooltipHtml='
-                        <div class="genericTooltip">
-                            Open Game Settings
-                        </div>
-                    '
-                ></button>
+            <div class="right-icons">
+                <div id="gameSettingsButtonContainer">
+                    <button
+                        id="gameSettingsButton"
+                        onclick="GameSettingsButton.toggle()"
+                        data-tooltipGroupId="bottomRightIcons"
+                        data-tooltipHtml='
+                            <div class="genericTooltip">
+                                Game Settings
+                            </div>
+                        '
+                    ></button>
+                </div>
+                <div id="controllerStatusButtonContainer">
+                    <button
+                        id="controllerStatusButton"
+                        onclick="showControllerStatusModal()"
+                        data-tooltipGroupId="bottomRightIcons"
+                        data-tooltipHtml='
+                            <div class="genericTooltip">
+                                <span id="controllerTooltipText">TardPad Status</span>
+                            </div>
+                        '
+                    ></button>
+                </div>
             </div>
         </div>
-
-        <div id="controller">
-            <div class="controller-status">
-                <img src="assets/interface/ui/tardpad.png" class="controller-icon" alt="Controller">
-                <span id="controllerStatusText"></span>
-            </div>
-        </div>
-    </div>
-    <div id="vampireFocalPoint"></div>
-    <div id="vampireFocalPointDesaturationOverlay"></div>
 
     <script src="scripts/preloader-v2.js"></script>
     <script src="scripts/tardboard.js"></script>
@@ -535,6 +542,10 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 delayMs: 800,
                 hideAfterInteraction: true,
                 position: "left",
+            },
+            bottomRightIcons: {
+                hideAfterInteraction: true,
+                position: "top end",
             },
         };
         document.querySelectorAll("[data-tooltiphtml]")
@@ -8543,6 +8554,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             isAlive: true,
             isActiveOnFloor: false,
             items: [],
+            consecutiveFloorsAbsent: 0,
             voice: {
                 pitch: 48,
                 speed: 45,
@@ -10054,18 +10066,28 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
                 placeWelcomeBanner();
             }
 
-            merchant.isActiveOnFloor =
-                merchant.isAlive &&
-                (floor === 1 || Math.random() < 0.35);
+            if (merchant.isAlive) {
+                // Always spawn on the first floor, or after 3 floors of absence
+                if (floor === 1 || merchant.consecutiveFloorsAbsent >= 3) {
+                    merchant.isActiveOnFloor = true;
+                    merchant.consecutiveFloorsAbsent = 0;
+                } else {
+                    merchant.isActiveOnFloor = Math.random() < 0.35;
+                    merchant.consecutiveFloorsAbsent +=
+                        ! merchant.isActiveOnFloor;
+                }
+
+                if (merchant.isActiveOnFloor) {
+                    merchant.set();
+                }
+            } else {
+                merchant.isActiveOnFloor = false;
+            }
 
             if (floor === 40) {
                 placeNoboWall();
             }
-
-            if (merchant.isActiveOnFloor) {
-                merchant.set();
-            }
-
+            
             gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
             if (gambler.isActiveOnFloor) {
                 gambler.set();
