@@ -921,7 +921,7 @@ a:link {
 #topLeft        { grid-area: topLeft; }
 #stats          { grid-area: stats; }
 #controls       { grid-area: controls; }
-#viewport       { grid-area: viewport; background-image: url(/assets/backgrounds/bg1.png); background-size: cover; }
+#viewport       { grid-area: viewport; background-image: url('assets/backgrounds/bg1.png'); background-size: cover; }
 #party          { grid-area: party; overflow: hidden; }
 #inventory      { grid-area: inventory; }
 #playerInput    { grid-area: playerInput; }

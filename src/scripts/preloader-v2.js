@@ -97,6 +97,9 @@
         './assets/interface/weapons/magic-pencil.gif','./assets/interface/weapons/nunchucks.png','./assets/interface/weapons/pointy-stick.png',
         './assets/interface/weapons/wiffle-ball-bat.png',
 
+        // viewport backgrounds
+        './assets/backgrounds/bg1.png',
+
         // transitions
         './assets/transitions/battle-transition.gif',
 
