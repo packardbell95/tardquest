@@ -284,7 +284,7 @@ a:link {
         #513805 100%
     );
     */
-    background: linear-gradient(180deg,rgba(97, 0, 10, 1) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 70%, rgba(117, 62, 0, 1) 100%);
+    background: linear-gradient(180deg, transparent 30%, rgb(0, 0, 0) 70%, rgb(117, 62, 0) 100%);
     overflow: hidden;
 }
 
@@ -921,7 +921,7 @@ a:link {
 #topLeft        { grid-area: topLeft; }
 #stats          { grid-area: stats; }
 #controls       { grid-area: controls; }
-#viewport       { grid-area: viewport; }
+#viewport       { grid-area: viewport; background-image: url(/assets/backgrounds/bg1.png); background-size: cover; }
 #party          { grid-area: party; overflow: hidden; }
 #inventory      { grid-area: inventory; }
 #playerInput    { grid-area: playerInput; }
