@@ -1,26 +1,21 @@
-// ============================================================================
-// TardBoard (Leaderboard + Anti-Cheat / Captcha Integration)
-// ============================================================================
-
 /**
- * @fileoverview TardBoard - Leaderboard and Anti-Cheat Integration System for TardQuest
+ * @fileoverview TardBoard - Leaderboard and Captcha Integration for TardQuest
  *
- * This module provides a comprehensive leaderboard system with anti-cheat protection
- * and captcha verification for highscore submissions. It includes:
+ * This module provides a comprehensive leaderboard system with bot protection
+ * and highscore submission flow. All anti-cheat and API logic is now centralized
+ * in coreAPI.js, which exposes global CoreAPI and API_BASE for use here and in other modules.
  *
+ * Features:
  * - Cloudflare Turnstile captcha integration for bot protection
- * - VocaGuard anti-cheat system with session-based validation
+ * - Leaderboard submission and validation
  * - Modal dialog system for user interaction
- * - Automatic game state monitoring and reporting
- * - Highscore submission with validation
  * - Game reset interception for leaderboard entry
  *
  * The system works by:
- * 1. Creating anti-cheat sessions when the game loads
- * 2. Monitoring game progress (floor/level changes)
- * 3. Intercepting game resets to show leaderboard submission dialog
- * 4. Validating sessions before allowing highscore submissions
- * 5. Using captcha to prevent automated submissions
+ * 1. Using CoreAPI to manage anti-cheat sessions and game state
+ * 2. Intercepting game resets to show leaderboard submission dialog
+ * 3. Validating sessions before allowing highscore submissions
+ * 4. Using captcha to prevent automated submissions
  *
  * @author VocaPepper
  */
@@ -29,9 +24,6 @@
 
 /** @type {Promise|null} Promise that resolves when Turnstile script is loaded */
 let _turnstileReadyPromise = null;
-
-/** @const {string} Base URL for the TardBoard API endpoints */
-const API_BASE = 'https://vocapepper.com:9601';
 
 /** @const {string} Cloudflare Turnstile site key for captcha verification */
 const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW';
@@ -64,50 +56,14 @@ function ensureTurnstileScript() {
     return _turnstileReadyPromise;
 }
 
-// --- State ------------------------------------------------------------------
-
-/** @type {string|null} Current VocaGuard anti-cheat session ID */
-let vocaguardSessionId = sessionStorage.getItem('vocaguardSessionId') || null;
-
-/** @type {number} Last known floor number for change detection */
-let lastFloor = 1;
-
-/** @type {number} Last known level number for change detection */
-let lastLevel = 1;
-
 // --- Utilities --------------------------------------------------------------
-
-/**
- * Retrieves the current game state (floor and level)
- * @returns {Object} Game state object with floor and level properties
- * @property {number} floor - Current floor number (defaults to 1)
- * @property {number} level - Current player level (defaults to 1)
- */
-function getGameState() {
-    const floorNum = (typeof floor !== 'undefined' && typeof floor === 'number' && !isNaN(floor)) ? floor : 1;
-    const levelNum = (typeof player !== 'undefined' && typeof player.level === 'number' && !isNaN(player.level)) ? player.level : 1;
-    return { floor: floorNum, level: levelNum };
-}
-
-/**
- * Checks if the leaderboard API is reachable and responding
- * @returns {Promise<boolean>} True if API is connected, false otherwise
- */
-async function checkApiStatus() {
-    try {
-        const res = await fetch(`${API_BASE}/api/leaderboard/status`, { method: 'GET', mode: 'cors' });
-        return res.ok;
-    } catch {
-        return false;
-    }
-}
 
 /**
  * Updates the API status indicator in the dialog
  * @param {Document|Element} [root=document] - Root element to search for status indicator
  */
 function updateApiIndicator(root = document) {
-    checkApiStatus().then(connected => {
+    (window.CoreAPI?.checkApiStatus ? window.CoreAPI.checkApiStatus() : Promise.resolve(false)).then(connected => {
         const status = root.querySelector('#tardboard-api-status');
         if (!status) return;
         if (connected) {
@@ -195,47 +151,6 @@ function removeDialog() {
     if (el) el.remove();
 }
 
-// --- Anti-Cheat Session Management ------------------------------------------
-
-/**
- * Starts a new VocaGuard anti-cheat session
- * Creates a session ID and stores it in sessionStorage
- */
-function startVocaGuardSession() {
-    fetch(`${API_BASE}/api/vocaguard/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
-        .then(res => res.json())
-        .then(data => {
-            vocaguardSessionId = data.session_id;
-            sessionStorage.setItem('vocaguardSessionId', vocaguardSessionId);
-            console.log('🛡️ VocaGuard: New session created.');
-            startVocaGuard();
-        })
-        .catch(err => console.warn('⚠️ VocaGuard: Could not create session!', err));
-}
-
-/**
- * Starts the periodic anti-cheat monitoring system
- * Monitors game state changes and reports them to the server
- */
-function startVocaGuard() {
-    checkApiStatus().then(on => console[on ? 'log' : 'warn'](`🛡️ VocaGuard: Anti-Cheat is ${on ? 'ON' : 'OFF'}.`));
-    let lf = (typeof floor !== 'undefined') ? floor : null;
-    let ll = (typeof player !== 'undefined' && typeof player.level === 'number' && !isNaN(player.level)) ? player.level : 1;
-    setInterval(() => {
-        const { floor: f, level: l } = getGameState();
-        if (f !== lf || l !== ll) {
-            lf = f; ll = l;
-            fetch(`${API_BASE}/api/vocaguard/update`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: vocaguardSessionId, floor: f, level: l })
-            });
-        }
-    }, 1000);
-}
-
-// Initialize anti-cheat session on script load
-if (!vocaguardSessionId) startVocaGuardSession(); else startVocaGuard();
-
 // --- Dialog / Submission Flow ----------------------------------------------
 
 /**
@@ -285,7 +200,7 @@ function showInitialsDialog(submitCallback) {
             sessionStorage.removeItem('vocaguardSessionId');
             window.location.reload();
         } else {
-            console.log('[TardBoard] Submitting initials:', val);
+            console.log('🏆 TardBoard: Submitting initials:', val);
             submitCallback({ initials: val, captcha: captchaToken });
         }
     }
@@ -411,22 +326,23 @@ function showValidationFailDialog(reason) {
  * @param {string} captchaToken - Captcha verification token
  */
 function submitHighscore(playerInitials, captchaToken) {
-    const { floor: floorNum, level: levelNum } = getGameState();
-    fetch(`${API_BASE}/api/vocaguard/validate`, {
+    const { floor: floorNum, level: levelNum } = (window.CoreAPI?.getGameState ? window.CoreAPI.getGameState() : { floor: 1, level: 1 });
+    const sessionId = window.CoreAPI?.getSessionId ? window.CoreAPI.getSessionId() : sessionStorage.getItem('vocaguardSessionId');
+    fetch(`${window.API_BASE}/api/vocaguard/validate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: vocaguardSessionId, floor: floorNum, level: levelNum })
+        body: JSON.stringify({ session_id: sessionId, floor: floorNum, level: levelNum })
     })
         .then(r => r.json())
         .then(validation => {
             if (validation.result === 'pass') {
                 const score = {
                     name: playerInitials.slice(0, 5).toUpperCase(),
-                    session_id: vocaguardSessionId,
+                    session_id: sessionId,
                     floor: floorNum,
                     level: levelNum,
                     hcaptcha_token: captchaToken
                 };
-                return fetch(`${API_BASE}/api/leaderboard`, {
+                return fetch(`${window.API_BASE}/api/leaderboard`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(score)
                 })
                     .then(resp => { if (!resp.ok) throw new Error('Network response was not ok'); return resp.json(); })
@@ -462,4 +378,4 @@ function submitHighscore(playerInitials, captchaToken) {
 })();
 
 // --- End of TardBoard script ---
-console.log('🏆 TardBoard: Script loaded successfully!');
+console.log('🏆 TardBoard: Module loaded!');

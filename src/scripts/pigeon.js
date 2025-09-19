@@ -26,10 +26,7 @@
     };
 
     /** @const {string} Current version of the messaging system */
-    const VERSION = '1.1';
-    
-    /** @const {string} Base URL for the pigeon messaging API */
-    const API_BASE = 'https://vocapepper.com:9601';
+    const VERSION = '1.2';
     
     /** @const {string} Placeholder text for the message input field */
     const PLACEHOLDER_PIGEON = "Message for the next adventurer...";
@@ -82,7 +79,7 @@
      * @returns {string|null} The session ID or null if not found
      */
     function getSessionId(){
-        return sessionStorage.getItem('vocaguardSessionId');
+        return (window.CoreAPI?.getSessionId ? window.CoreAPI.getSessionId() : sessionStorage.getItem('vocaguardSessionId'));
     }
 
     /**
@@ -132,7 +129,7 @@
             return false;
         }
         try {
-            const r = await fetch(`${API_BASE}/api/pigeon/send`, {
+            const r = await fetch(`${window.API_BASE}/api/pigeon/send`, {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({ session_id: sid, message })
@@ -233,7 +230,7 @@
         if (!sid) return;
         lastDeliveryAttempt = now;
         try {
-            const r = await fetch(`${API_BASE}/api/pigeon/delivery`, {
+            const r = await fetch(`${window.API_BASE}/api/pigeon/delivery`, {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({ session_id: sid })
@@ -329,5 +326,5 @@
         /** Ensures delivery polling is active */
         ensurePolling
     };
-    log.info('Module loaded; autonomous delivery polling active.');
+    log.info('Module loaded!');
 })();
