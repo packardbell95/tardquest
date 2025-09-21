@@ -948,6 +948,8 @@ TITLE_SCREEN.initialize = ($e) => {
         return;
     }
 
+    $e.classList.remove("hidden");
+
     const $canvas = document.createElement("canvas");
     $canvas.id = "backgroundStarfield";
     $e.append($canvas);
