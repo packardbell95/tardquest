@@ -10353,6 +10353,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
         function render() {
             refreshMinimap();
             updateBreathingSFX();
+            updateSkyboxPosition();
 
             // @TODO: Keep this out of render()
             // Stat updates should update the appropriate sections on their own
@@ -10627,6 +10628,17 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             }
         }
 
+        function updateSkyboxPosition() {
+            const viewport = document.getElementById('viewport');
+            if (!viewport) return;
+            
+            const sectionWidth = 368; // Width of each section of the skybox texture
+            
+            const xOffset = -(player.dir * sectionWidth);
+            
+            viewport.style.backgroundPosition = `${xOffset}px 0px`;
+        }
+
         function sleepMs(durationMs) {
             return new Promise((resolve) => {
                 setTimeout(resolve, durationMs);
@@ -10774,6 +10786,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             playSFX('turn');
             slideScreen('left');
             player.dir = (player.dir + 3) % 4;
+            updateSkyboxPosition();
             GameControl.update();
             render();
         }
@@ -10785,6 +10798,7 @@ A Javascript game by <a href="https://milklounge.wang/tardquest/" target="_blank
             playSFX('turn');
             slideScreen('right');
             player.dir = (player.dir + 1) % 4;
+            updateSkyboxPosition();
             GameControl.update();
             render();
         }

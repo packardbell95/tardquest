@@ -921,10 +921,18 @@ a:link {
 #topLeft        { grid-area: topLeft; }
 #stats          { grid-area: stats; }
 #controls       { grid-area: controls; }
-#viewport       { grid-area: viewport; background-image: url('assets/backgrounds/bg1.png'); background-size: cover; }
 #party          { grid-area: party; overflow: hidden; }
 #inventory      { grid-area: inventory; }
 #playerInput    { grid-area: playerInput; }
+#viewport { 
+    grid-area: viewport; 
+    background-image: url('assets/backgrounds/bg1.png'); 
+    background-size: 1472px 341px;
+    background-repeat: repeat-x;
+    background-position: 0px 0px;
+    position: relative;
+    overflow: hidden;
+}
 #bottomBar     {
     grid-area: bottomBar;
     display: flex;
