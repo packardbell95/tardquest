@@ -35,6 +35,7 @@ html, body {
 }
 body {
     background: #000;
+    height: 100vh;
     color: #fff;
     font-size: 10px;
     display: flex;
@@ -113,22 +114,39 @@ a:link {
     }
 }
 
+/** TITLE SCREEN STYLES **/
+
 #titleScreen {
     position: fixed;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background: #000;
     color: #fff;
     z-index: 999;
     font-family: monospace;
     font-size: 15px;
-    white-space: pre;
     user-select: none;
     -webkit-user-select: none;
     padding: 5px;
+
+    background: #150616;
+    background-image: url(assets/title/background.gif);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position-x: 0;
+    background-position-y: 66vh;
+
+    &.go {
+        transition: background-position-y 1s ease-in-out;
+        background-position-y: 50%;
+    }
 }
+
+#backgroundStarfield {
+    position: absolute;
+}
+
 #titleScreen .content{
     position: absolute;
     left: 0px;
@@ -147,14 +165,76 @@ a:link {
     font-size: 9px;
 }
 
-#titleScreen .startgame {
+@keyframes titleScreen_lightningStrike {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes titleScreen_distantLightningStrike {
+    0% { opacity: 1; }
+    10%, 100% { opacity: 0; }
+}
+
+#titleScreen .lightning {
+    animation: titleScreen_lightningStrike 1s ease-out 1s;
+    opacity: 0;
+    position: absolute;
+    white-space: pre;
+    line-height: 14px;
+    letter-spacing: -2.5px;
+    text-shadow:
+        0 0 200px #fdff,
+        0 0 100px #ffd700;
+    transform:
+        translateY(-30px)
+        translateX(241px)
+        scaleX(6%)
+        scaleY(40%)
+        rotateZ(-43deg);
+    z-index: 9999;
+}
+
+#titleScreen .distantLightning {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    top: calc(50% - 50px);
+    padding: 0 10%;
+    font-size: 8px;
+    white-space: pre;
+    width: 80vw;
+    text-shadow:
+        0 0 20px #fdf,
+        0 0 10px #ffd700;
+
+    & span {
+        opacity: 0;
+        animation: titleScreen_distantLightningStrike 10s ease-out infinite;
+        padding: 0 10%;
+    }
+
+    & :nth-child(1) {
+        animation-delay: 3s;
+    }
+
+    & :nth-child(2) {
+        animation-delay: 7s;
+    }
+
+    & :nth-child(3) {
+        animation-delay: 5s;
+    }
+}
+
+#startGameBtn {
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
     position: absolute;
     left: 50px;
-    top: 170px;
-    padding: 8px;
+    top: 180px;
+    padding: 4px 8px;
     text-align: center;
-    line-height: 0%;
     white-space: nowrap;
     align-content: center;
     border-style: solid;
@@ -170,11 +250,11 @@ a:link {
     }
 }
 
-#titleScreen .preloaderStatus {
+#titleScreen #preloaderStatus {
     cursor: pointer;
     position: absolute;
     left: 50px;
-    top: 250px;
+    top: 260px;
     width: 190px;
     height: 54px;
     padding: 8px;
@@ -197,6 +277,22 @@ a:link {
     align-items: center;
     position: relative;
     margin: auto;
+}
+
+#titleScreen #loadingBar {
+    height: 100%;
+    width: 0%;
+    background: #0f0;
+    transition: width .2s;
+}
+
+#titleScreen #loadingBarText {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #000;
+    width: 100%;
 }
 
 #titleScreen .skipPreloaderBtn {
@@ -224,37 +320,489 @@ a:link {
     font-size: 9px;
 }
 
-#titleScreen .credits {
+#titleScreen #credits {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: absolute;
     top: 540px;
     left: 30px;
     border-style: solid;
     border-width: 2px;
     border-top-width: 10px;
-    border-color: #ffffff;
-    background-color: #000000;
+    border-color: #fff;
+    background-color: #000;
     padding: 9px;
     z-index: 999;
 }
 
-#screenWipe {
-    position: fixed;
-    left: 0; bottom: 0; top: auto;
+#titleScreen .starfield {
+    position: absolute;
+    display: block;
     width: 100vw;
-    height: 0vh;
-    background: #000;
-    z-index: 10000;
-    pointer-events: none;
-    transition: height 0.5s cubic-bezier(.77,0,.18,1);
-}
-#screenWipe.active {
     height: 100vh;
-    transition: height 0.5s cubic-bezier(.77,0,.18,1);
 }
-#screenWipe.reveal {
-    height: 0vh;
-    transition: height 0.5s cubic-bezier(.77,0,.18,1);
+
+@keyframes titleScreen_logoAppear {
+    0% {
+        color: #fdf0;
+    }
+
+    44.9% {
+        color: #fdff;
+    }
+
+    45% {
+        color: #ffff;
+    }
+
+    100% {
+        color: #ffd700;
+    }
 }
+
+.logo {
+    color: #ffd700;
+    animation: titleScreen_logoAppear 2s ease-in-out forwards;
+}
+
+#titleScreen.go .logo {
+    animation: titleScreen_logoAppear 2s ease-in-out backwards;
+}
+
+@keyframes titleScreen_spireIdle {
+    0% {
+        transform: translate(0%, 0%);
+    }
+
+    5% {
+        transform: translate(0.93%, 5.88%);
+    }
+
+    10% {
+        transform: translate(1.76%, 9.51%);
+    }
+
+    15% {
+        transform: translate(2.43%, 9.51%);
+    }
+
+    20% {
+        transform: translate(2.85%, 5.88%);
+    }
+
+    25% {
+        transform: translate(3%, 0%);
+    }
+
+    30% {
+        transform: translate(2.85%, -5.88%);
+    }
+
+    35% {
+        transform: translate(2.43%, -9.51%);
+    }
+
+    40% {
+        transform: translate(1.76%, -9.51%);
+    }
+
+    45% {
+        transform: translate(0.93%, -5.88%);
+    }
+
+    50% {
+        transform: translate(0%, 0%);
+    }
+
+    55% {
+        transform: translate(-0.93%, 5.88%);
+    }
+
+    60% {
+        transform: translate(-1.76%, 9.51%);
+    }
+
+    65% {
+        transform: translate(-2.43%, 9.51%);
+    }
+
+    70% {
+        transform: translate(-2.85%, 5.88%);
+    }
+
+    75% {
+        transform: translate(-3%, 0%);
+    }
+
+    80% {
+        transform: translate(-2.85%, -5.88%);
+    }
+
+    85% {
+        transform: translate(-2.43%, -9.51%);
+    }
+
+    90% {
+        transform: translate(-1.76%, -9.51%);
+    }
+
+    95% {
+        transform: translate(-0.93%, -5.88%);
+    }
+
+    100% {
+        transform: translate(0%, 0%);
+    }
+}
+
+@keyframes titleScreen_spireFlyIn {
+    0% {
+        transform: rotateX(0deg)
+                   rotateY(0deg)
+                   translateX(0px)
+                   translateY(0px)
+                   translateZ(0px);
+    }
+
+    50% {
+        transform: rotateX(-90deg)
+                   rotateY(-2deg)
+                   translateX(-140px)
+                   translateY(-100px)
+                   translateZ(40px);
+    }
+
+    /* Quadratic ramp to 360deg (θ = -2 + 362 * s², s = (t-50%)/50%) */
+
+    55% {
+        transform: rotateX(-90deg)
+                   rotateY(2deg)
+                   translateX(-140px)
+                   translateY(-157px)
+                   translateZ(40px);
+    }
+
+    57.5% {
+        transform: rotateX(-90deg)
+                   rotateY(6deg)
+                   translateX(-140px)
+                   translateY(-186px)
+                   translateZ(40px);
+    }
+
+    60% {
+        transform: rotateX(-90deg)
+                   rotateY(12deg)
+                   translateX(-140px)
+                   translateY(-214px)
+                   translateZ(40px);
+    }
+
+    62.5% {
+        transform: rotateX(-90deg)
+                   rotateY(21deg)
+                   translateX(-140px)
+                   translateY(-242px)
+                   translateZ(40px);
+    }
+
+    65% {
+        transform: rotateX(-90deg)
+                   rotateY(31deg)
+                   translateX(-140px)
+                   translateY(-271px)
+                   translateZ(40px);
+    }
+
+    67.5% {
+        transform: rotateX(-90deg)
+                   rotateY(42deg)
+                   translateX(-140px)
+                   translateY(-300px)
+                   translateZ(40px);
+    }
+
+    70% {
+        transform: rotateX(-90deg)
+                   rotateY(56deg)
+                   translateX(-140px)
+                   translateY(-328px)
+                   translateZ(40px);
+    }
+
+    72.5% {
+        transform: rotateX(-90deg)
+                   rotateY(71deg)
+                   translateX(-140px)
+                   translateY(-356px)
+                   translateZ(40px);
+    }
+
+    75% {
+        transform: rotateX(-90deg)
+                   rotateY(88deg)
+                   translateX(-140px)
+                   translateY(-385px)
+                   translateZ(40px);
+    }
+
+    77.5% {
+        transform: rotateX(-90deg)
+                   rotateY(108deg)
+                   translateX(-140px)
+                   translateY(-414px)
+                   translateZ(40px);
+    }
+
+    80% {
+        transform: rotateX(-90deg)
+                   rotateY(128deg)
+                   translateX(-140px)
+                   translateY(-442px)
+                   translateZ(40px);
+    }
+
+    82.5% {
+        transform: rotateX(-90deg)
+                   rotateY(151deg)
+                   translateX(-140px)
+                   translateY(-470px)
+                   translateZ(40px);
+    }
+
+    85% {
+        transform: rotateX(-90deg)
+                   rotateY(175deg)
+                   translateX(-140px)
+                   translateY(-499px)
+                   translateZ(40px);
+    }
+
+    87.5% {
+        transform: rotateX(-90deg)
+                   rotateY(202deg)
+                   translateX(-140px)
+                   translateY(-528px)
+                   translateZ(40px);
+    }
+
+    90% {
+        transform: rotateX(-90deg)
+                   rotateY(230deg)
+                   translateX(-140px)
+                   translateY(-556px)
+                   translateZ(40px);
+    }
+
+    92.5% {
+        transform: rotateX(-90deg)
+                   rotateY(260deg)
+                   translateX(-140px)
+                   translateY(-584px)
+                   translateZ(40px);
+    }
+
+    95% {
+        transform: rotateX(-90deg)
+                   rotateY(291deg)
+                   translateX(-140px)
+                   translateY(-613px)
+                   translateZ(40px);
+    }
+
+    97.5% {
+        transform: rotateX(-90deg)
+                   rotateY(325deg)
+                   translateX(-140px)
+                   translateY(-642px)
+                   translateZ(40px);
+    }
+
+    100% {
+        transform: rotateX(-90deg)
+                   rotateY(360deg)
+                   translateX(-140px)
+                   translateY(-670px)
+                   translateZ(40px);
+    }
+}
+
+@keyframes titleScreen_spireIntro {
+    0% {
+        filter: brightness(1) saturate(0);
+        transform: translateY(150px);
+    }
+
+    10% {
+        filter: brightness(0) saturate(0);
+        transform: translateY(130px);
+    }
+
+    100% {
+        filter: brightness(1) saturate(1);
+        transform: translateY(0);
+    }
+}
+
+#spireContainer {
+    filter: brightness(0);
+    transform: translateY(150px);
+    animation: titleScreen_spireIntro 2s ease-in-out 1s forwards;
+    image-rendering: pixelated;
+    perspective: 700px;
+    perspective-origin: 50% 50%;
+    font-size: 9px;
+    line-height: 12px;
+    position: absolute;
+    left: 260px;
+    top: 20px;
+}
+
+#titleScreen #spireScene {
+    margin-top: 260px;
+    margin-left: 20px;
+    animation: titleScreen_spireIdle 16s linear infinite;
+}
+
+#titleScreen.go #spire {
+    animation: titleScreen_spireFlyIn 2s ease-in-out forwards;
+}
+
+@keyframes titleScreen_closeItUp {
+    0% {
+        clip-path: rect(0 100% 100% 0);
+    }
+
+    50% {
+        clip-path: rect(0 100% 8px 0);
+    }
+
+    100% {
+        clip-path: rect(0 0 8px 0);
+    }
+}
+
+#titleScreen.go {
+    & #startGameBtn,
+    & #preloaderStatus,
+    & #credits {
+        animation: titleScreen_closeItUp .6s ease-in-out forwards;
+    }
+
+    & #preloaderStatus {
+        animation-delay: .2s;
+    }
+
+    & #credits {
+        animation-delay: .4s;
+    }
+}
+
+#spire {
+    position: absolute;
+    inset: 10px;
+    transform-style: preserve-3d;
+
+    & pre {
+        position: absolute;
+        margin: 0;
+        backface-visibility: hidden;
+    }
+}
+
+.island {
+    position: relative;
+    transform: rotateX(0deg) translateZ(100px);
+
+    & > div {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        &.mask {
+            background-color: #000;
+            color: #1E0C26;
+            clip-path: polygon(
+                -2px 6px,
+                3% 20%,
+                10% 36%,
+                29% 82%,
+                39% 96%,
+                40% 87%,
+                58% 44%,
+                73% 32%,
+                92% 17%,
+                334px 7px
+            );
+        }
+
+        &.baseRock {
+            color: #623022;
+        }
+
+        &.rock {
+            color: #BA7;
+        }
+
+        &.baseGrass {
+            color: #26401A;
+        }
+
+        &.grass {
+            color: #648C3B;
+        }
+    }
+}
+
+.skyline {
+    transform: translateY(-7em);
+}
+
+.top {
+    transition: transform 1s linear;
+
+    &:nth-child(1) {
+        color: #fff;
+        transform: translateY(-4em) rotateX(100deg) translateY(-40px) translateZ(30px);
+    }
+
+    &:nth-child(2) {
+        color: #bbb;
+        transform: translateY(-4em) rotateX(100deg) translateY(-40px) translateZ(25px);
+    }
+
+    &:nth-child(3) {
+        color: #777;
+        transform: translateY(-4em) rotateX(100deg) translateY(-40px) translateZ(15px);
+    }
+
+    &:nth-child(4) {
+        color: #333;
+        transform: translateY(-4em) rotateX(100deg) translateY(-40px) translateZ(5px);
+        background-color: #000;
+    }
+}
+
+.go .top {
+    &:nth-child(1) {
+        transform: translateY(-4em) rotateX(90deg) translateY(-40px) translateZ(120px);
+    }
+
+    &:nth-child(2) {
+        transform: translateY(-4em) rotateX(90deg) translateY(-40px) translateZ(115px);
+    }
+
+    &:nth-child(3) {
+        transform: translateY(-4em) rotateX(90deg) translateY(-40px) translateZ(110px);
+    }
+
+    &:nth-child(4) {
+        transform: translateY(-4em) rotateX(90deg) translateY(-40px) translateZ(105px);
+    }
+}
+
+/** END OF TITLE SCREEN STYLES **/
 
 #game {
     width: 100%;
@@ -286,6 +834,41 @@ a:link {
     */
     background: linear-gradient(180deg,rgba(97, 0, 10, 1) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 0, 0, 1) 70%, rgba(117, 62, 0, 1) 100%);
     overflow: hidden;
+}
+
+@keyframes descendIntoFloor {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-400px);
+    }
+}
+
+#game.descendingIntoFloor {
+    animation: descendIntoFloor 1.2s forwards linear;
+}
+
+@keyframes descendFromCeiling {
+    from {
+        opacity: 0;
+        transform: translateY(400px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+#game.descendingToNextFloor {
+    animation:
+        descendIntoFloor 1.2s linear,
+        descendFromCeiling 1.2s linear 1.21s;
 }
 
 #game.terrain_iceCavern {
@@ -894,6 +1477,20 @@ a:link {
         "stats      viewport    inventory"
         "controls   party       playerInput"
         "bottomBar  bottomBar   controller";
+}
+
+@keyframes interface_reveal {
+    from {
+        clip-path: rect(0 696px 0 0);
+    }
+
+    to {
+        clip-path: rect(0 696px 646px 0);
+    }
+}
+
+#interface.reveal {
+    animation: interface_reveal 0.5s cubic-bezier(.77,0,.18,1) forwards;
 }
 
 #interface > div {

@@ -317,6 +317,62 @@ class Music {
     }
 
     /**
+     * Fades out the currently-playing track
+     *
+     * @param fadeOutTimeMs Number of milliseconds the fade should last
+     * @param callback function|null Optional callback to fire after fadeout
+     */
+    fadeOut(fadeOutTimeMs = 1000, callback = null) {
+        if (! Number.isInteger(fadeOutTimeMs) || fadeOutTimeMs < 0) {
+            console.error(
+                "fadeOutTimeMs must be a nonnegative integer",
+                { fadeOutTimeMs }
+            );
+            return;
+        }
+
+        if (this.#currentlyPlayingTrackId === null) {
+            return;
+        }
+
+        if (! this.#enabled || fadeOutTimeMs <= 0) {
+            this.stop();
+            return;
+        }
+
+        const audio = this.#collection?.[this.#currentlyPlayingTrackId]?.audio;
+        if (! audio) {
+            console.error(
+                "The currently-playing track has disappeared",
+                { currentlyPlayingTrackId: this.#currentlyPlayingTrackId }
+            );
+            return;
+        }
+
+        const intervalMs = 100;
+        const volumeStep = audio.volume / (fadeOutTimeMs / intervalMs);
+
+        const fadeInterval = setInterval(function () {
+            const hasVolumeRemaining = audio.volume - volumeStep > 0;
+
+            if (hasVolumeRemaining) {
+                audio.volume = Math.max(0, audio.volume - volumeStep);
+            } else {
+                audio.volume = 0;
+                this.stop();
+
+                clearInterval(fadeInterval);
+                setTimeout(() => {
+                    audio.volume = 1;
+                    if (typeof callback === "function") {
+                        callback();
+                    }
+                }, intervalMs);
+            }
+        }, intervalMs);
+    }
+
+    /**
      * Plays a specific track
      *
      * @param trackId string ID of the track to play
@@ -340,6 +396,7 @@ class Music {
         this.#currentlyPlayingTrackId = trackId;
         this.#currentlyPlayingTag = tag;
         track.audio.currentTime = 0;
+        track.audio.volume = 1;
         track.audio.play();
         this.#callbacks?.play(trackId, track.info, tag);
     }
