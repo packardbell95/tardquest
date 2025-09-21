@@ -1476,7 +1476,7 @@ a:link {
         "topLeft    viewport    inventory"
         "stats      viewport    inventory"
         "controls   party       playerInput"
-        "bottomBar  bottomBar   controller";
+        "bottomBar  bottomBar   bottomBar";
 }
 
 @keyframes interface_reveal {
@@ -1550,6 +1550,12 @@ a:link {
     text-shadow: 2px 2px 2px #000;
 }
 
+.right-icons {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
 #nowPlaying {
     margin-left: 0.5ch;
     display: flex;
@@ -1585,7 +1591,7 @@ a:link {
     }
 }
 
-#gameSettingsButtonContainer {
+#controllerStatusButtonContainer {
     width: 32px;
     height: 30px;
     background-color: #fff;
@@ -1594,13 +1600,49 @@ a:link {
     justify-content: end;
 }
 
-@keyframes gameSettingsButton_speen {
-    from {
-        transform: rotate(0deg);
+#controllerStatusButton {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    background-color: #000;
+    border: 1px solid #000;
+
+    &:hover {
+        background-color: #fff;
+        &::after {
+            filter: invert();
+        }
     }
-    to {
-        transform: rotate(360deg);
+
+    &::after {
+        content: "";
+        position: absolute;
+        width: 20px;
+        height: 16px;
+        top: 7px;
+        left: 5px;
+        background-image: url(assets/interface/ui/tardpad.png);
+        background-position: center;
+        background-size: 20px 16px;
+        background-repeat: no-repeat;
     }
+
+    &.connected::after {
+        background-image: url(assets/interface/ui/tardpad-connected.png);
+    }
+
+    &:not(.connected)::after {
+        background-image: url(assets/interface/ui/tardpad-disconnected.png);
+    }
+}
+
+#gameSettingsButtonContainer {
+    width: 32px;
+    height: 30px;
+    background-color: #fff;
+    display: flex;
+    align-content: center;
+    justify-content: end;
 }
 
 #gameSettingsButton {
@@ -1637,36 +1679,13 @@ a:link {
     }
 }
 
-#controller {
-    grid-area: controller;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    background-image: url('assets/interface/ui/tile1.gif');
-    background-repeat: repeat;
-    background-size: 25px;
-}
-
-#controller .controller-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-#controller .controller-icon {
-    width: 20px;
-    height: 16px;
-    vertical-align: middle;
-}
-
-#controllerStatusText.connected {
-    color: #0f0;
-}
-
-#controllerStatusText.disconnected {
-    color: #ff0000;
+@keyframes gameSettingsButton_speen {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 #viewport {
