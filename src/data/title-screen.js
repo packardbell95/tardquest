@@ -909,7 +909,7 @@ TITLE_SCREEN.content = {
 TITLE_SCREEN.credits = {
     build: () => {
         const previewBuildUrl =
-            "https://milklounge.wang/tardquest/gamedata/game_preview.html";
+            "https://milklounge.wang/tardquest/preview/index.html";
 
         const $credits = document.createElement("div");
         $credits.id = "credits";
