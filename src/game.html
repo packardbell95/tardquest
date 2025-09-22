@@ -17,7 +17,7 @@
     <div id="titleScreen" class="hidden"></div>
     <div id="vampireFocalPoint"></div>
     <div id="vampireFocalPointDesaturationOverlay"></div>
-    <div id="interface">
+    <div id="interface" class="hidden">
         <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
         <div id="topLeft">
@@ -6676,7 +6676,7 @@
         })();
 
         const GameControl = {
-            mode: null,
+            mode: "title screen",
             enabled: true,
             awaitingPersuasionText: false,
 
@@ -6703,8 +6703,19 @@
                 GameControl.update();
             },
 
+            getMode: () => {
+                if (TITLE_SCREEN.isActive) {
+                    return "title screen";
+                }
+
+                return menu.isOpen()
+                    ? "menu"
+                    : (player.inCombat ? "combat" : "navigation");
+            },
+
             updateMode: () => {
                 const skipModeUpdate =
+                    ! TITLE_SCREEN.isActive &&
                     ( GameControl.mode === "menu" && menu.isOpen()) ||
                     ! menu.isOpen() && (
                         ( GameControl.mode === "navigation" && !player.inCombat ) ||
@@ -6715,9 +6726,7 @@
                     return;
                 }
 
-                GameControl.mode = menu.isOpen()
-                    ? "menu"
-                    : (player.inCombat ? "combat" : "navigation");
+                GameControl.mode = GameControl.getMode();
 
                 // Update the displayed buttons based on the mode
                 document.querySelectorAll(`
@@ -6793,6 +6802,9 @@
                 GameControl.updateMode();
 
                 switch (GameControl.mode) {
+                    case "title screen":
+                        // Nothing to do
+                        break;
                     case "navigation":
                         GameControl.updateNavigationControls();
                         break;
@@ -10368,7 +10380,9 @@
             }
 
             const container = document.getElementById('viewport');
-            if (!container) return;
+            if (!container) {
+                return;
+            }
 
             GameControl.disableControls();
 
@@ -14896,10 +14910,14 @@
 
         function hideTitleScreen() {
             music.stop();
+
+            // @TODO Refactor this since it's duplicated in gamepad.js
+            // @see https://github.com/packardbell95/tardquest/issues/162
             TITLE_SCREEN.startGame(
                 $titleScreen,
                 () => {
                     const $interface = document.getElementById("interface");
+                    $interface.classList.remove("hidden");
                     $interface.classList.add("reveal");
 
                     setTimeout(() => {
@@ -14938,17 +14956,19 @@
         }, true);
 
         if (skipTitleScreen) {
-            if (!preloaderEnabled) {
+            const onGameReady = () => {
+                document.getElementById("interface").classList.remove("hidden");
                 hideTitleScreen();
+            };
+
+            if (!preloaderEnabled) {
+                onGameReady();
             } else {
-                window.onTardquestLoaded = function() {
-                    hideTitleScreen();
-                };
+                window.onTardquestLoaded = onGameReady;
             }
         } else {
             music.play("title");
-            GameControl.disableControls();
-            TITLE_SCREEN.initialize($titleScreen);
+            TITLE_SCREEN.initialize($titleScreen, hideTitleScreen);
         }
 
         player.party.initializePartySection();
