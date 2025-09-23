@@ -252,15 +252,6 @@
 
 
   /**
-   * Returns true if the title screen is currently visible.
-   */
-  function titleScreenVisible() {
-    const el = document.getElementById('titleScreen');
-    return !!(el && el.style.display !== 'none');
-  }
-
-
-  /**
    * Returns the global GameControl object if available.
    */
   function getGameControl() {
@@ -282,9 +273,29 @@
    * Handles input for the title screen (A or Start to continue).
    */
   function handleTitleScreen(gp) {
-    if (!titleScreenVisible()) return false;
+    if (typeof TITLE_SCREEN !== "undefined" && ! TITLE_SCREEN?.isActive) {
+      return false;
+    }
+
     if (edgePressed(gp, 0) || edgePressed(gp, 9)) {
-      if (typeof window.hideTitleScreen === 'function') window.hideTitleScreen();
+      // @TODO Refactor this since it's duplicating the callback code in
+      // game.html
+      // @see https://github.com/packardbell95/tardquest/issues/162
+      TITLE_SCREEN.startGame(
+        document.getElementById('titleScreen'),
+        () => {
+          const $interface = document.getElementById("interface");
+          $interface.classList.remove("hidden");
+          $interface.classList.add("reveal");
+
+          setTimeout(() => {
+            $interface.classList.remove("reveal");
+            GameControl.enableControls();
+            music.playRandom("exploration");
+            render();
+          }, 500);
+        }
+      );
       return true;
     }
     return false;
@@ -488,9 +499,10 @@
       }
     })();
 
-  // Block all inputs unless GameControl.enabled is true
-  const gcForEnabled = getGameControl();
-  if (gcForEnabled && gcForEnabled.enabled !== true) {
+
+    // Block all inputs unless GameControl.enabled is true
+    const gcForEnabled = getGameControl();
+    if (gcForEnabled && gcForEnabled.enabled !== true) {
       // Keep previous states in sync to avoid edge-trigger bursts when re-enabled
       if (gp.buttons) {
         try {
