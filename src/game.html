@@ -10210,18 +10210,8 @@
         }
 
         function updateViewportHeader() {
-            const $viewportHeader = document.querySelector('#viewport .ui-header');
-            if (!$viewportHeader) return;
-
-            if (menu.isOpen()) {
-                const currentMenuData = menu.getCurrentMenuData();
-                const menuTitle = typeof currentMenuData?.title === 'function'
-                    ? currentMenuData.title()
-                    : currentMenuData?.title || 'MENU';
-                $viewportHeader.innerHTML = `<span class="space-between">${menuTitle}</span>`;
-            } else {
-                $viewportHeader.innerHTML = '<span class="space-between">Viewport</span>';
-            }
+            document.querySelector('#viewport .ui-header').textContent =
+                menu.getFullTitle() ?? "Viewport";
         }
 
         function refreshMinimap() {
@@ -12151,6 +12141,7 @@
         menu.setMenuElement(document.getElementById("menu"));
         menu.setDefaultItemsPerPage(15);
         menu.setOnOpen(() => {
+            document.getElementById("game").classList.add("hidden");
             InventorySidebar.close();
             GameControl.update();
             updateViewportHeader();
@@ -12168,6 +12159,7 @@
             updateViewportHeader();
         });
         menu.setOnClose(() => {
+            document.getElementById("game").classList.remove("hidden");
             InventorySidebar.open("main");
             GameControl.update();
             updateViewportHeader();
@@ -12321,7 +12313,7 @@
             },
 
             musicSettings: {
-                title: "GAME SETTINGS > MUSIC SETTINGS",
+                title: "MUSIC SETTINGS",
                 getOptions: () => [
                     {
                         id: "explorationMusicSettings",
@@ -12343,7 +12335,7 @@
             },
 
             explorationMusicSettings: {
-                title: "GAME SETTINGS > MUSIC SETTINGS > EXPLORATION MUSIC",
+                title: "EXPLORATION MUSIC",
                 landingHtml: () =>
                     "Select which exploration tracks to include in rotation",
                 getOptions: () => {
@@ -12377,7 +12369,7 @@
             },
 
             battleMusicSettings: {
-                title: "GAME SETTINGS > MUSIC SETTINGS > BATTLE MUSIC",
+                title: "BATTLE MUSIC",
                 landingHtml: () => "Select which battle tracks to include in rotation",
                 getOptions: () => {
                     const options = music.getTracks("battle").map(track => {
@@ -12479,7 +12471,7 @@
                 },
             },
             inventoryItems: {
-                title: "INVENTORY > ITEMS",
+                title: "ITEMS",
                 landingHtml: () => {
                     return !player.inventory.hasItems()
                         ? 'You own nothing. Klaus Schwab would be proud'
@@ -12516,7 +12508,7 @@
                 },
             },
             inventoryEquipment: {
-                title: "INVENTORY > EQUIPMENT",
+                title: "EQUIPMENT",
                 getOptions: () => {
                     const weapon = player.inventory.getEquippedWeapon();
                     const armor = player.inventory.getEquippedArmor();
@@ -12554,7 +12546,7 @@
                 },
             },
             equipHand: {
-                title: "INVENTORY > EQUIPMENT > EQUIP WEAPON",
+                title: "EQUIP WEAPON",
                 getOptions: () => {
                     const equippedWeaponId =
                         player.inventory.getEquippedWeapon()?.id || null;
@@ -12621,7 +12613,7 @@
             },
 
             equipBody: {
-                title: "INVENTORY > EQUIPMENT > EQUIP ARMOR",
+                title: "EQUIP ARMOR",
                 getOptions: () => {
                     const equippedArmorId =
                         player.inventory.getEquippedArmor()?.id || null;
@@ -12685,7 +12677,7 @@
             },
 
             equipRings: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS",
+                title: "EQUIP RINGS",
                 getOptions: () => {
                     const rings = player.inventory.getEquippedRings();
                     const leftHandText = "Left Hand:  " + (rings.leftHand
@@ -12731,7 +12723,7 @@
             },
 
             ringLeftHandSelect: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > LEFT HAND",
+                title: "LEFT HAND",
                 getOptions: () => {
                     const ownedRings =
                         Object.values(player.inventory.getRings());
@@ -12816,7 +12808,7 @@
             },
 
             ringRightHandSelect: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > RIGHT HAND",
+                title: "RIGHT HAND",
                 getOptions: () => {
                     const ownedRings =
                         Object.values(player.inventory.getRings());
@@ -12965,7 +12957,7 @@
                 },
             },
             merchantItems: {
-                title: "MERCHANT > ITEMS",
+                title: "ITEMS",
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ?
@@ -13009,7 +13001,7 @@
                 },
             },
             merchantWeapons: {
-                title: "MERCHANT > WEAPONS",
+                title: "WEAPONS",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
                         ?
@@ -13078,7 +13070,7 @@
                 },
             },
             merchantArmor: {
-                title: "MERCHANT > ARMOR",
+                title: "ARMOR",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
                         ?
@@ -13142,7 +13134,7 @@
                 },
             },
             merchantRings: {
-                title: "MERCHANT > RINGS",
+                title: "RINGS",
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ? `You have <span class="BTC">` +
@@ -13183,7 +13175,7 @@
             },
 
             merchantSell: {
-                title: "MERCHANT > SELL",
+                title: "SELL",
                 landingHtml: () =>
                     `Sell your unwanted inventory for a small sum.\n\n` +
                     `You have <span class="BTC">` +
