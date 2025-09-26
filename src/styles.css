@@ -1987,6 +1987,9 @@ a:link {
 #inventorySidebarCloseButton {
     width: 100%;
 
+    background-color: #900;
+    border-color: #c00 #600 #600 #c00;
+
     &:hover {
         color: #fff;
         background-color: #f00;
@@ -2632,7 +2635,14 @@ a:link {
     flex-direction: column;
     padding: 10px;
     border: 2px solid #fff;
-    max-width: 500px;
+    max-width: 540px;
+}
+
+.inventoryTooltip .header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1ch;
+    vertical-align: top;
 }
 
 .inventoryTooltip .name {
