@@ -93,7 +93,7 @@
 }
 
 .loading,
-.loading div {
+.loading .bar {
     box-sizing: border-box;
 }
 .loading {
@@ -102,7 +102,7 @@
     width: 80px;
     height: 80px;
 }
-.loading div {
+.loading .bar {
     display: inline-block;
     position: absolute;
     left: 8px;
@@ -110,15 +110,15 @@
     background: currentColor;
     animation: loading 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
 }
-.loading div:nth-child(1) {
+.loading .bar:nth-child(1) {
     left: 8px;
     animation-delay: -0.24s;
 }
-.loading div:nth-child(2) {
+.loading .bar:nth-child(2) {
     left: 32px;
     animation-delay: -0.12s;
 }
-.loading div:nth-child(3) {
+.loading .bar:nth-child(3) {
     left: 56px;
     animation-delay: 0s;
 }

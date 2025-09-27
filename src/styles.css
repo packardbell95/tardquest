@@ -1142,6 +1142,7 @@ a:link {
 }
 
 #menu .option {
+    display: flex;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -1151,12 +1152,17 @@ a:link {
     background-color: #003;
 }
 
-#menu .option:not(.selected)::before {
-    content: "  ";
+#menu .option .cursor {
+    width: 2ch;
+    flex-grow: 0;
 }
 
-#menu .option.selected::before {
+#menu .option.selected .cursor::before {
     content: "▶ ";
+}
+
+#menu .option .text {
+    flex-grow: 1;
 }
 
 #menu .selectionDescription {
@@ -1987,6 +1993,9 @@ a:link {
 #inventorySidebarCloseButton {
     width: 100%;
 
+    background-color: #900;
+    border-color: #c00 #600 #600 #c00;
+
     &:hover {
         color: #fff;
         background-color: #f00;
@@ -2632,7 +2641,14 @@ a:link {
     flex-direction: column;
     padding: 10px;
     border: 2px solid #fff;
-    max-width: 500px;
+    max-width: 540px;
+}
+
+.inventoryTooltip .header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1ch;
+    vertical-align: top;
 }
 
 .inventoryTooltip .name {

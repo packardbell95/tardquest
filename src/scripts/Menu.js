@@ -188,7 +188,6 @@ class Menu {
         this.#currentPage = 0; // Reset to the first page
 
         // @TODO Adjust selectors
-        document.getElementById('game').classList.add('hidden');
         this.#elements.$menu.classList.remove('hidden');
         this.#elements.$selectionDescription.textContent = '';
 
@@ -210,7 +209,6 @@ class Menu {
 
         if (this.#breadcrumbs.length === 0) {
             this.#elements.$menu.classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
             this.#isOpen = false;
 
             this.#onClose?.();
@@ -241,8 +239,6 @@ class Menu {
             this.#menus[previousMenu.menuName].onClose?.();
         }
         this.#elements.$menu.classList.add('hidden');
-        document.getElementById('game').classList.remove('hidden');
-
         this.#isOpen = false;
         this.#onClose?.();
     }
@@ -284,6 +280,17 @@ class Menu {
         };
     }
 
+    getFullTitle() {
+        if (! this.#isOpen) {
+            return null;
+        }
+
+        return this.#breadcrumbs.map((m) => {
+            const title = this.#menus[m.menuName]?.title;
+            return (typeof title === 'function' ? title() : title) || "???";
+        }).join(" > ");
+    }
+
     render() {
         const activeMenu = this.getActiveMenu();
         if (typeof activeMenu === 'undefined') {
@@ -297,13 +304,8 @@ class Menu {
         const startIndex = this.#currentPage * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedOptions = options.slice(startIndex, endIndex);
-
-        // Render the title and page indicator
-        const titleText = typeof activeMenu.title === 'function' ? activeMenu.title() : activeMenu.title;
-        const titleHtml = activeMenu.title ? `<span class="title">「${titleText}」</span>` : '';
-
-        const landingHtml = `<div>${activeMenu?.landingHtml?.() || ''}</div>`;
-        this.#elements.$landing.innerHTML = titleHtml + landingHtml;
+        this.#elements.$landing.innerHTML =
+            `<div>${activeMenu?.landingHtml?.() || ''}</div>`;
 
         const paginationText = totalPages > 1 ? (
             (this.#currentPage > 0 ? '◀ ' : '  ') +
@@ -324,7 +326,6 @@ class Menu {
             const isSelectedLine = index === this.#selectionIndex;
             const classes = [
                 "option",
-                ...(option.className ? [option.className] : []),
                 ...(isSelectedLine ? ["selected"] : []),
             ];
 
@@ -342,9 +343,17 @@ class Menu {
                 ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
                 : '';
 
-            $option.appendChild(document.createTextNode(
-                `${option.displayText}${dots}${trailText}`
-            ));
+            const $cursor = document.createElement("span");
+            $cursor.className = "cursor";
+            $option.append($cursor);
+
+            const $text = document.createElement("span");
+            $text.className = "text";
+            if (option.className) {
+                $text.classList.add(option.className);
+            }
+            $text.textContent = `${option.displayText}${dots}${trailText}`;
+            $option.append($text);
 
             $list.appendChild($option);
 

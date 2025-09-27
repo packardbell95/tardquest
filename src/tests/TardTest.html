@@ -11,6 +11,7 @@
 
     <!-- Libraries to test -->
     <script src="../scripts/Map.js"></script>
+    <script src="../scripts/Menu.js"></script>
     <script src="../scripts/Music.js"></script>
 
     <!-- Test Suites -->
@@ -21,6 +22,8 @@
     <script src="suites/GameMap/findPath-around-spiral.js"></script>
     <script src="suites/GameMap/findPath-around-object.js"></script>
     <script src="suites/GameMap/findNextStep.js"></script>
+
+    <script src="suites/Menu/allTests.js"></script>
 
     <script src="suites/Music/helpers/generateSilentAudioUrl.js"></script>
     <script src="suites/Music/allTests.js"></script>
@@ -86,6 +89,9 @@
         GameMap_findPathAroundObject();
         GameMap_findNextStep();
 
+        testGroup("Menu");
+        Menu_allTests();
+
         testGroup("Music Handling System");
         Music_allTests();
 
@@ -109,7 +115,11 @@
         </p>
     </section>
     <section id="loadingContainer">
-        <div class="loading"><div></div><div></div><div></div></div>
+        <div class="loading">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
     </section>
 </body>
 </html>
