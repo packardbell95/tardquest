@@ -326,7 +326,6 @@ class Menu {
             const isSelectedLine = index === this.#selectionIndex;
             const classes = [
                 "option",
-                ...(option.className ? [option.className] : []),
                 ...(isSelectedLine ? ["selected"] : []),
             ];
 
@@ -344,9 +343,17 @@ class Menu {
                 ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
                 : '';
 
-            $option.appendChild(document.createTextNode(
-                `${option.displayText}${dots}${trailText}`
-            ));
+            const $cursor = document.createElement("span");
+            $cursor.className = "cursor";
+            $option.append($cursor);
+
+            const $text = document.createElement("span");
+            $text.className = "text";
+            if (option.className) {
+                $text.classList.add(option.className);
+            }
+            $text.textContent = `${option.displayText}${dots}${trailText}`;
+            $option.append($text);
 
             $list.appendChild($option);
 

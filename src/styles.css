@@ -1142,6 +1142,7 @@ a:link {
 }
 
 #menu .option {
+    display: flex;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -1151,12 +1152,17 @@ a:link {
     background-color: #003;
 }
 
-#menu .option:not(.selected)::before {
-    content: "  ";
+#menu .option .cursor {
+    width: 2ch;
+    flex-grow: 0;
 }
 
-#menu .option.selected::before {
+#menu .option.selected .cursor::before {
     content: "▶ ";
+}
+
+#menu .option .text {
+    flex-grow: 1;
 }
 
 #menu .selectionDescription {
