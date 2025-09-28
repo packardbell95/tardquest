@@ -114,7 +114,7 @@
         './audio/sfx/lean.mp3',
 
         // ambient sfx
-        './audio/sfx/ambient/rat1.ogg','./audio/sfx/ambient/howl1.ogg','./audio/sfx/ambient/chain1.ogg','./audio/sfx/ambient/run1.ogg'
+        './audio/ambient/rat1.ogg','./audio/ambient/howl1.ogg','./audio/ambient/chain1.ogg','./audio/ambient/run1.ogg'
     ];
 
     /* --------------------------------------------------------------------- *
