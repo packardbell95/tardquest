@@ -7882,6 +7882,7 @@
                 player.steppingOnHealingTile = false;
             },
             enterCombat: () => {
+                pauseAmbientSfx();  
                 persuasionAttempts = 0;
                 maxPersuasionAttempts = getEffectiveStat("persuasionAttempts");
                 player.enteringCombat = true;
@@ -7898,6 +7899,7 @@
                 player.party.purgeDeadMembers();
                 GameControl.update();
                 InventorySidebar.leaveCombat();
+                resumeAmbientSfx();
             },
             heal: (hp) => {
                 player.hp = Math.min(getEffectiveStat('maxHp'), player.hp + hp);
@@ -9536,38 +9538,49 @@
         }
 
         const sfx = {
-            footstep: new Audio('audio/footsteps.mp3'),
-            footstepsDescending: new Audio('audio/footsteps-descending.mp3'),
-            turn: new Audio('audio/turn.mp3'),
-            attack: new Audio('audio/attack.mp3'),
-            run: new Audio('audio/run.mp3'),
-            persuade: new Audio('audio/persuade.mp3'),
-            explosion: new Audio('audio/explosion.mp3'),
-            scream: new Audio('audio/scream.mp3'),
-            breathe1: new Audio('audio/breathe1.mp3'),
-            breathe2: new Audio('audio/breathe2.mp3'),
-            kaching: new Audio('audio/kaching.mp3'),
-            torch: new Audio('audio/torch.mp3'),
-            gamble: new Audio('audio/gamble.mp3'),
-            inventoryOpen: new Audio('audio/inventoryOpen.mp3'),
-            uiOption: new Audio('audio/uiOption.mp3'),
-            uiSelect: new Audio('audio/uiSelect.mp3'),
-            uiCancel: new Audio('audio/uiCancel.mp3'),
-            raisins: new Audio('audio/raisins.mp3'),
-            floorCrackSlight: new Audio('audio/floorCrackSlight.mp3'),
-            floorBreakScreamDie: new Audio('audio/floorBreakScreamDie.mp3'),
-            healTile: new Audio('audio/healTile.mp3'),
-            tromBone: new Audio('audio/tromBONE.mp3'),
-            attacked: new Audio('audio/attacked.mp3'),
-            battleStart: new Audio('audio/battleStart.mp3'),
-            battleEnd: new Audio('audio/battleEnd.mp3'),
-            ash: new Audio('audio/ash.mp3'),
-            alert: new Audio('audio/alert.ogg'),
-            batWingFlapDry: new Audio('audio/bat-wings-dry.ogg'),
-            batWingFlapWet: new Audio('audio/bat-wings-wet.ogg'),
-            lean: new Audio('audio/lean.mp3'),
+            footstep: new Audio('audio/sfx/footsteps.mp3'),
+            footstepsDescending: new Audio('audio/sfx/footsteps-descending.mp3'),
+            turn: new Audio('audio/sfx/turn.mp3'),
+            attack: new Audio('audio/sfx/attack.mp3'),
+            run: new Audio('audio/sfx/run.mp3'),
+            persuade: new Audio('audio/sfx/persuade.mp3'),
+            explosion: new Audio('audio/sfx/explosion.mp3'),
+            scream: new Audio('audio/sfx/scream.mp3'),
+            breathe1: new Audio('audio/sfx/breathe1.mp3'),
+            breathe2: new Audio('audio/sfx/breathe2.mp3'),
+            kaching: new Audio('audio/sfx/kaching.mp3'),
+            torch: new Audio('audio/sfx/torch.mp3'),
+            gamble: new Audio('audio/sfx/gamble.mp3'),
+            inventoryOpen: new Audio('audio/sfx/inventoryOpen.mp3'),
+            uiOption: new Audio('audio/sfx/uiOption.mp3'),
+            uiSelect: new Audio('audio/sfx/uiSelect.mp3'),
+            uiCancel: new Audio('audio/sfx/uiCancel.mp3'),
+            raisins: new Audio('audio/sfx/raisins.mp3'),
+            floorCrackSlight: new Audio('audio/sfx/floorCrackSlight.mp3'),
+            floorBreakScreamDie: new Audio('audio/sfx/floorBreakScreamDie.mp3'),
+            healTile: new Audio('audio/sfx/healTile.mp3'),
+            tromBone: new Audio('audio/sfx/tromBONE.mp3'),
+            attacked: new Audio('audio/sfx/attacked.mp3'),
+            battleStart: new Audio('audio/sfx/battleStart.mp3'),
+            battleEnd: new Audio('audio/sfx/battleEnd.mp3'),
+            ash: new Audio('audio/sfx/ash.mp3'),
+            alert: new Audio('audio/sfx/alert.ogg'),
+            batWingFlapDry: new Audio('audio/sfx/bat-wings-dry.ogg'),
+            batWingFlapWet: new Audio('audio/sfx/bat-wings-wet.ogg'),
+            lean: new Audio('audio/sfx/lean.mp3'),
         };
 
+        const sfxAmb = {
+            rat1: new Audio('audio/ambient/rat1.ogg'),
+            howl1 : new Audio('audio/ambient/howl1.ogg'),
+            chain1: new Audio('audio/ambient/chain1.ogg'),
+            run1: new Audio('audio/ambient/run1.ogg'),
+        };
+
+        let ambientSfxTimeout = null;
+        let ambientSfxPaused = false;
+        let ambientSfxScheduledTime = null;
+        let ambientSfxStartTime = null;
         let currentEnemy = null;
         let gameOver = false;
         let persuasionAttempts = 0;
@@ -11204,6 +11217,78 @@
             draw();
         }
 
+        function playRandomAmbientSfx() {
+            if (!sfxEnabled || player.inCombat || gameOver || ambientSfxPaused) {
+                scheduleNextAmbientSfx();
+                return;
+            }
+
+            const ambientSounds = Object.keys(sfxAmb);
+            const randomSound = randomEntry(ambientSounds);
+            
+            if (randomSound && sfxAmb[randomSound]) {
+                const ambientVolume = 0.6; // Ambient audio volume
+                sfxAmb[randomSound].currentTime = 0;
+                sfxAmb[randomSound].volume = ambientVolume;
+                sfxAmb[randomSound].play().catch(() => {
+                });
+            }
+            
+            scheduleNextAmbientSfx();
+        }
+
+        function scheduleNextAmbientSfx() {
+            if (ambientSfxTimeout) {
+                clearTimeout(ambientSfxTimeout);
+            }
+            if (ambientSfxPaused) {
+                return;
+            }
+            let delay;
+            if (ambientSfxScheduledTime !== null && ambientSfxStartTime !== null) {
+                const elapsed = performance.now() - ambientSfxStartTime;
+                delay = Math.max(0, ambientSfxScheduledTime - elapsed);
+                ambientSfxScheduledTime = null;
+                ambientSfxStartTime = null;
+            } else {
+                // Play next sfxAmb anytime between these two intervals
+                const minDelay = 20000; // 20 seconds
+                const maxDelay = 30000; // 30 seconds
+                delay = numberBetween(minDelay, maxDelay);
+            }
+            
+            ambientSfxStartTime = performance.now();
+            ambientSfxTimeout = setTimeout(playRandomAmbientSfx, delay);
+        }
+
+        function pauseAmbientSfx() {
+            if (ambientSfxTimeout && !ambientSfxPaused) {
+                if (ambientSfxStartTime !== null) {
+                    const elapsed = performance.now() - ambientSfxStartTime;
+                    ambientSfxScheduledTime = Math.max(1000, ambientSfxScheduledTime || 20000);
+                    if (elapsed < ambientSfxScheduledTime) {
+                        ambientSfxScheduledTime = ambientSfxScheduledTime - elapsed;
+                    } else {
+                        ambientSfxScheduledTime = 1000;
+                    }
+                }
+                
+                clearTimeout(ambientSfxTimeout);
+                ambientSfxTimeout = null;
+                ambientSfxPaused = true;
+            }
+            Object.values(sfxAmb).forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+
+        function resumeAmbientSfx() {
+            if (ambientSfxPaused) {
+                ambientSfxPaused = false;
+                scheduleNextAmbientSfx();
+            }
+        }
 
         async function tryRun() {
             if (!player.inCombat || GameControl.awaitingPersuasionText) {
@@ -11221,7 +11306,7 @@
             }
 
             playSFX('run');
-            if (Math.random() < 0.5) {
+            if (Math.random() < 0.3) {
                 player.say("Gee willikers, I'm outta here!");
                 player.leaveCombat();
                 await npcMove();
@@ -14570,6 +14655,7 @@
         generateMap();
         updateSeenTiles();
         music.playRandom("exploration");
+        scheduleNextAmbientSfx();
         render();
 
         let isLevelUpAllocation = false;
