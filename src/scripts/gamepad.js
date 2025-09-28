@@ -639,12 +639,12 @@ function showControllerStatusModal() {
   if (isConnected) {
     const gp = pads[0];
     content = `
-      <h3>🎮 Gamepad Connected</h3>
+      <h3><img src="assets/interface/ui/tardpad-connected.png" height="15px"> Gamepad Connected</h3>
       <p><strong>Name:</strong> ${gp.id}</p>
     `;
   } else {
     content = `
-      <h3>🎮 No Gamepad Detected</h3>
+      <h3><img src="assets/interface/ui/tardpad-disconnected.png" height="15px"> No Gamepad Detected</h3>
       <p>Please connect a gamepad and press any button to activate it.</p>
     `;
   }

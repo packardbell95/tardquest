@@ -7079,10 +7079,20 @@
                     description: "A crusty styrofoam cup filled with a strange purple syrup. +1.2 LOAD, +20 HP",
                     use: () => {
                         player.heal(20);
+                        playSFX('lean');
                         updateBattleLog(
                             `Your stomach feels nauseous, but your head ` +
                             `feels great! <span class="HP">+20 HP</span>`
                         );
+
+                        // Trigger visual effect
+                        const $game = document.getElementById('game');
+                        $game.classList.add('lean-effect');
+                        
+                        // Remove effect after 20 seconds
+                        setTimeout(() => {
+                            $game.classList.remove('lean-effect');
+                        }, 60000);
 
                         if (player.inCombat) {
                             endOfPlayerTurn();
@@ -9541,6 +9551,7 @@
             alert: new Audio('audio/alert.ogg'),
             batWingFlapDry: new Audio('audio/bat-wings-dry.ogg'),
             batWingFlapWet: new Audio('audio/bat-wings-wet.ogg'),
+            lean: new Audio('audio/lean.mp3'),
         };
 
         let currentEnemy = null;
