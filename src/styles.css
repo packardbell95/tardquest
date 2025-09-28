@@ -928,16 +928,34 @@ a:link {
     filter: brightness(0);
 }
 
-#game > .layer.darkening,
-#game > .layer.lightening {
+#game:not(.lean-effect) > .layer.darkening {
     animation-name: darken;
     animation-duration: .5s;
     animation-fill-mode: forwards;
     animation-timing-function: ease;
 }
 
-#game > .layer.lightening {
+#game.lean-effect > .layer.darkening {
+    animation-name: darken, leanWaveContent;
+    animation-duration: .5s, 3s;
+    animation-fill-mode: forwards, none;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: 1, infinite;
+}
+
+#game:not(.lean-effect) > .layer.lightening {
     animation-name: lighten;
+    animation-duration: .5s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease;
+}
+
+#game.lean-effect > .layer.lightening {
+    animation-name: lighten, leanWaveContent;
+    animation-duration: .5s, 3s;
+    animation-fill-mode: forwards, none;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: 1, infinite;
 }
 
 #game > .layer.enemy > span {
@@ -1018,7 +1036,10 @@ a:link {
 }
 
 #game.lean-effect > .layer {
-    animation: leanWaveContent 3s ease-in-out infinite;
+    animation-name: leanWaveContent;
+    animation-duration: 3s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
 }
 
 @keyframes leanWave {

@@ -5482,12 +5482,12 @@
                     },
                     {
                         data: `
-                            >▄  
+                            >▄
                         `,
                     },
                     {
                         data: `
-                            ƒ  
+                            ƒ
                         `,
                     },
                 ],
@@ -7088,11 +7088,11 @@
                         // Trigger visual effect
                         const $game = document.getElementById('game');
                         $game.classList.add('lean-effect');
-                        
+
                         // Remove effect after 20 seconds
                         setTimeout(() => {
                             $game.classList.remove('lean-effect');
-                        }, 60000);
+                        }, 20000);
 
                         if (player.inCombat) {
                             endOfPlayerTurn();
@@ -10008,7 +10008,7 @@
             if (floor === 40) {
                 placeNoboWall();
             }
-            
+
             gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
             if (gambler.isActiveOnFloor) {
                 gambler.set();
@@ -10550,14 +10550,15 @@
         }
 
         function updateSkyboxPosition() {
-            const viewport = document.getElementById('viewport');
-            if (!viewport) return;
-            
-            const sectionWidth = 368; // Width of each section of the skybox texture
-            
+            const $viewport = document.getElementById('viewport');
+            if (! $viewport) {
+                return;
+            }
+
+            const sectionWidth = 368;
             const xOffset = -(player.dir * sectionWidth);
-            
-            viewport.style.backgroundPosition = `${xOffset}px 0px`;
+
+            $viewport.style.backgroundPosition = `${xOffset}px 0px`;
         }
 
         function sleepMs(durationMs) {
