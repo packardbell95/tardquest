@@ -282,12 +282,6 @@
                 navigator.serviceWorker.controller.postMessage({ type:'CACHE_PROBE', urls: STATIC_MANIFEST });
             }
         }catch(_e){}
-        // Hook start button to existing title/hide handler if present.
-        try{
-            const btn = document.getElementById('startGameBtn');
-            const hts = window.hideTitleScreen || window.hideTitleScreen?.bind?.(window);
-            if (btn && typeof hts === 'function') btn.onclick = hts;
-        }catch(_e){}
         // Game entry callback
         try{
             if (typeof window.onTardquestLoaded === 'function') window.onTardquestLoaded();

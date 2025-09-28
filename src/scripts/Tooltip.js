@@ -8,6 +8,9 @@
  * attribute associated with it which contains the contents of the tooltip. Then
  * the element must be used to call Tooltip.initialize()
  *
+ * If a tooltip's contents are updated dynamically, then Tooltip.refresh()
+ * should be called on the element
+ *
  * Tooltip Data Attributes
  * - tooltipHtml:           The HTML contents of the tooltip. This is required
  *                          in order for the tooltip to work
@@ -45,7 +48,7 @@
  *                          the second would appeaer immediately without fading
  *                          out or in first
  *
- *  - hideAfterInteraction: A boolean flag that, when set to true, will suppress
+ * - hideAfterInteraction:  A boolean flag that, when set to true, will suppress
  *                          the tooltip for that group if the element has been
  *                          clicked. This is used to minimize redundant tooltips
  *                          for common interactions
@@ -102,6 +105,42 @@ const Tooltip = {
         $element.addEventListener("mouseleave", (e) => Tooltip._hide(e));
     },
 
+    /**
+     * Refreshes the contents of an existing tooltip
+     *
+     * When called with an $element that has a `data-tooltiphtml` attribute,
+     * the existing tooltip will be updated with the new content
+     *
+     * @param $element The DOM element with an existing tooltip to update
+     */
+    refresh: ($element) => {
+        if (! $element.dataset.tooltipid) {
+            console.warn("Cannot reload a nonexistent tooltip", { $element });
+            return;
+        }
+
+        if (! $element.dataset.tooltiphtml) {
+            console.warn(
+                "Cannot refresh a tooltip with no content",
+                { $element }
+            );
+            return;
+        }
+
+        const $tooltip = document.getElementById($element.dataset.tooltipid);
+        if (! $tooltip) {
+            return;
+        }
+
+        $tooltip.innerHTML = $element.dataset.tooltiphtml;
+
+        if (Tooltip._isVisible($tooltip)) {
+            const positions = Tooltip._getPosition($element, $tooltip);
+            $tooltip.style.top = `${positions.top}px`;
+            $tooltip.style.left = `${positions.left}px`;
+        }
+    },
+
     /** Private properties/methods. Don't hook into or call these directly **/
 
     _dismissalMs: 200,
@@ -109,6 +148,13 @@ const Tooltip = {
     _lastElementForGroup: {},
     _lastGroupDisplayMs: {},
     _lastGroupHideMs: {},
+
+    _isVisible: ($element) => {
+        const computedStyle = window.getComputedStyle($element);
+        return computedStyle.visibility !== "hidden"
+            && computedStyle.display !== "none"
+            && computedStyle.opacity !== "0";
+    },
 
     _getTooltip: ($target) => {
         const $existingTooltip =

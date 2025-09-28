@@ -4,15 +4,20 @@
  * USAGE
  *
  * Display the title screen
- *  TITLE_SCREEN.initialize($e)
- *  where $e is the title screen's container element
+ *  TITLE_SCREEN.initialize($e, startGameFunction)
+ *  where $e is the title screen's container element and onStartGameClick is
+ *  called when the "Press [ENTER]..." message is clicked
  *
  * Hide the title screen
  *  TITLE_SCREEN.startGame($e, callback)
  *  where $e is the title screen's container and callback is fired after closing
  */
 const TITLE_SCREEN = {
+    // bool True if the title screen is active
     isActive: false,
+
+    // bool True if the title screen is actively starting the game
+    isStarting: false,
 };
 
 TITLE_SCREEN.logo = Object.freeze({
@@ -866,7 +871,7 @@ TITLE_SCREEN.distantLightning = {
 };
 
 TITLE_SCREEN.content = {
-    build: () => {
+    build: (onStartGameClick) => {
         const $content = document.createElement("div");
         $content.append(TITLE_SCREEN.logo.build());
 
@@ -877,6 +882,11 @@ TITLE_SCREEN.content = {
             <div>to begin your descent into</div>
             <div>the TardSpire...</div>
         `;
+
+        if (typeof onStartGameClick === "function") {
+            $startGameButton.onclick = onStartGameClick;
+        };
+
         $content.append($startGameButton);
 
         const $preloaderStatus = document.createElement("div");
@@ -942,7 +952,7 @@ TITLE_SCREEN.credits = {
     },
 };
 
-TITLE_SCREEN.initialize = ($e) => {
+TITLE_SCREEN.initialize = ($e, onStartGameClick) => {
     if (! $e instanceof Element) {
         console.error("The title screen target is not an element", { $e });
         return;
@@ -956,7 +966,7 @@ TITLE_SCREEN.initialize = ($e) => {
 
     $e.append(TITLE_SCREEN.distantLightning.build());
     $e.append(TITLE_SCREEN.lightning.build());
-    $e.append(TITLE_SCREEN.content.build());
+    $e.append(TITLE_SCREEN.content.build(onStartGameClick));
     $e.append(TITLE_SCREEN.credits.build());
 
     TITLE_SCREEN.starfield.initialize();
@@ -964,10 +974,12 @@ TITLE_SCREEN.initialize = ($e) => {
 };
 
 TITLE_SCREEN.startGame = ($e, callback) => {
-    if (! TITLE_SCREEN.isActive) {
+    if (! TITLE_SCREEN.isActive || TITLE_SCREEN.isStarting) {
         // The title screen isn't active, so there's nothing to do
         return;
     }
+
+    TITLE_SCREEN.isStarting = true;
 
     if (! $e instanceof Element) {
         console.warn("The title screen target is not an element", { $e });
@@ -989,6 +1001,7 @@ TITLE_SCREEN.startGame = ($e, callback) => {
             $e.classList.add("hidden");
             $e.replaceChildren();
             TITLE_SCREEN.isActive = false;
+            TITLE_SCREEN.isStarting = false;
             if (typeof callback === "function") {
                 callback();
             }

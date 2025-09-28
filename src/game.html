@@ -17,7 +17,7 @@
     <div id="titleScreen" class="hidden"></div>
     <div id="vampireFocalPoint"></div>
     <div id="vampireFocalPointDesaturationOverlay"></div>
-    <div id="interface">
+    <div id="interface" class="hidden">
         <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
         <div id="topLeft">
@@ -172,6 +172,7 @@
             ></button>
             <button
                 id="inventorySidebarScrollUp"
+                class="hidden"
                 onClick="InventorySidebar.scrollUp()"
             ></button>
             <div name="main">
@@ -218,6 +219,7 @@
             <div name="rings" class="hidden"></div>
             <button
                 id="inventorySidebarScrollDown"
+                class="hidden"
                 onClick="InventorySidebar.scrollDown()"
             ></button>
         </div>
@@ -6676,7 +6678,7 @@
         })();
 
         const GameControl = {
-            mode: null,
+            mode: "title screen",
             enabled: true,
             awaitingPersuasionText: false,
 
@@ -6703,8 +6705,19 @@
                 GameControl.update();
             },
 
+            getMode: () => {
+                if (TITLE_SCREEN.isActive) {
+                    return "title screen";
+                }
+
+                return menu.isOpen()
+                    ? "menu"
+                    : (player.inCombat ? "combat" : "navigation");
+            },
+
             updateMode: () => {
                 const skipModeUpdate =
+                    ! TITLE_SCREEN.isActive &&
                     ( GameControl.mode === "menu" && menu.isOpen()) ||
                     ! menu.isOpen() && (
                         ( GameControl.mode === "navigation" && !player.inCombat ) ||
@@ -6715,9 +6728,7 @@
                     return;
                 }
 
-                GameControl.mode = menu.isOpen()
-                    ? "menu"
-                    : (player.inCombat ? "combat" : "navigation");
+                GameControl.mode = GameControl.getMode();
 
                 // Update the displayed buttons based on the mode
                 document.querySelectorAll(`
@@ -6793,6 +6804,9 @@
                 GameControl.updateMode();
 
                 switch (GameControl.mode) {
+                    case "title screen":
+                        // Nothing to do
+                        break;
                     case "navigation":
                         GameControl.updateNavigationControls();
                         break;
@@ -10209,18 +10223,8 @@
         }
 
         function updateViewportHeader() {
-            const $viewportHeader = document.querySelector('#viewport .ui-header');
-            if (!$viewportHeader) return;
-
-            if (menu.isOpen()) {
-                const currentMenuData = menu.getCurrentMenuData();
-                const menuTitle = typeof currentMenuData?.title === 'function'
-                    ? currentMenuData.title()
-                    : currentMenuData?.title || 'MENU';
-                $viewportHeader.innerHTML = `<span class="space-between">${menuTitle}</span>`;
-            } else {
-                $viewportHeader.innerHTML = '<span class="space-between">Viewport</span>';
-            }
+            document.querySelector('#viewport .ui-header').textContent =
+                menu.getFullTitle() ?? "Viewport";
         }
 
         function refreshMinimap() {
@@ -10379,7 +10383,9 @@
             }
 
             const container = document.getElementById('viewport');
-            if (!container) return;
+            if (!container) {
+                return;
+            }
 
             GameControl.disableControls();
 
@@ -12149,6 +12155,7 @@
         menu.setMenuElement(document.getElementById("menu"));
         menu.setDefaultItemsPerPage(15);
         menu.setOnOpen(() => {
+            document.getElementById("game").classList.add("hidden");
             InventorySidebar.close();
             GameControl.update();
             updateViewportHeader();
@@ -12166,6 +12173,7 @@
             updateViewportHeader();
         });
         menu.setOnClose(() => {
+            document.getElementById("game").classList.remove("hidden");
             InventorySidebar.open("main");
             GameControl.update();
             updateViewportHeader();
@@ -12319,7 +12327,7 @@
             },
 
             musicSettings: {
-                title: "GAME SETTINGS > MUSIC SETTINGS",
+                title: "MUSIC SETTINGS",
                 getOptions: () => [
                     {
                         id: "explorationMusicSettings",
@@ -12341,7 +12349,7 @@
             },
 
             explorationMusicSettings: {
-                title: "GAME SETTINGS > MUSIC SETTINGS > EXPLORATION MUSIC",
+                title: "EXPLORATION MUSIC",
                 landingHtml: () =>
                     "Select which exploration tracks to include in rotation",
                 getOptions: () => {
@@ -12375,7 +12383,7 @@
             },
 
             battleMusicSettings: {
-                title: "GAME SETTINGS > MUSIC SETTINGS > BATTLE MUSIC",
+                title: "BATTLE MUSIC",
                 landingHtml: () => "Select which battle tracks to include in rotation",
                 getOptions: () => {
                     const options = music.getTracks("battle").map(track => {
@@ -12477,7 +12485,7 @@
                 },
             },
             inventoryItems: {
-                title: "INVENTORY > ITEMS",
+                title: "ITEMS",
                 landingHtml: () => {
                     return !player.inventory.hasItems()
                         ? 'You own nothing. Klaus Schwab would be proud'
@@ -12514,7 +12522,7 @@
                 },
             },
             inventoryEquipment: {
-                title: "INVENTORY > EQUIPMENT",
+                title: "EQUIPMENT",
                 getOptions: () => {
                     const weapon = player.inventory.getEquippedWeapon();
                     const armor = player.inventory.getEquippedArmor();
@@ -12552,7 +12560,7 @@
                 },
             },
             equipHand: {
-                title: "INVENTORY > EQUIPMENT > EQUIP WEAPON",
+                title: "EQUIP WEAPON",
                 getOptions: () => {
                     const equippedWeaponId =
                         player.inventory.getEquippedWeapon()?.id || null;
@@ -12619,7 +12627,7 @@
             },
 
             equipBody: {
-                title: "INVENTORY > EQUIPMENT > EQUIP ARMOR",
+                title: "EQUIP ARMOR",
                 getOptions: () => {
                     const equippedArmorId =
                         player.inventory.getEquippedArmor()?.id || null;
@@ -12683,7 +12691,7 @@
             },
 
             equipRings: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS",
+                title: "EQUIP RINGS",
                 getOptions: () => {
                     const rings = player.inventory.getEquippedRings();
                     const leftHandText = "Left Hand:  " + (rings.leftHand
@@ -12729,7 +12737,7 @@
             },
 
             ringLeftHandSelect: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > LEFT HAND",
+                title: "LEFT HAND",
                 getOptions: () => {
                     const ownedRings =
                         Object.values(player.inventory.getRings());
@@ -12814,7 +12822,7 @@
             },
 
             ringRightHandSelect: {
-                title: "INVENTORY > EQUIPMENT > EQUIP RINGS > RIGHT HAND",
+                title: "RIGHT HAND",
                 getOptions: () => {
                     const ownedRings =
                         Object.values(player.inventory.getRings());
@@ -12963,7 +12971,7 @@
                 },
             },
             merchantItems: {
-                title: "MERCHANT > ITEMS",
+                title: "ITEMS",
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ?
@@ -13007,7 +13015,7 @@
                 },
             },
             merchantWeapons: {
-                title: "MERCHANT > WEAPONS",
+                title: "WEAPONS",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
                         ?
@@ -13076,7 +13084,7 @@
                 },
             },
             merchantArmor: {
-                title: "MERCHANT > ARMOR",
+                title: "ARMOR",
                 landingHtml: () => {
                     const message = player.bitcoins > 0
                         ?
@@ -13140,7 +13148,7 @@
                 },
             },
             merchantRings: {
-                title: "MERCHANT > RINGS",
+                title: "RINGS",
                 landingHtml: () => {
                     return player.bitcoins > 0
                         ? `You have <span class="BTC">` +
@@ -13181,7 +13189,7 @@
             },
 
             merchantSell: {
-                title: "MERCHANT > SELL",
+                title: "SELL",
                 landingHtml: () =>
                     `Sell your unwanted inventory for a small sum.\n\n` +
                     `You have <span class="BTC">` +
@@ -14062,22 +14070,28 @@
                 );
             },
 
-            createButton: (sectionName, objectDefinition) => {
-                const $button = document.createElement("button");
-                $button.className = `${sectionName}-${objectDefinition.id}`;
-                $button.dataset.id = objectDefinition.id;
-
+            setButtonTooltip: ($button, definition) => {
                 $button.setAttribute(
                     'data-tooltipHtml',
                     `<div class="inventoryTooltip">
-                        <div class="name">${objectDefinition.name}</div>
+                        <div class="header">
+                            <div class="name">${definition.name}</div>
+                            <div class="friendly">${definition.equippedText || ""}</div>
+                        </div>
                         <div class="details">
-                            ${objectDefinition.description}
+                            ${definition.description}
                         </div>
                     </div>`
                 );
                 $button.setAttribute('data-tooltipPosition', 'left');
                 $button.setAttribute('data-tooltipGroupId', 'inventorySidebar');
+            },
+
+            createButton: (sectionName, definition) => {
+                const $button = document.createElement("button");
+                $button.className = `${sectionName}-${definition.id}`;
+                $button.dataset.id = definition.id;
+                InventorySidebar.setButtonTooltip($button, definition);
 
                 // Reflect current enabled state on creation
                 if (!InventorySidebar.enabled) {
@@ -14093,7 +14107,7 @@
                 const $label = document.createElement("div");
                 $label.className = "label";
                 $label.innerText = sectionName === "items"
-                    ? `${objectDefinition.count.toLocaleString(undefined)}x`
+                    ? `${definition.count.toLocaleString(undefined)}x`
                     : "";
 
                 $container.appendChild($icon);
@@ -14151,6 +14165,7 @@
 
             refreshWeapons: () => {
                 const playerWeapons = player.inventory.getWeapons();
+                const equippedWeaponId = player.inventory.getEquippedWeaponId();
                 const $weapons =
                     document.querySelector(`#inventory [name="weapons"]`);
 
@@ -14159,10 +14174,21 @@
                     const $weapon =
                         $weapons.querySelector(`[data-id="${weapon.id}"]`);
 
+                    const equippedText = weapon.id === equippedWeaponId
+                        ? "Equipped"
+                        : null;
+                    const definition = { ...weapon, equippedText };
+
                     if (!$weapon) {
+                        const equippedText = weapon.id === equippedWeaponId
+                            ? "Equipped"
+                            : null;
+
                         // Create the weapon entry in the list
-                        const $button =
-                            InventorySidebar.createButton("weapons", weapon);
+                        const $button = InventorySidebar.createButton(
+                            "weapons",
+                            definition
+                        );
 
                         $button.onclick = function () {
                             const requiredStrength = weapon.requiredStr || 0;
@@ -14185,6 +14211,9 @@
                         };
 
                         $weapons.appendChild($button);
+                    } else {
+                        InventorySidebar.setButtonTooltip($weapon, definition);
+                        Tooltip.refresh($weapon);
                     }
                 });
 
@@ -14203,7 +14232,6 @@
                 });
 
                 // Highlight the equipped weapon
-                const equippedWeaponId = player.inventory.getEquippedWeaponId();
                 if (!equippedWeaponId) {
                     return;
                 }
@@ -14216,6 +14244,7 @@
 
             refreshArmor: () => {
                 const playerArmor = player.inventory.getArmor();
+                const equippedArmorId = player.inventory.getEquippedArmorId();
                 const $armor =
                     document.querySelector(`#inventory [name="armor"]`);
 
@@ -14224,10 +14253,17 @@
                     const $armorPiece =
                         $armor.querySelector(`[data-id="${armor.id}"]`);
 
+                    const equippedText = armor.id === equippedArmorId
+                        ? "Equipped"
+                        : null;
+                    const definition = { ...armor, equippedText };
+
                     if (!$armorPiece) {
                         // Create the armor entry in the list
-                        const $button =
-                            InventorySidebar.createButton("armor", armor);
+                        const $button = InventorySidebar.createButton(
+                            "armor",
+                            definition
+                        );
 
                         $button.onclick = function () {
                             playSFX("uiSelect");
@@ -14251,6 +14287,12 @@
                         };
 
                         $armor.appendChild($button);
+                    } else {
+                        InventorySidebar.setButtonTooltip(
+                            $armorPiece,
+                            definition
+                        );
+                        Tooltip.refresh($armorPiece);
                     }
                 });
 
@@ -14274,7 +14316,6 @@
                 });
 
                 // Highlight equipped armor
-                const equippedArmorId = player.inventory.getEquippedArmorId();
                 if (!equippedArmorId) {
                     return;
                 }
@@ -14288,9 +14329,8 @@
             refreshRings: () => {
                 const playerRings = player.inventory.getRings();
                 const playerRingIds = Object.keys(playerRings);
-                const equippedRingIds = Object
-                    .values(player.inventory.getEquippedRingIds())
-                    .filter(r => r);
+                const hands = player.inventory.getEquippedRingIds();
+                const equippedRingIds = Object.values(hands).filter(r => r);
                 const $rings =
                     document.querySelector(`#inventory [name="rings"]`);
 
@@ -14298,11 +14338,23 @@
                 Object.values(playerRings).forEach(ring => {
                     const $ring =
                         $rings.querySelector(`[data-id="${ring.id}"]`);
+                    const isEquipped = equippedRingIds.includes(ring.id);
+                    const equippedText = isEquipped
+                        ? "Equipped, " + (
+                            hands.leftHand === ring.id
+                                ? "left hand"
+                                : "right hand"
+                        )
+                        : null;
+                    const definition = { ...ring, equippedText };
 
                     if (!$ring) {
                         // Create the ring entry in the list
                         const $button =
-                            InventorySidebar.createButton("rings", ring);
+                            InventorySidebar.createButton(
+                                "rings",
+                                definition
+                            );
 
                         $button.onclick = function () {
                             playSFX("uiSelect");
@@ -14431,6 +14483,9 @@
                         };
 
                         $rings.appendChild($button);
+                    } else {
+                        InventorySidebar.setButtonTooltip($ring, definition);
+                        Tooltip.refresh($ring);
                     }
                 });
 
@@ -14908,10 +14963,14 @@
 
         function hideTitleScreen() {
             music.stop();
+
+            // @TODO Refactor this since it's duplicated in gamepad.js
+            // @see https://github.com/packardbell95/tardquest/issues/162
             TITLE_SCREEN.startGame(
                 $titleScreen,
                 () => {
                     const $interface = document.getElementById("interface");
+                    $interface.classList.remove("hidden");
                     $interface.classList.add("reveal");
 
                     setTimeout(() => {
@@ -14950,17 +15009,19 @@
         }, true);
 
         if (skipTitleScreen) {
-            if (!preloaderEnabled) {
+            const onGameReady = () => {
+                document.getElementById("interface").classList.remove("hidden");
                 hideTitleScreen();
+            };
+
+            if (!preloaderEnabled) {
+                onGameReady();
             } else {
-                window.onTardquestLoaded = function() {
-                    hideTitleScreen();
-                };
+                window.onTardquestLoaded = onGameReady;
             }
         } else {
             music.play("title");
-            GameControl.disableControls();
-            TITLE_SCREEN.initialize($titleScreen);
+            TITLE_SCREEN.initialize($titleScreen, hideTitleScreen);
         }
 
         player.party.initializePartySection();
