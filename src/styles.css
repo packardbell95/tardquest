@@ -928,16 +928,34 @@ a:link {
     filter: brightness(0);
 }
 
-#game > .layer.darkening,
-#game > .layer.lightening {
+#game:not(.lean-effect) > .layer.darkening {
     animation-name: darken;
     animation-duration: .5s;
     animation-fill-mode: forwards;
     animation-timing-function: ease;
 }
 
-#game > .layer.lightening {
+#game.lean-effect > .layer.darkening {
+    animation-name: darken, leanWaveContent;
+    animation-duration: .5s, 3s;
+    animation-fill-mode: forwards, none;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: 1, infinite;
+}
+
+#game:not(.lean-effect) > .layer.lightening {
     animation-name: lighten;
+    animation-duration: .5s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease;
+}
+
+#game.lean-effect > .layer.lightening {
+    animation-name: lighten, leanWaveContent;
+    animation-duration: .5s, 3s;
+    animation-fill-mode: forwards, none;
+    animation-timing-function: linear, ease-in-out;
+    animation-iteration-count: 1, infinite;
 }
 
 #game > .layer.enemy > span {
@@ -995,6 +1013,69 @@ a:link {
     line-height: 12px;
 }
 
+#game.lean-effect {
+    position: relative;
+}
+
+#game.lean-effect::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        rgba(187, 1, 187, 0.493) 0%, 
+        rgba(147, 0, 211, 0.15) 25%, 
+        rgba(131, 25, 230, 0.11) 50%, 
+        rgba(128, 0, 128, 0.15) 75%, 
+        rgba(113, 3, 160, 0.486) 100%);
+    animation: leanWave 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 5;
+}
+
+#game.lean-effect > .layer {
+    animation-name: leanWaveContent;
+    animation-duration: 3s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+@keyframes leanWave {
+    0%, 100% {
+        transform: translateX(0) skewX(0deg);
+        filter: hue-rotate(0deg);
+    }
+    25% {
+        transform: translateX(2px) skewX(0.5deg);
+        filter: hue-rotate(10deg);
+    }
+    50% {
+        transform: translateX(-1px) skewX(-0.3deg);
+        filter: hue-rotate(-5deg);
+    }
+    75% {
+        transform: translateX(1px) skewX(0.2deg);
+        filter: hue-rotate(5deg);
+    }
+}
+
+@keyframes leanWaveContent {
+    0%, 100% {
+        transform: translateX(0) skewX(0deg) scaleY(1);
+    }
+    25% {
+        transform: translateX(5px) skewX(0.3deg) scaleY(1.01);
+    }
+    50% {
+        transform: translateX(-0.8px) skewX(-0.2deg) scaleY(0.995);
+    }
+    75% {
+        transform: translateX(0.8px) skewX(0.1deg) scaleY(1.005);
+    }
+}
+
 #animBattleTransition {
     position: absolute;
     background-repeat: no-repeat;
@@ -1020,18 +1101,22 @@ a:link {
 }
 
 #animTorch {
-    width: 110px;
+    width: 176px;
     height: 256px;
     image-rendering: pixelated;
     left: 0;
     bottom: 0;
     background-image: url(assets/fp-anim/fp-torch.gif);
-    transform: translate(-55px, 256px);
-    transition: transform .5s steps(8, jump-end);
+    background-size: contain;
+    background-repeat: no-repeat;
+    transform: translateX(-200px) translateY(100px);
+    transition: transform .5s steps(12, jump-end);
+    user-select: none;
+    pointer-events: none;
 }
 
 #animTorch.onscreen {
-    transform: translate(0, 0);
+    transform: translateX(0) translateY(-10px);
 }
 
 #animTrombone {

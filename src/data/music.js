@@ -20,7 +20,7 @@
  */
 const TARDQUEST_MUSIC_TRACKS = Object.freeze({
     title: {
-        audio: new Audio("audio/title.mp3"),
+        audio: new Audio("audio/music/title.mp3"),
         playback: {
             looped: true,
         },
@@ -33,7 +33,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
 
     // Exploration tracks
     intoTheTardspire: {
-        audio: new Audio("audio/explore1.mp3"),
+        audio: new Audio("audio/music/explore1.mp3"),
         playback: {
             looped: true,
         },
@@ -44,7 +44,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["exploration"],
     },
     metalSpoons: {
-        audio: new Audio("audio/explore2.mp3"),
+        audio: new Audio("audio/music/explore2.mp3"),
         playback: {
             looped: true,
         },
@@ -55,7 +55,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["exploration"],
     },
     tardedWarrior: {
-        audio: new Audio("audio/explore3.mp3"),
+        audio: new Audio("audio/music/explore3.mp3"),
         playback: {
             looped: true,
         },
@@ -66,7 +66,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["exploration"],
     },
     mucalParasite: {
-        audio: new Audio("audio/explore4.mp3"),
+        audio: new Audio("audio/music/explore4.mp3"),
         playback: {
             looped: true,
         },
@@ -77,7 +77,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["exploration"],
     },
     intoTheTardspireRedux: {
-        audio: new Audio("audio/explore5.mp3"),
+        audio: new Audio("audio/music/explore5.mp3"),
         playback: {
             looped: true,
         },
@@ -90,7 +90,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
 
     // Battle tracks
     tardusMembrane: {
-        audio: new Audio("audio/battle1.mp3"),
+        audio: new Audio("audio/music/battle1.mp3"),
         playback: {
             looped: true,
         },
@@ -101,7 +101,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["battle"],
     },
     aDangerousGameOfTag: {
-        audio: new Audio("audio/battle2.mp3"),
+        audio: new Audio("audio/music/battle2.mp3"),
         playback: {
             looped: true,
         },
@@ -112,7 +112,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["battle"],
     },
     eekACunt: {
-        audio: new Audio("audio/battle3.mp3"),
+        audio: new Audio("audio/music/battle3.mp3"),
         playback: {
             looped: true,
         },
@@ -123,7 +123,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["battle"],
     },
     theCumdown: {
-        audio: new Audio("audio/battle4.mp3"),
+        audio: new Audio("audio/music/battle4.mp3"),
         playback: {
             looped: true,
         },
@@ -134,7 +134,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["battle"],
     },
     surpriseCockfight: {
-        audio: new Audio("audio/battle5.mp3"),
+        audio: new Audio("audio/music/battle5.mp3"),
         playback: {
             looped: true,
         },
@@ -145,7 +145,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["battle"],
     },
     stabQuest: {
-        audio: new Audio("audio/battle6.mp3"),
+        audio: new Audio("audio/music/battle6.mp3"),
         playback: {
             looped: true,
         },
@@ -158,7 +158,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
 
     // Vampire themes
     vampireBattleIntro: {
-        audio: new Audio("audio/vampire-vengeful-fruit-intro.mp3"),
+        audio: new Audio("audio/music/vampire-vengeful-fruit-intro.mp3"),
         playback: {
             looped: false,
             nextTrackId: "vampireBattleMainLoop"
@@ -170,7 +170,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["vampire", "special battle"],
     },
     vampireBattleMainLoop: {
-        audio: new Audio("audio/vampire-vengeful-fruit-main-loop.mp3"),
+        audio: new Audio("audio/music/vampire-vengeful-fruit-main-loop.mp3"),
         playback: {
             looped: true,
         },
@@ -181,7 +181,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["vampire", "special battle"],
     },
     vampireLurking: {
-        audio: new Audio("audio/lurking.ogg"),
+        audio: new Audio("audio/music/lurking.ogg"),
         playback: {
             looped: true,
         },
@@ -194,7 +194,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
 
     // Other NPC themes
     merchantTheme: {
-        audio: new Audio("audio/merchant.mp3"),
+        audio: new Audio("audio/music/merchant.mp3"),
         playback: {
             looped: true,
         },
@@ -205,7 +205,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["merchant"],
     },
     gamblerTheme: {
-        audio: new Audio("audio/gamblers-theme.mp3"),
+        audio: new Audio("audio/music/gamblers-theme.mp3"),
         playback: {
             looped: true,
         },
@@ -216,7 +216,7 @@ const TARDQUEST_MUSIC_TRACKS = Object.freeze({
         tags: ["gambler"],
     },
     erokTheme: {
-        audio: new Audio("audio/erok.mp3"),
+        audio: new Audio("audio/music/erok.mp3"),
         playback: {
             looped: true,
         },
