@@ -13,6 +13,7 @@
   let lastMenuDpad = { up: 0, down: 0, left: 0, right: 0 };
   let partyTalkLocked = false;
   let talkHoldStart = 0;
+  const lastActivitySignature = new Map();
 
   // --- TardBoard Handling ---
   const TARDBOARD_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -475,27 +476,41 @@
 
     // UI input device activity detection
     (function detectActivity(){
-      let active = false;
+      let hasActivity = false;
+      const parts = [];
 
-      // Buttons
       if (gp.buttons) {
         for (let i = 0; i < gp.buttons.length; i++) {
           const b = gp.buttons[i];
-          if (b && (b.pressed || (typeof b.value === 'number' && b.value > 0.3))) {
-            active = true; break;
+          const pressed = !!(b && (b.pressed || (typeof b.value === 'number' && b.value > 0.3)));
+          if (pressed) {
+            hasActivity = true;
+            parts.push(`b${i}`);
           }
         }
       }
-      // Axes (includes sticks / triggers if reported as axes)
-      if (!active && axes) {
+
+      if (axes) {
         for (let i = 0; i < axes.length; i++) {
-          if (Math.abs(axes[i]) > ACTIVITY_AXIS_DEADZONE) {
-            active = true; break;
+          const v = axes[i];
+          if (Math.abs(v) > ACTIVITY_AXIS_DEADZONE) {
+            hasActivity = true;
+            parts.push(`a${i}:${Math.round(v * 10)}`);
           }
         }
       }
-      if (active && window.InputDeviceManager) {
-        window.InputDeviceManager.setLast('gamepad');
+
+      const signature = hasActivity ? parts.join('|') : '';
+      const padIndex = typeof gp.index === 'number' ? gp.index : 0;
+      const prevSignature = lastActivitySignature.get(padIndex) || '';
+
+      if (signature) {
+        if (signature !== prevSignature && window.InputDeviceManager) {
+          window.InputDeviceManager.setLast('gamepad');
+        }
+        lastActivitySignature.set(padIndex, signature);
+      } else if (prevSignature) {
+        lastActivitySignature.delete(padIndex);
       }
     })();
 
