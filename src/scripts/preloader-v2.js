@@ -111,7 +111,7 @@
         './audio/sfx/kaching.mp3','./audio/music/lurking.ogg','./audio/music/merchant.mp3','./audio/sfx/persuade.mp3','./audio/sfx/raisins.mp3','./audio/sfx/run.mp3',
         './audio/sfx/scream.mp3','./audio/music/title.mp3','./audio/sfx/torch.mp3','./audio/sfx/tromBONE.mp3','./audio/sfx/turn.mp3',
         './audio/sfx/uiCancel.mp3','./audio/sfx/uiOption.mp3','./audio/sfx/uiSelect.mp3','./audio/music/vampire-vengeful-fruit-intro.mp3','./audio/music/vampire-vengeful-fruit-main-loop.mp3',
-        './audio/sfx/lean.mp3',
+        './audio/sfx/lean.mp3','./audio/sfx/merchant-near.ogg','./audio/sfx/erok-near.ogg',
 
         // ambient sfx
         './audio/ambient/rat1.ogg','./audio/ambient/howl1.ogg','./audio/ambient/chain1.ogg','./audio/ambient/run1.ogg'
