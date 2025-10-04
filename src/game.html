@@ -9585,6 +9585,8 @@
         let ambientSfxScheduledTime = null;
         let ambientSfxStartTime = null;
         let lastNearbyNPCs = new Set();
+        let npcProximityTimers = new Map();
+        let npcProximityIntervals = new Map();
         let currentEnemy = null;
         let stepsSinceLastBattle = 0;
         let gameOver = false;
@@ -11288,8 +11290,6 @@
                 ambientSfxTimeout = null;
                 ambientSfxPaused = true;
             }
-            
-            // Stop any currently playing ambient sounds
             Object.values(sfxAmb).forEach(audio => {
                 audio.pause();
                 audio.currentTime = 0;
@@ -11307,10 +11307,11 @@
 
         function checkNPCProximity() {
             if (!sfxEnabled || player.inCombat || gameOver || menu.isOpen()) {
+                clearAllProximityTimers();
                 return;
             }
 
-            const currentNearbyNPCs = new Set();
+            const currentNearbyNPCs = new Map();
             const proximityRange = 8; // How many spaces away to trigger NPC audio cue
 
             // Check Merchant proximity
@@ -11319,7 +11320,7 @@
                 if (merchantLocation) {
                     const distance = Math.abs(player.x - merchantLocation.x) + Math.abs(player.y - merchantLocation.y);
                     if (distance <= proximityRange) {
-                        currentNearbyNPCs.add('merchant');
+                        currentNearbyNPCs.set('merchant', { distance, location: merchantLocation });
                     }
                 }
             }
@@ -11330,24 +11331,89 @@
                 if (erokLocation) {
                     const distance = Math.abs(player.x - erokLocation.x) + Math.abs(player.y - erokLocation.y);
                     if (distance <= proximityRange) {
-                        currentNearbyNPCs.add('erok');
+                        currentNearbyNPCs.set('erok', { distance, location: erokLocation });
                     }
                 }
             }
 
-            // Play sounds for newly nearby NPCs
-            currentNearbyNPCs.forEach(npc => {
-                if (!lastNearbyNPCs.has(npc)) {
-                    const soundName = `${npc}Near`;
-                    if (sfx[soundName]) {
-                        sfx[soundName].currentTime = 0;
-                        sfx[soundName].play().catch(() => {
-                        });
+            currentNearbyNPCs.forEach((npcData, npcName) => {
+                const wasNearby = lastNearbyNPCs.has(npcName);
+                
+                if (!wasNearby) {
+                    // First time entering proximity - play immediately and start interval
+                    playProximitySound(npcName, npcData.distance);
+                    startProximityInterval(npcName);
+                } else {
+                    const existingTimer = npcProximityTimers.get(npcName);
+                    if (existingTimer) {
+                        existingTimer.distance = npcData.distance;
                     }
                 }
             });
 
-            lastNearbyNPCs = currentNearbyNPCs;
+            lastNearbyNPCs.forEach(npcName => {
+                if (!currentNearbyNPCs.has(npcName)) {
+                    clearProximityTimer(npcName);
+                }
+            });
+
+            lastNearbyNPCs = new Set(currentNearbyNPCs.keys());
+        }
+
+        function playProximitySound(npcName, distance) {
+            const soundName = `${npcName}Near`;
+            if (sfx[soundName]) {
+                const maxRange = 8; // Max amount of steps away to near NPC sound
+                const maxVolume = 1; // Max volume when closest to NPC
+                const minVolume = 0.1; // Min volume when farthest away from NPC
+                const volume = maxVolume - ((distance - 1) / (maxRange - 1)) * (maxVolume - minVolume);
+                const clampedVolume = Math.max(minVolume, Math.min(maxVolume, volume));
+                
+                sfx[soundName].currentTime = 0;
+                sfx[soundName].volume = clampedVolume;
+                sfx[soundName].play().catch(() => {
+                });
+            }
+        }
+
+        function startProximityInterval(npcName) {
+            clearProximityTimer(npcName);
+            const timerData = {
+                distance: 0,
+                intervalId: null
+            };
+
+            timerData.intervalId = setInterval(() => {
+                if (lastNearbyNPCs.has(npcName) && 
+                    sfxEnabled && 
+                    !player.inCombat && 
+                    !gameOver && 
+                    !menu.isOpen()) {
+                    playProximitySound(npcName, timerData.distance);
+                } else {
+                    clearProximityTimer(npcName);
+                }
+            }, numberBetween(10000, 20000)); // Time intervals between playing the NPC sound in seconds
+            
+            npcProximityTimers.set(npcName, timerData);
+        }
+
+        function clearProximityTimer(npcName) {
+            const timerData = npcProximityTimers.get(npcName);
+            if (timerData && timerData.intervalId) {
+                clearInterval(timerData.intervalId);
+            }
+            npcProximityTimers.delete(npcName);
+        }
+
+        function clearAllProximityTimers() {
+            npcProximityTimers.forEach((timerData, npcName) => {
+                if (timerData.intervalId) {
+                    clearInterval(timerData.intervalId);
+                }
+            });
+            npcProximityTimers.clear();
+            lastNearbyNPCs.clear();
         }
 
         async function tryRun() {
