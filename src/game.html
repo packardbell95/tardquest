@@ -11267,9 +11267,9 @@
                 ambientSfxStartTime = null;
             } else {
                 // Play next sfxAmb anytime between these two intervals
-                const minDelay = 40000; // 40 seconds
-                const maxDelay = 60000; // 60 seconds
-                delay = numberBetween(minDelay, maxDelay);
+                const minDelayMs = 40000;
+                const maxDelayMs = 60000;
+                delay = numberBetween(minDelayMs, maxDelayMs);
             }
             
             ambientSfxStartTime = performance.now();
