@@ -11226,12 +11226,14 @@
 
         function playRandomAmbientSfx() {
             // Checks for title screen + menu interactions
-            if (!sfxEnabled || 
-                player.inCombat || 
-                gameOver || 
+            const shouldScheduleAmbientSfx =
+                !sfxEnabled ||
+                player.inCombat ||
+                gameOver ||
                 ambientSfxPaused ||
                 TITLE_SCREEN.isActive ||
-                menu.isOpen()) {
+                menu.isOpen();
+            if (shouldScheduleAmbientSfx) {
                 scheduleNextAmbientSfx();
                 return;
             }
