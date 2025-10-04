@@ -7842,6 +7842,8 @@
             exp: 0,
             level: 1,
             stepsTakenOnCurrentFloor: 0,
+            stepsSinceLastBattle: 0, // Add this property
+            lastNearbyNPCs: new Set(), // Add this property
             inCombat: false,
             isHoldingTorch: false,
             enteringCombat: false,
@@ -7895,7 +7897,7 @@
                 player.leavingCombat = true;
                 player.inCombat = false;
                 currentEnemy = null;
-                stepsSinceLastBattle = 0;
+                player.stepsSinceLastBattle = 0;
                 music.resumeTag("exploration");
                 player.party.purgeDeadMembers();
                 GameControl.update();
@@ -9584,11 +9586,9 @@
         let ambientSfxPaused = false;
         let ambientSfxScheduledTime = null;
         let ambientSfxStartTime = null;
-        let lastNearbyNPCs = new Set();
         let npcProximityTimers = new Map();
         let npcProximityIntervals = new Map();
         let currentEnemy = null;
-        let stepsSinceLastBattle = 0;
         let gameOver = false;
         let persuasionAttempts = 0;
         let maxPersuasionAttempts = 2;
@@ -10684,7 +10684,7 @@
                 player.x = nx;
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
-                stepsSinceLastBattle++;
+                player.stepsSinceLastBattle++;
 
                 // @TODO: Make the map system support onEnter for entities
                 //        and move this logic there
@@ -10705,8 +10705,8 @@
                     if (isAsync) {
                         await maybePromise;
                     }
-                } else if (stepsSinceLastBattle > 2 && Math.random() < randomEncounterChance) {
-                    // Only trigger random encounters after 2 steps since last battle
+                // Only trigger random encounters after 2 steps since last battle
+                } else if (player.stepsSinceLastBattle > 2 && Math.random() < randomEncounterChance) {
                     startEncounter();
                 }
             } else if (typeof tile.onTouch === "function") {
@@ -11337,7 +11337,7 @@
             }
 
             currentNearbyNPCs.forEach((npcData, npcName) => {
-                const wasNearby = lastNearbyNPCs.has(npcName);
+                const wasNearby = player.lastNearbyNPCs.has(npcName);
                 
                 if (!wasNearby) {
                     // First time entering proximity - play immediately and start interval
@@ -11351,13 +11351,13 @@
                 }
             });
 
-            lastNearbyNPCs.forEach(npcName => {
+            player.lastNearbyNPCs.forEach(npcName => {
                 if (!currentNearbyNPCs.has(npcName)) {
                     clearProximityTimer(npcName);
                 }
             });
 
-            lastNearbyNPCs = new Set(currentNearbyNPCs.keys());
+            player.lastNearbyNPCs = new Set(currentNearbyNPCs.keys());
         }
 
         function playProximitySound(npcName, distance) {
@@ -11384,7 +11384,7 @@
             };
 
             timerData.intervalId = setInterval(() => {
-                if (lastNearbyNPCs.has(npcName) && 
+                if (player.lastNearbyNPCs.has(npcName) && 
                     sfxEnabled && 
                     !player.inCombat && 
                     !gameOver && 
@@ -11413,7 +11413,7 @@
                 }
             });
             npcProximityTimers.clear();
-            lastNearbyNPCs.clear();
+            player.lastNearbyNPCs.clear();
         }
 
         async function tryRun() {
