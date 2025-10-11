@@ -21,7 +21,7 @@
 
 # [►►► PLAY ONLINE ◄◄◄](https://milklounge.wang/tardquest)
 
-A Javascript dungeon crawler by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/) and [MySpace Tom](https://forum.agoraroad.com/index.php?members/3460/)
+A Javascript dungeon crawler by [Xx_TheMilkMan69_xX](https://forum.agoraroad.com/index.php?members/8701/), [MySpace Tom](https://forum.agoraroad.com/index.php?members/3460/) and [VocaPepper](https://vocapepper.com/)
 
 # CREDITS
 ### PROGRAMMING + GRAPHICS
