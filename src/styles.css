@@ -304,6 +304,7 @@ a:link {
     display: flex;
     flex-direction: column;
     align-items: center;
+    text-align: center;
     position: absolute;
     top: 540px;
     left: 20px;

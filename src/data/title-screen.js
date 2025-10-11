@@ -918,16 +918,22 @@ TITLE_SCREEN.credits = {
         $credits.id = "credits";
         $credits.innerHTML = `
             <div>
-                A Javascript dungeon crawler by
-                <a
-                    href="https://milklounge.wang/"
-                    target="_blank"
-                ><i>Xx_TheMilkMan69_xX</i></a>
-                and
-                <a
-                    href="https://packardbell95.com/"
-                    target="_blank"
-                ><i>Packard Bell 95</i></a>
+                <div>A Javascript dungeon crawler by</div>
+                <div>
+                    <a
+                        href="https://milklounge.wang/" target="_blank"><i>Xx_TheMilkMan69_xX</i>
+                    </a>,
+                    
+                    <a
+                        href="https://packardbell95.com/" target="_blank"><i>Packard Bell 95</i>
+                    </a>,
+
+                    and
+
+                    <a 
+                        href="https://vocapepper.com/" target="_blank"><i>VocaPepper</i>
+                    </a>
+                </div>
             </div>
             <div>
                 TardQuest™ (${ new Date().getFullYear() }) ||
