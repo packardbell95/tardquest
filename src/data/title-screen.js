@@ -878,9 +878,15 @@ TITLE_SCREEN.content = {
         const $startGameButton = document.createElement("div");
         $startGameButton.id = "startGameBtn";
         $startGameButton.innerHTML = `
-            <div>Press [ENTER]</div>
-            <div>to begin your descent into</div>
-            <div>the TardSpire...</div>
+            <div>Click here to begin your descent into...</div>
+            <div class="action"><b><i>The TardSpire</i></b></div>
+            
+            <div id="preloaderStatus" class="preloaderStatus">
+                <div id="loadingBarContainer" class="loadingBarContainer">
+                    <div id="loadingBar"></div>
+                    <span id="loadingBarText">Checking files...</span>
+                </div>
+            </div>
         `;
 
         if (typeof onStartGameClick === "function") {
@@ -888,19 +894,6 @@ TITLE_SCREEN.content = {
         };
 
         $content.append($startGameButton);
-
-        const $preloaderStatus = document.createElement("div");
-        $preloaderStatus.id = "preloaderStatus";
-        $preloaderStatus.innerHTML = `
-            <div id="loadingBarContainer" class="loadingBarContainer">
-                <div id="loadingBar"></div>
-                <span id="loadingBarText">Checking files...</span>
-                <button class="skipPreloaderBtn" onclick="trySkipPreload()">
-                    Skip Preloading
-                </button>
-            </div>
-        `;
-        $content.append($preloaderStatus);
 
         const $spireScene = document.createElement("div");
         $spireScene.id = "spireScene";
@@ -925,16 +918,16 @@ TITLE_SCREEN.credits = {
         $credits.id = "credits";
         $credits.innerHTML = `
             <div>
-                A Javascript game by
+                A Javascript dungeon crawler by
                 <a
-                    href="https://milklounge.wang/tardquest/"
+                    href="https://milklounge.wang/"
                     target="_blank"
-                >Xx_TheMilkMan69_xX</a>
+                ><i>Xx_TheMilkMan69_xX</i></a>
                 and
                 <a
                     href="https://packardbell95.com/"
                     target="_blank"
-                >MySpace Tom</a>
+                ><i>Packard Bell 95</i></a>
             </div>
             <div>
                 TardQuest™ (${ new Date().getFullYear() }) ||

@@ -235,9 +235,9 @@
         const text = document.getElementById('loadingBarText');
         if (bar && total) bar.style.width = pct() + '%';
         if (text){
-            if (finalized || skipped) text.textContent = 'READY';
-            else if (total) text.textContent = `Downloading... ${pct()}%`;
-            else text.textContent = 'Scanning...';
+            if (finalized || skipped) text.innerHTML = '<b><i>READY</i></b>';
+            else if (total) text.innerHTML = `<b><i>Downloading... ${pct()}%</i></b>`;
+            else text.innerHTML = '<b><i>Scanning...</i></b>';
         }
     }
 

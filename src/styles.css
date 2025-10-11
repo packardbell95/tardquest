@@ -231,9 +231,9 @@ a:link {
     display: flex;
     flex-direction: column;
     position: absolute;
-    left: 50px;
-    top: 180px;
-    padding: 4px 8px;
+    left: 43px;
+    top: 160px;
+    padding: 2px 6px;
     text-align: center;
     white-space: nowrap;
     align-content: center;
@@ -242,6 +242,7 @@ a:link {
     border-top-width: 10px;
     border-color: #ffffff;
     background-color: #000000;
+    font-size: 12px;
     z-index: 999;
 
     &:hover {
@@ -250,29 +251,24 @@ a:link {
     }
 }
 
-#titleScreen #preloaderStatus {
-    cursor: pointer;
-    position: absolute;
-    left: 50px;
-    top: 260px;
-    width: 190px;
-    height: 54px;
-    padding: 8px;
-    text-align: center;
-    line-height: 0%;
-    border-style: solid;
-    border-width: 2px;
-    border-top-width: 10px;
-    border-color: #ffffff;
-    background-color: #000000;
-    z-index: 999;
+#titleScreen #startGameBtn #preloaderStatus {
+    position: static;
+    left: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    padding: 4px 0;
+    margin-top: 8px;
+    border: none;
+    background-color: transparent;
+    cursor: inherit;
 }
 
-#titleScreen .loadingBarContainer {
-    width: 190px;
-    height: 22px;
+#titleScreen #startGameBtn .loadingBarContainer {
+    width: 100%;
+    height: 15px;
     background: #090;
-    border: 2px solid #0f0;
+    border-bottom: #ffffff 2px solid;
     display: flex;
     align-items: center;
     position: relative;
@@ -283,6 +279,7 @@ a:link {
     height: 100%;
     width: 0%;
     background: #0f0;
+    border-bottom: #ffffff 2px solid;
     transition: width .2s;
 }
 
@@ -290,26 +287,9 @@ a:link {
     position: absolute;
     left: 0;
     right: 0;
-    text-align: center;
+    text-align: center;;
     color: #000;
     width: 100%;
-}
-
-#titleScreen .skipPreloaderBtn {
-    position: absolute;
-    left: -2px;
-    top: 28px;
-    width: 194px;
-    height: 26px;
-    background: #000;
-    border: 2px solid #fff;
-    color: #fff;
-    font-weight: bold;
-
-    &:hover {
-        background-color: #fff;
-        color: #000;
-    }
 }
 
 
@@ -326,7 +306,7 @@ a:link {
     align-items: center;
     position: absolute;
     top: 540px;
-    left: 30px;
+    left: 20px;
     border-style: solid;
     border-width: 2px;
     border-top-width: 10px;
