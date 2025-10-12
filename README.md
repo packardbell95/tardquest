@@ -93,8 +93,16 @@ This is a desktop application build for TardQuest, which includes neat features 
 ▶[tardquest-standalone](https://github.com/TheMilkMan6669/tardquest-standalone)
 
 ### VocaPepper
-VocaPepper's 1.10.0 build most notably includes an online multiplayer mode (discontinued - for now).
+TardQuest Online - Incomplete multiplayer version
 
-▶[Main](https://vocapepper.com/tardquest/src/multiplayer.html)
+▶[TardQuest Online 1.10.0](https://vocapepper.com/tardquest/src/multiplayer.html)
 
 ▶[GitHub](https://github.com/VocaPepper/tardquest-online-legacy)
+
+TurdQuest Ganked Edition - A censored / non-copyright infringing version
+
+▶[TurdQuest GE](https://vocapepper.com/programs/turdquest)
+
+▶[GitHub](https://github.com/VocaPepper/turdquest-ge)
+
+
