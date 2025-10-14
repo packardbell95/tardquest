@@ -9634,6 +9634,20 @@
                 return boulder.isActiveOnFloor ? { x: boulder.x, y: boulder.y } : null;
             },
 
+            isOccupiedCell: function(x, y) {
+                const mapEntrance = MAP.getEntrance();
+                const isEntrance = mapEntrance.x === x && mapEntrance.y === y;
+
+                return (
+                    isEntrance ||
+                    merchant.isAt(x, y) ||
+                    gambler.isAt(x, y) ||
+                    erok.isAt(x, y) ||
+                    vampire.isAt(x, y) ||
+                    pigeon.isAt(x, y)
+                );
+            },
+
             findSuitableHallway: function() {
                 const hallways = [];
 
@@ -9665,10 +9679,8 @@
                             if (!playerInHallway) {
                                 let hasNPCs = false;
                                 for (let checkX = startX; checkX < startX + horizontalLength; checkX++) {
-                                    if (merchant.isAt(checkX, y) || gambler.isAt(checkX, y) ||
-                                        erok.isAt(checkX, y) || vampire.isAt(checkX, y) ||
-                                        pigeon.isAt(checkX, y)) {
-                                        hasNPCs = true;
+                                    hasNPCs = boulder.isOccupiedCell(checkX, y);
+                                    if (hasNPCs) {
                                         break;
                                     }
                                 }
@@ -9703,10 +9715,8 @@
                             if (!playerInHallway) {
                                 let hasNPCs = false;
                                 for (let checkY = startY; checkY < startY + verticalLength; checkY++) {
-                                    if (merchant.isAt(x, checkY) || gambler.isAt(x, checkY) ||
-                                        erok.isAt(x, checkY) || vampire.isAt(x, checkY) ||
-                                        pigeon.isAt(x, checkY)) {
-                                        hasNPCs = true;
+                                    hasNPCs = boulder.isOccupiedCell(x, checkY);
+                                    if (hasNPCs) {
                                         break;
                                     }
                                 }
@@ -9847,19 +9857,9 @@
 
                 // Check for obstacles at the next position
                 const nextCell = MAP.getCell(nextX, nextY);
-                const isObstacle = nextCell && (
-                    nextCell.type === 'treasureChest' ||
-                    nextCell.type === 'mimic' ||
-                    nextCell.type === 'healingTile' ||
-                    nextCell.type === 'crackedFloorSlight' ||
-                    nextCell.type === 'crackedFloor' ||
-                    nextCell.type === 'crackedFloorSevere' ||
-                    nextCell.type === 'merchant' ||
-                    nextCell.type === 'gambler' ||
-                    nextCell.type === 'erok' ||
-                    nextCell.type === 'exit' ||
-                    nextCell.isSolid
-                );
+                const isObstacle =
+                    nextCell.isSolid ||
+                    ! nextCell.canBeRolledOverByBouldingBall;
 
                 if (isObstacle || nextX < 0 || nextX >= WIDTH || nextY < 0 || nextY >= HEIGHT) {
                     boulder.movingDirection *= -1;
@@ -10212,6 +10212,7 @@
             healingTile: {
                 displayName: "Healing Tile",
                 mapCharacter: "H",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     player.steppingOnHealingTile = true;
 
@@ -10260,6 +10261,7 @@
             crackedFloorSlight: {
                 displayName: "Slightly-Cracked Floor",
                 mapCharacter: '✕',
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
@@ -10292,6 +10294,7 @@
             crackedFloor: {
                 displayName: "Cracked Floor",
                 mapCharacter: '✕',
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
@@ -10314,6 +10317,7 @@
             crackedFloorSevere: {
                 displayName: "Severely-Cracked Floor",
                 mapCharacter: '✖',
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     player.fallThroughFloorAndDie();
                 },
@@ -10367,6 +10371,7 @@
             exit: {
                 displayName: "Exit",
                 mapCharacter: "E",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function() {
                     descend();
                 }
@@ -10374,6 +10379,7 @@
             merchant: {
                 displayName: "Merchant",
                 mapCharacter: "M",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     music.play("merchantTheme");
                     menu.open('merchant', () => npcMove());
@@ -10401,6 +10407,7 @@
             gambler: {
                 displayName: "Gambler",
                 mapCharacter: "G",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     menu.open('gambler', () => npcMove());
                 },
@@ -10433,6 +10440,7 @@
             erok: {
                 displayName: "Erok",
                 mapCharacter: "D",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     menu.open('erok', () => npcMove());
                 },
@@ -10465,6 +10473,7 @@
             tardspireBanner: {
                 displayName: "Floor",
                 mapCharacter: ".",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     MAP.setCell(x, y);
                 },
@@ -10475,6 +10484,7 @@
             treasureChest: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     menu.open("chest");
                 },
@@ -10490,6 +10500,7 @@
             mimic: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     menu.open("chest");
                 },
