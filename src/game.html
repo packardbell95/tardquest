@@ -8222,6 +8222,7 @@
                 if (player.hp <= 0) {
                     GameControl.disableControls();
                     gameOver = true;
+                    animTorchEnd();
                 }
             },
             getEffectiveStats: () => {
@@ -9292,6 +9293,7 @@
             },
             encounteredPlayer: function() {
                 return (
+                    ! gameOver &&
                     vampire.isActiveOnFloor &&
                     vampire.x === player.x &&
                     vampire.y === player.y
@@ -11306,11 +11308,18 @@
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
                 player.stepsSinceLastBattle++;
+                let rollForRandomEncounter = true;
 
                 // @TODO: Make the map system support onEnter for entities
                 //        and move this logic there
+                if (boulder.isAt(player.x, player.y)) {
+                    boulder.hitPlayer();
+                    rollForRandomEncounter = false;
+                }
+
                 if (vampire.encounteredPlayer()) {
                     vampire.encounter();
+                    rollForRandomEncounter = false;
                 }
 
                 const fireOnEnter =
@@ -11326,8 +11335,15 @@
                     if (isAsync) {
                         await maybePromise;
                     }
-                // Only trigger random encounters after 2 steps since last battle
-                } else if (player.stepsSinceLastBattle > 2 && Math.random() < randomEncounterChance) {
+                }
+
+                const startRandomEncounter =
+                    ! fireOnEnter &&
+                    rollForRandomEncounter &&
+                    player.stepsSinceLastBattle > 2 &&
+                    Math.random() < randomEncounterChance;
+
+                if (startRandomEncounter) {
                     startEncounter();
                 }
             } else if (typeof tile.onTouch === "function") {
