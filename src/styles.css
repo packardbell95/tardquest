@@ -1430,6 +1430,49 @@ a:link {
     }
 }
 
+#minimap .boulder,
+.mapCellDetails .enlargedTile.boulder {
+    position: relative;
+
+    &::before {
+        position: absolute;
+        left: calc(50% - (1ch / 2));
+        top: 0;
+        width: 1ch;
+        overflow: hidden;
+        content: " ";
+        display: inline-block;
+        animation: boulderRoll 0.6s infinite;
+        color: #8B5A28;
+    }
+}
+
+#minimap .boulder {
+    width: 1ch;
+}
+
+@keyframes boulderRoll {
+    0%, 25% {
+        content: "o";
+        transform: scaleY(1);
+    }
+
+    25.01%, 50% {
+        content: "o";
+        transform: scaleY(-1);
+    }
+
+    50.01%, 75% {
+        content: "o";
+        transform: scaleY(1);
+    }
+
+    75.01%, 100% {
+        content: "o";
+        transform: scaleY(-1);
+    }
+}
+
 #portraitArtOverlay.portrait-art {
     position: absolute;
     top: 107px;
