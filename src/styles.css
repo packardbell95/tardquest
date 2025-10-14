@@ -1383,7 +1383,10 @@ a:link {
 
 #minimap .crackedFloorSlight,
 #minimap .crackedFloor,
-#minimap .crackedFloorSevere {
+#minimap .crackedFloorSevere,
+.mapCellDetails .crackedFloorSlight,
+.mapCellDetails .crackedFloor,
+.mapCellDetails .crackedFloorSevere {
     color: #f00;
 }
 
@@ -1445,6 +1448,10 @@ a:link {
         animation: boulderRoll 0.6s infinite;
         color: #8B5A28;
     }
+}
+
+.mapCellDetails .enlargedTile.boulder::before {
+    top: 0.4ch !important;
 }
 
 #minimap .boulder {
