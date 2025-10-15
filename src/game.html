@@ -9635,10 +9635,13 @@
             },
 
             isOccupiedCell: function(x, y) {
+                const cell = MAP.getCell(x, y);
                 const mapEntrance = MAP.getEntrance();
                 const isEntrance = mapEntrance.x === x && mapEntrance.y === y;
 
                 return (
+                    cell.isSolid ||
+                    ! cell.canBeRolledOverByBouldingBall ||
                     isEntrance ||
                     merchant.isAt(x, y) ||
                     gambler.isAt(x, y) ||
@@ -9664,8 +9667,12 @@
                         let startX = x;
 
                         while (startX + horizontalLength < WIDTH - 1) {
-                            const checkCell = MAP.getCell(startX + horizontalLength, y);
-                            if (checkCell?.type !== 'floor') break;
+                            const cx = startX + horizontalLength;
+                            const occupied = boulder.isOccupiedCell(cx, y);
+                            if (occupied) {
+                                break;
+                            }
+
                             horizontalLength++;
                         }
 
@@ -9700,8 +9707,12 @@
                         let startY = y;
 
                         while (startY + verticalLength < HEIGHT - 1) {
-                            const checkCell = MAP.getCell(x, startY + verticalLength);
-                            if (checkCell?.type !== 'floor') break;
+                            const cy = startY + verticalLength;
+                            const occupied = boulder.isOccupiedCell(x, cy);
+                            if (occupied) {
+                                break;
+                            }
+
                             verticalLength++;
                         }
 
@@ -9856,12 +9867,8 @@
                 }
 
                 // Check for obstacles at the next position
-                const nextCell = MAP.getCell(nextX, nextY);
-                const isObstacle =
-                    nextCell.isSolid ||
-                    ! nextCell.canBeRolledOverByBouldingBall;
-
-                if (isObstacle || nextX < 0 || nextX >= WIDTH || nextY < 0 || nextY >= HEIGHT) {
+                const isObstacle = boulder.isOccupiedCell(nextX, nextY);
+                if (isObstacle) {
                     boulder.movingDirection *= -1;
                     return null;
                 }
