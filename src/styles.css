@@ -1005,11 +1005,11 @@ a:link {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, 
-        rgba(187, 1, 187, 0.493) 0%, 
-        rgba(147, 0, 211, 0.15) 25%, 
-        rgba(131, 25, 230, 0.11) 50%, 
-        rgba(128, 0, 128, 0.15) 75%, 
+    background: linear-gradient(45deg,
+        rgba(187, 1, 187, 0.493) 0%,
+        rgba(147, 0, 211, 0.15) 25%,
+        rgba(131, 25, 230, 0.11) 50%,
+        rgba(128, 0, 128, 0.15) 75%,
         rgba(113, 3, 160, 0.486) 100%);
     animation: leanWave 3s ease-in-out infinite;
     pointer-events: none;
@@ -1383,7 +1383,10 @@ a:link {
 
 #minimap .crackedFloorSlight,
 #minimap .crackedFloor,
-#minimap .crackedFloorSevere {
+#minimap .crackedFloorSevere,
+.mapCellDetails .crackedFloorSlight,
+.mapCellDetails .crackedFloor,
+.mapCellDetails .crackedFloorSevere {
     color: #f00;
 }
 
@@ -1445,6 +1448,10 @@ a:link {
         animation: boulderRoll 0.6s infinite;
         color: #8B5A28;
     }
+}
+
+.mapCellDetails .enlargedTile.boulder::before {
+    top: 0.4ch !important;
 }
 
 #minimap .boulder {
@@ -1636,9 +1643,9 @@ a:link {
 #party          { grid-area: party; overflow: hidden; }
 #inventory      { grid-area: inventory; }
 #playerInput    { grid-area: playerInput; }
-#viewport { 
-    grid-area: viewport; 
-    background-image: url('assets/backgrounds/bg1.png'); 
+#viewport {
+    grid-area: viewport;
+    background-image: url('assets/backgrounds/bg1.png');
     background-size: 1472px 341px;
     background-repeat: repeat-x;
     background-position: 0px 0px;

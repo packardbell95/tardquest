@@ -4215,7 +4215,7 @@
                     },
                     p2_0: {
                         artIndex: 1,
-                        drawAt: { x: -7, y: 14 },
+                        drawAt: { x: -7, y: 9 },
                     },
                     p2_1: {
                         artIndex: 1,
@@ -4231,7 +4231,7 @@
                     },
                     p2_4: {
                         artIndex: 3,
-                        drawAt: { x: 42, y: 10 },
+                        drawAt: { x: 42, y: 9 },
                     },
                     p3_0: {
                         artIndex: 4,
@@ -8169,7 +8169,7 @@
                 player.steppingOnHealingTile = false;
             },
             enterCombat: () => {
-                pauseAmbientSfx();  
+                pauseAmbientSfx();
                 persuasionAttempts = 0;
                 maxPersuasionAttempts = getEffectiveStat("persuasionAttempts");
                 player.enteringCombat = true;
@@ -8222,6 +8222,7 @@
                 if (player.hp <= 0) {
                     GameControl.disableControls();
                     gameOver = true;
+                    animTorchEnd();
                 }
             },
             getEffectiveStats: () => {
@@ -9292,6 +9293,7 @@
             },
             encounteredPlayer: function() {
                 return (
+                    ! gameOver &&
                     vampire.isActiveOnFloor &&
                     vampire.x === player.x &&
                     vampire.y === player.y
@@ -9623,54 +9625,73 @@
             hallwayBounds: { start: null, end: null },
             lastMoveTime: 0,
             moveInterval: 500, // Time in ms between boulder movements
-            
+
             isAt: function(x, y) {
                 return boulder.isActiveOnFloor && boulder.x === x && boulder.y === y;
             },
-            
+
             location: function() {
                 return boulder.isActiveOnFloor ? { x: boulder.x, y: boulder.y } : null;
             },
-            
+
+            isOccupiedCell: function(x, y) {
+                const cell = MAP.getCell(x, y);
+                const mapEntrance = MAP.getEntrance();
+                const isEntrance = mapEntrance.x === x && mapEntrance.y === y;
+
+                return (
+                    cell.isSolid ||
+                    ! cell.canBeRolledOverByBouldingBall ||
+                    isEntrance ||
+                    merchant.isAt(x, y) ||
+                    gambler.isAt(x, y) ||
+                    erok.isAt(x, y) ||
+                    vampire.isAt(x, y) ||
+                    pigeon.isAt(x, y)
+                );
+            },
+
             findSuitableHallway: function() {
                 const hallways = [];
-                
+
                 // Check player floor spawn position
                 const playerSpawn = MAP.getEntrance();
-                
+
                 // Scan map for valid hallways
                 for (let y = 1; y < HEIGHT - 1; y++) {
                     for (let x = 1; x < WIDTH - 1; x++) {
                         const cell = MAP.getCell(x, y);
                         if (cell?.type !== 'floor') continue;
-                        
+
                         let horizontalLength = 0;
                         let startX = x;
-                        
+
                         while (startX + horizontalLength < WIDTH - 1) {
-                            const checkCell = MAP.getCell(startX + horizontalLength, y);
-                            if (checkCell?.type !== 'floor') break;
+                            const cx = startX + horizontalLength;
+                            const occupied = boulder.isOccupiedCell(cx, y);
+                            if (occupied) {
+                                break;
+                            }
+
                             horizontalLength++;
                         }
-                        
+
                         if (horizontalLength >= 4) { // Amount of spaces in a hallway required for a boulder to spawn
                             // Check if player spawn point is in this horizontal hallway
-                            const playerInHallway = playerSpawn && 
-                                playerSpawn.y === y && 
-                                playerSpawn.x >= startX && 
+                            const playerInHallway = playerSpawn &&
+                                playerSpawn.y === y &&
+                                playerSpawn.x >= startX &&
                                 playerSpawn.x < startX + horizontalLength;
-                            
+
                             if (!playerInHallway) {
                                 let hasNPCs = false;
                                 for (let checkX = startX; checkX < startX + horizontalLength; checkX++) {
-                                    if (merchant.isAt(checkX, y) || gambler.isAt(checkX, y) || 
-                                        erok.isAt(checkX, y) || vampire.isAt(checkX, y) ||
-                                        pigeon.isAt(checkX, y)) {
-                                        hasNPCs = true;
+                                    hasNPCs = boulder.isOccupiedCell(checkX, y);
+                                    if (hasNPCs) {
                                         break;
                                     }
                                 }
-                                
+
                                 if (!hasNPCs) {
                                     hallways.push({
                                         direction: 'horizontal',
@@ -9681,34 +9702,36 @@
                                 }
                             }
                         }
-                        
+
                         let verticalLength = 0;
                         let startY = y;
-                        
+
                         while (startY + verticalLength < HEIGHT - 1) {
-                            const checkCell = MAP.getCell(x, startY + verticalLength);
-                            if (checkCell?.type !== 'floor') break;
+                            const cy = startY + verticalLength;
+                            const occupied = boulder.isOccupiedCell(x, cy);
+                            if (occupied) {
+                                break;
+                            }
+
                             verticalLength++;
                         }
-                        
+
                         if (verticalLength >= 4) { // Amount of spaces in a hallway required for a boulder to spawn
                             // Check if player spawn point is in this vertical hallway
-                            const playerInHallway = playerSpawn && 
-                                playerSpawn.x === x && 
-                                playerSpawn.y >= startY && 
+                            const playerInHallway = playerSpawn &&
+                                playerSpawn.x === x &&
+                                playerSpawn.y >= startY &&
                                 playerSpawn.y < startY + verticalLength;
-                            
+
                             if (!playerInHallway) {
                                 let hasNPCs = false;
                                 for (let checkY = startY; checkY < startY + verticalLength; checkY++) {
-                                    if (merchant.isAt(x, checkY) || gambler.isAt(x, checkY) || 
-                                        erok.isAt(x, checkY) || vampire.isAt(x, checkY) ||
-                                        pigeon.isAt(x, checkY)) {
-                                        hasNPCs = true;
+                                    hasNPCs = boulder.isOccupiedCell(x, checkY);
+                                    if (hasNPCs) {
                                         break;
                                     }
                                 }
-                                
+
                                 if (!hasNPCs) {
                                     hallways.push({
                                         direction: 'vertical',
@@ -9721,50 +9744,50 @@
                         }
                     }
                 }
-                
+
                 return hallways.length > 0 ? randomEntry(hallways) : null;
             },
-            
+
             spawn: function() {
                 const hallway = boulder.findSuitableHallway();
                 if (!hallway) {
                     boulder.isActiveOnFloor = false;
                     return;
                 }
-                
+
                 boulder.isActiveOnFloor = true;
                 boulder.direction = hallway.direction;
                 boulder.hallwayBounds = { start: hallway.start, end: hallway.end };
                 boulder.movingDirection = 1;
-                
+
                 // Start at one end of the hallway
                 boulder.x = hallway.start.x;
                 boulder.y = hallway.start.y;
                 boulder.lastMoveTime = performance.now();
-                
+
                 // Create bypass gaps in the walls adjacent to the boulder's path
                 boulder.createBypassGaps(hallway);
-                
+
                 updateBattleLog('<span class="action">You sense the presence of a large object rolling about...</span>');
             },
 
             createBypassGaps: function(hallway) {
                 const gapSize = 1; // How many wall tiles can be removed to create a gap
-                
+
                 if (hallway.direction === 'horizontal') {
                     // Create gaps for horizontal hallways
                     const midPoint = Math.floor((hallway.start.x + hallway.end.x) / 2);
                     for (let i = 0; i < gapSize; i++) {
                         const gapX = midPoint + i;
                         const gapY = hallway.start.y - 1;
-                        
+
                         if (gapX >= 0 && gapX < WIDTH && gapY >= 0 && gapY < HEIGHT) {
                             const cell = MAP.getCell(gapX, gapY);
                             // Check for void spaces
                             const beyondY = gapY - 1;
                             const beyondCell = MAP.getCell(gapX, beyondY);
                             const isSafeToRemove = beyondCell && beyondCell.type === 'floor';
-                            
+
                             if (cell?.isSolid && isSafeToRemove) {
                                 MAP.setCell(gapX, gapY, 'floor');
                             }
@@ -9773,34 +9796,33 @@
                     for (let i = 0; i < gapSize; i++) {
                         const gapX = midPoint + i;
                         const gapY = hallway.start.y + 1;
-                        
+
                         if (gapX >= 0 && gapX < WIDTH && gapY >= 0 && gapY < HEIGHT) {
                             const cell = MAP.getCell(gapX, gapY);
                             // Check for void spaces
                             const beyondY = gapY + 1;
                             const beyondCell = MAP.getCell(gapX, beyondY);
                             const isSafeToRemove = beyondCell && beyondCell.type === 'floor';
-                            
+
                             if (cell?.isSolid && isSafeToRemove) {
                                 MAP.setCell(gapX, gapY, 'floor');
                             }
                         }
                     }
-                    
                 } else {
                     // Create gaps for vertical hallways
                     const midPoint = Math.floor((hallway.start.y + hallway.end.y) / 2);
                     for (let i = 0; i < gapSize; i++) {
                         const gapX = hallway.start.x - 1;
                         const gapY = midPoint + i;
-                        
+
                         if (gapX >= 0 && gapX < WIDTH && gapY >= 0 && gapY < HEIGHT) {
                             const cell = MAP.getCell(gapX, gapY);
                             // Check for void spaces
                             const beyondX = gapX - 1;
                             const beyondCell = MAP.getCell(beyondX, gapY);
                             const isSafeToRemove = beyondCell && beyondCell.type === 'floor';
-                            
+
                             if (cell?.isSolid && isSafeToRemove) {
                                 MAP.setCell(gapX, gapY, 'floor');
                             }
@@ -9809,14 +9831,14 @@
                     for (let i = 0; i < gapSize; i++) {
                         const gapX = hallway.start.x + 1;
                         const gapY = midPoint + i;
-                        
+
                         if (gapX >= 0 && gapX < WIDTH && gapY >= 0 && gapY < HEIGHT) {
                             const cell = MAP.getCell(gapX, gapY);
                             // Check for void spaces
                             const beyondX = gapX + 1;
                             const beyondCell = MAP.getCell(beyondX, gapY);
                             const isSafeToRemove = beyondCell && beyondCell.type === 'floor';
-                            
+
                             if (cell?.isSolid && isSafeToRemove) {
                                 MAP.setCell(gapX, gapY, 'floor');
                             }
@@ -9824,82 +9846,68 @@
                     }
                 }
             },
-            
+
             move: function() {
                 if (!boulder.isActiveOnFloor) return null;
-                
+
                 const currentTime = performance.now();
                 if (currentTime - boulder.lastMoveTime < boulder.moveInterval) {
                     return null;
                 }
-                
+
                 boulder.lastMoveTime = currentTime;
-                
+
                 let nextX = boulder.x;
                 let nextY = boulder.y;
-                
+
                 if (boulder.direction === 'horizontal') {
                     nextX += boulder.movingDirection;
                 } else {
                     nextY += boulder.movingDirection;
                 }
-                
+
                 // Check for obstacles at the next position
-                const nextCell = MAP.getCell(nextX, nextY);
-                const isObstacle = nextCell && (
-                    nextCell.type === 'treasureChest' ||
-                    nextCell.type === 'mimic' ||
-                    nextCell.type === 'healingTile' ||
-                    nextCell.type === 'crackedFloorSlight' ||
-                    nextCell.type === 'crackedFloor' ||
-                    nextCell.type === 'crackedFloorSevere' ||
-                    nextCell.type === 'merchant' ||
-                    nextCell.type === 'gambler' ||
-                    nextCell.type === 'erok' ||
-                    nextCell.type === 'exit' ||
-                    nextCell.isSolid
-                );
-                
-                if (isObstacle || nextX < 0 || nextX >= WIDTH || nextY < 0 || nextY >= HEIGHT) {
+                const isObstacle = boulder.isOccupiedCell(nextX, nextY);
+                if (isObstacle) {
                     boulder.movingDirection *= -1;
                     return null;
                 }
-                
+
                 // If no obstacle, move to the next position
                 boulder.x = nextX;
                 boulder.y = nextY;
-                
+
                 if (boulder.x === player.x && boulder.y === player.y) {
                     return () => boulder.hitPlayer();
                 }
-                
+
                 return null;
             },
-            
+
             hitPlayer: function() {
                 const damage = Math.ceil(getEffectiveStat('maxHp') / 3);
                 player.damage(damage);
                 playSFX('attacked');
                 playSFX('boulderHit');
-                
+
                 updateBattleLog(
                     `<span class="action">YEOUCH!</span> A vicious, bloodthirsty, ` +
                     `Boulding Ball deals <span class="enemy">${damage} HP</span> to you!`
                 );
                 render();
             },
-        };   
+        };
         function startBoulderMovement() {
             if (boulderMovementInterval) {
                 clearInterval(boulderMovementInterval);
             }
-            
+
             boulderMovementInterval = setInterval(() => {
                 // Don't move boulder during combat, animations, in menus, or game over
                 if (player.inCombat || animationActive || window._inputBlocked || menu.isOpen() || gameOver) {
                     return;
                 }
-                
+
                 if (boulder.isActiveOnFloor) {
                     const result = boulder.move();
                     if (typeof result === 'function') {
@@ -10199,7 +10207,7 @@
         let currentBreathing = null;
         let floor = 1;
         let boulderMovementInterval = null;
-        
+
         const MAP = new GameMap();
         MAP.setMinimap(document.getElementById("minimap"));
 
@@ -10211,6 +10219,7 @@
             healingTile: {
                 displayName: "Healing Tile",
                 mapCharacter: "H",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     player.steppingOnHealingTile = true;
 
@@ -10259,6 +10268,7 @@
             crackedFloorSlight: {
                 displayName: "Slightly-Cracked Floor",
                 mapCharacter: '✕',
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
@@ -10291,6 +10301,7 @@
             crackedFloor: {
                 displayName: "Cracked Floor",
                 mapCharacter: '✕',
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     const weightLevel = player.getWeightLevel();
 
@@ -10313,6 +10324,7 @@
             crackedFloorSevere: {
                 displayName: "Severely-Cracked Floor",
                 mapCharacter: '✖',
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     player.fallThroughFloorAndDie();
                 },
@@ -10366,6 +10378,7 @@
             exit: {
                 displayName: "Exit",
                 mapCharacter: "E",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function() {
                     descend();
                 }
@@ -10373,6 +10386,7 @@
             merchant: {
                 displayName: "Merchant",
                 mapCharacter: "M",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     music.play("merchantTheme");
                     menu.open('merchant', () => npcMove());
@@ -10400,6 +10414,7 @@
             gambler: {
                 displayName: "Gambler",
                 mapCharacter: "G",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     menu.open('gambler', () => npcMove());
                 },
@@ -10432,6 +10447,7 @@
             erok: {
                 displayName: "Erok",
                 mapCharacter: "D",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     menu.open('erok', () => npcMove());
                 },
@@ -10464,6 +10480,7 @@
             tardspireBanner: {
                 displayName: "Floor",
                 mapCharacter: ".",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     MAP.setCell(x, y);
                 },
@@ -10474,6 +10491,7 @@
             treasureChest: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
                     menu.open("chest");
                 },
@@ -10489,6 +10507,7 @@
             mimic: {
                 displayName: "Treasure Chest",
                 mapCharacter: "T",
+                canBeRolledOverByBouldingBall: false,
                 onEnter: async function (x, y) {
                     menu.open("chest");
                 },
@@ -11307,11 +11326,18 @@
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
                 player.stepsSinceLastBattle++;
+                let rollForRandomEncounter = true;
 
                 // @TODO: Make the map system support onEnter for entities
                 //        and move this logic there
+                if (boulder.isAt(player.x, player.y)) {
+                    boulder.hitPlayer();
+                    rollForRandomEncounter = false;
+                }
+
                 if (vampire.encounteredPlayer()) {
                     vampire.encounter();
+                    rollForRandomEncounter = false;
                 }
 
                 const fireOnEnter =
@@ -11327,8 +11353,15 @@
                     if (isAsync) {
                         await maybePromise;
                     }
-                // Only trigger random encounters after 2 steps since last battle
-                } else if (player.stepsSinceLastBattle > 2 && Math.random() < randomEncounterChance) {
+                }
+
+                const startRandomEncounter =
+                    ! fireOnEnter &&
+                    rollForRandomEncounter &&
+                    player.stepsSinceLastBattle > 2 &&
+                    Math.random() < randomEncounterChance;
+
+                if (startRandomEncounter) {
                     startEncounter();
                 }
             } else if (typeof tile.onTouch === "function") {
@@ -11864,7 +11897,7 @@
 
             const ambientSounds = Object.keys(sfxAmb);
             const randomSound = randomEntry(ambientSounds);
-            
+
             if (randomSound && sfxAmb[randomSound]) {
                 const ambientVolume = 0.6; // Ambient audio volume
                 sfxAmb[randomSound].currentTime = 0;
@@ -11872,7 +11905,7 @@
                 sfxAmb[randomSound].play().catch(() => {
                 });
             }
-            
+
             scheduleNextAmbientSfx();
         }
 
@@ -11883,7 +11916,7 @@
             if (ambientSfxPaused || TITLE_SCREEN.isActive || menu.isOpen()) {
                 return;
             }
-            
+
             let delay;
             if (ambientSfxScheduledTime !== null) {
                 delay = ambientSfxScheduledTime;
@@ -11895,7 +11928,7 @@
                 const maxDelayMs = 60000;
                 delay = numberBetween(minDelayMs, maxDelayMs);
             }
-            
+
             ambientSfxStartTime = performance.now();
             ambientSfxTimeout = setTimeout(playRandomAmbientSfx, delay);
         }
@@ -11907,7 +11940,7 @@
                     const originalDelay = 40000; // Use minimum delay as fallback
                     ambientSfxScheduledTime = Math.max(1000, originalDelay - elapsed);
                 }
-                
+
                 clearTimeout(ambientSfxTimeout);
                 ambientSfxTimeout = null;
                 ambientSfxPaused = true;
@@ -11960,7 +11993,7 @@
 
             currentNearbyNPCs.forEach((npcData, npcName) => {
                 const wasNearby = player.lastNearbyNPCs.has(npcName);
-                
+
                 if (!wasNearby) {
                     // First time entering proximity - play immediately and start interval
                     playProximitySound(npcName, npcData.distance);
@@ -11990,7 +12023,7 @@
                 const minVolume = 0.1; // Min volume when farthest away from NPC
                 const volume = maxVolume - ((distance - 1) / (maxRange - 1)) * (maxVolume - minVolume);
                 const clampedVolume = Math.max(minVolume, Math.min(maxVolume, volume));
-                
+
                 sfx[soundName].currentTime = 0;
                 sfx[soundName].volume = clampedVolume;
                 sfx[soundName].play().catch(() => {
@@ -12006,17 +12039,17 @@
             };
 
             timerData.intervalId = setInterval(() => {
-                if (player.lastNearbyNPCs.has(npcName) && 
-                    sfxEnabled && 
-                    !player.inCombat && 
-                    !gameOver && 
+                if (player.lastNearbyNPCs.has(npcName) &&
+                    sfxEnabled &&
+                    !player.inCombat &&
+                    !gameOver &&
                     !menu.isOpen()) {
                     playProximitySound(npcName, timerData.distance);
                 } else {
                     clearProximityTimer(npcName);
                 }
             }, numberBetween(10000, 20000)); // Time intervals between playing the NPC sound in seconds
-            
+
             npcProximityTimers.set(npcName, timerData);
         }
 
@@ -12072,12 +12105,12 @@
 
         function startBoulderProximityAudio(distance) {
             if (!sfx.boulderNear) return;
-            
+
             boulderProximityAudio = sfx.boulderNear;
             boulderProximityAudio.loop = true;
             boulderProximityAudio.currentTime = 0;
             updateBoulderProximityVolume(distance);
-            
+
             boulderProximityAudio.play().catch(() => {
             });
 
@@ -12086,7 +12119,7 @@
                     clearBoulderProximity();
                     return;
                 }
-                
+
                 const boulderLocation = boulder.location();
                 if (boulderLocation) {
                     const currentDistance = Math.abs(player.x - boulderLocation.x) + Math.abs(player.y - boulderLocation.y);
@@ -12103,14 +12136,14 @@
 
         function updateBoulderProximityVolume(distance) {
             if (!boulderProximityAudio) return;
-            
+
             const maxRange = 8; // Boulder proximity range
             const maxVolume = 1; // Max volume when closest
             const minVolume = 0.1; // Min volume when furthest away
-            
+
             const volume = maxVolume - ((distance - 1) / (maxRange - 1)) * (maxVolume - minVolume);
             const clampedVolume = Math.max(minVolume, Math.min(maxVolume, volume));
-            
+
             boulderProximityAudio.volume = clampedVolume;
         }
 
@@ -12119,14 +12152,14 @@
                 clearInterval(boulderProximityTimer);
                 boulderProximityTimer = null;
             }
-            
+
             if (boulderProximityAudio) {
                 boulderProximityAudio.pause();
                 boulderProximityAudio.currentTime = 0;
                 boulderProximityAudio.loop = false;
                 boulderProximityAudio = null;
             }
-            
+
             lastBoulderDistance = null;
         }
 
