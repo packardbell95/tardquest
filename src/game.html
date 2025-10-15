@@ -136,7 +136,7 @@
             <div id="animTorch" class="offscreen"></div>
             <div id="animTrombone" class="offscreen"></div>
             <div id="animBattleTransition" class="offscreen"></div>
-            <div id="animBoulderHit"></div>
+            <div id="animBoulderHit" class="fixed"></div>
             <div id="menu"></div>
             <div id="mouseControl">
                 <div class="navigation">
@@ -9888,7 +9888,6 @@
             hitPlayer: function() {
                 const damage = Math.ceil(getEffectiveStat('maxHp') / 3);
                 player.damage(damage);
-                playSFX('attacked');
                 playSFX('boulderHit');
                 animBoulderHit();
 
@@ -11181,9 +11180,9 @@
                 console.error('Boulder hit animation element not found');
                 return;
             }
-            
+
             $boulderHit.classList.add('onscreen');
-            
+
             setTimeout(() => {
                 $boulderHit.classList.remove('onscreen');
             }, 3000); // Slide anim back out of viewport after this duration
@@ -11198,7 +11197,8 @@
                 if ($child.classList.contains('ui-header')) continue;
                 const childIsVisible =
                     !$child.classList.contains('hidden') &&
-                    !$child.classList.contains('offscreen');
+                    !$child.classList.contains('offscreen') &&
+                    !$child.classList.contains('fixed');
 
                 if (!childIsVisible) {
                     continue;
@@ -11219,7 +11219,8 @@
                 if ($child.classList.contains('ui-header')) continue;
                 const childIsVisible =
                     !$child.classList.contains('hidden') &&
-                    !$child.classList.contains('offscreen');
+                    !$child.classList.contains('offscreen') &&
+                    !$child.classList.contains('fixed');
 
                 if (!childIsVisible) {
                     continue;
