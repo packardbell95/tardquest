@@ -136,6 +136,7 @@
             <div id="animTorch" class="offscreen"></div>
             <div id="animTrombone" class="offscreen"></div>
             <div id="animBattleTransition" class="offscreen"></div>
+            <div id="animBoulderHit"></div>
             <div id="menu"></div>
             <div id="mouseControl">
                 <div class="navigation">
@@ -9889,6 +9890,7 @@
                 player.damage(damage);
                 playSFX('attacked');
                 playSFX('boulderHit');
+                animBoulderHit();
 
                 updateBattleLog(
                     `<span class="action">YEOUCH!</span> A vicious, bloodthirsty, ` +
@@ -11171,6 +11173,20 @@
         function animTromboneEnd() {
             const $trombone = document.getElementById('animTrombone');
             $trombone.classList.remove('onscreen');
+        }
+
+        function animBoulderHit() {
+            const $boulderHit = document.getElementById('animBoulderHit');
+            if (!$boulderHit) {
+                console.error('Boulder hit animation element not found');
+                return;
+            }
+            
+            $boulderHit.classList.add('onscreen');
+            
+            setTimeout(() => {
+                $boulderHit.classList.remove('onscreen');
+            }, 3000); // Slide anim back out of viewport after this duration
         }
 
         function shakeScreen() {

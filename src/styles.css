@@ -1117,6 +1117,27 @@ a:link {
     transform: translate(200px, 100px);
 }
 
+#animBoulderHit {
+    position: absolute;
+    background-repeat: no-repeat;
+    width: 41px;
+    height: 64px;
+    image-rendering: pixelated;
+    right: 20px;
+    top: -200px;
+    background-image: url(assets/interface/ui/boulder-hit.gif);
+    background-size: contain;
+    background-position: center;
+    transform: translateY(0);
+    transition: transform 0.3s ease-in-out;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+#animBoulderHit.onscreen {
+    transform: translateY(220px);
+}
+
 #viewport #mouseControl {
     position: absolute;
     top: 0;
