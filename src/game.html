@@ -102,6 +102,7 @@
                     <div><span data-control="backward" data-keyboard="↓/S" data-gamepad='<img src="assets/gamepad/generic/d-down.png" alt="D-Pad Down">'></span>:</div><div>Move Backward</div>
                     <div><span data-control="turn" data-keyboard="←/A,→/D" data-gamepad='<img src="assets/gamepad/generic/d-left.png" alt="D-Pad Left">/<img src="assets/gamepad/generic/d-right.png" alt="D-Pad Right">'></span>:</div><div>Turn</div>
                     <div><span data-control="strafe" data-keyboard="Q,E" data-gamepad='<img src="assets/gamepad/generic/L1.png" alt="LB">/<img src="assets/gamepad/generic/R1.png" alt="RB">'></span>:</div><div>Strafe</div>
+                    <div><span data-control="wait" data-keyboard="Space" data-gamepad='<img src="assets/gamepad/xinput/b.png" alt="X">/<img src="assets/gamepad/playstation/circle.png" alt="SQ">'></span>:</div><div>Wait</div>
                     <div><span data-control="talk" data-keyboard="T" data-gamepad='<img src="assets/gamepad/xinput/x.png" alt="X">/<img src="assets/gamepad/playstation/square.png" alt="SQ">'></span>:</div><div>Talk</div>
                     <div><span data-control="inventory" data-keyboard="I" data-gamepad='<img src="assets/gamepad/xinput/y.png" alt="Y">/<img src="assets/gamepad/playstation/triangle.png" alt="T">'></span>:</div><div>Inventory</div>
                     <div><span data-control="menu" data-keyboard="Esc" data-gamepad='<img src="assets/gamepad/xinput/start.png" alt="Menu">/<img src="assets/gamepad/playstation/start.png" alt="MenuPS">'></span>:</div><div>Game Menu</div>
@@ -294,6 +295,17 @@
                                 </div>
                             '
                             onclick="move('strafeRight')"
+                        ></button>
+                        <button
+                            name="wait"
+                            onclick="wait()"
+                            data-tooltipgroupid="playerInput"
+                            data-tooltipposition="left"
+                            data-tooltiphtml='
+                                <div class="genericTooltip">
+                                    Wait for a moment...
+                                </div>
+                            '
                         ></button>
                     </div>
                 </div>
@@ -4473,6 +4485,288 @@
                 ],
             },
 
+            roamingEnemy: {
+                relativeColor: { r: 255, g: 0, b: 0 }, // Red color
+                positions: {
+                    p0_0: {
+                        artIndex: 0,
+                        drawAt: { x: -28, y: 7 },
+                    },
+                    p0_2: {
+                        artIndex: 0,
+                        drawAt: { x: 45, y: 7 },
+                    },
+                    p1_0: {
+                        artIndex: 0,
+                        drawAt: { x: -25, y: 4 },
+                    },
+                    p1_1: {
+                        artIndex: 0,
+                        drawAt: { x: 7, y: 4 },
+                    },
+                    p1_2: {
+                        artIndex: 0,
+                        drawAt: { x: 39, y: 4 },
+                    },
+                    p2_0: {
+                        artIndex: 1,
+                        drawAt: { x: -7, y: 9 },
+                    },
+                    p2_1: {
+                        artIndex: 1,
+                        drawAt: { x: 3, y: 9 },
+                    },
+                    p2_2: {
+                        artIndex: 2,
+                        drawAt: { x: 16, y: 9 },
+                    },
+                    p2_3: {
+                        artIndex: 3,
+                        drawAt: { x: 30, y: 9 },
+                    },
+                    p2_4: {
+                        artIndex: 3,
+                        drawAt: { x: 42, y: 9 },
+                    },
+                    p3_0: {
+                        artIndex: 4,
+                        drawAt: { x: -9, y: 15 },
+                    },
+                    p3_1: {
+                        artIndex: 4,
+                        drawAt: { x: -3, y: 11 },
+                    },
+                    p3_2: {
+                        artIndex: 4,
+                        drawAt: { x: 8, y: 11 },
+                    },
+                    p3_3: {
+                        artIndex: 5,
+                        drawAt: { x: 20, y: 11 },
+                    },
+                    p3_4: {
+                        artIndex: 6,
+                        drawAt: { x: 29, y: 11 },
+                    },
+                    p3_5: {
+                        artIndex: 6,
+                        drawAt: { x: 36, y: 11 },
+                    },
+                    p3_6: {
+                        artIndex: 6,
+                        drawAt: { x: 46, y: 12 },
+                    },
+                    p4_0: {
+                        artIndex: 7,
+                        drawAt: { x: 2, y: 12 },
+                    },
+                    p4_1: {
+                        artIndex: 7,
+                        drawAt: { x: 7, y: 12 },
+                    },
+                    p4_2: {
+                        artIndex: 7,
+                        drawAt: { x: 12, y: 12 },
+                    },
+                    p4_3: {
+                        artIndex: 7,
+                        drawAt: { x: 17, y: 12 },
+                    },
+                    p4_4: {
+                        artIndex: 7,
+                        drawAt: { x: 22, y: 12 },
+                    },
+                    p4_5: {
+                        artIndex: 7,
+                        drawAt: { x: 26, y: 12 },
+                    },
+                    p4_6: {
+                        artIndex: 7,
+                        drawAt: { x: 30, y: 12 },
+                    },
+                    p4_7: {
+                        artIndex: 7,
+                        drawAt: { x: 35, y: 12 },
+                    },
+                    p4_8: {
+                        artIndex: 7,
+                        drawAt: { x: 40, y: 12 },
+                    },
+                    p5_0: {
+                        artIndex: 8,
+                        drawAt: { x: 14, y: 13 },
+                    },
+                    p5_1: {
+                        artIndex: 8,
+                        drawAt: { x: 16, y: 13 },
+                    },
+                    p5_2: {
+                        artIndex: 8,
+                        drawAt: { x: 18, y: 13 },
+                    },
+                    p5_3: {
+                        artIndex: 8,
+                        drawAt: { x: 20, y: 13 },
+                    },
+                    p5_4: {
+                        artIndex: 8,
+                        drawAt: { x: 22, y: 13 },
+                    },
+                    p5_5: {
+                        artIndex: 8,
+                        drawAt: { x: 24, y: 13 },
+                    },
+                    p5_6: {
+                        artIndex: 8,
+                        drawAt: { x: 26, y: 13 },
+                    },
+                    p5_7: {
+                        artIndex: 8,
+                        drawAt: { x: 28, y: 13 },
+                    },
+                    p5_8: {
+                        artIndex: 8,
+                        drawAt: { x: 30, y: 13 },
+                    },
+                    p5_9: {
+                        artIndex: 8,
+                        drawAt: { x: 32, y: 13 },
+                    },
+                    p5_10: {
+                        artIndex: 8,
+                        drawAt: { x: 34, y: 13 },
+                    },
+                },
+                art: [
+                    {
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                            %%%%%%▄▄▄%%%%%%%%▄%%%%%%%%%%%%%%%%%
+                            %%%%%%%█▀▀▄%%%%▄█%%%%%%%▄▄▄▄▄%%%%%%
+                            %%%%%%%█   █%▄█ ▀▀▄%%%▄▀ ▄▄▀%%%%%%%
+                            %%%%%%█     █     █%%▄▀ ▄▀%%%%%%%%%
+                            %%%%%%%█   █      ▀▄▀  ▄▀%%%%%%%%%%
+                            %%%%%%%%█              █%%%%%%%%%%%
+                            %%%%▄▄%█                █%%%%%%%%%%
+                            %%%%%%█                  █%%%%%%%%%
+                            %%%%%%%█                  █%%%%%%%%
+                            %%%%%%█                  █%%%%%%%%%
+                            %%%%%█                  █%%%%%%%%%%
+                            %%%%█                    █%%%%%%%%%
+                            %%%%%█  ▄▄▄           ▄▄▄ ▀▄%%%%%%%
+                            %%%%█    █             █    █%%%%%%
+                            %%%█          ▄▄▄▄▄▄▄▄▄      █%%%%%
+                            %%%█             ▀  ▀         █%%%%
+                            %%%█                ▀          █%%%
+                            %%%▀▄               ▀         ▄▀%%%
+                            %%%%%▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀%%%%%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%█%%%%%%%%%%%%
+                            %%█ █%%█%%%▄▀%%%
+                            %%█ █%█ █%%█%%%%
+                            %▄▀  ▀   ▀▄█%%%%
+                            %█         ▀▄%%%
+                            %█          ▀▄%%
+                            ▄▀▄▄▄     ▄▄▄▀▄%
+                            █  ▀  ▄▄▄▄ ▀  ▀▄
+                            █              █
+                            %▀▄▄▄▄▄▄▄▄▄▄▄▄▀%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%█%%%%%%%%%%%%
+                            %%█ █%%█%%%▄▀%%%
+                            %%█ █%█ █%%█%%%%
+                            %▄▀  ▀   ▀▄█%%%%
+                            %█         ▀▄%%%
+                            %█          ▀▄%%
+                            ▄▀▄▄▄     ▄▄▄▀▄%
+                            █  ▀  ▄▄▄▄ ▀  ▀▄
+                            █              █
+                            %▀▄▄▄▄▄▄▄▄▄▄▄▄▀%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%█%%%%%%%%%%%%
+                            %%█ █%%█%%%▄▀%%%
+                            %%█ █%█ █%%█%%%%
+                            %▄▀  ▀   ▀▄█%%%%
+                            %█         ▀▄%%%
+                            %█          ▀▄%%
+                            ▄▀▄▄▄     ▄▄▄▀▄%
+                            █  ▀  ▄▄▄▄ ▀  ▀▄
+                            █              █
+                            %▀▄▄▄▄▄▄▄▄▄▄▄▄▀%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%%%
+                            %%%%▄%%%%%%%%
+                            %%%█ ▀▀▄%▄%%%
+                            %%%█    ▀ █%%
+                            %%%█ T  T █%%
+                            %%%▀▄▄▄▄▄▄▀%%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%%%
+                            %%%%▄%%%%%%%%
+                            %%%█ ▀▀▄%▄%%%
+                            %%%█    ▀ █%%
+                            %%%█ T  T █%%
+                            %%%▀▄▄▄▄▄▄▀%%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%%%%%%%%
+                            %%%%▄%%%%%%%%
+                            %%%█ ▀▀▄%▄%%%
+                            %%%█    ▀ █%%
+                            %%%█ T  T █%%
+                            %%%▀▄▄▄▄▄▄▀%%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        transparentCharacter: '%',
+                        data: `
+                            %%%%%%
+                            %█▄▄%%
+                            %█TT█%
+                            %█▄▄█%
+                        `,
+                    },
+                    {
+                        automaskBlockCharacters: true,
+                        data: `
+                            %
+                            @%
+                        `,
+                    },
+                ],
+            },
+
             exit: {
                 positions: {
                     p0_0: {
@@ -7203,6 +7497,15 @@
                         ? $button.removeAttribute("disabled")
                         : $button.setAttribute("disabled", "true")
                     );
+
+                // Wait functionality - always enabled during exploration
+                const waitEnabled = controlsEnabled;
+                $playerInput.querySelector('[name="wait"]')
+                    ?.removeAttribute("disabled");
+                if (!waitEnabled) {
+                    $playerInput.querySelector('[name="wait"]')
+                        ?.setAttribute("disabled", "true");
+                }
             },
 
             updateMenuControls: () => {
@@ -7370,6 +7673,7 @@
                         return true;
                     },
                     merchantStockChance: 0.9,
+                    chestDrop: true,
                     weight: 0.4,
                     price: 10,
                 },
@@ -7401,6 +7705,7 @@
                         return true;
                     },
                     merchantStockChance: 0.6,
+                    chestDrop: true,
                     weight: 0.8,
                     price: 20,
                 },
@@ -7423,6 +7728,7 @@
                         return true;
                     },
                     merchantStockChance: .4,
+                    chestDrop: true,
                     weight: 1.2,
                     price: 30,
                 },
@@ -7447,6 +7753,7 @@
                         return true;
                     },
                     merchantStockChance: .35,
+                    chestDrop: true,
                     weight: 1.5,
                     price: 45,
                 },
@@ -7489,6 +7796,7 @@
                         return true;
                     },
                     merchantStockChance: 0.8,
+                    chestDrop: true,
                     weight: 1.2,
                     price: 15,
                 },
@@ -7521,6 +7829,7 @@
                         return true;
                     },
                     merchantStockChance: 0.8,
+                    chestDrop: true,
                     weight: 0.9,
                     price: 40,
                 },
@@ -7621,6 +7930,7 @@
                         return true;
                     },
                     merchantStockChance: 0.7,
+                    chestDrop: true,
                     weight: 2,
                     price: 120,
                 },
@@ -7675,6 +7985,7 @@
                         return true;
                     },
                     merchantStockChance: 1.0,
+                    chestDrop: true,
                     weight: 1.3,
                     price: 5,
                 },
@@ -7697,7 +8008,7 @@
                         return false;
                     },
                     merchantStockChance: 1,
-                    chestChance: 0,
+                    chestDrop: false,
                     weight: 1,
                     price: 10,
                 },
@@ -7900,11 +8211,11 @@
                     name: "RING OF SEXY UNDERWEAR",
                     description:
                         "A ring with an engraving of a pair of strangely " +
-                        "attractive undergarments. +3 PRS",
-                    effects: { persuasion: 3 },
+                        "attractive undergarments. +5 PRS",
+                    effects: { persuasion: 5 },
                     price: 60,
                     merchantStockChance: 0.5,
-                    chestChance: 0.1,
+                    chestDrop: true,
                     weight: 1,
                 },
 
@@ -7913,11 +8224,11 @@
                     name: "FRENCHLY ACCENTED RING",
                     description:
                         "A ring that somehow magically forces you to speak " +
-                        "in a French accent. VERY sexy! +5 PRS",
-                    effects: { persuasion: 5 },
+                        "in a French accent. VERY sexy! +7 PRS",
+                    effects: { persuasion: 7 },
                     price: 100,
                     merchantStockChance: 0.3,
-                    chestChance: 0.04,
+                    chestDrop: true,
                     weight: 1,
                 },
 
@@ -7932,7 +8243,7 @@
                     effects: { maxHp: 5 },
                     price: 60,
                     merchantStockChance: 0.5,
-                    chestChance: 0.07,
+                    chestDrop: true,
                     weight: 1,
                 },
                 ringBloodstream: {
@@ -7944,7 +8255,7 @@
                     effects: { maxHp: 8 },
                     price: 100,
                     merchantStockChance: 0.3,
-                    chestChance: 0.04,
+                    chestDrop: true,
                     weight: 1,
                 },
 
@@ -7958,7 +8269,7 @@
                     effects: { defense: 2 },
                     price: 60,
                     merchantStockChance: 0.4,
-                    chestChance: 0.07,
+                    chestDrop: true,
                     weight: 1,
                 },
                 ringPectoralPiercing: {
@@ -7970,7 +8281,7 @@
                     effects: { defense: 5 },
                     price: 100,
                     merchantStockChance: 0.3,
-                    chestChance: 0.04,
+                    chestDrop: true,
                     weight: 1,
                 },
 
@@ -7985,7 +8296,7 @@
                     effects: { speed: 1 },
                     price: 60,
                     merchantStockChance: 0.4,
-                    chestChance: 0.07,
+                    chestDrop: true,
                     weight: 1,
                 },
                 ringCrack: {
@@ -7996,7 +8307,7 @@
                     effects: { speed: 2 },
                     price: 100,
                     merchantStockChance: 0.3,
-                    chestChance: 0.04,
+                    chestDrop: true,
                     weight: 1,
                 },
 
@@ -8006,11 +8317,11 @@
                     name: "GAMBLER'S RING",
                     description:
                         "A cheap looking ring with a 240p image of a slot " +
-                        "machine on it. +2 LUK",
-                    effects: { luck: 2 },
+                        "machine on it. +5 LUK",
+                    effects: { luck: 5 },
                     price: 150,
                     merchantStockChance: 0.1,
-                    chestChance: 0.05,
+                    chestDrop: true,
                     weight: 1,
                 },
                 ringEscobar: {
@@ -8018,11 +8329,11 @@
                     name: "PABLO ESCOBAR'S GOLDEN RING",
                     description:
                         "A golden ring that once belonged to Pablo Escobar. " +
-                        "It smells rather illegal, but who give a shit? +4 LUK",
-                    effects: { luck: 4 },
+                        "It smells rather illegal, but who give a shit? +10 LUK",
+                    effects: { luck: 10 },
                     price: 200,
                     merchantStockChance: 0.07,
-                    chestChance: 0.02,
+                    chestDrop: true,
                     weight: 1,
                 },
 
@@ -8037,7 +8348,7 @@
                     effects: {},
                     price: 180,
                     merchantStockChance: 0.2,
-                    chestChance: 0.0,
+                    chestDrop: false,
                     weight: 2,
                 },
                 ringOfStinky: {
@@ -8045,12 +8356,12 @@
                     name: "RING OF STINKY",
                     description:
                         "A ring so stinky, SO putrid, that even monsters " +
-                        "will reconsider confronting you. Reduces encounter " +
-                        "rate by 30%",
+                        "will reconsider confronting you. Causes enemies" +
+                        "to move away from you more often.",
                     effects: {},
                     price: 200,
                     merchantStockChance: 0.2,
-                    chestChance: 0.0,
+                    chestDrop: false,
                     weight: 2,
                 },
                 ringOfAmplifiedAudio: {
@@ -8058,11 +8369,11 @@
                     name: "RING OF AMPLIFIED AUDIO",
                     description:
                         "A ring with a tiny, yet deceptively loud megaphone. " +
-                        "Miniphone? idk. +2 PRS and a PRS attempt",
-                    effects: { persuasion: 2 },
+                        "Miniphone? idk. +10 PRS and a PRS attempt",
+                    effects: { persuasion: 10 },
                     price: 130,
                     merchantStockChance: 0.2,
-                    chestChance: 0.00,
+                    chestDrop: false,
                     weight: 2,
                 },
             }),
@@ -8128,8 +8439,7 @@
             exp: 0,
             level: 1,
             stepsTakenOnCurrentFloor: 0,
-            stepsSinceLastBattle: 0, // Add this property
-            lastNearbyNPCs: new Set(), // Add this property
+            lastNearbyNPCs: new Set(),
             inCombat: false,
             isHoldingTorch: false,
             enteringCombat: false,
@@ -8188,7 +8498,6 @@
                 player.leavingCombat = true;
                 player.inCombat = false;
                 currentEnemy = null;
-                player.stepsSinceLastBattle = 0;
                 music.resumeTag("exploration");
                 player.party.purgeDeadMembers();
                 GameControl.update();
@@ -9925,6 +10234,7 @@
                 boulderMovementInterval = null;
             }
         }
+
         const enemies = [
             {
                 id: "snailSentinel",
@@ -10115,6 +10425,209 @@
                 voice: vampire.voice,
             },
         ];
+
+        const roamingEnemies = {
+            enemies: [],
+            maxEnemies: 6,
+            nextId: 0,
+            enemiesKilledOnFloor: 0,
+            respawningEnabled: false,
+
+            // Check if a position is in a boulder's path
+            isInBoulderPath: function(x, y) {
+                if (!boulder.isActiveOnFloor) return false;
+                
+                if (boulder.direction === 'horizontal') {
+                    return y === boulder.y && x >= boulder.hallwayBounds.start.x && x <= boulder.hallwayBounds.end.x;
+                } else {
+                    return x === boulder.x && y >= boulder.hallwayBounds.start.y && y <= boulder.hallwayBounds.end.y;
+                }
+            },
+
+            spawnEnemy: function() {
+                if (roamingEnemies.enemies.length >= roamingEnemies.maxEnemies) {
+                    return;
+                }
+
+                const emptyCoords = MAP.getEmptyCellCoordinates();
+                if (emptyCoords.length === 0) {
+                    return;
+                }
+
+                // Filter out positions that are in boulder paths
+                const safeCoords = emptyCoords.filter(coord => 
+                    !roamingEnemies.isInBoulderPath(coord.x, coord.y)
+                );
+
+                if (safeCoords.length === 0) {
+                    return;
+                }
+
+                const spawnPoint = randomEntry(safeCoords);
+                const enemy = {
+                    id: roamingEnemies.nextId++,
+                    x: spawnPoint.x,
+                    y: spawnPoint.y,
+                    lastMoveDirection: randomEntry(['N', 'S', 'E', 'W'])
+                };
+
+                roamingEnemies.enemies.push(enemy);
+                MAP.setCell(spawnPoint.x, spawnPoint.y, 'roamingEnemy');
+            },
+
+            removeEnemy: function(enemyId) {
+                const enemyIndex = roamingEnemies.enemies.findIndex(e => e.id === enemyId);
+                if (enemyIndex === -1) return;
+
+                const enemy = roamingEnemies.enemies[enemyIndex];
+                MAP.setCell(enemy.x, enemy.y, 'floor');
+                roamingEnemies.enemies.splice(enemyIndex, 1);
+            },
+
+            killEnemy: function(enemyId) {
+                // Remove enemy,increment kill counter
+                roamingEnemies.removeEnemy(enemyId);
+                roamingEnemies.enemiesKilledOnFloor++;
+                
+                // Enable respawning after 4 kills
+                if (roamingEnemies.enemiesKilledOnFloor >= 4) {
+                    roamingEnemies.respawningEnabled = true;
+                }
+            },
+
+            isAt: function(x, y) {
+                return roamingEnemies.enemies.some(enemy => enemy.x === x && enemy.y === y);
+            },
+
+            getEnemyAt: function(x, y) {
+                return roamingEnemies.enemies.find(enemy => enemy.x === x && enemy.y === y);
+            },
+
+            moveEnemies: function() {
+                const hasRingOfStinky = player.inventory.hasEquippedRing("ringOfStinky");
+                
+                roamingEnemies.enemies.forEach(enemy => {
+                    const directions = ['N', 'S', 'E', 'W'];
+                    let possibleMoves = [];
+                    let awayFromPlayerMoves = [];
+                    let towardPlayerMoves = [];
+
+                    // Calculate distance to player
+                    const distanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
+                    const isNearPlayer = distanceToPlayer <= 2;
+                    
+                    // Ring of Stinky behavior: % chance to avoid when close
+                    const shouldAvoidPlayer = hasRingOfStinky && isNearPlayer && Math.random() < 0.8;
+                    
+                    // Normal pursuit behavior: chase player when close (unless avoiding due to Ring of Stinky)
+                    const shouldPursuePlayer = isNearPlayer && !shouldAvoidPlayer;
+
+                    directions.forEach(direction => {
+                        const dirIndex = DIRECTIONS.indexOf(direction);
+                        const newX = enemy.x + DX[dirIndex];
+                        const newY = enemy.y + DY[dirIndex];
+                        
+                        const cell = MAP.getCell(newX, newY);
+                        if (cell && !cell.isSolid && (cell.type === 'floor' || (newX === player.x && newY === player.y))) {
+                            // Check collision conditions (excluding player position now)
+                            if (roamingEnemies.isAt(newX, newY)) return;
+                            if (merchant.isAt(newX, newY)) return;
+                            if (gambler.isAt(newX, newY)) return;
+                            if (erok.isAt(newX, newY)) return;
+                            if (vampire.isAt(newX, newY)) return;
+                            if (pigeon.isAt(newX, newY)) return;
+                            if (boulder.isAt(newX, newY)) return;
+                            
+                            // Don't move into boulder paths
+                            if (roamingEnemies.isInBoulderPath(newX, newY)) return;
+                            
+                            const moveData = { direction, x: newX, y: newY };
+                            possibleMoves.push(moveData);
+
+                            // Calculate new distance after this move
+                            const newDistance = Math.abs(newX - player.x) + Math.abs(newY - player.y);
+                            
+                            // Ring of Stinky: Check if this move takes the enemy away from the player
+                            if (shouldAvoidPlayer && newDistance > distanceToPlayer) {
+                                awayFromPlayerMoves.push(moveData);
+                            }
+                            
+                            // Pursuit behavior: Check if this move brings the enemy closer to the player
+                            if (shouldPursuePlayer && newDistance < distanceToPlayer) {
+                                towardPlayerMoves.push(moveData);
+                            }
+                        }
+                    });
+
+                    if (possibleMoves.length === 0) return;
+
+                    let selectedMove;
+
+                    // Priority 1: Ring of Stinky avoidance (overrides pursuit)
+                    if (shouldAvoidPlayer && awayFromPlayerMoves.length > 0) {
+                        selectedMove = randomEntry(awayFromPlayerMoves);
+                    } 
+                    // Priority 2: Pursuit behavior when close to player
+                    else if (shouldPursuePlayer && towardPlayerMoves.length > 0) {
+                        selectedMove = randomEntry(towardPlayerMoves);
+                    } 
+                    // Priority 3: Normal random movement behavior
+                    else {
+                        // Prefer continuing in the same direction, otherwise pick randomly
+                        selectedMove = possibleMoves.find(move => move.direction === enemy.lastMoveDirection);
+                        if (!selectedMove || Math.random() < 0.3) { // % chance to change direction
+                            selectedMove = randomEntry(possibleMoves);
+                        }
+                    }
+                    MAP.setCell(enemy.x, enemy.y, 'floor');
+                    
+                    enemy.x = selectedMove.x;
+                    enemy.y = selectedMove.y;
+                    enemy.lastMoveDirection = selectedMove.direction;
+                    
+                    if (enemy.x === player.x && enemy.y === player.y) {
+                        const enemyIndex = roamingEnemies.enemies.findIndex(e => e.id === enemy.id);
+                        if (enemyIndex !== -1) {
+                            roamingEnemies.enemies.splice(enemyIndex, 1);
+                        }
+                        startEncounter();
+                        return;
+                    }
+                    
+                    MAP.setCell(enemy.x, enemy.y, 'roamingEnemy');
+                });
+
+                if (roamingEnemies.respawningEnabled) {
+                    if (roamingEnemies.enemies.length > 0 && roamingEnemies.enemies.length < roamingEnemies.maxEnemies) {
+                        if (Math.random() < 0.1) { // % chance per enemy movement cycle to spawn new enemies
+                            const maxToSpawn = Math.min(4, roamingEnemies.maxEnemies - roamingEnemies.enemies.length);
+                            const numberToSpawn = numberBetween(1, maxToSpawn);
+                            
+                            for (let i = 0; i < numberToSpawn; i++) {
+                                roamingEnemies.spawnEnemy();
+                            }
+                        }
+                    }
+                }
+            },
+
+            encounterEnemy: function(x, y) {
+                const enemy = roamingEnemies.getEnemyAt(x, y);
+                if (!enemy) return;
+                roamingEnemies.killEnemy(enemy.id);
+                startEncounter();
+            },
+
+            initialize: function() {
+                // Reset kill counter and respawning state for new floor
+                roamingEnemies.enemiesKilledOnFloor = 0;
+                roamingEnemies.respawningEnabled = false;
+                
+                for (let i = 0; i < roamingEnemies.maxEnemies; i++) {
+                    roamingEnemies.spawnEnemy();
+                }
+            }
+        };
 
         function getEffectiveStat(stat) {
             if (stat === "persuasionAttempts") {
@@ -10531,6 +11044,17 @@
                     playSFX('scream');
                 },
             },
+            roamingEnemy: {
+                displayName: "Monster",
+                mapCharacter: "☠︎︎",
+                canBeRolledOverByBouldingBall: false,
+                onEnter: async function(x, y) {
+                    roamingEnemies.encounterEnemy(x, y);
+                },
+                isVisible: function() {
+                    return true;
+                },
+            },
         });
 
         const music = new Music(
@@ -10633,6 +11157,8 @@
             });
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
 
+            roamingEnemies.enemies = [];
+
             if (pigeon.checkForMessages()) {
                 pigeon.isActiveOnFloor = true;
                 pigeon.set();
@@ -10686,6 +11212,9 @@
             } else {
                 boulder.isActiveOnFloor = false;
             }
+
+            // Initialize roaming enemies after all other map elements are placed
+            roamingEnemies.initialize();
 
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
@@ -10808,8 +11337,17 @@
             return randomEntry(
                 Object
                     .keys(items)
-                    .filter(itemId => items[itemId] .merchantStockChance > 0)
+                    .filter(itemId => items[itemId].merchantStockChance > 0)
             );
+        }
+
+        function getRandomChestItem() {
+            const items = InventoryObjectDefinitions.items;
+            const chestEligibleItems = Object.keys(items).filter(itemId => {
+                return items[itemId].chestDrop === true;
+            });
+            
+            return chestEligibleItems.length > 0 ? randomEntry(chestEligibleItems) : null;
         }
 
         function updateSeenTiles() {
@@ -10886,9 +11424,7 @@
                     x: vampire.x,
                     y: vampire.y,
                     displayName: player.hasEncounteredVampire
-                        ?
-                            `<span class="${vampire.displayClassName}">` +
-                            `${vampire.displayName}</span>`
+                        ? `<span class="gay vampire">${vampire.displayName}</span>`
                         : `<em>A Menacing... Fruit Bat?</em>`,
                     isExplored: true,
                     isVisible: true,
@@ -10918,6 +11454,18 @@
                     type: "boulder",
                 };
             }
+
+            // Add roaming enemies to the minimap
+            roamingEnemies.enemies.forEach(enemy => {
+                entities[`roamingEnemy_${enemy.id}`] = {
+                    x: enemy.x,
+                    y: enemy.y,
+                    displayName: "Monster",
+                    isVisible: true,
+                    mapCharacter: "☠︎",
+                    type: "roamingEnemy",
+                };
+            });
 
             entities.player = {
                 forceRefresh: true,
@@ -11303,6 +11851,12 @@
                     render();
                 }
             }
+
+            // Roaming Enemy movement
+            if (!player.inCombat && !gameOver) {
+                roamingEnemies.moveEnemies();
+                render();
+            }
         }
 
         async function move(direction) {
@@ -11312,7 +11866,7 @@
             player.movementDisabled = true;
 
             playSFX('footstep');
-            let nx, ny, randomEncounterChance = 0.4;
+            let nx, ny;
             if (direction === 'forward') {
                 nx = player.x + DX[player.dir];
                 ny = player.y + DY[player.dir];
@@ -11328,13 +11882,7 @@
             } else {
                 nx = player.x - DX[player.dir];
                 ny = player.y - DY[player.dir];
-                randomEncounterChance = 0.5; // When moving backward
                 shakeScreen();
-            }
-
-            // If Ring of Stinky is equipped, reduce encounter chance by 30%
-            if (player.inventory.hasEquippedRing("ringOfStinky")) {
-                randomEncounterChance *= 0.7;
             }
 
             const tile = MAP.getCell(nx, ny);
@@ -11342,19 +11890,15 @@
                 player.x = nx;
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
-                player.stepsSinceLastBattle++;
-                let rollForRandomEncounter = true;
 
                 // @TODO: Make the map system support onEnter for entities
                 //        and move this logic there
                 if (boulder.isAt(player.x, player.y)) {
                     boulder.hitPlayer();
-                    rollForRandomEncounter = false;
                 }
 
                 if (vampire.encounteredPlayer()) {
                     vampire.encounter();
-                    rollForRandomEncounter = false;
                 }
 
                 const fireOnEnter =
@@ -11372,29 +11916,20 @@
                     }
                 }
 
-                const startRandomEncounter =
-                    ! fireOnEnter &&
-                    rollForRandomEncounter &&
-                    player.stepsSinceLastBattle > 2 &&
-                    Math.random() < randomEncounterChance;
+                GameControl.update();
 
-                if (startRandomEncounter) {
-                    startEncounter();
+                // @TODO: Handle NPC movement after the menu has closed
+                const shouldSkipNpc = player.inCombat || menu.isOpen();
+
+                if (!shouldSkipNpc) {
+                    await endOfPlayerMove();
+                } else {
+                    const timeDelayMs = player.getInputDelayMs();
+                    await sleepMs(timeDelayMs);
                 }
             } else if (typeof tile.onTouch === "function") {
                 tile.onTouch();
-            }
-
-            GameControl.update();
-
-            // @TODO: Handle NPC movement after the menu has closed
-            const shouldSkipNpc = player.inCombat || menu.isOpen();
-
-            if (!shouldSkipNpc) {
-                await endOfPlayerMove();
-            } else {
-                const timeDelayMs = player.getInputDelayMs();
-                await sleepMs(timeDelayMs);
+                // Don't increment steps or handle NPC movement when touching walls
             }
 
             player.movementDisabled = false;
@@ -11423,6 +11958,31 @@
             updateSkyboxPosition();
             GameControl.update();
             render();
+        }
+
+        async function wait() {
+            if (player.inCombat || gameOver || player.movementDisabled) {
+                return;
+            }
+            player.movementDisabled = true;
+            player.stepsTakenOnCurrentFloor++;
+
+            updateBattleLog("You kneel down and rest for but a moment, pondering your thoughts and awaiting a response from the spire...");
+
+            GameControl.update();
+
+            // Process NPC movement during wait
+            const shouldSkipNpc = player.inCombat || menu.isOpen();
+
+            if (!shouldSkipNpc) {
+                await endOfPlayerMove();
+            } else {
+                const timeDelayMs = player.getInputDelayMs();
+                await sleepMs(timeDelayMs);
+            }
+
+            player.movementDisabled = false;
+            GameControl.update();
         }
 
         function updateBreathingSFX() {
@@ -12907,31 +13467,56 @@
                 player.enterCombat();
                 music.playRandom("battle");
             } else if (cellType === 'treasureChest') {
-                // Normal chest, provide loot
-                const lootTypeRoll = Math.random();
+                const CHEST_LOOT_CHANCES = {
+                    btc: 50,    // % chance for BTC
+                    items: 25,  // % chance for items  
+                    rings: 25   // % chance for rings
+                };
+                
+                // Roll for loot type
+                const roll = Math.random() * 100;
                 let chestContents;
-                if (lootTypeRoll < 0.4) {
-                    chestContents = { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 };
-                } else if (lootTypeRoll < 0.7) {
-                    chestContents = { type: 'item', item: getRandomItem() };
+                
+                if (roll < CHEST_LOOT_CHANCES.btc) {
+                    // BTC reward
+                    chestContents = { 
+                        type: 'BTC', 
+                        amount: Math.floor(Math.random() * 10) + 3 
+                    };
+                } else if (roll < CHEST_LOOT_CHANCES.btc + CHEST_LOOT_CHANCES.items) {
+                    // Item reward
+                    const item = getRandomChestItem();
+                    if (item) {
+                        chestContents = { type: 'item', item: item };
+                    } else {
+                        // Fallback to BTC if no items are available for chests
+                        chestContents = { 
+                            type: 'BTC', 
+                            amount: Math.floor(Math.random() * 10) + 3 
+                        };
+                    }
                 } else {
-                    // Try to spawn a ring based on chestChance
+                    // Ring reward
                     const rings = InventoryObjectDefinitions.rings;
                     const ownedRings = Object.keys(player.inventory.getRings());
-                    const unonwedRings =
-                        Object.keys(rings).filter(r => !ownedRings.includes(r));
-                    const possibleRings = unonwedRings.filter(ringId =>
-                        Math.random() < (rings[ringId].chestChance || 0)
+                    const unownedRings = Object.keys(rings).filter(r => !ownedRings.includes(r));
+                    const eligibleRings = unownedRings.filter(ringId => 
+                        rings[ringId].chestDrop === true
                     );
-                    if (possibleRings.length > 0) {
-                        const ringId = randomEntry(possibleRings);
+                    
+                    if (eligibleRings.length > 0) {
+                        const ringId = randomEntry(eligibleRings);
                         chestContents = { type: 'ring', ring: ringId };
                     } else {
-                        // fallback to BTC if no ring
-                        chestContents = { type: 'BTC', amount: Math.floor(Math.random() * 10) + 3 };
+                        // Fallback to BTC if no rings available
+                        chestContents = { 
+                            type: 'BTC', 
+                            amount: Math.floor(Math.random() * 10) + 3 
+                        };
                     }
                 }
 
+                // Handle the loot (existing code remains the same)
                 if (chestContents.type === 'BTC') {
                     let bonus = Math.floor(chestContents.amount * (getEffectiveStat('luck') * 0.02));
                     let total = chestContents.amount + bonus;
@@ -13053,6 +13638,10 @@
                     case 'e':
                         e.preventDefault();
                         move('strafeRight');
+                        break;
+                    case ' ': // Spacebar
+                        e.preventDefault();
+                        wait();
                         break;
                     case 't':
                         speakingOutsideCombat = true;
