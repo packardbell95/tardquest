@@ -387,6 +387,10 @@
     // Strafe left/right (L1/R1)
     if (edgePressed(gp, 4)) tryFn('move', 'strafeLeft');
     if (edgePressed(gp, 5)) tryFn('move', 'strafeRight');
+    
+    // Wait (B)
+    if (edgePressed(gp, 1)) tryFn('wait');
+    
     // Y opens Inventory
     if (edgePressed(gp, 3)) {
       const m = getMenuInstance();
