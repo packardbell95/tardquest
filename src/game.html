@@ -10427,16 +10427,18 @@
         ];
 
         const roamingEnemies = {
-            enemies: [],
+            enemies: {},
             maxEnemies: 6,
             nextId: 0,
             enemiesKilledOnFloor: 0,
-            respawningEnabled: false,
+            respawnAfterKills: 4,
 
             // Check if a position is in a boulder's path
             isInBoulderPath: function(x, y) {
-                if (!boulder.isActiveOnFloor) return false;
-                
+                if (!boulder.isActiveOnFloor) {
+                    return false;
+                }
+
                 if (boulder.direction === 'horizontal') {
                     return y === boulder.y && x >= boulder.hallwayBounds.start.x && x <= boulder.hallwayBounds.end.x;
                 } else {
@@ -10444,19 +10446,35 @@
                 }
             },
 
-            spawnEnemy: function() {
-                if (roamingEnemies.enemies.length >= roamingEnemies.maxEnemies) {
+            totalActiveEnemies: function() {
+                return Object.keys(roamingEnemies.enemies).length;
+            },
+
+            canSpawnEnemy: function(isFloorInitialization) {
+                const total = roamingEnemies.totalActiveEnemies();
+                return (
+                    (isFloorInitialization || total > 0) &&
+                    total < roamingEnemies.maxEnemies
+                );
+            },
+
+            spawnEnemy: function(isFloorInitialization) {
+                if (! roamingEnemies.canSpawnEnemy(isFloorInitialization)) {
                     return;
                 }
 
-                const emptyCoords = MAP.getEmptyCellCoordinates();
-                if (emptyCoords.length === 0) {
-                    return;
-                }
+                const entrance = MAP.getEntrance();
+                // Spawn away from the entry point if the floor is being entered
+                const minDistanceFromEntrance = isFloorInitialization ? 2 : 0;
 
-                // Filter out positions that are in boulder paths
-                const safeCoords = emptyCoords.filter(coord => 
-                    !roamingEnemies.isInBoulderPath(coord.x, coord.y)
+                const safeCoords = MAP.getEmptyCellCoordinates().filter(coord =>
+                    // Filter out positions that are in boulder paths
+                    !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
+                    (
+                        Math.abs(coord.x - entrance.x) +
+                        Math.abs(coord.y - entrance.y) >=
+                            minDistanceFromEntrance
+                    )
                 );
 
                 if (safeCoords.length === 0) {
@@ -10464,69 +10482,79 @@
                 }
 
                 const spawnPoint = randomEntry(safeCoords);
-                const enemy = {
-                    id: roamingEnemies.nextId++,
+                const id = `enemy_${roamingEnemies.nextId++}`;
+
+                roamingEnemies.enemies[id] = {
+                    id,
                     x: spawnPoint.x,
                     y: spawnPoint.y,
-                    lastMoveDirection: randomEntry(['N', 'S', 'E', 'W'])
+                    lastMoveDirection: randomEntry(DIRECTIONS)
                 };
 
-                roamingEnemies.enemies.push(enemy);
+                // @TODO Use map entites instead of map cells
                 MAP.setCell(spawnPoint.x, spawnPoint.y, 'roamingEnemy');
             },
 
             removeEnemy: function(enemyId) {
-                const enemyIndex = roamingEnemies.enemies.findIndex(e => e.id === enemyId);
-                if (enemyIndex === -1) return;
+                const enemy = roamingEnemies.enemies[enemyId];
+                if (enemy) {
+                    MAP.setCell(enemy.x, enemy.y, 'floor');
+                }
 
-                const enemy = roamingEnemies.enemies[enemyIndex];
-                MAP.setCell(enemy.x, enemy.y, 'floor');
-                roamingEnemies.enemies.splice(enemyIndex, 1);
+                delete roamingEnemies.enemies[enemyId];
+            },
+
+            respawningEnabled: function() {
+                return (
+                    roamingEnemies.enemiesKilledOnFloor >=
+                    roamingEnemies.respawnAfterKills
+                );
             },
 
             killEnemy: function(enemyId) {
                 // Remove enemy,increment kill counter
                 roamingEnemies.removeEnemy(enemyId);
                 roamingEnemies.enemiesKilledOnFloor++;
-                
-                // Enable respawning after 4 kills
-                if (roamingEnemies.enemiesKilledOnFloor >= 4) {
-                    roamingEnemies.respawningEnabled = true;
-                }
             },
 
             isAt: function(x, y) {
-                return roamingEnemies.enemies.some(enemy => enemy.x === x && enemy.y === y);
+                return Object.values(roamingEnemies.enemies)
+                    .some(enemy => enemy.x === x && enemy.y === y);
             },
 
             getEnemyAt: function(x, y) {
-                return roamingEnemies.enemies.find(enemy => enemy.x === x && enemy.y === y);
+                return Object.values(roamingEnemies.enemies)
+                    .find(enemy => enemy.x === x && enemy.y === y);
+            },
+
+            getEnemy: function(id) {
+                return roamingEnemies.enemies[id];
             },
 
             moveEnemies: function() {
                 const hasRingOfStinky = player.inventory.hasEquippedRing("ringOfStinky");
-                
-                roamingEnemies.enemies.forEach(enemy => {
-                    const directions = ['N', 'S', 'E', 'W'];
-                    let possibleMoves = [];
-                    let awayFromPlayerMoves = [];
-                    let towardPlayerMoves = [];
+
+                Object.keys(roamingEnemies.enemies).forEach(enemyId => {
+                    const enemy = roamingEnemies.enemies[enemyId];
+                    const possibleMoves = [];
+                    const awayFromPlayerMoves = [];
+                    const towardPlayerMoves = [];
 
                     // Calculate distance to player
                     const distanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
                     const isNearPlayer = distanceToPlayer <= 2;
-                    
+
                     // Ring of Stinky behavior: % chance to avoid when close
                     const shouldAvoidPlayer = hasRingOfStinky && isNearPlayer && Math.random() < 0.8;
-                    
+
                     // Normal pursuit behavior: chase player when close (unless avoiding due to Ring of Stinky)
                     const shouldPursuePlayer = isNearPlayer && !shouldAvoidPlayer;
 
-                    directions.forEach(direction => {
+                    DIRECTIONS.forEach(direction => {
                         const dirIndex = DIRECTIONS.indexOf(direction);
                         const newX = enemy.x + DX[dirIndex];
                         const newY = enemy.y + DY[dirIndex];
-                        
+
                         const cell = MAP.getCell(newX, newY);
                         if (cell && !cell.isSolid && (cell.type === 'floor' || (newX === player.x && newY === player.y))) {
                             // Check collision conditions (excluding player position now)
@@ -10537,21 +10565,21 @@
                             if (vampire.isAt(newX, newY)) return;
                             if (pigeon.isAt(newX, newY)) return;
                             if (boulder.isAt(newX, newY)) return;
-                            
+
                             // Don't move into boulder paths
                             if (roamingEnemies.isInBoulderPath(newX, newY)) return;
-                            
+
                             const moveData = { direction, x: newX, y: newY };
                             possibleMoves.push(moveData);
 
                             // Calculate new distance after this move
                             const newDistance = Math.abs(newX - player.x) + Math.abs(newY - player.y);
-                            
+
                             // Ring of Stinky: Check if this move takes the enemy away from the player
                             if (shouldAvoidPlayer && newDistance > distanceToPlayer) {
                                 awayFromPlayerMoves.push(moveData);
                             }
-                            
+
                             // Pursuit behavior: Check if this move brings the enemy closer to the player
                             if (shouldPursuePlayer && newDistance < distanceToPlayer) {
                                 towardPlayerMoves.push(moveData);
@@ -10566,11 +10594,11 @@
                     // Priority 1: Ring of Stinky avoidance (overrides pursuit)
                     if (shouldAvoidPlayer && awayFromPlayerMoves.length > 0) {
                         selectedMove = randomEntry(awayFromPlayerMoves);
-                    } 
+                    }
                     // Priority 2: Pursuit behavior when close to player
                     else if (shouldPursuePlayer && towardPlayerMoves.length > 0) {
                         selectedMove = randomEntry(towardPlayerMoves);
-                    } 
+                    }
                     // Priority 3: Normal random movement behavior
                     else {
                         // Prefer continuing in the same direction, otherwise pick randomly
@@ -10580,51 +10608,51 @@
                         }
                     }
                     MAP.setCell(enemy.x, enemy.y, 'floor');
-                    
+
                     enemy.x = selectedMove.x;
                     enemy.y = selectedMove.y;
                     enemy.lastMoveDirection = selectedMove.direction;
-                    
+
                     if (enemy.x === player.x && enemy.y === player.y) {
-                        const enemyIndex = roamingEnemies.enemies.findIndex(e => e.id === enemy.id);
-                        if (enemyIndex !== -1) {
-                            roamingEnemies.enemies.splice(enemyIndex, 1);
-                        }
-                        startEncounter();
+                        roamingEnemies.encounterEnemy(enemy.id);
+                        delete roamingEnemies.enemies[enemy.id];
                         return;
                     }
-                    
+
                     MAP.setCell(enemy.x, enemy.y, 'roamingEnemy');
                 });
 
-                if (roamingEnemies.respawningEnabled) {
-                    if (roamingEnemies.enemies.length > 0 && roamingEnemies.enemies.length < roamingEnemies.maxEnemies) {
+                if (roamingEnemies.respawningEnabled()) {
+                    const total = roamingEnemies.totalActiveEnemies();
+                    if (total > 0 && total < roamingEnemies.maxEnemies) {
                         if (Math.random() < 0.1) { // % chance per enemy movement cycle to spawn new enemies
-                            const maxToSpawn = Math.min(4, roamingEnemies.maxEnemies - roamingEnemies.enemies.length);
+                            const maxToSpawn = Math.min(4, roamingEnemies.maxEnemies - total);
                             const numberToSpawn = numberBetween(1, maxToSpawn);
-                            
+
                             for (let i = 0; i < numberToSpawn; i++) {
-                                roamingEnemies.spawnEnemy();
+                                roamingEnemies.spawnEnemy(false);
                             }
                         }
                     }
                 }
             },
 
-            encounterEnemy: function(x, y) {
-                const enemy = roamingEnemies.getEnemyAt(x, y);
-                if (!enemy) return;
-                roamingEnemies.killEnemy(enemy.id);
+            encounterEnemy: function(id) {
+                const enemy = roamingEnemies.getEnemy(id);
+                if (!enemy) {
+                    return;
+                }
+                roamingEnemies.killEnemy(id);
                 startEncounter();
             },
 
             initialize: function() {
                 // Reset kill counter and respawning state for new floor
+                roamingEnemies.enemies = {};
                 roamingEnemies.enemiesKilledOnFloor = 0;
-                roamingEnemies.respawningEnabled = false;
-                
+
                 for (let i = 0; i < roamingEnemies.maxEnemies; i++) {
-                    roamingEnemies.spawnEnemy();
+                    roamingEnemies.spawnEnemy(true);
                 }
             }
         };
@@ -11049,7 +11077,10 @@
                 mapCharacter: "☠︎︎",
                 canBeRolledOverByBouldingBall: false,
                 onEnter: async function(x, y) {
-                    roamingEnemies.encounterEnemy(x, y);
+                    const enemy = roamingEnemies.getEnemyAt(x, y);
+                    if (enemy) {
+                        roamingEnemies.encounterEnemy(enemy.id);
+                    }
                 },
                 isVisible: function() {
                     return true;
@@ -11156,8 +11187,6 @@
                 },
             });
             MAP.generate(WIDTH, HEIGHT, player.x, player.y);
-
-            roamingEnemies.enemies = [];
 
             if (pigeon.checkForMessages()) {
                 pigeon.isActiveOnFloor = true;
@@ -11343,10 +11372,9 @@
 
         function getRandomChestItem() {
             const items = InventoryObjectDefinitions.items;
-            const chestEligibleItems = Object.keys(items).filter(itemId => {
-                return items[itemId].chestDrop === true;
-            });
-            
+            const chestEligibleItems = Object.keys(items)
+                .filter(itemId => items[itemId].chestDrop);
+
             return chestEligibleItems.length > 0 ? randomEntry(chestEligibleItems) : null;
         }
 
@@ -11456,7 +11484,7 @@
             }
 
             // Add roaming enemies to the minimap
-            roamingEnemies.enemies.forEach(enemy => {
+            Object.values(roamingEnemies.enemies).forEach(enemy => {
                 entities[`roamingEnemy_${enemy.id}`] = {
                     x: enemy.x,
                     y: enemy.y,
@@ -13469,19 +13497,19 @@
             } else if (cellType === 'treasureChest') {
                 const CHEST_LOOT_CHANCES = {
                     btc: 50,    // % chance for BTC
-                    items: 25,  // % chance for items  
+                    items: 25,  // % chance for items
                     rings: 25   // % chance for rings
                 };
-                
+
                 // Roll for loot type
                 const roll = Math.random() * 100;
                 let chestContents;
-                
+
                 if (roll < CHEST_LOOT_CHANCES.btc) {
                     // BTC reward
-                    chestContents = { 
-                        type: 'BTC', 
-                        amount: Math.floor(Math.random() * 10) + 3 
+                    chestContents = {
+                        type: 'BTC',
+                        amount: Math.floor(Math.random() * 10) + 3
                     };
                 } else if (roll < CHEST_LOOT_CHANCES.btc + CHEST_LOOT_CHANCES.items) {
                     // Item reward
@@ -13490,9 +13518,9 @@
                         chestContents = { type: 'item', item: item };
                     } else {
                         // Fallback to BTC if no items are available for chests
-                        chestContents = { 
-                            type: 'BTC', 
-                            amount: Math.floor(Math.random() * 10) + 3 
+                        chestContents = {
+                            type: 'BTC',
+                            amount: Math.floor(Math.random() * 10) + 3
                         };
                     }
                 } else {
@@ -13500,18 +13528,18 @@
                     const rings = InventoryObjectDefinitions.rings;
                     const ownedRings = Object.keys(player.inventory.getRings());
                     const unownedRings = Object.keys(rings).filter(r => !ownedRings.includes(r));
-                    const eligibleRings = unownedRings.filter(ringId => 
+                    const eligibleRings = unownedRings.filter(ringId =>
                         rings[ringId].chestDrop === true
                     );
-                    
+
                     if (eligibleRings.length > 0) {
                         const ringId = randomEntry(eligibleRings);
                         chestContents = { type: 'ring', ring: ringId };
                     } else {
                         // Fallback to BTC if no rings available
-                        chestContents = { 
-                            type: 'BTC', 
-                            amount: Math.floor(Math.random() * 10) + 3 
+                        chestContents = {
+                            type: 'BTC',
+                            amount: Math.floor(Math.random() * 10) + 3
                         };
                     }
                 }
