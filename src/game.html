@@ -12284,19 +12284,19 @@
                         playerAttackCooldown = false; // Reset for level up screen
                         player.leaveCombat();
                         setTorchOverlayVisibility();
-                        startLevelUpAllocation(() => npcMove());
+                        startLevelUpAllocation(() => render());
                     } else {
                         player.leaveCombat();
                         setTorchOverlayVisibility();
                         if (battleTransitionAnimationsEnabled) {
                             playerAttackCooldown = false;
                             animBattleTransitionStart(() => {
-                                npcMove();
+                                render();
                             }, false, true);
                         } else {
                             playSFX('battleEnd');
                             playerAttackCooldown = false; // Reset when battle fully ends
-                            npcMove();
+                            render();
                         }
                     }
                 });
