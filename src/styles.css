@@ -2039,6 +2039,9 @@ a:link {
 #playerInput button[name="wait"] {
     background-image: url(assets/interface/ui/wait.png);
     grid-column: span 3;
+    image-rendering: initial;
+    position: relative;
+    top: 13px;
 }
 
 #playerInput button[name="attack"] {
@@ -2537,7 +2540,7 @@ a:link {
 .friendly {
     color: #61C9F6;
 }
-.enemy { /* Unused class now, as of free-roaming enemies update? Not sure. -TheMilkman*/
+.enemy {
     color: #EC4134;
 }
 .roamingEnemy {
