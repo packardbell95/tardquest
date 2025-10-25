@@ -2036,6 +2036,14 @@ a:link {
     background-image: url(assets/interface/ui/right.png);
 }
 
+#playerInput button[name="wait"] {
+    background-image: url(assets/interface/ui/wait.png);
+    grid-column: span 3;
+    image-rendering: initial;
+    position: relative;
+    top: 13px;
+}
+
 #playerInput button[name="attack"] {
     background-image: url(assets/interface/ui/attack.gif);
 
@@ -2534,6 +2542,9 @@ a:link {
 }
 .enemy {
     color: #EC4134;
+}
+.roamingEnemy {
+    color: #f78080;
 }
 .EXP {
     color: #6EBD70;

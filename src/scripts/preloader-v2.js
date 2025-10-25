@@ -90,6 +90,7 @@
         './assets/interface/ui/scroll-up.png','./assets/interface/ui/settings.png',
         './assets/interface/ui/tardpad.png','./assets/interface/ui/tile1.gif','./assets/interface/ui/tile1.png','./assets/interface/ui/turn-left.png',
         './assets/interface/ui/turn-right.png','./assets/interface/ui/up.png','./assets/interface/ui/weapons.png','./assets/interface/ui/boulder-hit.gif',
+        './assets/interface/ui/wait.png',
 
         // interface/weapons
         './assets/interface/weapons/atlatl-spear.png','./assets/interface/weapons/bludgeon-mace.png','./assets/interface/weapons/crt.png',
