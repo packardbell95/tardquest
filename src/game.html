@@ -10542,7 +10542,10 @@
 
                     // Calculate distance to player
                     const distanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
-                    const isNearPlayer = distanceToPlayer <= 1;
+                    
+                    // Torch increases enemy line of sight to 2
+                    const enemySightRange = player.isHoldingTorch ? 2 : 1;
+                    const isNearPlayer = distanceToPlayer <= enemySightRange;
 
                     // Ring of Stinky behavior: % chance to avoid when close
                     const shouldAvoidPlayer = hasRingOfStinky && isNearPlayer && Math.random() < 0.8;
