@@ -10542,7 +10542,7 @@
 
                     // Calculate distance to player
                     const distanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
-                    const isNearPlayer = distanceToPlayer <= 2;
+                    const isNearPlayer = distanceToPlayer <= 1;
 
                     // Ring of Stinky behavior: % chance to avoid when close
                     const shouldAvoidPlayer = hasRingOfStinky && isNearPlayer && Math.random() < 0.8;
