@@ -10431,7 +10431,7 @@
             maxEnemies: 6,
             nextId: 0,
             enemiesKilledOnFloor: 0,
-            respawnAfterKills: 4,
+            respawnAfterKills: 3,
 
             // Check if a position is in a boulder's path
             isInBoulderPath: function(x, y) {
@@ -10464,24 +10464,43 @@
                 }
 
                 const entrance = MAP.getEntrance();
-                // Spawn away from the entry point if the floor is being entered
-                const minDistanceFromEntrance = isFloorInitialization ? 2 : 0;
+                let spawnCoords;
 
-                const safeCoords = MAP.getEmptyCellCoordinates().filter(coord =>
-                    // Filter out positions that are in boulder paths
-                    !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
-                    (
-                        Math.abs(coord.x - entrance.x) +
-                        Math.abs(coord.y - entrance.y) >=
-                        minDistanceFromEntrance
-                    )
-                );
+                if (isFloorInitialization) {
+                    // Initial spawn: spawn away from the entry point
+                    const minDistanceFromEntrance = 2;
+                    spawnCoords = MAP.getEmptyCellCoordinates().filter(coord =>
+                        // Filter out positions that are in boulder paths
+                        !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
+                        (
+                            Math.abs(coord.x - entrance.x) +
+                            Math.abs(coord.y - entrance.y) >=
+                            minDistanceFromEntrance
+                        )
+                    );
+                } else {   
+                    const spawnRadius = 5; // Respawn enemies within radius
+                    const minPlayerDistance = 3; // Safeguard for respawn distance
+                    spawnCoords = MAP.getEmptyCellCoordinates().filter(coord => {
+                        const distanceFromPlayer = Math.max(
+                            Math.abs(coord.x - player.x),
+                            Math.abs(coord.y - player.y)
+                        );
+                        
+                        return (
+                            distanceFromPlayer <= spawnRadius &&
+                            distanceFromPlayer >= minPlayerDistance &&
+                            !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
+                            !(coord.x === player.x && coord.y === player.y)
+                        );
+                    });
+                }
 
-                if (safeCoords.length === 0) {
+                if (spawnCoords.length === 0) {
                     return;
                 }
 
-                const spawnPoint = randomEntry(safeCoords);
+                const spawnPoint = randomEntry(spawnCoords);
                 const id = `enemy_${roamingEnemies.nextId++}`;
 
                 roamingEnemies.enemies[id] = {
@@ -10598,10 +10617,16 @@
                     }
                 });
 
+                // Respawn logic: spawn full maxEnemies amount when threshold is met
                 if (roamingEnemies.respawningEnabled()) {
                     const total = roamingEnemies.totalActiveEnemies();
-                    if (total > 0 && total < roamingEnemies.maxEnemies) {
-                        if (Math.random() < 0.1) { // % chance per enemy movement cycle to spawn new enemies
+                    
+                    // If we have fewer than maxEnemies and the respawn threshold is met
+                    if (total < roamingEnemies.maxEnemies) {
+                        // Spawn enough enemies to reach maxEnemies
+                        const enemiesToSpawn = roamingEnemies.maxEnemies - total;
+                        
+                        for (let i = 0; i < enemiesToSpawn; i++) {
                             roamingEnemies.spawnEnemy();
                         }
                     }
