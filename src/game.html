@@ -10483,6 +10483,28 @@
                 }
             },
 
+            isPlayerInLineOfSight: function(enemy) {
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                
+                const dirIndex = DIRECTIONS.indexOf(enemy.facing);
+                
+                // Check if player is in the general direction the enemy is facing
+                // Allow for a 90-degree cone of vision (45 degrees on each side)
+                switch (enemy.facing) {
+                    case 'N':
+                        return dy < 0 && Math.abs(dx) <= Math.abs(dy);
+                    case 'E':
+                        return dx > 0 && Math.abs(dy) <= Math.abs(dx);
+                    case 'S':
+                        return dy > 0 && Math.abs(dx) <= Math.abs(dy);
+                    case 'W':
+                        return dx < 0 && Math.abs(dy) <= Math.abs(dx);
+                    default:
+                        return false;
+                }
+            },
+
             totalActiveEnemies: function() {
                 return Object.keys(roamingEnemies.enemies).length;
             },
@@ -10510,9 +10532,8 @@
                         // Filter out positions that are in boulder paths
                         !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
                         (
-                            Math.abs(coord.x - entrance.x) +
-                            Math.abs(coord.y - entrance.y) >=
-                            minDistanceFromEntrance
+                            Math.abs(coord.x - entrance.x) >= minDistanceFromEntrance ||
+                            Math.abs(coord.y - entrance.y) >= minDistanceFromEntrance
                         )
                     );
                 } else {   
@@ -10525,10 +10546,9 @@
                         );
                         
                         return (
-                            distanceFromPlayer <= spawnRadius &&
                             distanceFromPlayer >= minPlayerDistance &&
-                            !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
-                            !(coord.x === player.x && coord.y === player.y)
+                            distanceFromPlayer <= spawnRadius &&
+                            !roamingEnemies.isInBoulderPath(coord.x, coord.y)
                         );
                     });
                 }
@@ -10544,7 +10564,9 @@
                     id,
                     x: spawnPoint.x,
                     y: spawnPoint.y,
-                    lastMoveDirection: randomEntry(DIRECTIONS)
+                    facing: randomEntry(DIRECTIONS),
+                    lastMoveDirection: randomEntry(DIRECTIONS),
+                    isPursuing: false
                 };
             },
 
@@ -10594,12 +10616,26 @@
                     // Torch increases enemy line of sight to 2
                     const enemySightRange = player.isHoldingTorch ? 2 : 1;
                     const isNearPlayer = distanceToPlayer <= enemySightRange;
+                    
+                    // Check if player is in line of sight
+                    const playerInLineOfSight = roamingEnemies.isPlayerInLineOfSight(enemy);
+                    
+                    // Enemy can see player if they're close AND in line of sight, OR if already pursuing
+                    const canSeePlayer = (isNearPlayer && playerInLineOfSight) || enemy.isPursuing;
 
                     // Ring of Stinky behavior: % chance to avoid when close
-                    const shouldAvoidPlayer = hasRingOfStinky && isNearPlayer && Math.random() < 0.8;
+                    const shouldAvoidPlayer = hasRingOfStinky && canSeePlayer && Math.random() < 0.9;
 
-                    // Normal pursuit behavior: chase player when close (unless avoiding due to Ring of Stinky)
-                    const shouldPursuePlayer = isNearPlayer && !shouldAvoidPlayer;
+                    // Pursuit behavior: chase player when they can see them (unless avoiding due to Ring of Stinky)
+                    const shouldPursuePlayer = canSeePlayer && !shouldAvoidPlayer;
+
+                    // Update pursuit state
+                    if (shouldPursuePlayer) {
+                        enemy.isPursuing = true;
+                    } else if (distanceToPlayer > enemySightRange * 2) {
+                        // Stop pursuing if player gets far enough away
+                        enemy.isPursuing = false;
+                    }
 
                     DIRECTIONS.forEach(direction => {
                         const dirIndex = DIRECTIONS.indexOf(direction);
@@ -10608,15 +10644,15 @@
 
                         const cell = MAP.getCell(newX, newY);
                         if (cell && !cell.isSolid && (cell.type === 'floor' || (newX === player.x && newY === player.y))) {
-                            const moveData = { direction, x: newX, y: newY };
+                            const moveData = { x: newX, y: newY, direction };
                             possibleMoves.push(moveData);
 
-                            const currentDistanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
-                            const newDistanceToPlayer = Math.abs(newX - player.x) + Math.abs(newY - player.y);
-                            
-                            if (newDistanceToPlayer < currentDistanceToPlayer) {
+                            const currentDistance = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
+                            const newDistance = Math.abs(newX - player.x) + Math.abs(newY - player.y);
+
+                            if (newDistance < currentDistance) {
                                 towardPlayerMoves.push(moveData);
-                            } else if (newDistanceToPlayer > currentDistanceToPlayer) {
+                            } else if (newDistance > currentDistance) {
                                 awayFromPlayerMoves.push(moveData);
                             }
                         }
@@ -10630,7 +10666,7 @@
                     if (shouldAvoidPlayer && awayFromPlayerMoves.length > 0) {
                         selectedMove = randomEntry(awayFromPlayerMoves);
                     }
-                    // Priority 2: Pursuit behavior when close to player
+                    // Priority 2: Pursuit behavior when can see player
                     else if (shouldPursuePlayer && towardPlayerMoves.length > 0) {
                         selectedMove = randomEntry(towardPlayerMoves);
                     }
@@ -10646,6 +10682,12 @@
                     enemy.x = selectedMove.x;
                     enemy.y = selectedMove.y;
                     enemy.lastMoveDirection = selectedMove.direction;
+
+                    if (shouldPursuePlayer || shouldAvoidPlayer) {
+                        enemy.facing = selectedMove.direction;
+                    } else {
+                        enemy.facing = selectedMove.direction;
+                    }
 
                     if (enemy.x === player.x && enemy.y === player.y) {
                         roamingEnemies.encounterEnemy(enemy.id);
@@ -10664,7 +10706,7 @@
                         const enemiesToSpawn = roamingEnemies.maxEnemies - total;
                         
                         for (let i = 0; i < enemiesToSpawn; i++) {
-                            roamingEnemies.spawnEnemy();
+                            roamingEnemies.spawnEnemy(false);
                         }
                     }
                 }
@@ -11518,14 +11560,20 @@
                 };
             }
 
-            // Add roaming enemies to the minimap
             Object.values(roamingEnemies.enemies).forEach(enemy => {
+                const directionArrows = {
+                    'N': '↑',
+                    'E': '→', 
+                    'S': '↓',
+                    'W': '←'
+                };
+                
                 entities[`roamingEnemy_${enemy.id}`] = {
                     x: enemy.x,
                     y: enemy.y,
                     displayName: "Monster",
                     isVisible: true,
-                    mapCharacter: "☠︎",
+                    mapCharacter: directionArrows[enemy.facing] || "☠︎",
                     type: "roamingEnemy",
                 };
             });
