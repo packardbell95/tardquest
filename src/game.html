@@ -10188,7 +10188,7 @@
 
                 const enemyAtNextPosition = roamingEnemies.getEnemyAt(nextX, nextY);
                 if (enemyAtNextPosition) {
-                    roamingEnemies.removeEnemy(enemyAtNextPosition.id);
+                    roamingEnemies.killEnemy(enemyAtNextPosition.id);
                     
                     const writableCellTypes = [
                         "floor", "rubble1", "rubble2", "crater", "tardspireBanner"
