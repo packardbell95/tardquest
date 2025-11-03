@@ -10473,7 +10473,7 @@
                     (
                         Math.abs(coord.x - entrance.x) +
                         Math.abs(coord.y - entrance.y) >=
-                            minDistanceFromEntrance
+                        minDistanceFromEntrance
                     )
                 );
 
@@ -10490,17 +10490,9 @@
                     y: spawnPoint.y,
                     lastMoveDirection: randomEntry(DIRECTIONS)
                 };
-
-                // @TODO Use map entites instead of map cells
-                MAP.setCell(spawnPoint.x, spawnPoint.y, 'roamingEnemy');
             },
 
             removeEnemy: function(enemyId) {
-                const enemy = roamingEnemies.enemies[enemyId];
-                if (enemy) {
-                    MAP.setCell(enemy.x, enemy.y, 'floor');
-                }
-
                 delete roamingEnemies.enemies[enemyId];
             },
 
@@ -10560,32 +10552,16 @@
 
                         const cell = MAP.getCell(newX, newY);
                         if (cell && !cell.isSolid && (cell.type === 'floor' || (newX === player.x && newY === player.y))) {
-                            // Check collision conditions (excluding player position now)
-                            if (roamingEnemies.isAt(newX, newY)) return;
-                            if (merchant.isAt(newX, newY)) return;
-                            if (gambler.isAt(newX, newY)) return;
-                            if (erok.isAt(newX, newY)) return;
-                            if (vampire.isAt(newX, newY)) return;
-                            if (pigeon.isAt(newX, newY)) return;
-                            if (boulder.isAt(newX, newY)) return;
-
-                            // Don't move into boulder paths
-                            if (roamingEnemies.isInBoulderPath(newX, newY)) return;
-
                             const moveData = { direction, x: newX, y: newY };
                             possibleMoves.push(moveData);
 
-                            // Calculate new distance after this move
-                            const newDistance = Math.abs(newX - player.x) + Math.abs(newY - player.y);
-
-                            // Ring of Stinky: Check if this move takes the enemy away from the player
-                            if (shouldAvoidPlayer && newDistance > distanceToPlayer) {
-                                awayFromPlayerMoves.push(moveData);
-                            }
-
-                            // Pursuit behavior: Check if this move brings the enemy closer to the player
-                            if (shouldPursuePlayer && newDistance < distanceToPlayer) {
+                            const currentDistanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
+                            const newDistanceToPlayer = Math.abs(newX - player.x) + Math.abs(newY - player.y);
+                            
+                            if (newDistanceToPlayer < currentDistanceToPlayer) {
                                 towardPlayerMoves.push(moveData);
+                            } else if (newDistanceToPlayer > currentDistanceToPlayer) {
+                                awayFromPlayerMoves.push(moveData);
                             }
                         }
                     });
@@ -10610,7 +10586,6 @@
                             selectedMove = randomEntry(possibleMoves);
                         }
                     }
-                    MAP.setCell(enemy.x, enemy.y, 'floor');
 
                     enemy.x = selectedMove.x;
                     enemy.y = selectedMove.y;
@@ -10621,20 +10596,13 @@
                         delete roamingEnemies.enemies[enemy.id];
                         return;
                     }
-
-                    MAP.setCell(enemy.x, enemy.y, 'roamingEnemy');
                 });
 
                 if (roamingEnemies.respawningEnabled()) {
                     const total = roamingEnemies.totalActiveEnemies();
                     if (total > 0 && total < roamingEnemies.maxEnemies) {
                         if (Math.random() < 0.1) { // % chance per enemy movement cycle to spawn new enemies
-                            const maxToSpawn = Math.min(4, roamingEnemies.maxEnemies - total);
-                            const numberToSpawn = numberBetween(1, maxToSpawn);
-
-                            for (let i = 0; i < numberToSpawn; i++) {
-                                roamingEnemies.spawnEnemy(false);
-                            }
+                            roamingEnemies.spawnEnemy();
                         }
                     }
                 }
@@ -11079,12 +11047,6 @@
                 displayName: "Monster",
                 mapCharacter: "☠︎︎",
                 canBeRolledOverByBouldingBall: false,
-                onEnter: async function(x, y) {
-                    const enemy = roamingEnemies.getEnemyAt(x, y);
-                    if (enemy) {
-                        roamingEnemies.encounterEnemy(enemy.id);
-                    }
-                },
                 isVisible: function() {
                     return true;
                 },
@@ -11921,6 +11883,14 @@
                 player.x = nx;
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
+
+                const enemy = roamingEnemies.getEnemyAt(player.x, player.y);
+                if (enemy) {
+                    roamingEnemies.encounterEnemy(enemy.id);
+                    player.movementDisabled = false;
+                    GameControl.update();
+                    return;
+                }
 
                 // @TODO: Make the map system support onEnter for entities
                 //        and move this logic there
