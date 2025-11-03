@@ -7034,6 +7034,8 @@
                             gridCell.push({ type: "vampire" });
                         } else if (pigeon.isAt(tx, ty)) {
                             gridCell.push({ type: "pigeon" });
+                        } else if (roamingEnemies.isAt(tx, ty)) {
+                            gridCell.push({ type: "roamingEnemy" });
                         }
                         // Trap check
                         if (boulder.isAt(tx, ty)) {
@@ -10181,6 +10183,38 @@
                 if (isObstacle) {
                     boulder.movingDirection *= -1;
                     return null;
+                }
+
+                const enemyAtNextPosition = roamingEnemies.getEnemyAt(nextX, nextY);
+                if (enemyAtNextPosition) {
+                    roamingEnemies.removeEnemy(enemyAtNextPosition.id);
+                    
+                    const writableCellTypes = [
+                        "floor", "rubble1", "rubble2", "crater", "tardspireBanner"
+                    ];
+                    
+                    const overwriteCell = writableCellTypes.includes(
+                        MAP.getCell(nextX, nextY)?.type
+                    );
+                    
+                    if (overwriteCell) {
+                        MAP.setCell(nextX, nextY, "bloodyCrater");
+                    }
+                    
+                    // Calculate distance-based scream volume
+                    const distance = Math.abs(player.x - nextX) + Math.abs(player.y - nextY);
+                    const maxRange = 10; // Max distance range
+                    const maxVolume = 1; // Max vol when closest
+                    const minVolume = 0.1; // Min vol range
+
+                    const volume = distance <= maxRange 
+                        ? Math.max(minVolume, maxVolume - ((distance - 1) / (maxRange - 1)) * (maxVolume - minVolume))
+                        : 0; // No sound if too far
+                    
+                    if (volume > 0) {
+                        playSFX('scream', volume);
+                        playSFX('boulderHit', volume);
+                    }
                 }
 
                 // If no obstacle, move to the next position
