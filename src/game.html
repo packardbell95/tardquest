@@ -21,11 +21,12 @@
         <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
         <div id="topLeft">
+            <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
             <div id="minimapContainer">
                 <div id="minimapHeader" class="ui-header space-around">Dungeon Floor --</div>
                 <div id="minimap"></div>
+                <div id="minimapFooter" class="minimap-footer"></div>
             </div>
-            <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
         </div>
         <div id="inputBox">
             <input type="text" id="persuadeInput" placeholder="Say your piece...">
@@ -10557,9 +10558,9 @@
             },
 
             killEnemy: function(enemyId) {
-                // Remove enemy,increment kill counter
                 roamingEnemies.removeEnemy(enemyId);
                 roamingEnemies.enemiesKilledOnFloor++;
+                updateMinimapFooter();
             },
 
             isAt: function(x, y) {
@@ -10672,14 +10673,14 @@
                 if (!enemy) {
                     return;
                 }
-                roamingEnemies.killEnemy(id);
+                roamingEnemies.removeEnemy(id);
                 startEncounter();
             },
 
             initialize: function() {
-                // Reset kill counter and respawning state for new floor
                 roamingEnemies.enemies = {};
                 roamingEnemies.enemiesKilledOnFloor = 0;
+                updateMinimapFooter();
 
                 for (let i = 0; i < roamingEnemies.maxEnemies; i++) {
                     roamingEnemies.spawnEnemy(true);
@@ -11272,7 +11273,15 @@
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
 
-            vampire.initialize();
+                updateMinimapFooter();
+                vampire.initialize();
+        }
+
+        function updateMinimapFooter() {
+            const $minimapFooter = document.getElementById('minimapFooter');
+            if ($minimapFooter) {
+                $minimapFooter.textContent = `Monsters Killed: ${roamingEnemies.enemiesKilledOnFloor}`;
+            }
         }
 
         let autoDicerollEnabled = false;
@@ -12263,6 +12272,11 @@
                 // When enemy dies, block input until battle is fully over
                 playerAttackCooldown = true;
                 animAsh(currentEnemy.id, () => {
+                    if (currentEnemy.isWild && currentEnemy.id !== "vampire") {
+                        roamingEnemies.enemiesKilledOnFloor++;
+                        updateMinimapFooter();
+                    }
+                    
                     if (currentEnemy.id === "mimic") {
                         updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">₿ ${currentEnemy.bitcoins}</span> in its remains!`);
                         player.giveBitcoins(currentEnemy.bitcoins);

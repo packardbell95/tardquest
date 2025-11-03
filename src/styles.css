@@ -1657,6 +1657,16 @@ a:link {
     justify-content: space-around;
 }
 
+.minimap-footer {
+    display: flex;
+    flex-direction: row;
+    background-color: #a30000;
+    color: #ffffff;
+    margin: 1px;
+    padding: 0 4px;
+    justify-content: center;
+}
+
 #battleLog      { grid-area: battleLog; }
 #topLeft        { grid-area: topLeft; }
 #stats          { grid-area: stats; }
