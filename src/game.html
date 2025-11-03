@@ -8536,6 +8536,8 @@
                     GameControl.disableControls();
                     gameOver = true;
                     animTorchEnd();
+                    const deathPortrait = currentEnemy?.id === "vampire" ? "deathVampire" : "death";
+                    Portrait.show(deathPortrait);
                 }
             },
             getEffectiveStats: () => {
@@ -11575,7 +11577,10 @@
 
             if (gameOver) {
                 GameControl.disableControls();
-                Portrait.show('death');
+                
+                const deathPortrait = currentEnemy?.id === "vampire" ? "deathVampire" : "death";
+                Portrait.show(deathPortrait);
+                
                 updateBattleLog(`Good job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`);
                 setTimeout(() => {
                     window.location.reload();

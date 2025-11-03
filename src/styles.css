@@ -1526,8 +1526,10 @@ a:link {
     top: 104px; /* lazy fix for clipping over border */
 }
 
-#portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
-    color: rgb(255, 214, 138);
+#portraitArtOverlay.erokIdle, #portraitArtOverlay.deathVampire {
+    color: #f0f;
+    top: 135px; /* lazy fix for vampire portrait positioning */
+    left: 20px;
 }
 
 #portraitArtOverlay.pigeon {
