@@ -9487,7 +9487,7 @@
                 const luckFloor = Math.max(luckMod - 0.5, 0);
                 const luckBoost = luckFloor + (Math.random() * luckMod);
                 const floorDeboost = floor * 0.05;
-                const modifier = 1.2 - floorDeboost + luckBoost;
+                const modifier = 1.5 - floorDeboost + luckBoost;
                 const calculatedSteps =
                     Math.max(Math.round(optimalPathLength * modifier), 10);
                 const steps = Math.max(calculatedSteps, optimalPathLength);
