@@ -1521,12 +1521,12 @@ a:link {
     color: #fc8;
 }
 
-#portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
+#portraitArtOverlay.erokIdle{
     color: rgb(255, 214, 138);
     top: 104px; /* lazy fix for clipping over border */
 }
 
-#portraitArtOverlay.erokIdle, #portraitArtOverlay.deathVampire {
+#portraitArtOverlay.deathVampire{
     color: #f0f;
     top: 135px; /* lazy fix for vampire portrait positioning */
     left: 20px;
@@ -1667,6 +1667,12 @@ a:link {
     margin: 1px;
     padding: 0 4px;
     justify-content: center;
+}
+/** Firefox-specific spacing fix for the minimap **/
+@supports (-moz-orient: inline) {
+    #minimap {
+        line-height: 13.6px;
+    }
 }
 
 #battleLog      { grid-area: battleLog; }

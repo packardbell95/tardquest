@@ -10683,11 +10683,7 @@
                     enemy.y = selectedMove.y;
                     enemy.lastMoveDirection = selectedMove.direction;
 
-                    if (shouldPursuePlayer || shouldAvoidPlayer) {
-                        enemy.facing = selectedMove.direction;
-                    } else {
-                        enemy.facing = selectedMove.direction;
-                    }
+                    enemy.facing = selectedMove.direction;
 
                     if (enemy.x === player.x && enemy.y === player.y) {
                         roamingEnemies.encounterEnemy(enemy.id);
@@ -11317,8 +11313,8 @@
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
 
-                updateMinimapFooter();
-                vampire.initialize();
+            updateMinimapFooter();
+            vampire.initialize();
         }
 
         function updateMinimapFooter() {
