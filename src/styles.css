@@ -1521,8 +1521,9 @@ a:link {
     color: #fc8;
 }
 
-#portraitArtOverlay.erokIdle{
-    color: rgb(255, 214, 138);
+#portraitArtOverlay.erokPet,
+#portraitArtOverlay.erokIdle {
+    color: #ffd68a;
     top: 104px; /* lazy fix for clipping over border */
 }
 
