@@ -290,5 +290,5 @@
         /** Ensures delivery polling is active */
         ensurePolling
     };
-    log.info('Module loaded; autonomous delivery polling active.');
+    log.info('Module loaded!');
 })();
