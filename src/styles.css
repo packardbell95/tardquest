@@ -1521,13 +1521,16 @@ a:link {
     color: #fc8;
 }
 
-#portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
-    color: rgb(255, 214, 138);
+#portraitArtOverlay.erokPet,
+#portraitArtOverlay.erokIdle {
+    color: #ffd68a;
     top: 104px; /* lazy fix for clipping over border */
 }
 
-#portraitArtOverlay.erokIdle, #portraitArtOverlay.erokPet {
-    color: rgb(255, 214, 138);
+#portraitArtOverlay.deathVampire{
+    color: #f0f;
+    top: 135px; /* lazy fix for vampire portrait positioning */
+    left: 20px;
 }
 
 #portraitArtOverlay.pigeon {
@@ -1655,6 +1658,22 @@ a:link {
 
 .ui-header.space-around {
     justify-content: space-around;
+}
+
+.minimap-footer {
+    display: flex;
+    flex-direction: row;
+    background-color: #a30000;
+    color: #ffffff;
+    margin: 1px;
+    padding: 0 4px;
+    justify-content: center;
+}
+/** Firefox-specific spacing fix for the minimap **/
+@supports (-moz-orient: inline) {
+    #minimap {
+        line-height: 13.6px;
+    }
 }
 
 #battleLog      { grid-area: battleLog; }

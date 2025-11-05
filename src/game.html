@@ -21,11 +21,12 @@
         <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
         <div id="topLeft">
+            <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
             <div id="minimapContainer">
                 <div id="minimapHeader" class="ui-header space-around">Dungeon Floor --</div>
                 <div id="minimap"></div>
+                <div id="minimapFooter" class="minimap-footer"></div>
             </div>
-            <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
         </div>
         <div id="inputBox">
             <input type="text" id="persuadeInput" placeholder="Say your piece...">
@@ -7034,6 +7035,8 @@
                             gridCell.push({ type: "vampire" });
                         } else if (pigeon.isAt(tx, ty)) {
                             gridCell.push({ type: "pigeon" });
+                        } else if (roamingEnemies.isAt(tx, ty)) {
+                            gridCell.push({ type: "roamingEnemy" });
                         }
                         // Trap check
                         if (boulder.isAt(tx, ty)) {
@@ -8533,6 +8536,8 @@
                     GameControl.disableControls();
                     gameOver = true;
                     animTorchEnd();
+                    const deathPortrait = currentEnemy?.id === "vampire" ? "deathVampire" : "death";
+                    Portrait.show(deathPortrait);
                 }
             },
             getEffectiveStats: () => {
@@ -9484,7 +9489,7 @@
                 const luckFloor = Math.max(luckMod - 0.5, 0);
                 const luckBoost = luckFloor + (Math.random() * luckMod);
                 const floorDeboost = floor * 0.05;
-                const modifier = 1.2 - floorDeboost + luckBoost;
+                const modifier = 1.5 - floorDeboost + luckBoost;
                 const calculatedSteps =
                     Math.max(Math.round(optimalPathLength * modifier), 10);
                 const steps = Math.max(calculatedSteps, optimalPathLength);
@@ -10183,6 +10188,38 @@
                     return null;
                 }
 
+                const enemyAtNextPosition = roamingEnemies.getEnemyAt(nextX, nextY);
+                if (enemyAtNextPosition) {
+                    roamingEnemies.killEnemy(enemyAtNextPosition.id);
+                    
+                    const writableCellTypes = [
+                        "floor", "rubble1", "rubble2", "crater", "tardspireBanner"
+                    ];
+                    
+                    const overwriteCell = writableCellTypes.includes(
+                        MAP.getCell(nextX, nextY)?.type
+                    );
+                    
+                    if (overwriteCell) {
+                        MAP.setCell(nextX, nextY, "bloodyCrater");
+                    }
+                    
+                    // Calculate distance-based scream volume
+                    const distance = Math.abs(player.x - nextX) + Math.abs(player.y - nextY);
+                    const maxRange = 10; // Max distance range
+                    const maxVolume = 1; // Max vol when closest
+                    const minVolume = 0.1; // Min vol range
+
+                    const volume = distance <= maxRange 
+                        ? Math.max(minVolume, maxVolume - ((distance - 1) / (maxRange - 1)) * (maxVolume - minVolume))
+                        : 0; // No sound if too far
+                    
+                    if (volume > 0) {
+                        playSFX('scream', volume);
+                        playSFX('boulderHit', volume);
+                    }
+                }
+
                 // If no obstacle, move to the next position
                 boulder.x = nextX;
                 boulder.y = nextY;
@@ -10431,7 +10468,7 @@
             maxEnemies: 6,
             nextId: 0,
             enemiesKilledOnFloor: 0,
-            respawnAfterKills: 4,
+            respawnAfterKills: 3,
 
             // Check if a position is in a boulder's path
             isInBoulderPath: function(x, y) {
@@ -10443,6 +10480,28 @@
                     return y === boulder.y && x >= boulder.hallwayBounds.start.x && x <= boulder.hallwayBounds.end.x;
                 } else {
                     return x === boulder.x && y >= boulder.hallwayBounds.start.y && y <= boulder.hallwayBounds.end.y;
+                }
+            },
+
+            isPlayerInLineOfSight: function(enemy) {
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                
+                const dirIndex = DIRECTIONS.indexOf(enemy.facing);
+                
+                // Check if player is in the general direction the enemy is facing
+                // Allow for a 90-degree cone of vision (45 degrees on each side)
+                switch (enemy.facing) {
+                    case 'N':
+                        return dy < 0 && Math.abs(dx) <= Math.abs(dy);
+                    case 'E':
+                        return dx > 0 && Math.abs(dy) <= Math.abs(dx);
+                    case 'S':
+                        return dy > 0 && Math.abs(dx) <= Math.abs(dy);
+                    case 'W':
+                        return dx < 0 && Math.abs(dy) <= Math.abs(dx);
+                    default:
+                        return false;
                 }
             },
 
@@ -10464,43 +10523,54 @@
                 }
 
                 const entrance = MAP.getEntrance();
-                // Spawn away from the entry point if the floor is being entered
-                const minDistanceFromEntrance = isFloorInitialization ? 2 : 0;
+                let spawnCoords;
 
-                const safeCoords = MAP.getEmptyCellCoordinates().filter(coord =>
-                    // Filter out positions that are in boulder paths
-                    !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
-                    (
-                        Math.abs(coord.x - entrance.x) +
-                        Math.abs(coord.y - entrance.y) >=
-                            minDistanceFromEntrance
-                    )
-                );
+                if (isFloorInitialization) {
+                    // Initial spawn: spawn away from the entry point
+                    const minDistanceFromEntrance = 2;
+                    spawnCoords = MAP.getEmptyCellCoordinates().filter(coord =>
+                        // Filter out positions that are in boulder paths
+                        !roamingEnemies.isInBoulderPath(coord.x, coord.y) &&
+                        (
+                            Math.abs(coord.x - entrance.x) >= minDistanceFromEntrance ||
+                            Math.abs(coord.y - entrance.y) >= minDistanceFromEntrance
+                        )
+                    );
+                } else {   
+                    const spawnRadius = 5; // Respawn enemies within radius
+                    const minPlayerDistance = 3; // Safeguard for respawn distance
+                    spawnCoords = MAP.getEmptyCellCoordinates().filter(coord => {
+                        const distanceFromPlayer = Math.max(
+                            Math.abs(coord.x - player.x),
+                            Math.abs(coord.y - player.y)
+                        );
+                        
+                        return (
+                            distanceFromPlayer >= minPlayerDistance &&
+                            distanceFromPlayer <= spawnRadius &&
+                            !roamingEnemies.isInBoulderPath(coord.x, coord.y)
+                        );
+                    });
+                }
 
-                if (safeCoords.length === 0) {
+                if (spawnCoords.length === 0) {
                     return;
                 }
 
-                const spawnPoint = randomEntry(safeCoords);
+                const spawnPoint = randomEntry(spawnCoords);
                 const id = `enemy_${roamingEnemies.nextId++}`;
 
                 roamingEnemies.enemies[id] = {
                     id,
                     x: spawnPoint.x,
                     y: spawnPoint.y,
-                    lastMoveDirection: randomEntry(DIRECTIONS)
+                    facing: randomEntry(DIRECTIONS),
+                    lastMoveDirection: randomEntry(DIRECTIONS),
+                    isPursuing: false
                 };
-
-                // @TODO Use map entites instead of map cells
-                MAP.setCell(spawnPoint.x, spawnPoint.y, 'roamingEnemy');
             },
 
             removeEnemy: function(enemyId) {
-                const enemy = roamingEnemies.enemies[enemyId];
-                if (enemy) {
-                    MAP.setCell(enemy.x, enemy.y, 'floor');
-                }
-
                 delete roamingEnemies.enemies[enemyId];
             },
 
@@ -10512,9 +10582,9 @@
             },
 
             killEnemy: function(enemyId) {
-                // Remove enemy,increment kill counter
                 roamingEnemies.removeEnemy(enemyId);
                 roamingEnemies.enemiesKilledOnFloor++;
+                updateMinimapFooter();
             },
 
             isAt: function(x, y) {
@@ -10542,13 +10612,30 @@
 
                     // Calculate distance to player
                     const distanceToPlayer = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
-                    const isNearPlayer = distanceToPlayer <= 2;
+                    
+                    // Torch increases enemy line of sight to 2
+                    const enemySightRange = player.isHoldingTorch ? 2 : 1;
+                    const isNearPlayer = distanceToPlayer <= enemySightRange;
+                    
+                    // Check if player is in line of sight
+                    const playerInLineOfSight = roamingEnemies.isPlayerInLineOfSight(enemy);
+                    
+                    // Enemy can see player if they're close AND in line of sight, OR if already pursuing
+                    const canSeePlayer = (isNearPlayer && playerInLineOfSight) || enemy.isPursuing;
 
                     // Ring of Stinky behavior: % chance to avoid when close
-                    const shouldAvoidPlayer = hasRingOfStinky && isNearPlayer && Math.random() < 0.8;
+                    const shouldAvoidPlayer = hasRingOfStinky && canSeePlayer && Math.random() < 0.9;
 
-                    // Normal pursuit behavior: chase player when close (unless avoiding due to Ring of Stinky)
-                    const shouldPursuePlayer = isNearPlayer && !shouldAvoidPlayer;
+                    // Pursuit behavior: chase player when they can see them (unless avoiding due to Ring of Stinky)
+                    const shouldPursuePlayer = canSeePlayer && !shouldAvoidPlayer;
+
+                    // Update pursuit state
+                    if (shouldPursuePlayer) {
+                        enemy.isPursuing = true;
+                    } else if (distanceToPlayer > enemySightRange * 2) {
+                        // Stop pursuing if player gets far enough away
+                        enemy.isPursuing = false;
+                    }
 
                     DIRECTIONS.forEach(direction => {
                         const dirIndex = DIRECTIONS.indexOf(direction);
@@ -10557,32 +10644,16 @@
 
                         const cell = MAP.getCell(newX, newY);
                         if (cell && !cell.isSolid && (cell.type === 'floor' || (newX === player.x && newY === player.y))) {
-                            // Check collision conditions (excluding player position now)
-                            if (roamingEnemies.isAt(newX, newY)) return;
-                            if (merchant.isAt(newX, newY)) return;
-                            if (gambler.isAt(newX, newY)) return;
-                            if (erok.isAt(newX, newY)) return;
-                            if (vampire.isAt(newX, newY)) return;
-                            if (pigeon.isAt(newX, newY)) return;
-                            if (boulder.isAt(newX, newY)) return;
-
-                            // Don't move into boulder paths
-                            if (roamingEnemies.isInBoulderPath(newX, newY)) return;
-
-                            const moveData = { direction, x: newX, y: newY };
+                            const moveData = { x: newX, y: newY, direction };
                             possibleMoves.push(moveData);
 
-                            // Calculate new distance after this move
+                            const currentDistance = Math.abs(enemy.x - player.x) + Math.abs(enemy.y - player.y);
                             const newDistance = Math.abs(newX - player.x) + Math.abs(newY - player.y);
 
-                            // Ring of Stinky: Check if this move takes the enemy away from the player
-                            if (shouldAvoidPlayer && newDistance > distanceToPlayer) {
-                                awayFromPlayerMoves.push(moveData);
-                            }
-
-                            // Pursuit behavior: Check if this move brings the enemy closer to the player
-                            if (shouldPursuePlayer && newDistance < distanceToPlayer) {
+                            if (newDistance < currentDistance) {
                                 towardPlayerMoves.push(moveData);
+                            } else if (newDistance > currentDistance) {
+                                awayFromPlayerMoves.push(moveData);
                             }
                         }
                     });
@@ -10595,7 +10666,7 @@
                     if (shouldAvoidPlayer && awayFromPlayerMoves.length > 0) {
                         selectedMove = randomEntry(awayFromPlayerMoves);
                     }
-                    // Priority 2: Pursuit behavior when close to player
+                    // Priority 2: Pursuit behavior when can see player
                     else if (shouldPursuePlayer && towardPlayerMoves.length > 0) {
                         selectedMove = randomEntry(towardPlayerMoves);
                     }
@@ -10607,31 +10678,31 @@
                             selectedMove = randomEntry(possibleMoves);
                         }
                     }
-                    MAP.setCell(enemy.x, enemy.y, 'floor');
 
                     enemy.x = selectedMove.x;
                     enemy.y = selectedMove.y;
                     enemy.lastMoveDirection = selectedMove.direction;
+
+                    enemy.facing = selectedMove.direction;
 
                     if (enemy.x === player.x && enemy.y === player.y) {
                         roamingEnemies.encounterEnemy(enemy.id);
                         delete roamingEnemies.enemies[enemy.id];
                         return;
                     }
-
-                    MAP.setCell(enemy.x, enemy.y, 'roamingEnemy');
                 });
 
+                // Respawn logic: spawn full maxEnemies amount when threshold is met
                 if (roamingEnemies.respawningEnabled()) {
                     const total = roamingEnemies.totalActiveEnemies();
-                    if (total > 0 && total < roamingEnemies.maxEnemies) {
-                        if (Math.random() < 0.1) { // % chance per enemy movement cycle to spawn new enemies
-                            const maxToSpawn = Math.min(4, roamingEnemies.maxEnemies - total);
-                            const numberToSpawn = numberBetween(1, maxToSpawn);
-
-                            for (let i = 0; i < numberToSpawn; i++) {
-                                roamingEnemies.spawnEnemy(false);
-                            }
+                    
+                    // If we have fewer than maxEnemies and the respawn threshold is met
+                    if (total < roamingEnemies.maxEnemies) {
+                        // Spawn enough enemies to reach maxEnemies
+                        const enemiesToSpawn = roamingEnemies.maxEnemies - total;
+                        
+                        for (let i = 0; i < enemiesToSpawn; i++) {
+                            roamingEnemies.spawnEnemy(false);
                         }
                     }
                 }
@@ -10642,14 +10713,14 @@
                 if (!enemy) {
                     return;
                 }
-                roamingEnemies.killEnemy(id);
+                roamingEnemies.removeEnemy(id);
                 startEncounter();
             },
 
             initialize: function() {
-                // Reset kill counter and respawning state for new floor
                 roamingEnemies.enemies = {};
                 roamingEnemies.enemiesKilledOnFloor = 0;
+                updateMinimapFooter();
 
                 for (let i = 0; i < roamingEnemies.maxEnemies; i++) {
                     roamingEnemies.spawnEnemy(true);
@@ -11076,12 +11147,6 @@
                 displayName: "Monster",
                 mapCharacter: "☠︎︎",
                 canBeRolledOverByBouldingBall: false,
-                onEnter: async function(x, y) {
-                    const enemy = roamingEnemies.getEnemyAt(x, y);
-                    if (enemy) {
-                        roamingEnemies.encounterEnemy(enemy.id);
-                    }
-                },
                 isVisible: function() {
                     return true;
                 },
@@ -11248,7 +11313,15 @@
             document.getElementById('minimapHeader').innerText =
                 `Dungeon Floor ${floor}`;
 
+            updateMinimapFooter();
             vampire.initialize();
+        }
+
+        function updateMinimapFooter() {
+            const $minimapFooter = document.getElementById('minimapFooter');
+            if ($minimapFooter) {
+                $minimapFooter.textContent = `Monsters Killed: ${roamingEnemies.enemiesKilledOnFloor}`;
+            }
         }
 
         let autoDicerollEnabled = false;
@@ -11483,14 +11556,20 @@
                 };
             }
 
-            // Add roaming enemies to the minimap
             Object.values(roamingEnemies.enemies).forEach(enemy => {
+                const directionArrows = {
+                    'N': '↑',
+                    'E': '→', 
+                    'S': '↓',
+                    'W': '←'
+                };
+                
                 entities[`roamingEnemy_${enemy.id}`] = {
                     x: enemy.x,
                     y: enemy.y,
                     displayName: "Monster",
                     isVisible: true,
-                    mapCharacter: "☠︎",
+                    mapCharacter: directionArrows[enemy.facing] || "☠︎",
                     type: "roamingEnemy",
                 };
             });
@@ -11542,7 +11621,10 @@
 
             if (gameOver) {
                 GameControl.disableControls();
-                Portrait.show('death');
+                
+                const deathPortrait = currentEnemy?.id === "vampire" ? "deathVampire" : "death";
+                Portrait.show(deathPortrait);
+                
                 updateBattleLog(`Good job! <span class="action">You died</span> on <span class="action">floor ${floor}</span>`);
                 setTimeout(() => {
                     window.location.reload();
@@ -11919,6 +12001,14 @@
                 player.y = ny;
                 player.stepsTakenOnCurrentFloor++;
 
+                const enemy = roamingEnemies.getEnemyAt(player.x, player.y);
+                if (enemy) {
+                    roamingEnemies.encounterEnemy(enemy.id);
+                    player.movementDisabled = false;
+                    GameControl.update();
+                    return;
+                }
+
                 // @TODO: Make the map system support onEnter for entities
                 //        and move this logic there
                 if (boulder.isAt(player.x, player.y)) {
@@ -12231,6 +12321,11 @@
                 // When enemy dies, block input until battle is fully over
                 playerAttackCooldown = true;
                 animAsh(currentEnemy.id, () => {
+                    if (currentEnemy.isWild && currentEnemy.id !== "vampire") {
+                        roamingEnemies.enemiesKilledOnFloor++;
+                        updateMinimapFooter();
+                    }
+                    
                     if (currentEnemy.id === "mimic") {
                         updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">₿ ${currentEnemy.bitcoins}</span> in its remains!`);
                         player.giveBitcoins(currentEnemy.bitcoins);
