@@ -16661,6 +16661,7 @@
 
         function hideTitleScreen() {
             music.stop();
+            PigeonMessaging.ensurePolling();
 
             // @TODO Refactor this since it's duplicated in gamepad.js
             // @see https://github.com/packardbell95/tardquest/issues/162
