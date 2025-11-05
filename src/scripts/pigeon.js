@@ -10,7 +10,6 @@
  * - LocalStorage persistence for pending messages
  * - Session-based authentication via VocaGuard
  * 
- * @author VocaPepper
  */
 
 (function(){
@@ -184,11 +183,11 @@
     function ensurePolling(){
         if (pollTimer || pendingDeliveredMessage) return; // Don't poll if a message is pending
         pollTimer = setInterval(()=>{
-            if (isTitleScreenActive() || pendingDeliveredMessage) return;
+            if (pendingDeliveredMessage) return;
             requestDeliveryOnce();
         }, DELIVERY_POLL_INTERVAL_MS);
         setTimeout(()=>{
-            if (!isTitleScreenActive() && !pendingDeliveredMessage) requestDeliveryOnce(true);
+            if (!pendingDeliveredMessage) requestDeliveryOnce(true);
         }, 1500);
         log.debug('Delivery polling started');
     }
@@ -260,44 +259,6 @@
     }
 
     /**
-     * Checks if the title screen is currently active/visible
-     * @returns {boolean} True if the title screen is active, false otherwise
-     */
-    function isTitleScreenActive(){
-        const el = document.getElementById('titleScreen');
-        if (!el) return false; // removed already
-        // Consider active if visible (no display:none and still in DOM)
-        const style = window.getComputedStyle(el);
-        return style && style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
-    }
-
-    /**
-     * Sets up polling to start after the title screen is hidden
-     * Patches the hideTitleScreen function if available, otherwise polls periodically
-     */
-    function armPollingGate(){
-        // If title screen already gone, start now
-        if (!isTitleScreenActive()) { ensurePolling(); return; }
-        // Patch hideTitleScreen if present to trigger polling after close
-        const existing = window.hideTitleScreen;
-        if (typeof existing === 'function' && !existing.__pigeonPatched){
-            window.hideTitleScreen = function patchedHideTitleScreen(...args){
-                const r = existing.apply(this, args);
-                // Defer a tick to let DOM update
-                setTimeout(()=>ensurePolling(), 50);
-                return r;
-            };
-            window.hideTitleScreen.__pigeonPatched = true;
-        }
-        const chk = setInterval(()=>{
-            if (!isTitleScreenActive()) { clearInterval(chk); ensurePolling(); }
-        }, 1000);
-    }
-
-    // Defer polling until title screen closes
-    armPollingGate();
-
-    /**
      * Public API for the Carrier Pigeon Messaging System
      * @namespace PigeonMessaging
      */
@@ -329,5 +290,5 @@
         /** Ensures delivery polling is active */
         ensurePolling
     };
-    log.info('Module loaded; autonomous delivery polling active.');
+    log.info('Module loaded!');
 })();
