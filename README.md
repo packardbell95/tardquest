@@ -93,6 +93,10 @@ This is a desktop application build for TardQuest, which includes neat features 
 ▶[tardquest-standalone](https://github.com/TheMilkMan6669/tardquest-standalone)
 
 ### VocaPepper
+TardQuest API - Python-based server that powers the leaderboard and Carrier Pigeon item
+
+▶[GitHub](https://github.com/VocaPepper/tardquest-api)
+
 TardQuest Online - Incomplete multiplayer version
 
 ▶[TardQuest Online 1.10.0](https://vocapepper.com/tardquest/src/multiplayer.html)
