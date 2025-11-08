@@ -396,7 +396,9 @@
                 <div class="form-group">
                     <label>Captcha Token: <input type="text" id="captchaToken" placeholder="Mock token or leave empty"></label>
                 </div>
+                <div id="turnstile-container" style="display: none;"></div>
                 <div class="button-group">
+                    <button onclick="generateTurnstileToken()">Generate Token</button>
                     <button onclick="testLeaderboardSubmit()">Submit Score</button>
                     <button onclick="testLeaderboardSubmitInvalid()">Test Invalid Name</button>
                 </div>
@@ -464,7 +466,98 @@
     <script>
         const API_BASE = 'https://vocapepper.com:9601';
         const LS_SESSION_KEY = 'vocaguardSessionId';
+        const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW';
         let isTestSuiteRunning = false;
+        let _turnstileReadyPromise = null;
+        let turnstileCaptchaToken = null;
+        let turnstileWidgetId = null;
+
+        // Turnstile Script Loading
+        async function ensureTurnstileScript() {
+            if (_turnstileReadyPromise) return _turnstileReadyPromise;
+            _turnstileReadyPromise = new Promise((resolve, reject) => {
+                if (window.turnstile && typeof window.turnstile.render === 'function') return resolve();
+                const existing = document.querySelector('script[data-turnstile-loaded]');
+                if (existing) {
+                    const check = setInterval(() => {
+                        if (window.turnstile && typeof window.turnstile.render === 'function') {
+                            clearInterval(check);
+                            resolve();
+                        }
+                    }, 100);
+                    setTimeout(() => {
+                        clearInterval(check);
+                        if (!(window.turnstile && window.turnstile.render)) {
+                            reject(new Error('Turnstile script timeout'));
+                        }
+                    }, 10000);
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+                s.async = true;
+                s.defer = true;
+                s.setAttribute('data-turnstile-loaded', '1');
+                s.onload = () => {
+                    if (window.turnstile && typeof window.turnstile.render === 'function') {
+                        resolve();
+                    } else {
+                        reject(new Error('Turnstile global missing after load'));
+                    }
+                };
+                s.onerror = () => reject(new Error('Failed to load Turnstile script'));
+                document.head.appendChild(s);
+                const poll = setInterval(() => {
+                    if (window.turnstile && typeof window.turnstile.render === 'function') {
+                        clearInterval(poll);
+                        resolve();
+                    }
+                }, 120);
+                setTimeout(() => clearInterval(poll), 10000);
+            });
+            return _turnstileReadyPromise;
+        }
+
+        // Turnstile Token Generation
+        async function generateTurnstileToken() {
+            const leaderboardOutput = document.getElementById('leaderboardOutput');
+            try {
+                logToOutput('leaderboardOutput', 'Loading Turnstile...', 'info');
+                await ensureTurnstileScript();
+                
+                const container = document.getElementById('turnstile-container');
+                const captchaInput = document.getElementById('captchaToken');
+                
+                // Clear previous widget if exists
+                if (turnstileWidgetId !== null) {
+                    window.turnstile.remove(turnstileWidgetId);
+                    container.innerHTML = '';
+                    turnstileWidgetId = null;
+                }
+                
+                container.style.display = 'block';
+                logToOutput('leaderboardOutput', 'Rendering Turnstile widget...', 'info');
+                
+                turnstileWidgetId = window.turnstile.render('#turnstile-container', {
+                    sitekey: TURNSTILE_SITE_KEY,
+                    size: 'normal',
+                    callback: (token) => {
+                        turnstileCaptchaToken = token;
+                        captchaInput.value = token;
+                        logToOutput('leaderboardOutput', 'Captcha token generated and populated!', 'success');
+                    },
+                    'error-callback': () => {
+                        logToOutput('leaderboardOutput', 'Captcha error occurred', 'error');
+                    },
+                    'timeout-callback': () => {
+                        logToOutput('leaderboardOutput', 'Captcha timeout', 'error');
+                    }
+                });
+                
+            } catch (err) {
+                logToOutput('leaderboardOutput', `Failed to generate token: ${err.message}`, 'error');
+            }
+        }
 
         // Unified logging system
         function logToOutput(elementId, message, type = 'info') {
