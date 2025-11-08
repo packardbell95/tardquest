@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TardQuest API Test Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 15px;
+            background: #000;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .test-panel {
+            border: 2px solid #fff;
+            background: #000;
+            padding: 15px;
+            border-radius: 0;
+        }
+
+        .test-panel h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #fff;
+            padding-bottom: 10px;
+        }
+
+        .test-panel h3 {
+            color: #fff;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            border-left: 4px solid #fff;
+            padding-left: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #fff;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #fff;
+            border: 2px solid #000;
+            color: #000;
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            background: #fff;
+            border: 2px solid #000;
+            box-shadow: inset 0 0 0 3px #000;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #fff;
+            border: 2px solid #000;
+            color: #000;
+            cursor: pointer;
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #000;
+            color: #fff;
+            border: 2px solid #fff;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .output-panel {
+            background: #000;
+            border: 2px solid #fff;
+            padding: 10px;
+            margin-top: 15px;
+            min-height: 80px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #fff;
+        }
+
+        .output-panel.success {
+            border: 2px solid #fff;
+            color: #fff;
+            background: #000;
+        }
+
+        .output-panel.error {
+            border: 2px solid #fff;
+            color: #fff;
+            background: #000;
+        }
+
+        .output-panel.info {
+            border: 2px solid #fff;
+            color: #fff;
+            background: #000;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 2px solid #fff;
+        }
+
+        .status-indicator.online {
+            background: #00ff00;
+            box-shadow: 0 0 8px #00ff00;
+        }
+
+        .status-indicator.offline {
+            background: #ff0000;
+            box-shadow: 0 0 8px #ff0000;
+        }
+
+        .status-line {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #fff;
+            text-align: center;
+            background: #000;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .session-info {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.85em;
+            color: #000;
+        }
+
+        .session-info strong {
+            color: #000;
+        }
+
+        .control-panel {
+            border: 2px solid #fff;
+            background: #000;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0;
+        }
+
+        .control-panel h2 {
+            color: #fff;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #fff;
+            padding-bottom: 10px;
+        }
+
+        .progress {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #fff;
+            border: 2px solid #000;
+            margin: 5px 0;
+            color: #000;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .divider {
+            border-top: 2px solid #fff;
+            margin: 30px 0;
+        }
+
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #fff;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TardQuest API Test Suite</h1>
+
+        <!-- API Status -->
+        <div class="status-line" id="apiStatus">
+            <span class="status-indicator offline"></span>
+            <span id="statusText">Checking API Status...</span>
+        </div>
+
+        <!-- Session Control Panel -->
+        <div class="control-panel">
+            <h2>Session Management</h2>
+            <div class="button-group">
+                <button onclick="createNewSession()">Create New Session</button>
+                <button onclick="loadSessionFromStorage()">Load Stored Session</button>
+                <button onclick="clearSessionStorage()">Clear Session Storage</button>
+            </div>
+            <div class="session-info">
+                <strong>Session ID:</strong> <span id="sessionIdDisplay">None</span><br>
+                <strong>Status:</strong> <span id="sessionStatusDisplay">Not initialized</span><br>
+                <strong>Current Floor:</strong> <span id="floorDisplay">-</span><br>
+                <strong>Current Level:</strong> <span id="levelDisplay">-</span>
+            </div>
+        </div>
+
+        <div class="test-grid">
+            <!-- VocaGuard Tests -->
+            <div class="test-panel">
+                <h2>VocaGuard (Anti-Cheat)</h2>
+
+                <h3>Session Management</h3>
+                <div class="button-group">
+                    <button onclick="testVocaguardStart()">Start Session</button>
+                    <button onclick="testValidate()">Validate Session</button>
+                </div>
+
+                <h3>Progress Update</h3>
+                <div class="form-group">
+                    <label>Floor: <input type="number" id="testFloor" value="1" min="1" max="100"></label>
+                </div>
+                <div class="form-group">
+                    <label>Level: <input type="number" id="testLevel" value="1" min="1" max="100"></label>
+                </div>
+                <div class="button-group">
+                    <button onclick="testVocaguardUpdate()">Update Progress</button>
+                </div>
+
+                <h3>Anti-Cheat Tests</h3>
+                <div class="button-group">
+                    <button onclick="testFloorRegression()">Test Floor Regression</button>
+                    <button onclick="testLevelRegression()">Test Level Regression</button>
+                    <button onclick="testFloorSkip()">Test Floor Skip</button>
+                </div>
+
+                <div class="output-panel" id="vocaguardOutput"></div>
+            </div>
+
+            <!-- Pigeon Purchase Tests -->
+            <div class="test-panel">
+                <h2>Carrier Pigeon Purchase</h2>
+
+                <h3>Inventory Check</h3>
+                <div class="button-group">
+                    <button onclick="testPigeonInventory()">Check Inventory</button>
+                </div>
+
+                <h3>Purchase Pigeon</h3>
+                <div class="form-group">
+                    <label>Quantity: <input type="number" id="purchaseQty" value="1" min="1" max="20"></label>
+                </div>
+                <div class="button-group">
+                    <button onclick="testPigeonPurchase()">Buy Pigeon(s)</button>
+                    <button onclick="testPigeonPurchaseRepeated()">Buy Multiple (Spam Test)</button>
+                </div>
+
+                <h3>Purchase Limit Tests</h3>
+                <div class="button-group">
+                    <button onclick="testPigeonLimit()">Test Max Pigeon Limit</button>
+                </div>
+
+                <div class="output-panel" id="pigeonOutput"></div>
+            </div>
+
+            <!-- Pigeon Messaging Tests -->
+            <div class="test-panel">
+                <h2>Carrier Pigeon Messaging</h2>
+
+                <h3>Send Message</h3>
+                <div class="form-group">
+                    <label>Message:</label>
+                    <textarea id="messageInput" placeholder="Enter message (max 420 chars)"></textarea>
+                </div>
+                <div class="button-group">
+                    <button onclick="testPigeonSend()">Send Message</button>
+                    <button onclick="testPigeonSendEmpty()">Test Empty Message</button>
+                </div>
+
+                <h3>Message Sanitization Tests</h3>
+                <div class="button-group">
+                    <button onclick="testPigeonSendHTML()">Send HTML Tags</button>
+                    <button onclick="testPigeonSendLong()">Send Long Message</button>
+                    <button onclick="testPigeonSendDuplicate()">Send Duplicate</button>
+                </div>
+
+                <h3>Receive Messages</h3>
+                <div class="button-group">
+                    <button onclick="testPigeonDelivery()">Check for Messages</button>
+                    <button onclick="testPigeonDeliveryRepeated()">Poll Messages (5x)</button>
+                </div>
+
+                <div class="output-panel" id="messagingOutput"></div>
+            </div>
+
+            <!-- Leaderboard Tests -->
+            <div class="test-panel">
+                <h2>Leaderboard</h2>
+
+                <h3>View Leaderboard</h3>
+                <div class="button-group">
+                    <button onclick="testLeaderboardGet()">Get Leaderboard</button>
+                </div>
+
+                <h3>Submit Score (Requires Captcha)</h3>
+                <div class="form-group">
+                    <label>Name (max 5 chars): <input type="text" id="leaderboardName" maxlength="5" value="TEST"></label>
+                </div>
+                <div class="form-group">
+                    <label>Captcha Token: <input type="text" id="captchaToken" placeholder="Mock token or leave empty"></label>
+                </div>
+                <div class="button-group">
+                    <button onclick="testLeaderboardSubmit()">Submit Score</button>
+                    <button onclick="testLeaderboardSubmitInvalid()">Test Invalid Name</button>
+                </div>
+
+                <div class="output-panel" id="leaderboardOutput"></div>
+            </div>
+
+            <!-- Abuse Detection Tests -->
+            <div class="test-panel">
+                <h2>Abuse Detection & Rate Limiting</h2>
+
+                <h3>Rate Limit Tests</h3>
+                <div class="button-group">
+                    <button onclick="testRateLimitUpdate()">Spam Updates (11x/min)</button>
+                    <button onclick="testRateLimitSend()">Spam Messages (6x/min)</button>
+                </div>
+
+                <h3>Duplicate Detection</h3>
+                <div class="button-group">
+                    <button onclick="testDuplicateMessage()">Send Same Message Twice</button>
+                </div>
+
+                <h3>Admin Abuse Status (Localhost Only)</h3>
+                <div class="button-group">
+                    <button onclick="testAbuseStatus()">Get Abuse Status</button>
+                </div>
+
+                <div class="output-panel" id="abuseOutput"></div>
+            </div>
+
+            <!-- API Health Tests -->
+            <div class="test-panel">
+                <h2>API Health & Status</h2>
+
+                <h3>Health Checks</h3>
+                <div class="button-group">
+                    <button onclick="testApiStatus()">Check API Status</button>
+                    <button onclick="testCORS()">Test CORS</button>
+                </div>
+
+                <h3>Performance</h3>
+                <div class="button-group">
+                    <button onclick="testResponseTime()">Measure Response Time</button>
+                </div>
+
+                <div class="output-panel" id="healthOutput"></div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Comprehensive Test Suite -->
+        <div class="control-panel">
+            <h2>Automated Test Suites</h2>
+            <div class="button-group">
+                <button onclick="runFullTestSuite()">Run Full Test Suite</button>
+                <button onclick="runPigeonWorkflow()">Run Pigeon Purchase Workflow</button>
+                <button onclick="runMessagingWorkflow()">Run Messaging Workflow</button>
+                <button onclick="clearCombinedOutput()">Clear Test Output</button>
+            </div>
+            <div id="combinedTestOutput" class="output-panel info" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://vocapepper.com:9601';
+        const LS_SESSION_KEY = 'vocaguardSessionId';
+        let isTestSuiteRunning = false;
+
+        // Unified logging system
+        function logToOutput(elementId, message, type = 'info') {
+            const elem = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'success' ? '[✓]' : type === 'error' ? '[✗]' : '[i]';
+            elem.textContent += `${timestamp} ${prefix} ${message}\n`;
+            elem.className = `output-panel ${type}`;
+            elem.scrollTop = elem.scrollHeight;
+        }
+
+        function clearOutput(elementId) {
+            const elem = document.getElementById(elementId);
+            if (elem) elem.textContent = '';
+        }
+
+        function clearCombinedOutput() {
+            clearOutput('combinedTestOutput');
+        }
+
+        function clearAllOutputs() {
+            document.querySelectorAll('.output-panel').forEach(el => el.textContent = '');
+        }
+
+        // Unified verbose logging for test suites
+        function testLog(message, type = 'info') {
+            logToOutput('combinedTestOutput', message, type);
+        }
+
+        // Individual panel logging (for non-suite tests)
+        function appendOutput(elementId, message, type = 'info') {
+            logToOutput(elementId, message, type);
+        }
+
+        // Utility Functions
+        function getSessionId() {
+            return sessionStorage.getItem(LS_SESSION_KEY);
+        }
+
+        function setSessionId(id) {
+            sessionStorage.setItem(LS_SESSION_KEY, id);
+            updateSessionDisplay();
+        }
+
+        function updateSessionDisplay() {
+            const sid = getSessionId();
+            document.getElementById('sessionIdDisplay').textContent = sid ? sid.substring(0, 12) + '...' : 'None';
+            document.getElementById('sessionStatusDisplay').textContent = sid ? 'Active' : 'Inactive';
+        }
+
+        async function checkApiStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard/status`, { method: 'GET' });
+                return res.ok;
+            } catch {
+                return false;
+            }
+        }
+
+        async function updateApiStatus() {
+            const online = await checkApiStatus();
+            const indicator = document.querySelector('.status-indicator');
+            const statusText = document.getElementById('statusText');
+            if (online) {
+                indicator.className = 'status-indicator online';
+                statusText.textContent = 'API Online and Responding';
+            } else {
+                indicator.className = 'status-indicator offline';
+                statusText.textContent = 'API Offline or Unreachable (CORS Error? Run on localhost:5500 or 9599)';
+            }
+        }
+
+        // Session Management
+        async function createNewSession() {
+            clearOutput('vocaguardOutput');
+            appendOutput('vocaguardOutput', 'Creating new VocaGuard session...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.session_id) {
+                    setSessionId(data.session_id);
+                    appendOutput('vocaguardOutput', `Session created: ${data.session_id}`, 'success');
+                } else {
+                    appendOutput('vocaguardOutput', 'No session ID returned', 'error');
+                }
+            } catch (err) {
+                appendOutput('vocaguardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        function loadSessionFromStorage() {
+            updateSessionDisplay();
+            const sid = getSessionId();
+            if (sid) {
+                appendOutput('vocaguardOutput', `Loaded session: ${sid}`, 'success');
+            } else {
+                appendOutput('vocaguardOutput', 'No session found in storage', 'error');
+            }
+        }
+
+        function clearSessionStorage() {
+            sessionStorage.removeItem(LS_SESSION_KEY);
+            updateSessionDisplay();
+            appendOutput('vocaguardOutput', 'Session storage cleared', 'info');
+        }
+
+        // VocaGuard Tests
+        async function testVocaguardStart() {
+            await createNewSession();
+        }
+
+        async function testVocaguardUpdate() {
+            clearOutput('vocaguardOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('vocaguardOutput', 'No session ID. Create a session first.', 'error');
+                return;
+            }
+            const floor = parseInt(document.getElementById('testFloor').value);
+            const level = parseInt(document.getElementById('testLevel').value);
+            appendOutput('vocaguardOutput', `Updating: Floor=${floor}, Level=${level}`, 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor, level })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('floorDisplay').textContent = floor;
+                    document.getElementById('levelDisplay').textContent = level;
+                    appendOutput('vocaguardOutput', `Progress updated: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    appendOutput('vocaguardOutput', `Error: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('vocaguardOutput', `Network error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testValidate() {
+            clearOutput('vocaguardOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('vocaguardOutput', 'No session ID. Create a session first.', 'error');
+                return;
+            }
+            const floor = parseInt(document.getElementById('testFloor').value);
+            const level = parseInt(document.getElementById('testLevel').value);
+            appendOutput('vocaguardOutput', `Validating: Floor=${floor}, Level=${level}`, 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor, level })
+                });
+                const data = await res.json();
+                if (data.result === 'pass') {
+                    appendOutput('vocaguardOutput', 'Validation PASSED ✓', 'success');
+                } else {
+                    appendOutput('vocaguardOutput', `Validation FAILED: ${data.reason}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('vocaguardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testFloorRegression() {
+            clearOutput('vocaguardOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('vocaguardOutput', 'Create a session first', 'error');
+                return;
+            }
+            appendOutput('vocaguardOutput', 'Testing floor regression (should fail)...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor: 0, level: 1 })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    appendOutput('vocaguardOutput', `✓ Correctly rejected: ${data.error}`, 'success');
+                } else {
+                    appendOutput('vocaguardOutput', 'Error: Should have been rejected!', 'error');
+                }
+            } catch (err) {
+                appendOutput('vocaguardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testLevelRegression() {
+            clearOutput('vocaguardOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('vocaguardOutput', 'Create a session first', 'error');
+                return;
+            }
+            // First set level to 5
+            await fetch(`${API_BASE}/api/vocaguard/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sid, floor: 1, level: 5 })
+            });
+            appendOutput('vocaguardOutput', 'Set level to 5, now testing regression...', 'info');
+            // Try to set back to 2
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor: 1, level: 2 })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    appendOutput('vocaguardOutput', `✓ Correctly rejected: ${data.error}`, 'success');
+                } else {
+                    appendOutput('vocaguardOutput', 'Error: Should have been rejected!', 'error');
+                }
+            } catch (err) {
+                appendOutput('vocaguardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testFloorSkip() {
+            clearOutput('vocaguardOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('vocaguardOutput', 'Create a session first', 'error');
+                return;
+            }
+            appendOutput('vocaguardOutput', 'Testing floor skip detection (floor 1 -> 5)...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor: 5, level: 1 })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    appendOutput('vocaguardOutput', `✓ Correctly rejected: ${data.error}`, 'success');
+                } else {
+                    appendOutput('vocaguardOutput', 'Error: Should have been rejected!', 'error');
+                }
+            } catch (err) {
+                appendOutput('vocaguardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Pigeon Tests
+        async function testPigeonInventory() {
+            clearOutput('pigeonOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('pigeonOutput', 'No session ID', 'error');
+                return;
+            }
+            appendOutput('pigeonOutput', 'Checking pigeon inventory...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/inventory?session_id=${sid}`);
+                const data = await res.json();
+                if (res.ok) {
+                    appendOutput('pigeonOutput', `Pigeons in inventory: ${data.carrierPigeon}`, 'success');
+                } else {
+                    appendOutput('pigeonOutput', `Error: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('pigeonOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonPurchase() {
+            clearOutput('pigeonOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('pigeonOutput', 'No session ID', 'error');
+                return;
+            }
+            const qty = parseInt(document.getElementById('purchaseQty').value);
+            appendOutput('pigeonOutput', `Purchasing ${qty} pigeon(s)...`, 'info');
+            try {
+                for (let i = 0; i < qty; i++) {
+                    const res = await fetch(`${API_BASE}/api/pigeon/purchase`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.purchased) {
+                        appendOutput('pigeonOutput', `✓ Purchase ${i + 1}: ${data.carrierPigeon} remaining`, 'success');
+                    } else {
+                        appendOutput('pigeonOutput', `✗ Purchase ${i + 1} failed: ${data.error}`, 'error');
+                        break;
+                    }
+                }
+            } catch (err) {
+                appendOutput('pigeonOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonPurchaseRepeated() {
+            clearOutput('pigeonOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('pigeonOutput', 'No session ID', 'error');
+                return;
+            }
+            appendOutput('pigeonOutput', 'Spam purchasing 11 pigeons (rate limit 20/hr)...', 'info');
+            const startTime = Date.now();
+            try {
+                for (let i = 0; i < 11; i++) {
+                    const res = await fetch(`${API_BASE}/api/pigeon/purchase`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid })
+                    });
+                    const data = await res.json();
+                    const elapsed = Date.now() - startTime;
+                    appendOutput('pigeonOutput', `${i + 1}. [${elapsed}ms] ${res.ok ? '✓' : '✗'} - ${data.carrierPigeon !== undefined ? data.carrierPigeon : data.error}`, 'info');
+                }
+            } catch (err) {
+                appendOutput('pigeonOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonLimit() {
+            clearOutput('pigeonOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('pigeonOutput', 'No session ID', 'error');
+                return;
+            }
+            appendOutput('pigeonOutput', 'Attempting to exceed max pigeon limit (20)...', 'info');
+            try {
+                for (let i = 0; i < 25; i++) {
+                    const res = await fetch(`${API_BASE}/api/pigeon/purchase`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid })
+                    });
+                    const data = await res.json();
+                    if (!res.ok || !data.purchased) {
+                        appendOutput('pigeonOutput', `Hit limit at attempt ${i + 1}: ${data.error}`, 'success');
+                        break;
+                    }
+                    if (i % 5 === 0) {
+                        appendOutput('pigeonOutput', `Attempt ${i + 1}: ${data.carrierPigeon} in inventory`, 'info');
+                    }
+                }
+            } catch (err) {
+                appendOutput('pigeonOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Messaging Tests
+        async function testPigeonSend() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('messagingOutput', 'No session ID', 'error');
+                return;
+            }
+            const message = document.getElementById('messageInput').value;
+            if (!message) {
+                appendOutput('messagingOutput', 'No message entered', 'error');
+                return;
+            }
+            appendOutput('messagingOutput', `Sending message (${message.length} chars)...`, 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message })
+                });
+                const data = await res.json();
+                if (res.ok && data.stored) {
+                    appendOutput('messagingOutput', `✓ Message sent!\nQueue length: ${data.queue_length_pending}\nRemaining pigeons: ${data.carrierPigeon_remaining}`, 'success');
+                } else {
+                    appendOutput('messagingOutput', `✗ Failed: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonSendEmpty() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            appendOutput('messagingOutput', 'Testing empty message rejection...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message: '' })
+                });
+                if (!res.ok) {
+                    appendOutput('messagingOutput', `✓ Correctly rejected empty message`, 'success');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonSendHTML() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            const htmlMessage = '&lt;script&gt;alert("xss")&lt;/script&gt;Hello!';
+            appendOutput('messagingOutput', 'Testing HTML sanitization...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message: htmlMessage })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    appendOutput('messagingOutput', `✓ Message sanitized\nOriginal: ${htmlMessage}\nSanitized: ${data.sanitized_text}`, 'success');
+                } else {
+                    appendOutput('messagingOutput', `Message rejected: ${data.error}`, 'info');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonSendLong() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            const longMessage = 'A'.repeat(500);
+            appendOutput('messagingOutput', `Testing long message (${longMessage.length} chars, max 420)...`, 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message: longMessage })
+                });
+                const data = await res.json();
+                if (res.ok && data.sanitized_text) {
+                    appendOutput('messagingOutput', `✓ Message truncated to ${data.sanitized_text.length} chars`, 'success');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonSendDuplicate() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            const message = 'Test duplicate message';
+            appendOutput('messagingOutput', 'Sending same message twice...', 'info');
+            try {
+                // First send
+                const res1 = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message })
+                });
+                if (res1.ok) {
+                    appendOutput('messagingOutput', '✓ First message sent', 'success');
+                }
+                // Second send (should be rejected)
+                const res2 = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message })
+                });
+                const data2 = await res2.json();
+                if (!res2.ok && data2.error.includes('Duplicate')) {
+                    appendOutput('messagingOutput', '✓ Duplicate correctly rejected', 'success');
+                } else {
+                    appendOutput('messagingOutput', '✗ Duplicate was not rejected!', 'error');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonDelivery() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('messagingOutput', 'No session ID', 'error');
+                return;
+            }
+            appendOutput('messagingOutput', 'Checking for delivered messages...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/delivery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid })
+                });
+                const data = await res.json();
+                if (data.pigeon_message) {
+                    appendOutput('messagingOutput', `✓ Message received!\n"${data.pigeon_message}"\nRemaining: ${data.remaining_queue_pending}`, 'success');
+                } else {
+                    appendOutput('messagingOutput', 'No messages in queue', 'info');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonDeliveryRepeated() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            appendOutput('messagingOutput', 'Polling for messages 5 times...', 'info');
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/pigeon/delivery`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid })
+                    });
+                    const data = await res.json();
+                    const msg = data.pigeon_message ? `"${data.pigeon_message}"` : 'Empty';
+                    appendOutput('messagingOutput', `${i + 1}. ${msg}`, 'info');
+                } catch (err) {
+                    appendOutput('messagingOutput', `Error on poll ${i + 1}: ${err.message}`, 'error');
+                }
+                // Small delay between polls
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        // Leaderboard Tests
+        async function testLeaderboardGet() {
+            clearOutput('leaderboardOutput');
+            appendOutput('leaderboardOutput', 'Fetching leaderboard...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard`, { method: 'GET' });
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    appendOutput('leaderboardOutput', `Top scores:\n${data.slice(0, 5).map((e, i) => `${i + 1}. ${e.name} - Floor ${e.floor}, Level ${e.level}`).join('\n')}`, 'success');
+                } else {
+                    appendOutput('leaderboardOutput', JSON.stringify(data, null, 2), 'info');
+                }
+            } catch (err) {
+                appendOutput('leaderboardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testLeaderboardSubmit() {
+            clearOutput('leaderboardOutput');
+            appendOutput('leaderboardOutput', 'Note: This requires a valid Turnstile captcha token', 'info');
+            const name = document.getElementById('leaderboardName').value;
+            const token = document.getElementById('captchaToken').value;
+            if (!token) {
+                appendOutput('leaderboardOutput', 'Captcha token is required. Get one from Turnstile or use a mock token.', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        floor: 1,
+                        level: 1,
+                        session_id: getSessionId(),
+                        hcaptcha_token: token
+                    })
+                });
+                const data = await res.json();
+                appendOutput('leaderboardOutput', `Response: ${JSON.stringify(data, null, 2)}`, res.ok ? 'success' : 'error');
+            } catch (err) {
+                appendOutput('leaderboardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testLeaderboardSubmitInvalid() {
+            clearOutput('leaderboardOutput');
+            appendOutput('leaderboardOutput', 'Testing invalid name (too long)...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'VERYLONGNAME',
+                        floor: 1,
+                        level: 1,
+                        session_id: getSessionId(),
+                        hcaptcha_token: 'fake-token'
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    appendOutput('leaderboardOutput', `✓ Correctly rejected: ${data.error}`, 'success');
+                }
+            } catch (err) {
+                appendOutput('leaderboardOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Abuse & Health Tests
+        async function testRateLimitUpdate() {
+            clearOutput('abuseOutput');
+            appendOutput('abuseOutput', 'Sending 11 updates in rapid succession (limit: 10/min)...', 'info');
+            const sid = getSessionId();
+            for (let i = 0; i < 11; i++) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid, floor: 1, level: 1 })
+                    });
+                    const status = res.status === 429 ? '⚠ RATE LIMITED' : '✓ OK';
+                    appendOutput('abuseOutput', `${i + 1}. ${status}`, res.status === 429 ? 'error' : 'success');
+                } catch (err) {
+                    appendOutput('abuseOutput', `${i + 1}. Error: ${err.message}`, 'error');
+                }
+            }
+        }
+
+        async function testRateLimitSend() {
+            clearOutput('abuseOutput');
+            appendOutput('abuseOutput', 'Sending 6 messages in rapid succession (limit: 5/min)...', 'info');
+            const sid = getSessionId();
+            for (let i = 0; i < 6; i++) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid, message: `Message ${i}` })
+                    });
+                    const status = res.status === 429 ? '⚠ RATE LIMITED' : res.ok ? '✓ OK' : '✗ FAIL';
+                    appendOutput('abuseOutput', `${i + 1}. ${status}`, res.status === 429 ? 'error' : res.ok ? 'success' : 'error');
+                } catch (err) {
+                    appendOutput('abuseOutput', `${i + 1}. Error: ${err.message}`, 'error');
+                }
+            }
+        }
+
+        async function testDuplicateMessage() {
+            clearOutput('abuseOutput');
+            appendOutput('abuseOutput', 'Testing duplicate detection...', 'info');
+            const sid = getSessionId();
+            const msg = 'Duplicate test message';
+            for (let i = 0; i < 2; i++) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid, message: msg })
+                    });
+                    const status = i === 0 ? '✓ First' : res.ok ? '✗ Should fail' : '✓ Rejected';
+                    appendOutput('abuseOutput', `Attempt ${i + 1}: ${status}`, i === 0 && res.ok ? 'success' : i === 1 && !res.ok ? 'success' : 'error');
+                } catch (err) {
+                    appendOutput('abuseOutput', `Error: ${err.message}`, 'error');
+                }
+            }
+        }
+
+        async function testAbuseStatus() {
+            clearOutput('abuseOutput');
+            appendOutput('abuseOutput', 'Fetching abuse status (localhost only)...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/abuse/status`);
+                const data = await res.json();
+                if (res.ok) {
+                    appendOutput('abuseOutput', `Flagged IPs: ${Object.keys(data.flagged).length}\nRecent events: ${data.vocaguard_events.length}`, 'success');
+                } else {
+                    appendOutput('abuseOutput', `Unauthorized (expected if not localhost): ${data.error}`, 'info');
+                }
+            } catch (err) {
+                appendOutput('abuseOutput', `Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testApiStatus() {
+            clearOutput('healthOutput');
+            appendOutput('healthOutput', 'Checking API status...', 'info');
+            try {
+                const start = Date.now();
+                const res = await fetch(`${API_BASE}/api/leaderboard/status`);
+                const elapsed = Date.now() - start;
+                if (res.ok) {
+                    appendOutput('healthOutput', `✓ API Healthy\nResponse time: ${elapsed}ms`, 'success');
+                    updateApiStatus();
+                } else {
+                    appendOutput('healthOutput', `✗ API returned status ${res.status}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('healthOutput', `✗ API unreachable: ${err.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            clearOutput('healthOutput');
+            appendOutput('healthOutput', 'Testing CORS...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard/status`, { mode: 'cors' });
+                if (res.ok) {
+                    appendOutput('healthOutput', '✓ CORS enabled', 'success');
+                }
+            } catch (err) {
+                appendOutput('healthOutput', `✗ CORS error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testResponseTime() {
+            clearOutput('healthOutput');
+            appendOutput('healthOutput', 'Measuring response times...', 'info');
+            const times = [];
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const start = Date.now();
+                    await fetch(`${API_BASE}/api/leaderboard/status`);
+                    times.push(Date.now() - start);
+                } catch (err) {}
+            }
+            if (times.length > 0) {
+                const avg = Math.round(times.reduce((a, b) => a + b) / times.length);
+                const min = Math.min(...times);
+                const max = Math.max(...times);
+                appendOutput('healthOutput', `Average: ${avg}ms\nMin: ${min}ms\nMax: ${max}ms`, 'success');
+            }
+        }
+
+        // Automated Workflows
+        async function runFullTestSuite() {
+            if (isTestSuiteRunning) return;
+            isTestSuiteRunning = true;
+            clearCombinedOutput();
+            testLog('=== FULL TEST SUITE STARTED ===', 'info');
+            testLog(`Time: ${new Date().toLocaleString()}`, 'info');
+            testLog('', 'info');
+
+            try {
+                testLog('PHASE 1: Session Management', 'info');
+                testLog('Creating new VocaGuard session...', 'info');
+                await new Promise(resolve => {
+                    const originalFetch = window.fetch;
+                    window.fetch = function(...args) {
+                        return originalFetch.apply(this, args).then(r => {
+                            if (args[0].includes('/vocaguard/start')) {
+                                r.clone().json().then(data => {
+                                    if (data.session_id) {
+                                        setSessionId(data.session_id);
+                                        testLog(`✓ Session created: ${data.session_id.substring(0, 12)}...`, 'success');
+                                    }
+                                });
+                            }
+                            return r;
+                        });
+                    };
+                    createNewSession();
+                    window.fetch = originalFetch;
+                    setTimeout(resolve, 1500);
+                });
+
+                testLog('', 'info');
+                testLog('PHASE 2: Anti-Cheat Testing', 'info');
+                document.getElementById('testFloor').value = '1';
+                document.getElementById('testLevel').value = '1';
+                testLog('Updating progress: Floor=1, Level=1...', 'info');
+                await testVocaguardUpdateSuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Validating session...', 'info');
+                await testValidateSuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('', 'info');
+                testLog('PHASE 3: Pigeon Purchase Testing', 'info');
+                testLog('Checking inventory...', 'info');
+                await testPigeonInventorySuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Purchasing 3 pigeons...', 'info');
+                for (let i = 0; i < 3; i++) {
+                    await testPigeonPurchaseSuite();
+                    await new Promise(r => setTimeout(r, 300));
+                }
+
+                testLog('', 'info');
+                testLog('PHASE 4: Messaging Testing', 'info');
+                document.getElementById('messageInput').value = 'Test message from automated suite';
+                testLog('Sending message...', 'info');
+                await testPigeonSendSuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Checking for delivered messages...', 'info');
+                await testPigeonDeliverySuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('', 'info');
+                testLog('PHASE 5: Leaderboard Testing', 'info');
+                testLog('Fetching leaderboard...', 'info');
+                await testLeaderboardGetSuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('', 'info');
+                testLog('PHASE 6: API Health Check', 'info');
+                testLog('Checking API status...', 'info');
+                await testApiStatusSuite();
+
+                testLog('', 'info');
+                testLog('=== FULL TEST SUITE COMPLETED ===', 'success');
+                testLog(`Final Time: ${new Date().toLocaleString()}`, 'success');
+            } catch (err) {
+                testLog(`SUITE ERROR: ${err.message}`, 'error');
+            } finally {
+                isTestSuiteRunning = false;
+            }
+        }
+
+        async function runPigeonWorkflow() {
+            if (isTestSuiteRunning) return;
+            isTestSuiteRunning = true;
+            clearCombinedOutput();
+            testLog('=== PIGEON PURCHASE WORKFLOW STARTED ===', 'info');
+            
+            try {
+                testLog('Step 1: Check inventory', 'info');
+                await testPigeonInventorySuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Step 2: Purchase pigeon', 'info');
+                await testPigeonPurchaseSuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Step 3: Verify inventory', 'info');
+                await testPigeonInventorySuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('', 'info');
+                testLog('=== PIGEON PURCHASE WORKFLOW COMPLETED ===', 'success');
+            } catch (err) {
+                testLog(`WORKFLOW ERROR: ${err.message}`, 'error');
+            } finally {
+                isTestSuiteRunning = false;
+            }
+        }
+
+        async function runMessagingWorkflow() {
+            if (isTestSuiteRunning) return;
+            isTestSuiteRunning = true;
+            clearCombinedOutput();
+            testLog('=== MESSAGING WORKFLOW STARTED ===', 'info');
+            
+            try {
+                testLog('Step 1: Prepare pigeons for sending', 'info');
+                await testPigeonInventorySuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Step 2: Send message', 'info');
+                document.getElementById('messageInput').value = 'Hello from automated messaging workflow!';
+                await testPigeonSendSuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('Step 3: Check for delivered messages', 'info');
+                await testPigeonDeliverySuite();
+                await new Promise(r => setTimeout(r, 500));
+
+                testLog('', 'info');
+                testLog('=== MESSAGING WORKFLOW COMPLETED ===', 'success');
+            } catch (err) {
+                testLog(`WORKFLOW ERROR: ${err.message}`, 'error');
+            } finally {
+                isTestSuiteRunning = false;
+            }
+        }
+
+        async function testApiStatusSuite() {
+            try {
+                const start = Date.now();
+                const res = await fetch(`${API_BASE}/api/leaderboard/status`);
+                const elapsed = Date.now() - start;
+                if (res.ok) {
+                    testLog(`✓ API Health: ${elapsed}ms response time`, 'success');
+                    updateApiStatus();
+                } else {
+                    testLog(`✗ API returned status ${res.status}`, 'error');
+                }
+            } catch (err) {
+                testLog(`✗ API unreachable: ${err.message}`, 'error');
+            }
+        }
+
+        // Suite versions of tests (non-destructive output)
+        async function testVocaguardUpdateSuite() {
+            const sid = getSessionId();
+            if (!sid) {
+                testLog('✗ No session ID', 'error');
+                return;
+            }
+            const floor = parseInt(document.getElementById('testFloor').value);
+            const level = parseInt(document.getElementById('testLevel').value);
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor, level })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    testLog(`✓ Progress updated: Floor=${floor}, Level=${level}`, 'success');
+                } else {
+                    testLog(`✗ Update failed: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testValidateSuite() {
+            const sid = getSessionId();
+            if (!sid) {
+                testLog('✗ No session ID', 'error');
+                return;
+            }
+            const floor = parseInt(document.getElementById('testFloor').value);
+            const level = parseInt(document.getElementById('testLevel').value);
+            try {
+                const res = await fetch(`${API_BASE}/api/vocaguard/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, floor, level })
+                });
+                const data = await res.json();
+                if (data.result === 'pass') {
+                    testLog(`✓ Validation PASSED`, 'success');
+                } else {
+                    testLog(`✗ Validation FAILED: ${data.reason}`, 'error');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonInventorySuite() {
+            const sid = getSessionId();
+            if (!sid) {
+                testLog('✗ No session ID', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/inventory?session_id=${sid}`);
+                const data = await res.json();
+                if (res.ok) {
+                    testLog(`✓ Pigeon inventory: ${data.carrierPigeon}`, 'success');
+                } else {
+                    testLog(`✗ Error: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonPurchaseSuite() {
+            const sid = getSessionId();
+            if (!sid) {
+                testLog('✗ No session ID', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/purchase`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid })
+                });
+                const data = await res.json();
+                if (res.ok && data.purchased) {
+                    testLog(`✓ Pigeon purchased: ${data.carrierPigeon} remaining`, 'success');
+                } else {
+                    testLog(`✗ Purchase failed: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonSendSuite() {
+            const sid = getSessionId();
+            if (!sid) {
+                testLog('✗ No session ID', 'error');
+                return;
+            }
+            const message = document.getElementById('messageInput').value;
+            if (!message) {
+                testLog('✗ No message entered', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, message })
+                });
+                const data = await res.json();
+                if (res.ok && data.stored) {
+                    testLog(`✓ Message sent (${message.length} chars): ${data.queue_length_pending} in queue`, 'success');
+                } else {
+                    testLog(`✗ Send failed: ${data.error}`, 'error');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonDeliverySuite() {
+            const sid = getSessionId();
+            if (!sid) {
+                testLog('✗ No session ID', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/delivery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid })
+                });
+                const data = await res.json();
+                if (data.pigeon_message) {
+                    testLog(`✓ Message received: "${data.pigeon_message.substring(0, 50)}..."`, 'success');
+                } else {
+                    testLog('ℹ No messages in queue', 'info');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testLeaderboardGetSuite() {
+            try {
+                const res = await fetch(`${API_BASE}/api/leaderboard`, { method: 'GET' });
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    const topScores = data.slice(0, 3).map((e, i) => `${i + 1}. ${e.name} F${e.floor}L${e.level}`).join(', ');
+                    testLog(`✓ Leaderboard retrieved: ${topScores}`, 'success');
+                } else {
+                    testLog('ℹ Leaderboard empty', 'info');
+                }
+            } catch (err) {
+                testLog(`✗ Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateSessionDisplay();
+            updateApiStatus();
+            setInterval(updateApiStatus, 30000); // Check every 30 seconds
+        });
+    </script>
+</body>
+</html>
