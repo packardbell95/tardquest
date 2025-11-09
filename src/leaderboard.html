@@ -2,23 +2,21 @@
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  
   <title>Leaderboard</title>
   <style>
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: #fff #000;
+        ::-webkit-scrollbar {
+            width: 10px;
         }
 
-        *::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        *::-webkit-scrollbar-track {
+        ::-webkit-scrollbar-track {
             background: #000;
         }
 
-        *::-webkit-scrollbar-thumb {
-            background-color: #000;
-            border-radius: 0px;
-            border: 0px solid #fff;
+        ::-webkit-scrollbar-thumb {
+            background: #fff;
+            border: 1px solid #000;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
         }
 
         @font-face {

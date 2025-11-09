@@ -1,3 +1,20 @@
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #fff;
+    border: 1px solid #000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #ccc;
+}
 :root {
     --lime: #A8E038;
     --lavender: #E0D0FF;
@@ -155,6 +172,7 @@ html, body {
     padding: 0;
     color: var(--text);
     font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    overflow-x: hidden;
 }
 
 body {
