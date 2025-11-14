@@ -445,6 +445,8 @@
         </div>
 
     <script src="scripts/preloader-v2.js"></script>
+    <!-- VOCAP: must be loaded before any other API modules! -->
+    <script src="scripts/tardAPI.js"></script>
     <script src="scripts/tardboard.js"></script>
     <script src="scripts/pigeon.js"></script>
     <script src="scripts/no-arrow-key-scroll.js"></script>
@@ -9174,7 +9176,7 @@
                     // Inform player we're attempting a server purchase
                     merchant.say("Hold on, checking the coop...");
 
-                    fetch('https://vocapepper.com:9601/api/pigeon/purchase', {
+                    fetch(`${TardAPI.API_BASE}/api/pigeon/purchase`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ session_id: sessionId })
@@ -16661,6 +16663,7 @@
 
         function hideTitleScreen() {
             music.stop();
+            TardAPI.createSession();
             PigeonMessaging.ensurePolling();
 
             // @TODO Refactor this since it's duplicated in gamepad.js
