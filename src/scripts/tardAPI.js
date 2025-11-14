@@ -23,7 +23,7 @@ const TardAPI = (function() {
     // --- Configuration ---
 
     /** @const {string} Base URL for all API endpoints */
-    const API_BASE = 'http://localhost:9602';
+    const API_BASE = 'https://vocapepper.com:9601';
 
     /** @const {string} Client API version (major.minor must match server) */
     const CLIENT_API_VERSION = '3.0.251113';
