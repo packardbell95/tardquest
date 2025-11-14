@@ -23,7 +23,7 @@ const TardAPI = (function() {
     // --- Configuration ---
 
     /** @const {string} Base URL for all API endpoints */
-    const API_BASE = 'https://vocapepper.com:9601';
+    const API_BASE = 'http://localhost:9602';
 
     /** @const {string} Client API version (major.minor must match server) */
     const CLIENT_API_VERSION = '3.0.251113';
@@ -74,13 +74,14 @@ const TardAPI = (function() {
     // --- Utility Functions ---
 
     /**
-     * Retrieves current game state (floor and level)
-     * @returns {Object} Game state with floor and level properties
+     * Retrieves current game state (floor, level, and total experience)
+     * @returns {Object} Game state with floor, level, and totalExp properties
      */
     function getGameState() {
         const floorNum = (typeof floor !== 'undefined' && typeof floor === 'number' && !isNaN(floor)) ? floor : 1;
         const levelNum = (typeof player !== 'undefined' && typeof player.level === 'number' && !isNaN(player.level)) ? player.level : 1;
-        return { floor: floorNum, level: levelNum };
+        const totalExpNum = (typeof player !== 'undefined' && typeof player.totalExp === 'number' && !isNaN(player.totalExp)) ? player.totalExp : 0;
+        return { floor: floorNum, level: levelNum, totalExp: totalExpNum };
     }
 
     /**
@@ -236,7 +237,7 @@ const TardAPI = (function() {
             return { success: false, error: 'Update in flight' };
         }
 
-        const { floor, level } = getGameState();
+        const { floor, level, totalExp } = getGameState();
 
         // Skip if state hasn't changed
         if (floor === lastFloor && level === lastLevel) {
@@ -259,7 +260,7 @@ const TardAPI = (function() {
             const res = await fetch(`${API_BASE}/api/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId, floor, level })
+                body: JSON.stringify({ session_id: sessionId, floor, level, exp: totalExp })
             });
 
             if (!res.ok) {
@@ -403,32 +404,6 @@ const TardAPI = (function() {
         sessionStorage.removeItem(LS_CHALLENGE_KEY);
         log.info('Session cleared');
     }
-
-    // --- Automatic Progress Monitoring ---
-
-    /**
-     * Starts automatic progress monitoring
-     * Checks for floor/level changes every second and sends updates
-     * @private
-     */
-    function startProgressMonitoring() {
-        setInterval(async () => {
-            const state = getGameState();
-            
-            // Check if state has changed
-            if (state.floor !== lastFloor || state.level !== lastLevel) {
-                // Only update if we have a session or can create one
-                if (sessionId || !updateInFlight) {
-                    await updateProgress();
-                }
-            }
-        }, 1000);
-        
-        // log.debug('Progress monitoring started');
-    }
-
-    // Start monitoring on module load
-    startProgressMonitoring();
 
     // --- Public API ---
 

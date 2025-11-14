@@ -8442,6 +8442,7 @@
             speed: baseStats.speed,
             luck: baseStats.luck,
             exp: 0,
+            totalExp: 0,
             level: 1,
             stepsTakenOnCurrentFloor: 0,
             lastNearbyNPCs: new Set(),
@@ -8651,11 +8652,14 @@
                     : 192,
             getExpRequiredForLevelUp: () => player.level * 10,
             levelUp: () => {
-                const rolledOverExp = Math.max(0, player.exp - player.getExpRequiredForLevelUp());
+                const expRequired = player.getExpRequiredForLevelUp();
+                const rolledOverExp = Math.max(0, player.exp - expRequired);
+                player.totalExp += expRequired;
                 player.level++;
                 player.exp = rolledOverExp;
                 player.hp = getEffectiveStat('maxHp');
                 document.getElementById('playerLevel').innerText = player.level;
+                TardAPI.updateProgress();
             },
             getInputDelayMs: () => {
                 const minDelayMs = 1;
@@ -13825,6 +13829,7 @@
             generateMap();
             animTorchEnd();
             PigeonMessaging.ensurePolling();
+            TardAPI.updateProgress();
         }
 
         document.getElementById("game").addEventListener("animationend", e => {
