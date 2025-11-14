@@ -81,9 +81,6 @@ function ensureTurnstileScript() {
 
 // --- State ------------------------------------------------------------------
 
-// TardAPI handles session management, no need to duplicate here
-// All session operations go through TardAPI singleton
-
 /**
  * Updates the API status indicator in the dialog
  * @param {Document|Element} [root=document] - Root element to search for status indicator
