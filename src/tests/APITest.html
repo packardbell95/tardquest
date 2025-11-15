@@ -278,12 +278,7 @@
 
         <!-- Session Control Panel -->
         <div class="control-panel">
-            <h2>Session Management</h2>
-            <div class="button-group">
-                <button onclick="createNewSession()">Create New Session</button>
-                <button onclick="loadSessionFromStorage()">Load Stored Session</button>
-                <button onclick="clearSessionStorage()">Clear Session Storage</button>
-            </div>
+            <h2>Session Information</h2>
             <div class="session-info">
                 <strong>Session ID:</strong> <span id="sessionIdDisplay">None</span><br>
                 <strong>Status:</strong> <span id="sessionStatusDisplay">Not initialized</span><br>
@@ -293,14 +288,16 @@
         </div>
 
         <div class="test-grid">
-            <!-- VocaGuard Tests -->
+            <!-- Main Tests -->
             <div class="test-panel">
-                <h2>VocaGuard (Anti-Cheat)</h2>
+                <h2>Sessions & Anti-Cheat</h2>
 
                 <h3>Session Management</h3>
                 <div class="button-group">
-                    <button onclick="testVocaguardStart()">Start Session</button>
+                    <button onclick="createNewSession()">Start Session</button>
                     <button onclick="testValidate()">Validate Session</button>
+                    <button onclick="loadSessionFromStorage()">Load Stored Session</button>
+                    <button onclick="clearSessionStorage()">Clear Session Storage</button>
                 </div>
 
                 <h3>Progress Update</h3>
@@ -311,10 +308,11 @@
                     <label>Level: <input type="number" id="testLevel" value="1" min="1" max="100"></label>
                 </div>
                 <div class="button-group">
-                    <button onclick="testVocaguardUpdate()">Update Progress</button>
+                    <button onclick="testVocaguardUpdate()">Update Progress (/api/update)</button>
                 </div>
 
-                <h3>Anti-Cheat Tests</h3>
+                <h3>Anti-Cheat Validation Tests</h3>
+                <p style="color: #aaa; font-size: 0.85em; margin-bottom: 10px;">Optional modular anti-cheat validation. Disable with ENABLE_VOCAGUARD=false</p>
                 <div class="button-group">
                     <button onclick="testFloorRegression()">Test Floor Regression</button>
                     <button onclick="testLevelRegression()">Test Level Regression</button>
@@ -327,6 +325,7 @@
             <!-- Pigeon Purchase Tests -->
             <div class="test-panel">
                 <h2>Carrier Pigeon Purchase</h2>
+                <p style="color: #aaa; font-size: 0.85em; margin-bottom: 10px;">Purchase carrier pigeons to send messages (/api/purchase)</p>
 
                 <h3>Inventory Check</h3>
                 <div class="button-group">
@@ -353,6 +352,7 @@
             <!-- Pigeon Messaging Tests -->
             <div class="test-panel">
                 <h2>Carrier Pigeon Messaging</h2>
+                <p style="color: #aaa; font-size: 0.85em; margin-bottom: 10px;">Send and receive messages via pigeons (/api/send, /api/get-messages)</p>
 
                 <h3>Send Message</h3>
                 <div class="form-group">
@@ -383,6 +383,7 @@
             <!-- Leaderboard Tests -->
             <div class="test-panel">
                 <h2>Leaderboard</h2>
+                <p style="color: #aaa; font-size: 0.85em; margin-bottom: 10px;">Validate and submit scores to leaderboard. Respects ENABLE_VOCAGUARD flag for validation</p>
 
                 <h3>View Leaderboard</h3>
                 <div class="button-group">
@@ -399,9 +400,10 @@
                 <div id="turnstile-container" style="display: none;"></div>
                 <div class="button-group">
                     <button onclick="generateTurnstileToken()">Generate Token</button>
-                    <button onclick="testLeaderboardSubmit()">Submit Score</button>
+                    <button onclick="testLeaderboardSubmit()">Submit Score (/api/leaderboard)</button>
                     <button onclick="testLeaderboardSubmitInvalid()">Test Invalid Name</button>
                 </div>
+                <p style="color: #aaa; font-size: 0.85em; margin-top: 10px; margin-bottom: 0;">Note: VocaGuard validation only runs if enabled</p>
 
                 <div class="output-panel" id="leaderboardOutput"></div>
             </div>
@@ -409,6 +411,7 @@
             <!-- Abuse Detection Tests -->
             <div class="test-panel">
                 <h2>Abuse Detection & Rate Limiting</h2>
+                <p style="color: #aaa; font-size: 0.85em; margin-bottom: 10px;">Test rate limiting and abuse detection mechanisms</p>
 
                 <h3>Rate Limit Tests</h3>
                 <div class="button-group">
@@ -432,10 +435,11 @@
             <!-- API Health Tests -->
             <div class="test-panel">
                 <h2>API Health & Status</h2>
+                <p style="color: #aaa; font-size: 0.85em; margin-bottom: 10px;">Monitor API health and version information</p>
 
                 <h3>Health Checks</h3>
                 <div class="button-group">
-                    <button onclick="testApiStatus()">Check API Status</button>
+                    <button onclick="testApiStatus()">Check Status (/api/status)</button>
                     <button onclick="testCORS()">Test CORS</button>
                 </div>
 
@@ -464,9 +468,11 @@
     </div>
 
     <script>
-        const API_BASE = 'https://vocapepper.com:9601';
+        const API_BASE = 'https://vocapepper.com:9601'; // Change to your API base URL
+        const CLIENT_API_VERSION = '3.0.251110'; // Must match server API_VERSION (major.minor.x)
         const LS_SESSION_KEY = 'vocaguardSessionId';
-        const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW';
+        const LS_CHALLENGE_KEY = 'vocaguardChallengeData';
+        const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW'; // Replace with your actual site key
         let isTestSuiteRunning = false;
         let _turnstileReadyPromise = null;
         let turnstileCaptchaToken = null;
@@ -564,8 +570,18 @@
             const elem = document.getElementById(elementId);
             const timestamp = new Date().toLocaleTimeString();
             const prefix = type === 'success' ? '[✓]' : type === 'error' ? '[✗]' : '[i]';
-            elem.textContent += `${timestamp} ${prefix} ${message}\n`;
-            elem.className = `output-panel ${type}`;
+            
+            // Create a line with colored text based on type
+            let lineColor = '#fff'; // default white
+            if (type === 'success') {
+                lineColor = '#00ff00'; // green for success
+            } else if (type === 'error') {
+                lineColor = '#ff0000'; // red for error
+            }
+            
+            // Use innerHTML to support inline styling
+            const lineHTML = `<span style="color: ${lineColor};">${timestamp} ${prefix} ${message}</span>\n`;
+            elem.innerHTML += lineHTML;
             elem.scrollTop = elem.scrollHeight;
         }
 
@@ -602,15 +618,42 @@
             updateSessionDisplay();
         }
 
+        function getChallengeData() {
+            const data = sessionStorage.getItem(LS_CHALLENGE_KEY);
+            return data ? JSON.parse(data) : null;
+        }
+
+        function setChallengeData(challengeId, challengeSecret) {
+            sessionStorage.setItem(LS_CHALLENGE_KEY, JSON.stringify({
+                challenge_id: challengeId,
+                challenge_secret: challengeSecret
+            }));
+        }
+
         function updateSessionDisplay() {
             const sid = getSessionId();
             document.getElementById('sessionIdDisplay').textContent = sid ? sid.substring(0, 12) + '...' : 'None';
             document.getElementById('sessionStatusDisplay').textContent = sid ? 'Active' : 'Inactive';
         }
 
+        // Compute SHA256 hash for PoW challenge verification
+        async function computeSHA256(text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Compute PoW challenge proof
+        async function computePoWProof(sessionId, challengeSecret) {
+            const input = challengeSecret + sessionId;
+            return await computeSHA256(input);
+        }
+
         async function checkApiStatus() {
             try {
-                const res = await fetch(`${API_BASE}/api/leaderboard/status`, { method: 'GET' });
+                const res = await fetch(`${API_BASE}/api/status`, { method: 'GET' });
                 return res.ok;
             } catch {
                 return false;
@@ -633,18 +676,35 @@
         // Session Management
         async function createNewSession() {
             clearOutput('vocaguardOutput');
-            appendOutput('vocaguardOutput', 'Creating new VocaGuard session...', 'info');
+            appendOutput('vocaguardOutput', 'Creating new TardQuest session...', 'info');
             try {
-                const res = await fetch(`${API_BASE}/api/vocaguard/start`, {
+                const res = await fetch(`${API_BASE}/api/start`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ version: CLIENT_API_VERSION })
                 });
                 const data = await res.json();
-                if (data.session_id) {
+                if (res.ok && data.session_id) {
                     setSessionId(data.session_id);
-                    appendOutput('vocaguardOutput', `Session created: ${data.session_id}`, 'success');
+                    appendOutput('vocaguardOutput', `✓ Session created: ${data.session_id}`, 'success');
+                    appendOutput('vocaguardOutput', `Server version: ${data.server_version}`, 'info');
+                    
+                    // Store PoW challenge if provided
+                    if (data.challenge_id && data.challenge_secret) {
+                        setChallengeData(data.challenge_id, data.challenge_secret);
+                        appendOutput('vocaguardOutput', `✓ PoW challenge received: ${data.challenge_id}`, 'success');
+                    } else {
+                        appendOutput('vocaguardOutput', 'Note: No PoW challenge in response (VocaGuard disabled on server)', 'info');
+                    }
+                } else if (res.status === 409) {
+                    appendOutput('vocaguardOutput', `✗ Version mismatch: ${data.error}`, 'error');
+                    appendOutput('vocaguardOutput', `Server expects: ${data.reason}`, 'error');
+                    appendOutput('vocaguardOutput', `Client sent: ${data.client_version}`, 'error');
+                } else if (res.status === 400) {
+                    appendOutput('vocaguardOutput', `✗ Invalid request: ${data.error}`, 'error');
+                    appendOutput('vocaguardOutput', `Reason: ${data.reason}`, 'error');
                 } else {
-                    appendOutput('vocaguardOutput', 'No session ID returned', 'error');
+                    appendOutput('vocaguardOutput', `No session ID returned: ${data.error || 'Unknown error'}`, 'error');
                 }
             } catch (err) {
                 appendOutput('vocaguardOutput', `Error: ${err.message}`, 'error');
@@ -667,11 +727,6 @@
             appendOutput('vocaguardOutput', 'Session storage cleared', 'info');
         }
 
-        // VocaGuard Tests
-        async function testVocaguardStart() {
-            await createNewSession();
-        }
-
         async function testVocaguardUpdate() {
             clearOutput('vocaguardOutput');
             const sid = getSessionId();
@@ -683,7 +738,7 @@
             const level = parseInt(document.getElementById('testLevel').value);
             appendOutput('vocaguardOutput', `Updating: Floor=${floor}, Level=${level}`, 'info');
             try {
-                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                const res = await fetch(`${API_BASE}/api/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session_id: sid, floor, level })
@@ -737,7 +792,7 @@
             }
             appendOutput('vocaguardOutput', 'Testing floor regression (should fail)...', 'info');
             try {
-                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                const res = await fetch(`${API_BASE}/api/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session_id: sid, floor: 0, level: 1 })
@@ -760,19 +815,24 @@
                 appendOutput('vocaguardOutput', 'Create a session first', 'error');
                 return;
             }
-            // First set level to 5
-            await fetch(`${API_BASE}/api/vocaguard/update`, {
+            // First set level to 2
+            await fetch(`${API_BASE}/api/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ session_id: sid, floor: 1, level: 5 })
             });
-            appendOutput('vocaguardOutput', 'Set level to 5, now testing regression...', 'info');
-            // Try to set back to 2
+            appendOutput('vocaguardOutput', 'Set level to 2, waiting 10s for timestamp validation...', 'info');
+            
+            // Wait 10 seconds to ensure timestamp difference is registered
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            appendOutput('vocaguardOutput', 'Now testing regression...', 'info');
+            
+            // Try to set back to 1
             try {
-                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                const res = await fetch(`${API_BASE}/api/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: sid, floor: 1, level: 2 })
+                    body: JSON.stringify({ session_id: sid, floor: 1, level: 1 })
                 });
                 const data = await res.json();
                 if (!res.ok) {
@@ -794,7 +854,7 @@
             }
             appendOutput('vocaguardOutput', 'Testing floor skip detection (floor 1 -> 5)...', 'info');
             try {
-                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                const res = await fetch(`${API_BASE}/api/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session_id: sid, floor: 5, level: 1 })
@@ -1112,16 +1172,32 @@
                 return;
             }
             try {
+                const sessionId = getSessionId();
+                const challengeData = getChallengeData();
+                
+                let leaderboardData = {
+                    name,
+                    floor: 1,
+                    level: 1,
+                    session_id: sessionId,
+                    hcaptcha_token: token
+                };
+                
+                // Add PoW challenge if available (modern client flow)
+                if (challengeData && challengeData.challenge_id && challengeData.challenge_secret) {
+                    appendOutput('leaderboardOutput', 'Computing PoW challenge proof...', 'info');
+                    const proof = await computePoWProof(sessionId, challengeData.challenge_secret);
+                    leaderboardData.challenge_id = challengeData.challenge_id;
+                    leaderboardData.challenge_proof = proof;
+                    appendOutput('leaderboardOutput', `✓ PoW proof computed: ${proof.substring(0, 16)}...`, 'success');
+                } else {
+                    appendOutput('leaderboardOutput', 'Note: No PoW challenge (submitting as legacy client)', 'info');
+                }
+                
                 const res = await fetch(`${API_BASE}/api/leaderboard`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name,
-                        floor: 1,
-                        level: 1,
-                        session_id: getSessionId(),
-                        hcaptcha_token: token
-                    })
+                    body: JSON.stringify(leaderboardData)
                 });
                 const data = await res.json();
                 appendOutput('leaderboardOutput', `Response: ${JSON.stringify(data, null, 2)}`, res.ok ? 'success' : 'error');
@@ -1161,7 +1237,7 @@
             const sid = getSessionId();
             for (let i = 0; i < 11; i++) {
                 try {
-                    const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                    const res = await fetch(`${API_BASE}/api/update`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ session_id: sid, floor: 1, level: 1 })
@@ -1217,7 +1293,7 @@
             clearOutput('abuseOutput');
             appendOutput('abuseOutput', 'Fetching abuse status (localhost only)...', 'info');
             try {
-                const res = await fetch(`${API_BASE}/api/abuse/status`);
+                const res = await fetch(`${API_BASE}/api/abuse`);
                 const data = await res.json();
                 if (res.ok) {
                     appendOutput('abuseOutput', `Flagged IPs: ${Object.keys(data.flagged).length}\nRecent events: ${data.vocaguard_events.length}`, 'success');
@@ -1290,25 +1366,27 @@
 
             try {
                 testLog('PHASE 1: Session Management', 'info');
-                testLog('Creating new VocaGuard session...', 'info');
-                await new Promise(resolve => {
-                    const originalFetch = window.fetch;
-                    window.fetch = function(...args) {
-                        return originalFetch.apply(this, args).then(r => {
-                            if (args[0].includes('/vocaguard/start')) {
-                                r.clone().json().then(data => {
-                                    if (data.session_id) {
-                                        setSessionId(data.session_id);
-                                        testLog(`✓ Session created: ${data.session_id.substring(0, 12)}...`, 'success');
-                                    }
-                                });
-                            }
-                            return r;
+                testLog('Creating new TardQuest session...', 'info');
+                
+                // Create session and wait for it to complete
+                await new Promise(async (resolve) => {
+                    try {
+                        const res = await fetch(`${API_BASE}/api/start`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ version: CLIENT_API_VERSION })
                         });
-                    };
-                    createNewSession();
-                    window.fetch = originalFetch;
-                    setTimeout(resolve, 1500);
+                        const data = await res.json();
+                        if (data.session_id) {
+                            setSessionId(data.session_id);
+                            testLog(`✓ Session created: ${data.session_id.substring(0, 12)}...`, 'success');
+                        } else {
+                            testLog('✗ No session ID returned', 'error');
+                        }
+                    } catch (err) {
+                        testLog(`✗ Error creating session: ${err.message}`, 'error');
+                    }
+                    resolve();
                 });
 
                 testLog('', 'info');
@@ -1450,7 +1528,7 @@
             const floor = parseInt(document.getElementById('testFloor').value);
             const level = parseInt(document.getElementById('testLevel').value);
             try {
-                const res = await fetch(`${API_BASE}/api/vocaguard/update`, {
+                const res = await fetch(`${API_BASE}/api/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ session_id: sid, floor, level })

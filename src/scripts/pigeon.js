@@ -8,8 +8,10 @@
  * - Message composition and sending
  * - Automatic polling for incoming messages
  * - LocalStorage persistence for pending messages
- * - Session-based authentication via VocaGuard
+ * - Session-based authentication via TardAPI
  * 
+ * Dependencies:
+ * - tardAPI.js (for session management and API access)
  */
 
 (function(){
@@ -25,11 +27,13 @@
     };
 
     /** @const {string} Current version of the messaging system */
-    const VERSION = '1.1';
+    const VERSION = '2.0';
     
-    /** @const {string} Base URL for the pigeon messaging API */
-    const API_BASE = 'https://vocapepper.com:9601';
-    
+    // Ensure TardAPI is loaded
+    if (typeof TardAPI === 'undefined') {
+        log.error('TardAPI module is required! Load tardAPI.js before pigeon.js');
+        return;
+    }
     /** @const {string} Placeholder text for the message input field */
     const PLACEHOLDER_PIGEON = "Message for the next adventurer...";
     
@@ -71,17 +75,17 @@
             if (pigeon.x == null || pigeon.y == null) {
                 pigeon.set();
             } else {
-                log.debug('Pigeon already positioned at', pigeon.x, pigeon.y);
+                // log.debug('Pigeon already positioned at', pigeon.x, pigeon.y);
             }
         }
     }
 
     /**
-     * Retrieves the current VocaGuard session ID from sessionStorage
+     * Retrieves the current VocaGuard session ID from TardAPI
      * @returns {string|null} The session ID or null if not found
      */
     function getSessionId(){
-        return sessionStorage.getItem('vocaguardSessionId');
+        return TardAPI.sessionId || sessionStorage.getItem('tardquestSID');
     }
 
     /**
@@ -99,16 +103,16 @@
      * Checks for required conditions (pigeon item, active session) before opening
      */
     function openPigeonInput(){
-        log.debug('Attempt open compose. LocalHas?', haveLocalPigeon());
+        // log.debug('Opening compose...');
         if (!haveLocalPigeon()) {
             updateBattleLog('<span class="enemy">You have no carrier pigeon.</span>');
-            log.warn('Blocked open: no local pigeon item');
+            log.warn('Blocked compose: no local pigeon item');
             return;
         }
         const sid = getSessionId();
         if (!sid) {
             updateBattleLog('<span class="enemy">No active VocaGuard session.</span>');
-            log.warn('Blocked open: missing session id');
+            log.warn('Blocked compose: missing session id');
             return;
         }
         pigeonInputMode = true;
@@ -123,15 +127,15 @@
      * @returns {Promise<boolean>} True if sent successfully, false otherwise
      */
     async function sendPigeon(message){
-        log.debug('Send attempt len=%d', message?.length||0);
+        // log.debug('Sending...');
         const sid = getSessionId();
         if (!sid) {
-            updateBattleLog('<span class="enemy">Cannot send: No active VocaGuard session.</span>');
+            updateBattleLog('<span class="enemy">Cannot send: No active session. Start a new game first.</span>');
             log.warn('Send aborted: no session id');
             return false;
         }
         try {
-            const r = await fetch(`${API_BASE}/api/pigeon/send`, {
+            const r = await fetch(`${TardAPI.API_BASE}/api/pigeon/send`, {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({ session_id: sid, message })
@@ -145,7 +149,7 @@
                     InventorySidebar.refresh('items');
                 }
                 pigeon.say("Your message has been sent! Coo coo!");
-                log.info('Sent successfully!', j.id || 'Queue:', j.queue_length_pending, 'Remaining carrierPigeon:', j.carrierPigeon_remaining);
+                log.info('Sent successfully!', j.id || 'Queue:', j.queue_length_pending);
                 if (typeof GameControl?.closePersuasionInputBox === "function") {
                     pigeonInputMode = false;
                     if (inp) inp.placeholder = "Say your piece...";
@@ -172,7 +176,7 @@
         if (pollTimer) {
             clearInterval(pollTimer);
             pollTimer = null;
-            log.debug('Delivery polling stopped');
+            // log.debug('Delivery polling stopped');
         }
     }
 
@@ -189,7 +193,7 @@
         setTimeout(()=>{
             if (!pendingDeliveredMessage) requestDeliveryOnce(true);
         }, 1500);
-        log.debug('Delivery polling started');
+        // log.debug('Delivery polling started');
     }
 
     /**
@@ -202,7 +206,7 @@
         }
         if (!msg) {
             if (typeof updateBattleLog === 'function') {
-                log.debug('No message to display');
+                // log.debug('No message to display');
                 ensurePolling();
             }
             return;
@@ -232,7 +236,7 @@
         if (!sid) return;
         lastDeliveryAttempt = now;
         try {
-            const r = await fetch(`${API_BASE}/api/pigeon/delivery`, {
+            const r = await fetch(`${TardAPI.API_BASE}/api/pigeon/delivery`, {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({ session_id: sid })
@@ -249,12 +253,12 @@
                     if (pigeon.x == null || pigeon.y == null) {
                         pigeon.set();
                     } else {
-                        log.debug('Pigeon already active at', pigeon.x, pigeon.y, '- skipping new spawn');
+                        // log.debug('Pigeon already active at', pigeon.x, pigeon.y, '- skipping new spawn');
                     }
                 }
             }
         } catch (e){
-            log.debug('Delivery request failed', e);
+            // log.debug('Delivery request failed', e);
         }
     }
 
@@ -290,5 +294,9 @@
         /** Ensures delivery polling is active */
         ensurePolling
     };
-    log.info('Module loaded!');
 })();
+
+// Module initialization complete
+if (typeof console !== 'undefined') {
+    console.log('🐦 Pigeon: Module loaded!');
+}
