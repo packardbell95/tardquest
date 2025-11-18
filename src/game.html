@@ -23,7 +23,16 @@
         <div id="topLeft">
             <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
             <div id="minimapContainer">
-                <div id="minimapHeader" class="ui-header space-around">Dungeon Floor --</div>
+                <div id="minimapHeader" class="ui-header space-between">
+                    <span id="dungeonFloor">--</span>
+                    <span
+                        id="killCounter"
+                        data-tooltipposition="top"
+                        data-tooltiphtml='
+                            <div class="genericTooltip">Total Kills</div>
+                        '
+                    >0</span>
+                </div>
                 <div id="minimap"></div>
             </div>
         </div>
@@ -9924,6 +9933,7 @@
                 }
 
                 playSFX('scream');
+                updateKillCounter();
                 pigeon.say(
                     'I WAS ONLY THE MESSENGERRRRRrrrrrrrr... *fucking dies*',
                     true
@@ -10588,8 +10598,7 @@
 
             killEnemy: function(enemyId) {
                 roamingEnemies.removeEnemy(enemyId);
-                roamingEnemies.enemiesKilledTotal++;
-                updateMinimapFooter();
+                updateKillCounter();
             },
 
             isAt: function(x, y) {
@@ -10724,7 +10733,6 @@
 
             initialize: function() {
                 roamingEnemies.enemies = {};
-                updateMinimapFooter();
 
                 for (let i = 0; i < roamingEnemies.maxEnemies; i++) {
                     roamingEnemies.spawnEnemy(true);
@@ -11017,6 +11025,7 @@
                 onExplode: function (x, y) {
                     merchant.isAlive = false;
                     merchant.isActiveOnFloor = false;
+                    updateKillCounter();
                     MAP.setCell(x, y, "bloodyCrater");
                     playSFX('scream');
                     merchant.say('AIEEEEEEEEEEEEEE!', true);
@@ -11045,6 +11054,7 @@
                 onExplode: function (x, y) {
                     gambler.isAlive = false;
                     gambler.isActiveOnFloor = false;
+                    updateKillCounter();
                     MAP.setCell(x, y, "bloodyCrater");
 
                     // Award between 50 and 100 BTC for the slaughter. I guess that's one way to win
@@ -11077,6 +11087,7 @@
                 onExplode: function (x, y) {
                     erok.isAlive = false;
                     erok.isActiveOnFloor = false;
+                    updateKillCounter();
                     MAP.setCell(x, y, "bloodyCrater");
                     playSFX('scream');
                     erok.say('i died oh noes', true);
@@ -11129,6 +11140,7 @@
                     menu.open("chest");
                 },
                 onExplode: function (x, y) {
+                    updateKillCounter();
                     MAP.setCell(x, y, "bloodyCrater");
 
                     // Calculate scaled BTC reward
@@ -11314,21 +11326,62 @@
             // Initialize roaming enemies after all other map elements are placed
             roamingEnemies.initialize();
 
-            document.getElementById('minimapHeader').innerText =
-                `Dungeon Floor ${floor}`;
+            document.getElementById('dungeonFloor').textContent =
+                floor.toLocaleString(undefined);
 
-            updateMinimapFooter();
             vampire.initialize();
         }
 
-        function updateMinimapFooter() {
-            const $minimapHeader = document.getElementById('minimapHeader');
-            if ($minimapHeader) {
-                $minimapHeader.innerHTML = `
-                    <span>Dungeon Floor ${floor}</span>
-                    <span><span class="skull-icon">☠</span> ${roamingEnemies.enemiesKilledTotal}</span>
-                `;
+        function updateKillCounter(initialValue) {
+            // Automatically update the counter by 1 unless an override is given
+            roamingEnemies.enemiesKilledTotal = Number.isInteger(initialValue)
+                ? initialValue
+                : roamingEnemies.enemiesKilledTotal + 1;
+
+            const $killCounter = document.getElementById('killCounter');
+            if (! $killCounter) {
+                console.error("The kill counter element doesn't exist");
+                return;
             }
+
+            const total = roamingEnemies.enemiesKilledTotal;
+            $killCounter.textContent = total.toLocaleString(undefined);
+
+            const message = (function () {
+                switch (total) {
+                    case 69:
+                        return "Nice";
+                    case 420:
+                        return "dude weed kills lmao";
+                    case 1337:
+                    case 31337:
+                        return "Literal hacker";
+                    case 5555:
+                        return "You daft punk";
+                    case 6969:
+                        return "Double nice";
+                    case 42069:
+                        return "Party time";
+                }
+
+                const totalString = total.toString();
+                if (totalString.match(/^(\d)\1+$/)) {
+                    switch (totalString.length) {
+                        case 2: return "Nice dubs!";
+                        case 3: return "Sick trips!";
+                        case 4: return "Quality quads!!";
+                        case 5: return "Quixotic quints!!!";
+                        default: return "Check 'em!";
+                    }
+                }
+
+                return "Total Kills";
+            }());
+
+            $killCounter.setAttribute(
+                'data-tooltipHtml',
+                `<div class="genericTooltip">${message}</div>`
+            );
         }
 
         let autoDicerollEnabled = false;
@@ -12329,8 +12382,7 @@
                 playerAttackCooldown = true;
                 animAsh(currentEnemy.id, () => {
                     if (currentEnemy.isWild && currentEnemy.id !== "vampire") {
-                        roamingEnemies.enemiesKilledTotal++;
-                        updateMinimapFooter();
+                        updateKillCounter();
                     }
                     
                     if (currentEnemy.id === "mimic") {
