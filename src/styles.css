@@ -1656,21 +1656,18 @@ a:link {
     justify-content: space-around;
 }
 
-.minimap-footer {
+#minimapHeader {
     display: flex;
-    flex-direction: row;
-    background-color: #a30000;
-    color: #ffffff;
-    margin: 1px;
-    padding: 0 4px;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    height: 11px;
 }
-/** Firefox-specific spacing fix for the minimap **/
-@supports (-moz-orient: inline) {
-    #minimap {
-        line-height: 13.6px;
-    }
+.skull-icon {
+    font-size: 16px;
+    vertical-align: top;
+    line-height: 0.6;
 }
+
 
 #battleLog      { grid-area: battleLog; }
 #topLeft        { grid-area: topLeft; }
@@ -1954,7 +1951,8 @@ a:link {
     gap: 4px;
     padding: 4px;
     grid-template-columns: 1fr 2fr;
-    margin: 4px 2px;
+    margin: 0px 2px;
+    position: absolute;
 }
 
 #controlsMenu .control-list {

@@ -25,7 +25,6 @@
             <div id="minimapContainer">
                 <div id="minimapHeader" class="ui-header space-around">Dungeon Floor --</div>
                 <div id="minimap"></div>
-                <div id="minimapFooter" class="minimap-footer"></div>
             </div>
         </div>
         <div id="inputBox">
@@ -10196,7 +10195,7 @@
 
                 const enemyAtNextPosition = roamingEnemies.getEnemyAt(nextX, nextY);
                 if (enemyAtNextPosition) {
-                    roamingEnemies.killEnemy(enemyAtNextPosition.id);
+                    roamingEnemies.removeEnemy(enemyAtNextPosition.id);
                     
                     const writableCellTypes = [
                         "floor", "rubble1", "rubble2", "crater", "tardspireBanner"
@@ -10473,7 +10472,7 @@
             enemies: {},
             maxEnemies: 6,
             nextId: 0,
-            enemiesKilledOnFloor: 0,
+            enemiesKilledTotal: 0,
             respawnAfterKills: 3,
 
             // Check if a position is in a boulder's path
@@ -10582,14 +10581,14 @@
 
             respawningEnabled: function() {
                 return (
-                    roamingEnemies.enemiesKilledOnFloor >=
+                    roamingEnemies.enemiesKilledTotal >=
                     roamingEnemies.respawnAfterKills
                 );
             },
 
             killEnemy: function(enemyId) {
                 roamingEnemies.removeEnemy(enemyId);
-                roamingEnemies.enemiesKilledOnFloor++;
+                roamingEnemies.enemiesKilledTotal++;
                 updateMinimapFooter();
             },
 
@@ -10725,7 +10724,6 @@
 
             initialize: function() {
                 roamingEnemies.enemies = {};
-                roamingEnemies.enemiesKilledOnFloor = 0;
                 updateMinimapFooter();
 
                 for (let i = 0; i < roamingEnemies.maxEnemies; i++) {
@@ -11324,9 +11322,12 @@
         }
 
         function updateMinimapFooter() {
-            const $minimapFooter = document.getElementById('minimapFooter');
-            if ($minimapFooter) {
-                $minimapFooter.textContent = `Monsters Killed: ${roamingEnemies.enemiesKilledOnFloor}`;
+            const $minimapHeader = document.getElementById('minimapHeader');
+            if ($minimapHeader) {
+                $minimapHeader.innerHTML = `
+                    <span>Dungeon Floor ${floor}</span>
+                    <span><span class="skull-icon">☠</span> ${roamingEnemies.enemiesKilledTotal}</span>
+                `;
             }
         }
 
@@ -12328,7 +12329,7 @@
                 playerAttackCooldown = true;
                 animAsh(currentEnemy.id, () => {
                     if (currentEnemy.isWild && currentEnemy.id !== "vampire") {
-                        roamingEnemies.enemiesKilledOnFloor++;
+                        roamingEnemies.enemiesKilledTotal++;
                         updateMinimapFooter();
                     }
                     
