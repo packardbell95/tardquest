@@ -1656,16 +1656,16 @@ a:link {
     justify-content: space-around;
 }
 
-#minimapHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 11px;
+#dungeonFloor::before {
+    content: "Dungeon Floor ";
 }
-.skull-icon {
+
+#killCounter::before {
+    content: "☠";
+    margin-right: 0.5ch;
     font-size: 16px;
     vertical-align: top;
-    line-height: 0.6;
+    line-height: 0.65;
 }
 
 
