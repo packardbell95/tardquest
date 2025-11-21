@@ -1656,21 +1656,18 @@ a:link {
     justify-content: space-around;
 }
 
-.minimap-footer {
-    display: flex;
-    flex-direction: row;
-    background-color: #a30000;
-    color: #ffffff;
-    margin: 1px;
-    padding: 0 4px;
-    justify-content: center;
+#dungeonFloor::before {
+    content: "Dungeon Floor ";
 }
-/** Firefox-specific spacing fix for the minimap **/
-@supports (-moz-orient: inline) {
-    #minimap {
-        line-height: 13.6px;
-    }
+
+#killCounter::before {
+    content: "☠";
+    margin-right: 0.5ch;
+    font-size: 16px;
+    vertical-align: top;
+    line-height: 0.65;
 }
+
 
 #battleLog      { grid-area: battleLog; }
 #topLeft        { grid-area: topLeft; }
@@ -1954,7 +1951,8 @@ a:link {
     gap: 4px;
     padding: 4px;
     grid-template-columns: 1fr 2fr;
-    margin: 4px 2px;
+    margin: 0px 2px;
+    position: absolute;
 }
 
 #controlsMenu .control-list {
