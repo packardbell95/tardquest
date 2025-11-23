@@ -26,7 +26,7 @@ const TardAPI = (function() {
     const API_BASE = 'https://vocapepper.com:9601';
 
     /** @const {string} Client API version (major.minor must match server) */
-    const CLIENT_API_VERSION = '3.0.251113';
+    const CLIENT_API_VERSION = '3.0.251123';
 
     /** @const {string} LocalStorage key for session ID persistence */
     const LS_SESSION_KEY = 'tardquestSID';
@@ -59,6 +59,21 @@ const TardAPI = (function() {
 
     /** @type {boolean} Whether an update is currently in flight */
     let updateInFlight = false;
+
+    /** @const {number} Maximum number of session creation attempts */
+    const MAX_SESSION_ATTEMPTS = 3;
+
+    /** @const {number} Milliseconds to wait before giving up on API (30 seconds) */
+    const API_TIMEOUT_MS = 30000;
+
+    /** @type {number} Number of failed session creation attempts */
+    let sessionAttempts = 0;
+
+    /** @type {number} Timestamp of first session attempt */
+    let firstSessionAttemptTime = null;
+
+    /** @type {boolean} Whether API has failed permanently */
+    let apiFailedPermanently = false;
 
     // Load challenge data from storage if it exists
     try {
@@ -126,9 +141,35 @@ const TardAPI = (function() {
     /**
      * Creates a new session with the API server
      * Initiates PoW challenge if enabled on server
+     * Stops retrying after MAX_SESSION_ATTEMPTS or API_TIMEOUT_MS
      * @returns {Promise<Object>} Session creation result with session_id and optionally challenge data
      */
     async function createSession() {
+        // Prevent endless retry loops if API is unavailable
+        if (apiFailedPermanently) {
+            return { success: false, error: 'API unavailable (giving up after timeout)' };
+        }
+
+        // Check if we've exceeded timeout window
+        if (firstSessionAttemptTime !== null) {
+            const elapsedTime = Date.now() - firstSessionAttemptTime;
+            if (elapsedTime > API_TIMEOUT_MS) {
+                apiFailedPermanently = true;
+                log.error('API timeout exceeded - stopping retry attempts');
+                return { success: false, error: 'API unavailable (timeout)' };
+            }
+        } else {
+            firstSessionAttemptTime = Date.now();
+        }
+
+        // Check if we've exceeded attempt count
+        if (sessionAttempts >= MAX_SESSION_ATTEMPTS) {
+            apiFailedPermanently = true;
+            log.error(`Max session attempts (${MAX_SESSION_ATTEMPTS}) exceeded - stopping`);
+            return { success: false, error: `Failed to create session after ${MAX_SESSION_ATTEMPTS} attempts` };
+        }
+
+        sessionAttempts++;
         // Check if we already have an active session
         if (sessionId) {
             // log.debug('Session already active:', sessionId);
@@ -256,6 +297,11 @@ const TardAPI = (function() {
                 }
             }
 
+            // Double-check API hasn't failed during createSession
+            if (apiFailedPermanently) {
+                return { success: false, error: 'API unavailable' };
+            }
+
             // Update server
             const res = await fetch(`${API_BASE}/api/update`, {
                 method: 'POST',
@@ -276,9 +322,12 @@ const TardAPI = (function() {
 
             // log.debug('Progress updated: floor', floor, 'level', level);
 
+            // Success - reset attempt counter
+            sessionAttempts = 0;
+            firstSessionAttemptTime = null;
             return { success: true, data };
         } catch (err) {
-            log.error('Progress update failed:', err.message);
+            log.error(`Session creation failed (attempt ${sessionAttempts}/${MAX_SESSION_ATTEMPTS}):`, err.message);
             return { success: false, error: err.message };
         } finally {
             updateInFlight = false;
