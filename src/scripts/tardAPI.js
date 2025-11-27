@@ -399,29 +399,70 @@ const TardAPI = (function() {
      * Gets the leaderboard from the server
      * @param {Object} options - Query options
      * @param {number} [options.limit] - Number of entries to retrieve
-     * @returns {Promise<Object>} Leaderboard data
+     * @param {boolean} [options.force] - Ignore apiFailedPermanently flag
+     * @returns {Promise<Object>} Leaderboard data { success, leaderboard } or { success:false, error }
      */
     async function getLeaderboard(options = {}) {
+        const { limit, force = false } = options;
+
+        if (apiFailedPermanently && !force) {
+            log.warn('getLeaderboard: API marked as permanently failed, returning empty');
+            return { success: false, error: 'API unavailable' };
+        }
+
         try {
             const params = new URLSearchParams();
-            if (options.limit) params.append('limit', options.limit);
+            if (limit) params.append('limit', String(limit));
 
             const url = params.toString()
                 ? `${API_BASE}/api/leaderboard?${params.toString()}`
                 : `${API_BASE}/api/leaderboard`;
 
+            log.info('Fetching leaderboard from', url);
             const res = await fetch(url, { method: 'GET', mode: 'cors' });
 
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                return { success: false, error: data.error || `HTTP ${res.status}` };
+            // Read raw text first so we can recover from non-JSON responses gracefully
+            const text = await res.text();
+
+            let data;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (jsonErr) {
+                log.warn('getLeaderboard: Failed to parse JSON, returning error', jsonErr);
+                return { success: false, error: 'Invalid JSON response from leaderboard' };
             }
 
-            const data = await res.json();
-            return { success: true, leaderboard: data.leaderboard || [] };
+            if (!res.ok) {
+                const error = (data && (data.error || data.message)) || `HTTP ${res.status}`;
+                log.warn('getLeaderboard: response not OK', res.status, error);
+                return { success: false, error };
+            }
+
+            // Normalize the leaderboard data - handle array or wrapped objects
+            let leaderboard = [];
+            if (Array.isArray(data)) {
+                leaderboard = data;
+            } else if (data && typeof data === 'object') {
+                if (Array.isArray(data.leaderboard)) leaderboard = data.leaderboard;
+                else if (Array.isArray(data.entries)) leaderboard = data.entries;
+                else if (Array.isArray(data.data)) leaderboard = data.data;
+                else if (Array.isArray(data.results)) leaderboard = data.results;
+                else {
+                    // Fallback: pick the first array property, if any
+                    for (const key of Object.keys(data)) {
+                        if (Array.isArray(data[key])) {
+                            leaderboard = data[key];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            log.info('getLeaderboard: fetched entries', leaderboard.length);
+            return { success: true, leaderboard };
         } catch (err) {
-            log.error('Leaderboard fetch failed:', err.message);
-            return { success: false, error: err.message };
+            log.error('Leaderboard fetch failed:', err.message || err);
+            return { success: false, error: err.message || String(err) };
         }
     }
 
@@ -494,4 +535,8 @@ const TardAPI = (function() {
 // Module initialization complete
 if (typeof console !== 'undefined') {
     console.log('🌎 TardAPI: Module loaded!');
+}
+
+if (typeof window !== 'undefined' && typeof window.TardAPI === 'undefined') {
+    window.TardAPI = TardAPI;
 }
