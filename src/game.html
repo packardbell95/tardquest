@@ -11312,7 +11312,7 @@
             }
         
             try {
-                const res = await TardAPI.getLeaderboard({ force: true });
+                const res = await TardAPI.getLeaderboard({ force: false }); // only force for debug
                 if (!res || !res.success || !Array.isArray(res.leaderboard) || res.leaderboard.length === 0) {
                     console.debug("spawnGravestone: leaderboard empty or failed", res);
                     return;
