@@ -11461,6 +11461,7 @@
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
         let battleTransitionAnimationsEnabled = true;
+        let cachedLeaderboardEntries = null;
 
         // Taken from https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
         function shuffle(array) {
@@ -11519,38 +11520,43 @@
         async function spawnGravestone() {
             // Only spawn one per floor
             if (gravestoneData[floor]) return;
-        
+
             if (typeof TardAPI === 'undefined' || typeof TardAPI.getLeaderboard !== 'function') {
-                // TardAPI not loaded or no leaderboard; skip
                 console.warn("spawnGravestone: TardAPI.getLeaderboard not available - skipping spawn");
                 return;
             }
-        
+
             try {
-                const res = await TardAPI.getLeaderboard({ force: false }); // only force for debug
-                if (!res || !res.success || !Array.isArray(res.leaderboard) || res.leaderboard.length === 0) {
-                    console.debug("spawnGravestone: leaderboard empty or failed", res);
-                    return;
+                // Use cached entries if available, otherwise fetch
+                let entries = cachedLeaderboardEntries;
+                
+                if (!entries) {
+                    const res = await TardAPI.getLeaderboard({ force: false });
+                    if (!res || !res.success || !Array.isArray(res.leaderboard) || res.leaderboard.length === 0) {
+                        console.debug("spawnGravestone: leaderboard empty or failed", res);
+                        return;
+                    }
+                    entries = res.leaderboard;
+                    cachedLeaderboardEntries = entries; // Cache for future floors
                 }
-                const entries = res.leaderboard;
+
                 if (!Array.isArray(entries) || entries.length === 0) return;
-        
+
                 // Only consider leaderboard entries from the current floor
                 const floorEntries = entries.filter(e => {
                     const entryFloor = Number(e.floor ?? e.floor_reached ?? e.max_floor ?? NaN);
                     return Number.isFinite(entryFloor) && entryFloor === floor;
                 });
-        
+
                 if (floorEntries.length === 0) {
                     console.debug("spawnGravestone: no leaderboard entries for current floor", { floor, totalEntries: entries.length });
-                    return; // skip spawn if no matched entries for this floor
+                    return;
                 }
-        
+
                 // Collate top scores per unique name (preserve full entry)
                 const topByName = {};
                 floorEntries.forEach(e => {
                     const name = e.name || e.player || e.displayName || `Player${e.id ?? ''}`;
-                    // Prefer numeric score, otherwise combine floor/level into a metric
                     const score = Number(e.score ?? e.points ?? e.total ?? NaN);
                     const floorVal = Number(e.floor ?? e.floor_reached ?? e.max_floor ?? NaN);
                     const levelVal = Number(e.level ?? e.level_reached ?? e.max_level ?? NaN);
@@ -11559,7 +11565,7 @@
                         : ((!Number.isNaN(floorVal) || !Number.isNaN(levelVal))
                             ? ((Number.isFinite(floorVal) ? floorVal : 0) * 1000 + (Number.isFinite(levelVal) ? levelVal : 0))
                             : 0);
-        
+
                     const existing = topByName[name];
                     if (!existing || metric > existing.__metric) {
                         topByName[name] = { ...e, name, __metric: metric };
@@ -11567,39 +11573,33 @@
                 });
                 const uniqueEntries = Object.values(topByName);
                 if (uniqueEntries.length === 0) return;
-        
+
                 // Choose random unique entry
                 const entry = randomEntry(uniqueEntries);
-        
+
                 // Choose a coordinate - floor cell and not near player/boulder/merchant/gambler etc
                 const spawnCandidates = MAP.getEmptyCellCoordinates().filter(coord => {
                     const distanceFromPlayer = Math.max(Math.abs(coord.x - player.x), Math.abs(coord.y - player.y));
                     if (distanceFromPlayer < 4) return false;
                     if (roamingEnemies.isInBoulderPath(coord.x, coord.y)) return false;
-                    // avoid NPC positions
                     if (merchant.isAt(coord.x, coord.y) || gambler.isAt(coord.x, coord.y) || erok.isAt(coord.x, coord.y) || vampire.isAt(coord.x, coord.y) || pigeon.isAt(coord.x, coord.y)) return false;
                     const cell = MAP.getCell(coord.x, coord.y);
-                    // require an ordinary floor cell
                     return cell && (cell.type === 'floor' || cell.type === 'rubble1' || cell.type === 'rubble2' || cell.type === 'crater' || cell.type === 'bloodyCrater');
                 });
-        
+
                 if (spawnCandidates.length === 0) return;
-        
+
                 const chosenCell = randomEntry(spawnCandidates);
                 const { x, y } = chosenCell;
-        
-                // place gravestone, store the meta data
+
                 MAP.setCell(x, y, 'gravestone');
-        
                 gravestoneData[floor] = { x, y, entry, explored: false };
-        
-                // update minimap and render
+
                 MAP.setEntities({});
                 MAP.refreshMinimap();
                 render();
-        
+
             } catch (err) {
-                // If leaderboard fails, just ignore and move on
                 console.warn("Could not spawn gravestone: leaderboard fetch failed", err);
             }
         }
