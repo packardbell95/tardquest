@@ -11582,8 +11582,10 @@
                     const distanceFromPlayer = Math.max(Math.abs(coord.x - player.x), Math.abs(coord.y - player.y));
                     if (distanceFromPlayer < 4) return false;
                     if (roamingEnemies.isInBoulderPath(coord.x, coord.y)) return false;
+                    // avoid NPC positions
                     if (merchant.isAt(coord.x, coord.y) || gambler.isAt(coord.x, coord.y) || erok.isAt(coord.x, coord.y) || vampire.isAt(coord.x, coord.y) || pigeon.isAt(coord.x, coord.y)) return false;
                     const cell = MAP.getCell(coord.x, coord.y);
+                    // require an ordinary floor cell
                     return cell && (cell.type === 'floor' || cell.type === 'rubble1' || cell.type === 'rubble2' || cell.type === 'crater' || cell.type === 'bloodyCrater');
                 });
 
@@ -11591,15 +11593,16 @@
 
                 const chosenCell = randomEntry(spawnCandidates);
                 const { x, y } = chosenCell;
-
+                // place gravestone, store the meta data
                 MAP.setCell(x, y, 'gravestone');
                 gravestoneData[floor] = { x, y, entry, explored: false };
-
+                // update minimap and render
                 MAP.setEntities({});
                 MAP.refreshMinimap();
                 render();
-
+                
             } catch (err) {
+                // If leaderboard fails, just ignore and move on
                 console.warn("Could not spawn gravestone: leaderboard fetch failed", err);
             }
         }
