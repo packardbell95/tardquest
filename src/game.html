@@ -11394,32 +11394,34 @@
                 isSolid: false,
                 onEnter: function(x, y) {
                     const data = gravestoneData[floor];
-                    if (!data || data.x !== x || data.y !== y || !data.entry) {
+                    if (!data || !data.entry) {
+                        console.warn("Gravestone entered but no data found", { floor, data });
                         render();
                         return;
                     }
 
-                    const entry = data.entry;
-                    const name = entry.name || entry.player || entry.displayName || "Unknown";
-                    const floorVal = entry.floor ?? entry.floor_reached ?? entry.max_floor ?? null;
-                    const levelVal = entry.level ?? entry.level_reached ?? entry.max_level ?? null;
-                    const displayScore = (floorVal !== null || levelVal !== null)
-                        ? `Floor ${floorVal ?? '??'} - Level ${levelVal ?? '??'}`
-                        : `Score: ${entry.score ?? entry.points ?? entry.total ?? '??'}`;
+                    const entry = data.entry || {};
+                    const name = entry.name || 'Unknown';
+                    const entryFloor = typeof entry.floor !== 'undefined' ? entry.floor : null;
+                    const entryLevel = typeof entry.level !== 'undefined' ? entry.level : null;
+                    const displayScore = `Floor ${entryFloor ?? '??'} - Level ${entryLevel ?? '??'}`;
 
-                    const message = randomEntry(gravestoneMessages);
+                    // choose gravestone message per-floor
+                    let message;
+                    if (data.gravestoneMessage) {
+                        message = data.gravestoneMessage;
+                    } else {
+                        message = randomEntry(gravestoneMessages);
+                        data.gravestoneMessage = message;
+                    }
 
                     updateBattleLog(
                         `<span class="friendly">${name}</span> - ` +
-                        `<span class="BTC">${displayScore}</span> ` +
+                        `<span class="BTC">${displayScore}</span> - ` +
                         `<span class="action">${message}</span>`
                     );
 
                     data.explored = true;
-                    const cell = MAP.getCell(x, y);
-                    if (cell) cell.isExplored = true;
-                    MAP.refreshMinimap();
-                    render();
                 },
             },
         });
@@ -11554,19 +11556,21 @@
                 // Collate top scores per unique name (preserve full entry)
                 const topByName = {};
                 floorEntries.forEach(e => {
-                    const name = e.name || e.player || e.displayName || `Player${e.id ?? ''}`;
-                    const score = Number(e.score ?? e.points ?? e.total ?? NaN);
-                    const floorVal = Number(e.floor ?? e.floor_reached ?? e.max_floor ?? NaN);
-                    const levelVal = Number(e.level ?? e.level_reached ?? e.max_level ?? NaN);
-                    const metric = !Number.isNaN(score)
-                        ? score
-                        : ((!Number.isNaN(floorVal) || !Number.isNaN(levelVal))
-                            ? ((Number.isFinite(floorVal) ? floorVal : 0) * 1000 + (Number.isFinite(levelVal) ? levelVal : 0))
-                            : 0);
-
+                    const name = e.name || e.player || `Player${e.id ?? ''}`;
+                    const floorNum = Number(e.floor ?? NaN);
+                    const levelNum = Number(e.level ?? NaN);
                     const existing = topByName[name];
-                    if (!existing || metric > existing.__metric) {
-                        topByName[name] = { ...e, name, __metric: metric };
+                    if (!existing) {
+                        topByName[name] = { ...e, name };
+                        return;
+                    }
+
+                    const existingFloor = Number(existing.floor ?? NaN);
+                    const existingLevel = Number(existing.level ?? NaN);
+
+                    // Prefer higher floor, break ties with higher level
+                    if (floorNum > existingFloor || (floorNum === existingFloor && levelNum > existingLevel)) {
+                        topByName[name] = { ...e, name };
                     }
                 });
                 const uniqueEntries = Object.values(topByName);

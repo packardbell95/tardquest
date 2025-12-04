@@ -438,23 +438,14 @@ const TardAPI = (function() {
                 return { success: false, error };
             }
 
-            // Normalize the leaderboard data - handle array or wrapped objects
+            // Normalize leaderboard: accept either an array of entries or a single-entry object
             let leaderboard = [];
             if (Array.isArray(data)) {
                 leaderboard = data;
             } else if (data && typeof data === 'object') {
-                if (Array.isArray(data.leaderboard)) leaderboard = data.leaderboard;
-                else if (Array.isArray(data.entries)) leaderboard = data.entries;
-                else if (Array.isArray(data.data)) leaderboard = data.data;
-                else if (Array.isArray(data.results)) leaderboard = data.results;
-                else {
-                    // Fallback: pick the first array property, if any
-                    for (const key of Object.keys(data)) {
-                        if (Array.isArray(data[key])) {
-                            leaderboard = data[key];
-                            break;
-                        }
-                    }
+                // If server returned a single entry like {floor:69, level:69, name:"GAY"} wrap it. Unlikely outside of the development server.
+                if (typeof data.name === 'string' && (typeof data.floor === 'number' || typeof data.level === 'number')) {
+                    leaderboard = [data];
                 }
             }
 
