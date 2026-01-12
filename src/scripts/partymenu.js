@@ -70,6 +70,12 @@
                             <button class="edit-name-btn" onclick="editPartyMemberName(${partyMemberId}, this)"></button>
                         </div>
                         
+                        <div>Level:</div>
+                        <span class="LV">${member.level}</span>
+
+                        <div>DEF:</div>
+                        <span class="DEF">${member.def}</span>
+
                         <div>HP:</div>
                         <progress-bar 
                             class="party-member-hp"
@@ -78,7 +84,7 @@
                             cautionAtOrBelowPercentage="25"
                             dangerAtOrBelowPercentage="10">
                         </progress-bar>
-
+                        
                         <div>EXP:</div>
                         <progress-bar 
                             class="party-member-exp"
@@ -87,9 +93,7 @@
                             emptyColor="#000"
                             filledColor="#1900ff">
                         </progress-bar>
-                        
-                        <div>Level:</div>
-                        <span>${member.level}</span>
+
 
                     </div>
                     
@@ -145,11 +149,6 @@
         
         input.focus();
         input.select();
-
-        // Additional input blocking for editing mode
-        if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
-            GameControl.setInputBlocked(true, 'editing');
-        }
         
         function saveName() {
             const newName = input.value.trim();
@@ -157,18 +156,18 @@
                 // Update the member data
                 member.name = newName;
                 
-                // Update the modal title
+                // Update the modal title (include level)
                 const modalTitle = nameSection.closest('.modal').querySelector('.title');
-                modalTitle.textContent = newName;
+                modalTitle.textContent = `LV.${member.level} ${newName}`;
                 
-                // Update the name in the party list
+                // Update the name in the party list (include level)
                 const partyMemberElement = document.querySelector(`[data-partyMemberId="${partyMemberId}"] .name .clickable-name`);
                 if (partyMemberElement) {
-                    partyMemberElement.textContent = newName;
+                    partyMemberElement.textContent = `LV.${member.level} ${newName}`;
                 }
                 
-                // Update the displayed name
-                nameSpan.textContent = newName;
+                // Update the displayed name in modal (include level)
+                nameSpan.textContent = `LV.${member.level} ${newName}`;
             }
             
             // Restore original display
@@ -177,11 +176,6 @@
             cancelBtn.remove();
             nameSpan.style.display = '';
             editButton.style.display = '';
-
-            // Restore input blocking to modal level only
-            if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
-                GameControl.setInputBlocked(true);
-            }
         }
         
         function cancelEdit() {
@@ -191,37 +185,17 @@
             cancelBtn.remove();
             nameSpan.style.display = '';
             editButton.style.display = '';
-
-            // Restore input blocking to modal level only
-            if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
-                GameControl.setInputBlocked(true);
-            }
         }
         
         // Event handlers
         saveBtn.addEventListener('click', saveName);
         cancelBtn.addEventListener('click', cancelEdit);
-        
-        // Prevent event propagation for the input field
         input.addEventListener('keydown', (e) => {
-            e.stopPropagation(); // Stop the event from bubbling up to game controls
-            
             if (e.key === 'Enter') {
-                e.preventDefault();
                 saveName();
             } else if (e.key === 'Escape') {
-                e.preventDefault();
                 cancelEdit();
             }
-        });
-
-        // Also prevent keypress and keyup from propagating
-        input.addEventListener('keypress', (e) => {
-            e.stopPropagation();
-        });
-        
-        input.addEventListener('keyup', (e) => {
-            e.stopPropagation();
         });
     }
 

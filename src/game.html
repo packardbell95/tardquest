@@ -9008,6 +9008,11 @@
                 add: (enemyId, name, hp, maxHp, persuasionMessage) => {
                     const index = player.party.members.length;
                     const partyMemberId = player.party.seenMembers;
+                    
+                    // Calculate base defense based on floor (similar to HP scaling)
+                    const floorBoost = Math.floor(floor / 2);
+                    const baseDef = Math.max(1, 3 + floorBoost);
+                    
                     player.party.members.push({
                         id: partyMemberId,
                         enemyId,
@@ -9019,6 +9024,7 @@
                         level: 1,
                         exp: 0,
                         totalExp: 0,
+                        def: baseDef,
                     });
 
                     const $partyMembers =
@@ -9032,7 +9038,7 @@
 
                     // Fix: Use the correct variable name - it should be $partyMember.querySelector('.name')
                     const $nameElement = $partyMember.querySelector('.name');
-                    $nameElement.innerHTML = `<span class="clickable-name" onclick="showPartyMemberModal(${partyMemberId})">${name}</span>`;
+                    $nameElement.innerHTML = `<span class="clickable-name" onclick="showPartyMemberModal(${partyMemberId})">LV.${1} ${name}</span>`;
 
                     const $healthBar =
                         $partyMember.querySelector("progress-bar");
@@ -9058,8 +9064,7 @@
                 refresh: () => {
                     for (let i=0; i<player.party.members.length; i++) {
                         const partyMember = player.party.members[i];
-                        const selector =
-                            `#partyMembers [data-partyMemberId="${partyMember.id}"]`;
+                        const selector = `#partyMembers [data-partyMemberId="${partyMember.id}"]`;
 
                         const $partyMember = document.querySelector(selector);
                         if (!$partyMember) {
@@ -9070,14 +9075,24 @@
                             continue;
                         }
 
+                        // Update name with level
+                        const $nameElement = $partyMember.querySelector('.name .clickable-name');
+                        if ($nameElement) {
+                            $nameElement.textContent = `LV.${partyMember.level} ${partyMember.name}`;
+                        }
+
+                        // Handle dead member styling
                         if (partyMember.hp <= 0) {
                             $partyMember.querySelector('.name')
                                 .classList.add('strikethrough');
                             player.party.disableButtons(partyMember.id);
+                        } else {
+                            $partyMember.querySelector('.name')
+                                .classList.remove('strikethrough');
                         }
 
-                        const $healthBar = $partyMember
-                            .querySelector(`progress-bar.health-bar`);
+                        // Update health bar
+                        const $healthBar = $partyMember.querySelector(`progress-bar.health-bar`);
                         $healthBar.setAttribute('value', partyMember.hp);
                         $healthBar.setAttribute('max', partyMember.maxHp);
                     }
@@ -9348,15 +9363,19 @@
                     member.level++;
                     member.exp = rolledOverExp;
                     
-                    // Party member stat boosts
+                    // Party members get stat boosts on level up
                     const hpBoost = Math.floor(member.maxHp * 0.1) + 1; // 10% + 1 HP boost
+                    const defBoost = Math.max(1, Math.floor(member.def * 0.15)); // 15% DEF boost (minimum 1)
+                    
                     member.maxHp += hpBoost;
                     member.hp = Math.min(member.hp + hpBoost, member.maxHp); // Heal a bit on level up
+                    member.def += defBoost;
                     
                     updateBattleLog(
                         `<span class="friendly">${member.name}</span> reached ` +
                         `<span class="LV">Level ${member.level}</span>! ` +
-                        `<span class="HP">+${hpBoost} HP</span>`
+                        `<span class="HP">+${hpBoost} HP</span>, ` +
+                        `<span class="DEF">+${defBoost} DEF</span>`
                     );
                     
                     // Check for another level up (in case they gained a lot of exp)
