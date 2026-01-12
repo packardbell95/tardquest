@@ -471,6 +471,7 @@
     <script src="data/enemyart.js"></script>
     <script src="data/title-screen.js"></script>
     <script src="scripts/gamepad.js"></script>
+    <script src="scripts/partymenu.js"></script>
     <script>
         Tooltip.groupSettings = {
             playerInput: {
@@ -9022,7 +9023,9 @@
                         partyMemberId
                     );
 
-                    $partyMember.querySelector(".name").textContent = name;
+                    // Fix: Use the correct variable name - it should be $partyMember.querySelector('.name')
+                    const $nameElement = $partyMember.querySelector('.name');
+                    $nameElement.innerHTML = `<span class="clickable-name" onclick="showPartyMemberModal(${partyMemberId})">${name}</span>`;
 
                     const $healthBar =
                         $partyMember.querySelector("progress-bar");
