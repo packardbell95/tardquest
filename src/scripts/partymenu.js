@@ -5,7 +5,7 @@
         const member = player.party.members.find(m => m.id === partyMemberId);
         if (!member) return;
 
-        // Lock player movement
+        // Lock player movement (only half works i guess idk)
         if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
             GameControl.setInputBlocked(true);
         }
@@ -17,14 +17,11 @@
         const expRequired = player.party.getExpRequiredForLevelUp(member.level);
         const expProgress = member.exp;
         
-        // Get ASCII art for the member
+        // Get member ASCII art
         let asciiArtSection = '';
         const indexedArt = window.ENEMY_ART?.[member.enemyId];
         if (indexedArt) {
-            // Format the art like the game does
             let art = sceneRenderer.formatArt(indexedArt);
-            
-            // Apply offsets if specified
             if (indexedArt.offsetX) {
                 art = art
                     .split('\n')
@@ -44,8 +41,6 @@
         }
         
         const persuasionSection = member.persuasionMessage ? `
-            <hr class="party-member-divider">
-            
             <div class="party-member-persuasion">
                 <strong>Words of Recruitment:</strong><br>
                 <div class="persuasion-text">
@@ -124,14 +119,14 @@
         const nameSection = editButton.parentNode;
         const nameSpan = nameSection.querySelector('.member-name');
         
-        // Create input field
+        // Input field
         const input = document.createElement('input');
         input.type = 'text';
         input.value = member.name;
         input.className = 'rename-input';
         input.maxLength = 50;
         
-        // Create save/cancel buttons
+        // Save/Cancel buttons
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Save';
         saveBtn.className = 'save-name-btn';
@@ -140,7 +135,7 @@
         cancelBtn.textContent = 'Cancel';
         cancelBtn.className = 'cancel-name-btn';
         
-        // Replace name display with input
+        // Replace displayed name
         nameSpan.style.display = 'none';
         editButton.style.display = 'none';
         nameSection.appendChild(input);
@@ -153,24 +148,19 @@
         function saveName() {
             const newName = input.value.trim();
             if (newName && newName !== member.name) {
-                // Update the member data
                 member.name = newName;
-                
-                // Update the modal title (include level)
+
                 const modalTitle = nameSection.closest('.modal').querySelector('.title');
                 modalTitle.textContent = `LV.${member.level} ${newName}`;
                 
-                // Update the name in the party list (include level)
                 const partyMemberElement = document.querySelector(`[data-partyMemberId="${partyMemberId}"] .name .clickable-name`);
                 if (partyMemberElement) {
                     partyMemberElement.textContent = `LV.${member.level} ${newName}`;
                 }
                 
-                // Update the displayed name in modal (include level)
                 nameSpan.textContent = `LV.${member.level} ${newName}`;
             }
-            
-            // Restore original display
+
             input.remove();
             saveBtn.remove();
             cancelBtn.remove();
@@ -179,15 +169,13 @@
         }
         
         function cancelEdit() {
-            // Restore original display
             input.remove();
             saveBtn.remove();
             cancelBtn.remove();
             nameSpan.style.display = '';
             editButton.style.display = '';
         }
-        
-        // Event handlers
+
         saveBtn.addEventListener('click', saveName);
         cancelBtn.addEventListener('click', cancelEdit);
         input.addEventListener('keydown', (e) => {
@@ -199,7 +187,6 @@
         });
     }
 
-    // Make functions globally available
     window.showPartyMemberModal = showPartyMemberModal;
     window.editPartyMemberName = editPartyMemberName;
 

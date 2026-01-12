@@ -9008,10 +9008,9 @@
                 add: (enemyId, name, hp, maxHp, persuasionMessage) => {
                     const index = player.party.members.length;
                     const partyMemberId = player.party.seenMembers;
-                    
-                    // Calculate base defense based on floor (similar to HP scaling)
                     const floorBoost = Math.floor(floor / 2);
                     const baseDef = Math.max(1, 3 + floorBoost);
+                    const startingExp = Math.max(0, (floor - 1) * 5);
                     
                     player.party.members.push({
                         id: partyMemberId,
@@ -9022,44 +9021,42 @@
                         healedThisBattle: false,
                         persuasionMessage,
                         level: 1,
-                        exp: 0,
-                        totalExp: 0,
+                        exp: startingExp,
+                        totalExp: startingExp,
                         def: baseDef,
                     });
 
-                    const $partyMembers =
-                        document.getElementById("partyMembers");
+                    const $partyMembers = document.getElementById("partyMembers");
                     const $partyMember = $partyMembers.children.item(index);
 
-                    $partyMember.setAttribute(
-                        'data-partyMemberId',
-                        partyMemberId
-                    );
+                    $partyMember.setAttribute('data-partyMemberId', partyMemberId);
 
-                    // Fix: Use the correct variable name - it should be $partyMember.querySelector('.name')
                     const $nameElement = $partyMember.querySelector('.name');
                     $nameElement.innerHTML = `<span class="clickable-name" onclick="showPartyMemberModal(${partyMemberId})">LV.${1} ${name}</span>`;
 
-                    const $healthBar =
-                        $partyMember.querySelector("progress-bar");
+                    const $healthBar = $partyMember.querySelector("progress-bar");
                     $healthBar.setAttribute('value', hp);
                     $healthBar.setAttribute('max', maxHp);
                     $healthBar.removeAttribute("placeholder");
 
-                    const $talkButton =
-                        $partyMember.querySelector("button.talk");
+                    const $talkButton = $partyMember.querySelector("button.talk");
                     $talkButton.disabled = false;
-                    $talkButton.onclick =
-                        () => player.party.talk(partyMemberId);
+                    $talkButton.onclick = () => player.party.talk(partyMemberId);
 
-                    const $releaseButton =
-                        $partyMember.querySelector("button.release");
+                    const $releaseButton = $partyMember.querySelector("button.release");
                     $releaseButton.disabled = false;
-                    $releaseButton.onclick =
-                        () => player.party.release(partyMemberId);
+                    $releaseButton.onclick = () => player.party.release(partyMemberId);
 
                     $partyMember.classList.remove("placeholder");
                     player.party.seenMembers++;
+                    
+                    if (startingExp > 0) {
+                        const member = player.party.members[player.party.members.length - 1];
+                        const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+                        if (member.exp >= expRequired) {
+                            player.party.levelUpMember(member);
+                        }
+                    }
                 },
                 refresh: () => {
                     for (let i=0; i<player.party.members.length; i++) {
