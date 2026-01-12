@@ -4,11 +4,8 @@
     function showPartyMemberModal(partyMemberId) {
         const member = player.party.members.find(m => m.id === partyMemberId);
         if (!member) return;
-
-        // Lock player movement (only half works i guess idk)
-        if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
-            GameControl.setInputBlocked(true);
-        }
+        GameControl.awaitingPersuasionText = true; // Used for blocking game control while still allowing to type into the renaming field
+        GameControl.disableControls();
 
         const modal = document.createElement('dialog');
         modal.className = 'modal';
@@ -89,7 +86,6 @@
                             filledColor="#1900ff">
                         </progress-bar>
 
-
                     </div>
                     
                     ${persuasionSection}
@@ -104,10 +100,10 @@
         document.body.appendChild(modal);
         modal.showModal();
         modal.addEventListener('close', () => {
-            // Unlock player movement when modal closes
-            if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
-                GameControl.setInputBlocked(false);
-            }
+            setTimeout(() => {
+                GameControl.awaitingPersuasionText = false;
+                GameControl.enableControls();
+            }, 200);
             modal.remove();
         });
     }
@@ -125,6 +121,15 @@
         input.value = member.name;
         input.className = 'rename-input';
         input.maxLength = 50;
+        
+        // Prevent event propagation to avoid game controls interfering
+        input.addEventListener('keydown', (e) => {
+            e.stopPropagation(); // Prevent game from handling these key events
+        });
+        
+        input.addEventListener('keypress', (e) => {
+            e.stopPropagation(); // Prevent game from handling these key events
+        });
         
         // Save/Cancel buttons
         const saveBtn = document.createElement('button');
@@ -158,7 +163,7 @@
                     partyMemberElement.textContent = `LV.${member.level} ${newName}`;
                 }
                 
-                nameSpan.textContent = `LV.${member.level} ${newName}`;
+                nameSpan.textContent = newName;
             }
 
             input.remove();
@@ -179,9 +184,12 @@
         saveBtn.addEventListener('click', saveName);
         cancelBtn.addEventListener('click', cancelEdit);
         input.addEventListener('keydown', (e) => {
+            e.stopPropagation(); // Prevent game from handling key events
             if (e.key === 'Enter') {
+                e.preventDefault();
                 saveName();
             } else if (e.key === 'Escape') {
+                e.preventDefault();
                 cancelEdit();
             }
         });
