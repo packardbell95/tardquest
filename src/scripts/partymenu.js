@@ -5,13 +5,24 @@
         const member = player.party.members.find(m => m.id === partyMemberId);
         if (!member) return;
 
-        // Lock player movement
+        // Lock player movement? Idk this only half works
         if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
             GameControl.setInputBlocked(true);
         }
 
         const modal = document.createElement('dialog');
         modal.className = 'modal';
+        
+        const persuasionSection = member.persuasionMessage ? `
+            <hr class="party-member-divider">
+            
+            <div class="party-member-persuasion">
+                <strong>Words of Recruitment:</strong><br>
+                <div class="persuasion-text">
+                    "${member.persuasionMessage}"
+                </div>
+            </div>
+        ` : '';
         
         modal.innerHTML = `
             <div class="header">
@@ -30,6 +41,10 @@
                         <strong>HP:</strong>
                         <span class="HP">${member.hp} / ${member.maxHp}</span>
                     </div>
+                    
+                    ${persuasionSection}
+                    
+
                 </div>
                 <div class="footer">
                     <button onclick="this.closest('dialog').close()">Close</button>

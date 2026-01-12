@@ -9002,7 +9002,7 @@
                         $partyMembers.appendChild($placeholder);
                     }
                 },
-                add: (enemyId, name, hp, maxHp) => {
+                add: (enemyId, name, hp, maxHp, persuasionMessage) => {
                     const index = player.party.members.length;
                     const partyMemberId = player.party.seenMembers;
                     player.party.members.push({
@@ -9012,6 +9012,7 @@
                         hp,
                         maxHp,
                         healedThisBattle: false,
+                        persuasionMessage,
                     });
 
                     const $partyMembers =
@@ -13450,7 +13451,8 @@
                             currentEnemy.id,
                             currentEnemy.name,
                             enemyHp,
-                            maxEnemyHp
+                            maxEnemyHp,
+                            playerMessage
                         );
                         updateBattleLog(
                             `The <span class="friendly">${currentEnemy.name}` +

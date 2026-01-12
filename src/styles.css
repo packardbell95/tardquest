@@ -3314,3 +3314,16 @@ dialog.modal::backdrop {
 .cancel-name-btn {
     background-color: #000000;
 }
+
+.party-member-persuasion {
+    margin-bottom: 1rem;
+}
+
+.party-member-persuasion .persuasion-text {
+    margin-top: 0.5rem;
+    margin-left: 0.5rem;
+    color: #A23AB4;
+    font-style: italic;
+    border-left: 2px solid #A23AB4;
+    background-color: #a23ab421;
+}
