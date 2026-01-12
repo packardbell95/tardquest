@@ -5,13 +5,43 @@
         const member = player.party.members.find(m => m.id === partyMemberId);
         if (!member) return;
 
-        // Lock player movement? Idk this only half works
+        // Lock player movement
         if (typeof GameControl !== 'undefined' && GameControl.setInputBlocked) {
             GameControl.setInputBlocked(true);
         }
 
         const modal = document.createElement('dialog');
         modal.className = 'modal';
+        
+        // Calculate exp progress
+        const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+        const expProgress = member.exp;
+        
+        // Get ASCII art for the member
+        let asciiArtSection = '';
+        const indexedArt = window.ENEMY_ART?.[member.enemyId];
+        if (indexedArt) {
+            // Format the art like the game does
+            let art = sceneRenderer.formatArt(indexedArt);
+            
+            // Apply offsets if specified
+            if (indexedArt.offsetX) {
+                art = art
+                    .split('\n')
+                    .map(line => ' '.repeat(indexedArt.offsetX) + line)
+                    .join('\n');
+            }
+            
+            if (indexedArt.offsetY) {
+                art = '\n'.repeat(indexedArt.offsetY) + art;
+            }
+            
+            asciiArtSection = `
+                <div class="party-member-art">
+                    <pre class="ascii-art">${art}</pre>
+                </div>
+            `;
+        }
         
         const persuasionSection = member.persuasionMessage ? `
             <hr class="party-member-divider">
@@ -22,11 +52,13 @@
                     "${member.persuasionMessage}"
                 </div>
             </div>
-        ` : '';
+            
+            ${asciiArtSection}
+        ` : asciiArtSection;
         
         modal.innerHTML = `
             <div class="header">
-                <div class="title">${member.name}</div>
+                <div class="title">LV.${member.level} ${member.name}</div>
                 <button class="close" onclick="this.closest('dialog').close()"></button>
             </div>
             <div class="bodyContainer">
@@ -38,13 +70,31 @@
                             <button class="edit-name-btn" onclick="editPartyMemberName(${partyMemberId}, this)"></button>
                         </div>
                         
-                        <strong>HP:</strong>
-                        <span class="HP">${member.hp} / ${member.maxHp}</span>
+                        <div>HP:</div>
+                        <progress-bar 
+                            class="party-member-hp"
+                            value="${member.hp}" 
+                            max="${member.maxHp}"
+                            cautionAtOrBelowPercentage="25"
+                            dangerAtOrBelowPercentage="10">
+                        </progress-bar>
+
+                        <div>EXP:</div>
+                        <progress-bar 
+                            class="party-member-exp"
+                            value="${expProgress}" 
+                            max="${expRequired}"
+                            emptyColor="#000"
+                            filledColor="#1900ff">
+                        </progress-bar>
+                        
+                        <div>Level:</div>
+                        <span>${member.level}</span>
+
                     </div>
                     
                     ${persuasionSection}
                     
-
                 </div>
                 <div class="footer">
                     <button onclick="this.closest('dialog').close()">Close</button>

@@ -8955,6 +8955,9 @@
 
                     $partyMembers.replaceChildren(...placeholders);
                 },
+
+
+                
                 getPartyMemberPlaceholder: () => {
                     const $placeholder = document.createElement("div");
                     $placeholder.className = "party-member placeholder";
@@ -9013,6 +9016,9 @@
                         maxHp,
                         healedThisBattle: false,
                         persuasionMessage,
+                        level: 1,
+                        exp: 0,
+                        totalExp: 0,
                     });
 
                     const $partyMembers =
@@ -9073,6 +9079,7 @@
                         const $healthBar = $partyMember
                             .querySelector(`progress-bar.health-bar`);
                         $healthBar.setAttribute('value', partyMember.hp);
+                        $healthBar.setAttribute('max', partyMember.maxHp);
                     }
 
                     player.party.refreshPartyCount();
@@ -9310,6 +9317,55 @@
                         ]
                     );
                 },
+
+                giveExperience: (baseExp = 2) => {
+                    // Calculate exp based on floor (same scaling as enemy stats)
+                    const floorBoost = Math.floor(floor / 2);
+                    const expToGive = Math.max(1, baseExp + floorBoost);
+                    
+                    player.party.members.forEach(member => {
+                        if (member.hp > 0) { // Only alive members gain exp
+                            member.exp += expToGive;
+                            member.totalExp += expToGive;
+                            
+                            // Check for level up
+                            const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+                            if (member.exp >= expRequired) {
+                                player.party.levelUpMember(member);
+                            }
+                        }
+                    });
+                },
+
+                getExpRequiredForLevelUp: (level) => {
+                    return level * 10;
+                },
+
+                levelUpMember: (member) => {
+                    const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+                    const rolledOverExp = Math.max(0, member.exp - expRequired);
+                    
+                    member.level++;
+                    member.exp = rolledOverExp;
+                    
+                    // Party member stat boosts
+                    const hpBoost = Math.floor(member.maxHp * 0.1) + 1; // 10% + 1 HP boost
+                    member.maxHp += hpBoost;
+                    member.hp = Math.min(member.hp + hpBoost, member.maxHp); // Heal a bit on level up
+                    
+                    updateBattleLog(
+                        `<span class="friendly">${member.name}</span> reached ` +
+                        `<span class="LV">Level ${member.level}</span>! ` +
+                        `<span class="HP">+${hpBoost} HP</span>`
+                    );
+                    
+                    // Check for another level up (in case they gained a lot of exp)
+                    const nextExpRequired = player.party.getExpRequiredForLevelUp(member.level);
+                    if (member.exp >= nextExpRequired) {
+                        player.party.levelUpMember(member);
+                    }
+                },
+
                 refreshPartyCount: () => {
                     document.getElementById("totalPartyMembers").innerText =
                         player.party.members.length.toLocaleString(undefined);
@@ -12753,6 +12809,8 @@
                     if (currentEnemy.isWild && currentEnemy.id !== "vampire") {
                         updateKillCounter();
                     }
+
+                    player.party.giveExperience();
                     
                     if (currentEnemy.id === "mimic") {
                         updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">₿ ${currentEnemy.bitcoins}</span> in its remains!`);

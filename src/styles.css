@@ -1768,7 +1768,6 @@ a:link {
     width: 30px;
     height: 30px;
     background-color: #000;
-    border: 1px solid #000;
 
     &:hover {
         background-color: #fff;
@@ -1813,7 +1812,6 @@ a:link {
     width: 30px;
     height: 30px;
     background-color: #000;
-    border: 1px solid #000;
 
     &.opened:not(:active):not(:hover),
     &:not(.opened):active,
@@ -3257,62 +3255,9 @@ dialog.modal::backdrop {
     margin-bottom: 1rem;
 }
 
-.name-section {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.edit-name-btn {
-    width: 23px;
-    height: 23px;
-    padding: 0;
-    background-image: url(assets/interface/ui/edit.png);
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-width: auto;
-    border: 2px solid;
-    border-color: #e3e3e3 #979797 #979797 #e3e3e3;
-    image-rendering: initial;
-}
-
-.edit-name-btn:not(:disabled):hover {
-    background-color: #037e13;
-    border-color: #75eb8d #037e13 #037e13 #75eb8d;
-}
-
-.edit-name-btn:not(:disabled):active {
-    background-position: calc(50% + 2px) calc(50% + 2px);
-}
-
-.save-name-btn,
-.cancel-name-btn {
-    padding: 2px 6px;
-    font-size: 0.8em;
-    min-width: auto;
-}
-
-.rename-input {
-    background: #000000;
-    border: 1px solid #ffffff;
-    color: #fff;
-    padding: 2px 4px;
-    font-size: 0.9em;
-    border-radius: 0px;
-}
-
-.rename-input:focus {
-    outline: none;
-    border-color: #ffffff;
-}
-
-.save-name-btn {
-    background-color: #037e13;
-}
-
-.cancel-name-btn {
-    background-color: #000000;
+.party-member-divider {
+    border: 1px solid #666;
+    margin: 1rem 0;
 }
 
 .party-member-persuasion {
@@ -3326,4 +3271,83 @@ dialog.modal::backdrop {
     font-style: italic;
     border-left: 2px solid #A23AB4;
     background-color: #a23ab421;
+}
+
+.name-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.edit-name-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background-image: url(assets/interface/ui/edit.png);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-width: auto;
+    border: 2px solid;
+    border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+    image-rendering: initial;
+}
+
+.edit-name-btn:not(:disabled):hover {
+    background-color: #00f;
+    border-color: #99f #00c #00c #99f;
+}
+
+.edit-name-btn:not(:disabled):active {
+    background-position: calc(50% + 2px) calc(50% + 2px);
+}
+
+.party-member-hp,
+.party-member-exp {
+    width: 100%;
+    height: 16px;
+}
+
+.save-name-btn,
+.cancel-name-btn {
+    padding: 2px 6px;
+    font-size: 0.8em;
+    min-width: auto;
+}
+
+.rename-input {
+    background: #333;
+    border: 1px solid #666;
+    color: #fff;
+    padding: 2px 4px;
+    font-size: 0.9em;
+    border-radius: 2px;
+}
+
+.rename-input:focus {
+    outline: none;
+    border-color: #61C9F6;
+}
+
+.save-name-btn {
+    background-color: #4CAF50;
+}
+
+.save-name-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-name-btn {
+    background-color: #666;
+}
+
+.cancel-name-btn:hover {
+    background-color: #777;
+}
+
+
+
+.party-member-art {
+    font-size: 2px;
+    white-space: pre;
 }
