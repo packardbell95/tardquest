@@ -3259,6 +3259,12 @@ dialog.modal::backdrop {
     margin-bottom: 1rem;
 }
 
+.party-divider {
+    border-top: 2px solid #fff;
+    display: flex;
+    padding-bottom: 8px;
+}
+
 .edit-name-btn {
     width: 20px;
     height: 20px;
@@ -3333,33 +3339,50 @@ dialog.modal::backdrop {
     white-space: pre;
 }
 
-.ascii-art-container {
+.party-member-main-content {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ascii-art-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .party-member-art {
+    font-size: 2px;
+    white-space: pre;
+}
+
+.party-member-info {
+    display: grid;
+    grid-template-columns: 1fr 5fr;
+    gap: 0.5rem;
+    align-items: center;
     flex: 1;
 }
 
 button[data-feed-button] {
-    width: 40px;
-    height: 40px;
+    width: 26px;
+    height: 26px;
     padding: 0;
     background-image: url(assets/interface/items/seed.png);
     background-size: 40px 40px;
     background-position: center;
     background-repeat: no-repeat;
-    min-width: 26px;
-    min-height: 26px;
+    min-width: 40px;
+    min-height: 40px;
     border: 2px solid;
     border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+    image-rendering: pixelated;
     image-rendering: initial;
     flex-shrink: 0;
     box-sizing: border-box;
-    align-self: flex-start;
 }
 
 button[data-feed-button]:not(:disabled):hover {

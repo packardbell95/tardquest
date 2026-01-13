@@ -49,15 +49,14 @@
         }
         
         const persuasionSection = member.persuasionMessage ? `
+            <div class="party-divider"></div>
             <div class="party-member-persuasion">
                 <strong>Words of Recruitment:</strong><br>
                 <div class="persuasion-text">
                     "${member.persuasionMessage}"
                 </div>
             </div>
-            
-            ${asciiArtSection}
-        ` : asciiArtSection;
+        ` : '';
         
         modal.innerHTML = `
             <div class="header">
@@ -66,37 +65,40 @@
             </div>
             <div class="bodyContainer">
                 <div class="body">
-                    <div class="party-member-info">
-                        <strong>Name:</strong>
-                        <div class="name-section">
-                            <span class="member-name">${member.name}</span>
-                            <button class="edit-name-btn" onclick="editPartyMemberName(${partyMemberId}, this)"></button>
+                    <div class="party-member-main-content">
+                        ${asciiArtSection}
+                        
+                        <div class="party-member-info">
+                            <strong>Name:</strong>
+                            <div class="name-section">
+                                <span class="member-name">${member.name}</span>
+                                <button class="edit-name-btn" onclick="editPartyMemberName(${partyMemberId}, this)"></button>
+                            </div>
+                            
+                            <div>Level:</div>
+                            <span class="LV">${member.level}</span>
+
+                            <div>DEF:</div>
+                            <span class="DEF">${member.def}</span>
+
+                            <div>HP:</div>
+                            <progress-bar 
+                                class="party-member-hp"
+                                value="${member.hp}" 
+                                max="${member.maxHp}"
+                                cautionAtOrBelowPercentage="25"
+                                dangerAtOrBelowPercentage="10">
+                            </progress-bar>
+                            
+                            <div>EXP:</div>
+                            <progress-bar 
+                                class="party-member-exp"
+                                value="${expProgress}" 
+                                max="${expRequired}"
+                                emptyColor="#000"
+                                filledColor="#1900ff">
+                            </progress-bar>
                         </div>
-                        
-                        <div>Level:</div>
-                        <span class="LV">${member.level}</span>
-
-                        <div>DEF:</div>
-                        <span class="DEF">${member.def}</span>
-
-                        <div>HP:</div>
-                        <progress-bar 
-                            class="party-member-hp"
-                            value="${member.hp}" 
-                            max="${member.maxHp}"
-                            cautionAtOrBelowPercentage="25"
-                            dangerAtOrBelowPercentage="10">
-                        </progress-bar>
-                        
-                        <div>EXP:</div>
-                        <progress-bar 
-                            class="party-member-exp"
-                            value="${expProgress}" 
-                            max="${expRequired}"
-                            emptyColor="#000"
-                            filledColor="#1900ff">
-                        </progress-bar>
-
                     </div>
                     
                     ${persuasionSection}
