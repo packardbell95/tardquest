@@ -8231,6 +8231,24 @@
                     weight: 1,
                     price: 10,
                 },
+
+                seedPhial: {
+                    article: 'a',
+                    name: "PHIAL OF SEED",
+                    description: "Seed that you can inject into your humble friends! Heals party member by 25% of max HP. +0.4 LOAD",
+                    use: () => {
+                        updateBattleLog(
+                            `<span class="action">You can't eat this!</span> ` +
+                            `This phial full of seed is not safe for humans. Feed your party ` +
+                            `via a member's character sheet instead.`
+                        );
+                        return false;
+                    },
+                    merchantStockChance: 0.8,
+                    chestDrop: true,
+                    weight: 0.4,
+                    price: 15,
+                },
             }),
 
             // Inventory object category: Weapons
@@ -9360,12 +9378,11 @@
                     member.level++;
                     member.exp = rolledOverExp;
                     
-                    // Party members get stat boosts on level up
-                    const hpBoost = Math.floor(member.maxHp * 0.1) + 1; // 10% + 1 HP boost
-                    const defBoost = Math.max(1, Math.floor(member.def * 0.15)); // 15% DEF boost (minimum 1)
+                    const hpBoost = 1; // Fixed +1 HP boost
+                    const defBoost = 1; // Fixed +1 DEF boost
                     
                     member.maxHp += hpBoost;
-                    member.hp = Math.min(member.hp + hpBoost, member.maxHp); // Heal a bit on level up
+                    member.hp = Math.min(member.hp + hpBoost, member.maxHp); // Heal slightly on level up
                     member.def += defBoost;
                     
                     updateBattleLog(
@@ -9375,7 +9392,6 @@
                         `<span class="DEF">+${defBoost} DEF</span>`
                     );
                     
-                    // Check for another level up (in case they gained a lot of exp)
                     const nextExpRequired = player.party.getExpRequiredForLevelUp(member.level);
                     if (member.exp >= nextExpRequired) {
                         player.party.levelUpMember(member);

@@ -4,8 +4,8 @@
     function showPartyMemberModal(partyMemberId) {
         const member = player.party.members.find(m => m.id === partyMemberId);
         if (!member) return;
-        GameControl.awaitingPersuasionText = true; // Used for blocking game control while still allowing to type into the renaming field
-        GameControl.disableControls();
+
+        GameControl.awaitingPersuasionText = true;
 
         const modal = document.createElement('dialog');
         modal.className = 'modal';
@@ -13,6 +13,10 @@
         // Calculate exp progress
         const expRequired = player.party.getExpRequiredForLevelUp(member.level);
         const expProgress = member.exp;
+        
+        // Check if player has party healing items
+        const hasseedPhials = player.inventory.getItemCount('seedPhial') > 0;
+        const canHeal = hasseedPhials && member.hp > 0 && member.hp < member.maxHp;
         
         // Get member ASCII art
         let asciiArtSection = '';
@@ -31,8 +35,15 @@
             }
             
             asciiArtSection = `
-                <div class="party-member-art">
-                    <pre class="ascii-art">${art}</pre>
+                <div class="ascii-art-container">
+                    <div class="party-member-art">
+                        <pre class="ascii-art">${art}</pre>
+                    </div>
+                    <button data-feed-button 
+                            onclick="feedPartyMember(${partyMemberId})"
+                            ${canHeal ? '' : 'disabled'}
+                            title="${canHeal ? 'Use PHIAL OF SEED' : (hasseedPhials ? 'Member is at full health' : 'No PHIAL OF SEED available')}">
+                    </button>
                 </div>
             `;
         }
@@ -102,7 +113,6 @@
         modal.addEventListener('close', () => {
             setTimeout(() => {
                 GameControl.awaitingPersuasionText = false;
-                GameControl.enableControls();
             }, 200);
             modal.remove();
         });
@@ -122,13 +132,12 @@
         input.className = 'rename-input';
         input.maxLength = 50;
         
-        // Prevent event propagation to avoid game controls interfering
         input.addEventListener('keydown', (e) => {
-            e.stopPropagation(); // Prevent game from handling these key events
+            e.stopPropagation();
         });
         
         input.addEventListener('keypress', (e) => {
-            e.stopPropagation(); // Prevent game from handling these key events
+            e.stopPropagation();
         });
         
         // Save/Cancel buttons
@@ -195,7 +204,68 @@
         });
     }
 
+    function feedPartyMember(partyMemberId) {
+        const member = player.party.members.find(m => m.id === partyMemberId);
+        if (!member) return;
+        
+        // Check if player has seed phials
+        const phialCount = player.inventory.getItemCount('seedPhial');
+        
+        if (phialCount <= 0) {
+            updateBattleLog('<span class="enemy">You don\'t have any PHIALS OF SEED!</span>');
+            return;
+        }
+
+        // Check if member is dead
+        if (member.hp <= 0) {
+            updateBattleLog('<span class="enemy">They\'re fucking dead, bro. Come on.</span>');
+            return;
+        }
+
+        // Check if member is at full health
+        if (member.hp >= member.maxHp) {
+            updateBattleLog(`<span class="friendly">${member.name}</span> is already at full HP. Overfeeding would lead to serious medical problems down the road. I would not recommend doing this.`);
+            return;
+        }
+
+        const itemDeducted = player.inventory.deductItem('seedPhial', 1);
+        
+        if (!itemDeducted) {
+            updateBattleLog('<span class="enemy">Failed to use PHIAL OF SEED!</span>');
+            return;
+        }
+        
+        // Heal the member by 25% of their max HP
+        const healAmount = Math.ceil(member.maxHp * 0.25);
+        const actualHeal = Math.min(healAmount, member.maxHp - member.hp);
+        member.hp += actualHeal;
+
+        updateBattleLog(
+            `You give a <span class="friendly">PHIAL OF SEED</span> to ` +
+            `<span class="friendly">${member.name}</span> and ` +
+            `<span class="HP">heal them by ${actualHeal} HP</span>`
+        );
+
+        const modal = document.querySelector('.modal');
+        if (modal) {
+            modal.close();
+        }
+
+        if (player.party && typeof player.party.refresh === 'function') {
+            player.party.refresh();
+        }
+
+        if (typeof player.refreshStats === 'function') {
+            player.refreshStats();
+        }
+
+        if (player.inCombat && typeof endOfPlayerTurn === 'function') {
+            endOfPlayerTurn();
+        }
+    }
+
     window.showPartyMemberModal = showPartyMemberModal;
     window.editPartyMemberName = editPartyMemberName;
+    window.feedPartyMember = feedPartyMember;
 
 })();
