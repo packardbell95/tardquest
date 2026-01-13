@@ -9386,10 +9386,8 @@
                     member.def += defBoost;
                     
                     updateBattleLog(
-                        `<span class="friendly">${member.name}</span> reached ` +
-                        `<span class="LV">Level ${member.level}</span>! ` +
-                        `<span class="HP">+${hpBoost} HP</span>, ` +
-                        `<span class="DEF">+${defBoost} DEF</span>`
+                        `<span class="friendly">${member.name}</span> has reached ` +
+                        `<span class="LV">Level ${member.level}</span>! All stats increased!`
                     );
                     
                     const nextExpRequired = player.party.getExpRequiredForLevelUp(member.level);

@@ -237,8 +237,7 @@
             return;
         }
         
-        // Heal the member by 25% of their max HP
-        const healAmount = Math.ceil(member.maxHp * 0.25);
+        const healAmount = Math.ceil(member.maxHp * 0.4); // % of max HP gained from consuming PHIAL OF SEED
         const actualHeal = Math.min(healAmount, member.maxHp - member.hp);
         member.hp += actualHeal;
 
