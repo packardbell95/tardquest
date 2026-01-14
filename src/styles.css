@@ -3336,7 +3336,11 @@ dialog.modal::backdrop {
 }
 
 .party-member-art {
+    font-size: 2px;
+    white-space: pre;
     flex-shrink: 0;
+    line-height: 1;
+    margin-bottom: auto;
 }
 
 .party-member-main-content {
@@ -3349,7 +3353,9 @@ dialog.modal::backdrop {
 .ascii-art-container {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    align-items: center;
+    width: 100%;
+    height: 100%;
     justify-content: space-between;
 }
 
@@ -3371,9 +3377,12 @@ dialog.modal::backdrop {
     background-image: url(assets/interface/ui/tile2.png);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
     height: 170px;
     padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 button[data-feed-button] {
