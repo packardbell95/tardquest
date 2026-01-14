@@ -40,10 +40,11 @@
                         <div class="party-member-art">
                             <pre class="ascii-art">${art}</pre>
                         </div>
-                        <button data-feed-button 
-                                onclick="feedPartyMember(${partyMemberId})"
-                                ${canHeal ? '' : 'disabled'}
-                                '>
+                        <button
+                            data-feed-button
+                            onclick="feedPartyMember(${partyMemberId})"
+                            ${canHeal ? '' : 'disabled'}
+                        >
                             x${player.inventory.getItemCount('seedPhial')}
                         </button>
                     </div>
