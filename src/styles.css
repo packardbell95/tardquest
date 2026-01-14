@@ -3368,7 +3368,7 @@ dialog.modal::backdrop {
 
 .party-member-portrait-border {
     border: outset 5px #4b2e0242;
-    background-image: url(/assets/interface/ui/tile2.png);
+    background-image: url(assets/interface/ui/tile2.png);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
