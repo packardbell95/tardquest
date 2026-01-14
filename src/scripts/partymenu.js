@@ -1,5 +1,5 @@
+"use strict";
 (function() {
-    'use strict';
 
     function showPartyMemberModal(partyMemberId) {
         const member = player.party.members.find(m => m.id === partyMemberId);
@@ -15,8 +15,8 @@
         const expProgress = member.exp;
         
         // Check if player has party healing items
-        const hasseedPhials = player.inventory.getItemCount('seedPhial') > 0;
-        const canHeal = hasseedPhials && member.hp > 0 && member.hp < member.maxHp;
+        const hasSeedPhials = player.inventory.getItemCount('seedPhial') > 0;
+        const canHeal = hasSeedPhials && member.hp > 0 && member.hp < member.maxHp;
         
         // Get member ASCII art
         let asciiArtSection = '';
@@ -42,7 +42,7 @@
                     <button data-feed-button 
                             onclick="feedPartyMember(${partyMemberId})"
                             ${canHeal ? '' : 'disabled'}
-                            title="${canHeal ? 'Use PHIAL OF SEED' : (hasseedPhials ? 'Member is at full health' : 'No PHIAL OF SEED available')}">
+                            title="${canHeal ? 'Use PHIAL OF SEED' : (hasSeedPhials ? 'Member is at full health' : 'No PHIAL OF SEED available')}">
                     </button>
                 </div>
             `;
@@ -214,7 +214,10 @@
         const phialCount = player.inventory.getItemCount('seedPhial');
         
         if (phialCount <= 0) {
-            updateBattleLog('<span class="enemy">You don\'t have any PHIALS OF SEED!</span>');
+            updateBattleLog(
+                `<span class="enemy">You don't own a single ` +
+                `${InventoryObjectDefinitions.items.seedPhial.name}!</span>`
+            );
             return;
         }
 
@@ -233,7 +236,10 @@
         const itemDeducted = player.inventory.deductItem('seedPhial', 1);
         
         if (!itemDeducted) {
-            updateBattleLog('<span class="enemy">Failed to use PHIAL OF SEED!</span>');
+            updateBattleLog(
+                `<span class="enemy">Failed to use ` +
+                `${InventoryObjectDefinitions.items.seedPhial.name}</span>`
+            );
             return;
         }
         
@@ -242,7 +248,8 @@
         member.hp += actualHeal;
 
         updateBattleLog(
-            `You give a <span class="friendly">PHIAL OF SEED</span> to ` +
+            `You give a <span class="friendly">` +
+            `${InventoryObjectDefinitions.items.seedPhial.name}</span> to ` +
             `<span class="friendly">${member.name}</span> and ` +
             `<span class="HP">heal them by ${actualHeal} HP</span>`
         );
