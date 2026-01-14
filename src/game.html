@@ -11087,8 +11087,10 @@
             floorCrackSlight: new Audio('audio/sfx/floorCrackSlight.mp3'),
             floorBreakScreamDie: new Audio('audio/sfx/floorBreakScreamDie.mp3'),
             healTile: new Audio('audio/sfx/healTile.mp3'),
+            healParty: new Audio('audio/sfx/healParty.mp3'),
             tromBone: new Audio('audio/sfx/tromBONE.mp3'),
             attacked: new Audio('audio/sfx/attacked.mp3'),
+            attackedParty: new Audio('audio/sfx/attackedParty.mp3'),
             battleStart: new Audio('audio/sfx/battleStart.mp3'),
             battleEnd: new Audio('audio/sfx/battleEnd.mp3'),
             ash: new Audio('audio/sfx/ash.mp3'),
@@ -12934,9 +12936,12 @@
             const ally = randomEntry(player.party.get());
             const target = ally && Math.random() < 0.5 ? "ally" : "player";
 
-            target === "ally"
-                ? ally.hp = Math.max(ally.hp - totalDamage, 0)
-                : player.damage(totalDamage);
+            if (target === "ally") {
+                ally.hp = Math.max(ally.hp - totalDamage, 0);
+                playSFX('attackedParty');
+            } else {
+                player.damage(totalDamage);
+            }
 
             const targetLine = target === "ally"
                 ? `your <span class="friendly">${ally.name}</span>`

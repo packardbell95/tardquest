@@ -250,6 +250,7 @@
         const actualHeal = Math.min(healAmount, member.maxHp - member.hp);
         member.hp += actualHeal;
 
+        playSFX('healParty');
         updateBattleLog(
             `You give a <span class="friendly">` +
             `${InventoryObjectDefinitions.items.seedPhial.name}</span> to ` +
