@@ -2838,6 +2838,7 @@ a:link {
 }
 
 dialog.modal {
+    user-select: none;
     font-size: 14px;
     min-width: 400px;
     min-height: 150px;
@@ -3335,8 +3336,7 @@ dialog.modal::backdrop {
 }
 
 .party-member-art {
-    font-size: 2px;
-    white-space: pre;
+    flex-shrink: 0;
 }
 
 .party-member-main-content {
@@ -3349,9 +3349,8 @@ dialog.modal::backdrop {
 .ascii-art-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
+    flex: 1;
+    justify-content: space-between;
 }
 
 .party-member-art {
@@ -3367,22 +3366,50 @@ dialog.modal::backdrop {
     flex: 1;
 }
 
+.party-member-portrait-border {
+    border: outset 5px #4b2e0242;
+    background-image: url(/assets/interface/ui/tile2.png);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 170px;
+    padding: 10px;
+}
+
 button[data-feed-button] {
-    width: 26px;
-    height: 26px;
-    padding: 0;
+    width: 120px;
+    height: 30px;
+    padding: 2px;
     background-image: url(assets/interface/items/seed.png);
     background-size: 40px 40px;
-    background-position: center;
+    background-position: left;
     background-repeat: no-repeat;
     min-width: 40px;
     min-height: 40px;
     border: 2px solid;
     border-color: #e3e3e3 #979797 #979797 #e3e3e3;
-    image-rendering: pixelated;
     image-rendering: initial;
     flex-shrink: 0;
     box-sizing: border-box;
+    position: relative;
+    font-size: 10px;
+    color: #fff !important;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-left: 27px;
+    padding-top: 23px;
+    align-self: flex-start;
+}
+
+button[data-feed-button]::after {
+    content: "HEAL";
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    font-size: 14px;
+    color: #fff;
+    pointer-events: none;
 }
 
 button[data-feed-button]:not(:disabled):hover {
@@ -3390,12 +3417,26 @@ button[data-feed-button]:not(:disabled):hover {
     border-color: #9f9 #0c0 #0c0 #9f9;
 }
 
+button[data-feed-button]:not(:disabled):hover::after {
+    color: #fff;
+}
+
 button[data-feed-button]:not(:disabled):active {
     background-position: calc(50% + 2px) calc(50% + 2px);
+}
+
+button[data-feed-button]:not(:disabled):active::after {
+    bottom: 2px;
+    right: 6px;
 }
 
 button[data-feed-button]:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     background-color: #000000;
+    color: #666;
+}
+
+button[data-feed-button]:disabled::after {
+    color: #666;
 }

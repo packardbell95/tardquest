@@ -88,7 +88,7 @@
         './assets/interface/ui/left.png','./assets/interface/ui/next.png','./assets/interface/ui/persuade.gif','./assets/interface/ui/previous.png',
         './assets/interface/ui/right.png','./assets/interface/ui/rings.png','./assets/interface/ui/run.gif','./assets/interface/ui/scroll-down.png',
         './assets/interface/ui/scroll-up.png','./assets/interface/ui/settings.png',
-        './assets/interface/ui/tardpad.png','./assets/interface/ui/tile1.gif','./assets/interface/ui/tile1.png','./assets/interface/ui/turn-left.png',
+        './assets/interface/ui/tardpad.png','./assets/interface/ui/tile1.gif','./assets/interface/ui/tile1.png','/assets/interface/ui/tile2.png','./assets/interface/ui/turn-left.png',
         './assets/interface/ui/turn-right.png','./assets/interface/ui/up.png','./assets/interface/ui/weapons.png','./assets/interface/ui/boulder-hit.gif',
         './assets/interface/ui/wait.png','./assets/interface/ui/edit.png','./assets/interface/items/seed.png',
 

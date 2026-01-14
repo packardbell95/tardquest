@@ -35,15 +35,18 @@
             }
             
             asciiArtSection = `
-                <div class="ascii-art-container">
-                    <div class="party-member-art">
-                        <pre class="ascii-art">${art}</pre>
+                <div class="party-member-portrait-border">
+                    <div class="ascii-art-container">
+                        <div class="party-member-art">
+                            <pre class="ascii-art">${art}</pre>
+                        </div>
+                        <button data-feed-button 
+                                onclick="feedPartyMember(${partyMemberId})"
+                                ${canHeal ? '' : 'disabled'}
+                                '>
+                            x${player.inventory.getItemCount('seedPhial')}
+                        </button>
                     </div>
-                    <button data-feed-button 
-                            onclick="feedPartyMember(${partyMemberId})"
-                            ${canHeal ? '' : 'disabled'}
-                            title="${canHeal ? 'Use PHIAL OF SEED' : (hasSeedPhials ? 'Member is at full health' : 'No PHIAL OF SEED available')}">
-                    </button>
                 </div>
             `;
         }
