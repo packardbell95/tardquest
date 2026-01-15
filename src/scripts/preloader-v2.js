@@ -88,9 +88,9 @@
         './assets/interface/ui/left.png','./assets/interface/ui/next.png','./assets/interface/ui/persuade.gif','./assets/interface/ui/previous.png',
         './assets/interface/ui/right.png','./assets/interface/ui/rings.png','./assets/interface/ui/run.gif','./assets/interface/ui/scroll-down.png',
         './assets/interface/ui/scroll-up.png','./assets/interface/ui/settings.png',
-        './assets/interface/ui/tardpad.png','./assets/interface/ui/tile1.gif','./assets/interface/ui/tile1.png','./assets/interface/ui/turn-left.png',
+        './assets/interface/ui/tardpad.png','./assets/interface/ui/tile1.gif','./assets/interface/ui/tile1.png','/assets/interface/ui/tile2.png','./assets/interface/ui/turn-left.png',
         './assets/interface/ui/turn-right.png','./assets/interface/ui/up.png','./assets/interface/ui/weapons.png','./assets/interface/ui/boulder-hit.gif',
-        './assets/interface/ui/wait.png',
+        './assets/interface/ui/wait.png','./assets/interface/ui/edit.png','./assets/interface/items/seed.png',
 
         // interface/weapons
         './assets/interface/weapons/atlatl-spear.png','./assets/interface/weapons/bludgeon-mace.png','./assets/interface/weapons/crt.png',
@@ -112,7 +112,7 @@
         './audio/sfx/kaching.mp3','./audio/music/lurking.ogg','./audio/music/merchant.mp3','./audio/sfx/persuade.mp3','./audio/sfx/raisins.mp3','./audio/sfx/run.mp3',
         './audio/sfx/scream.mp3','./audio/music/title.mp3','./audio/sfx/torch.mp3','./audio/sfx/tromBONE.mp3','./audio/sfx/turn.mp3',
         './audio/sfx/uiCancel.mp3','./audio/sfx/uiOption.mp3','./audio/sfx/uiSelect.mp3','./audio/music/vampire-vengeful-fruit-intro.mp3','./audio/music/vampire-vengeful-fruit-main-loop.mp3',
-        './audio/sfx/lean.mp3','./audio/sfx/merchant-near.ogg','./audio/sfx/erok-near.ogg','./audio/sfx/boulder-near.ogg','./audio/sfx/boulder-hit.ogg',
+        './audio/sfx/lean.mp3','./audio/sfx/merchant-near.ogg','./audio/sfx/erok-near.ogg','./audio/sfx/boulder-near.ogg','./audio/sfx/boulder-hit.ogg','./audio/sfx/attackedParty.mp3','./audio/sfx/healParty.mp3',
 
         // ambient sfx
         './audio/ambient/rat1.ogg','./audio/ambient/howl1.ogg','./audio/ambient/chain1.ogg','./audio/ambient/run1.ogg'

@@ -471,6 +471,7 @@
     <script src="data/enemyart.js"></script>
     <script src="data/title-screen.js"></script>
     <script src="scripts/gamepad.js"></script>
+    <script src="scripts/partymenu.js"></script>
     <script>
         Tooltip.groupSettings = {
             playerInput: {
@@ -8230,6 +8231,24 @@
                     weight: 1,
                     price: 10,
                 },
+
+                seedPhial: {
+                    article: 'a',
+                    name: "PHIAL OF SEED",
+                    description: "Seed that you can inject into your humble friends! Heals party member by 25% of max HP. +0.4 LOAD",
+                    use: () => {
+                        updateBattleLog(
+                            `<span class="action">You can't eat this!</span> ` +
+                            `This phial full of seed is not safe for humans. Feed your party ` +
+                            `via a member's character sheet instead.`
+                        );
+                        return false;
+                    },
+                    merchantStockChance: 0.8,
+                    chestDrop: true,
+                    weight: 0.4,
+                    price: 15,
+                },
             }),
 
             // Inventory object category: Weapons
@@ -8954,6 +8973,9 @@
 
                     $partyMembers.replaceChildren(...placeholders);
                 },
+
+
+                
                 getPartyMemberPlaceholder: () => {
                     const $placeholder = document.createElement("div");
                     $placeholder.className = "party-member placeholder";
@@ -9001,9 +9023,13 @@
                         $partyMembers.appendChild($placeholder);
                     }
                 },
-                add: (enemyId, name, hp, maxHp) => {
+                add: (enemyId, name, hp, maxHp, persuasionMessage) => {
                     const index = player.party.members.length;
                     const partyMemberId = player.party.seenMembers;
+                    const floorBoost = Math.floor(floor / 2);
+                    const baseDef = Math.max(1, 3 + floorBoost);
+                    const startingExp = Math.max(0, (floor - 1) * 5);
+                    
                     player.party.members.push({
                         id: partyMemberId,
                         enemyId,
@@ -9011,45 +9037,49 @@
                         hp,
                         maxHp,
                         healedThisBattle: false,
+                        persuasionMessage,
+                        level: 1,
+                        exp: startingExp,
+                        totalExp: startingExp,
+                        def: baseDef,
                     });
 
-                    const $partyMembers =
-                        document.getElementById("partyMembers");
+                    const $partyMembers = document.getElementById("partyMembers");
                     const $partyMember = $partyMembers.children.item(index);
 
-                    $partyMember.setAttribute(
-                        'data-partyMemberId',
-                        partyMemberId
-                    );
+                    $partyMember.setAttribute('data-partyMemberId', partyMemberId);
 
-                    $partyMember.querySelector(".name").textContent = name;
+                    const $nameElement = $partyMember.querySelector('.name');
+                    $nameElement.innerHTML = `<span class="clickable-name" onclick="showPartyMemberModal(${partyMemberId})">LV.${1} ${name}</span>`;
 
-                    const $healthBar =
-                        $partyMember.querySelector("progress-bar");
+                    const $healthBar = $partyMember.querySelector("progress-bar");
                     $healthBar.setAttribute('value', hp);
                     $healthBar.setAttribute('max', maxHp);
                     $healthBar.removeAttribute("placeholder");
 
-                    const $talkButton =
-                        $partyMember.querySelector("button.talk");
+                    const $talkButton = $partyMember.querySelector("button.talk");
                     $talkButton.disabled = false;
-                    $talkButton.onclick =
-                        () => player.party.talk(partyMemberId);
+                    $talkButton.onclick = () => player.party.talk(partyMemberId);
 
-                    const $releaseButton =
-                        $partyMember.querySelector("button.release");
+                    const $releaseButton = $partyMember.querySelector("button.release");
                     $releaseButton.disabled = false;
-                    $releaseButton.onclick =
-                        () => player.party.release(partyMemberId);
+                    $releaseButton.onclick = () => player.party.release(partyMemberId);
 
                     $partyMember.classList.remove("placeholder");
                     player.party.seenMembers++;
+                    
+                    if (startingExp > 0) {
+                        const member = player.party.members[player.party.members.length - 1];
+                        const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+                        if (member.exp >= expRequired) {
+                            player.party.levelUpMember(member);
+                        }
+                    }
                 },
                 refresh: () => {
                     for (let i=0; i<player.party.members.length; i++) {
                         const partyMember = player.party.members[i];
-                        const selector =
-                            `#partyMembers [data-partyMemberId="${partyMember.id}"]`;
+                        const selector = `#partyMembers [data-partyMemberId="${partyMember.id}"]`;
 
                         const $partyMember = document.querySelector(selector);
                         if (!$partyMember) {
@@ -9060,15 +9090,26 @@
                             continue;
                         }
 
+                        // Update name with level
+                        const $nameElement = $partyMember.querySelector('.name .clickable-name');
+                        if ($nameElement) {
+                            $nameElement.textContent = `LV.${partyMember.level} ${partyMember.name}`;
+                        }
+
+                        // Handle dead member styling
                         if (partyMember.hp <= 0) {
                             $partyMember.querySelector('.name')
                                 .classList.add('strikethrough');
                             player.party.disableButtons(partyMember.id);
+                        } else {
+                            $partyMember.querySelector('.name')
+                                .classList.remove('strikethrough');
                         }
 
-                        const $healthBar = $partyMember
-                            .querySelector(`progress-bar.health-bar`);
+                        // Update health bar
+                        const $healthBar = $partyMember.querySelector(`progress-bar.health-bar`);
                         $healthBar.setAttribute('value', partyMember.hp);
+                        $healthBar.setAttribute('max', partyMember.maxHp);
                     }
 
                     player.party.refreshPartyCount();
@@ -9306,6 +9347,55 @@
                         ]
                     );
                 },
+
+                giveExperience: (baseExp = 2) => {
+                    // Calculate exp based on floor (same scaling as enemy stats)
+                    const floorBoost = Math.floor(floor / 2);
+                    const expToGive = Math.max(1, baseExp + floorBoost);
+                    
+                    player.party.members.forEach(member => {
+                        if (member.hp > 0) { // Only alive members gain exp
+                            member.exp += expToGive;
+                            member.totalExp += expToGive;
+                            
+                            // Check for level up
+                            const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+                            if (member.exp >= expRequired) {
+                                player.party.levelUpMember(member);
+                            }
+                        }
+                    });
+                },
+
+                getExpRequiredForLevelUp: (level) => {
+                    return level * 10;
+                },
+
+                levelUpMember: (member) => {
+                    const expRequired = player.party.getExpRequiredForLevelUp(member.level);
+                    const rolledOverExp = Math.max(0, member.exp - expRequired);
+                    
+                    member.level++;
+                    member.exp = rolledOverExp;
+                    
+                    const hpBoost = 1; // Fixed +1 HP boost
+                    const defBoost = 1; // Fixed +1 DEF boost
+                    
+                    member.maxHp += hpBoost;
+                    member.hp = Math.min(member.hp + hpBoost, member.maxHp); // Heal slightly on level up
+                    member.def += defBoost;
+                    
+                    updateBattleLog(
+                        `<span class="friendly">${member.name}</span> has reached ` +
+                        `<span class="LV">Level ${member.level}</span>! All stats increased!`
+                    );
+                    
+                    const nextExpRequired = player.party.getExpRequiredForLevelUp(member.level);
+                    if (member.exp >= nextExpRequired) {
+                        player.party.levelUpMember(member);
+                    }
+                },
+
                 refreshPartyCount: () => {
                     document.getElementById("totalPartyMembers").innerText =
                         player.party.members.length.toLocaleString(undefined);
@@ -10997,8 +11087,10 @@
             floorCrackSlight: new Audio('audio/sfx/floorCrackSlight.mp3'),
             floorBreakScreamDie: new Audio('audio/sfx/floorBreakScreamDie.mp3'),
             healTile: new Audio('audio/sfx/healTile.mp3'),
+            healParty: new Audio('audio/sfx/healParty.mp3'),
             tromBone: new Audio('audio/sfx/tromBONE.mp3'),
             attacked: new Audio('audio/sfx/attacked.mp3'),
+            attackedParty: new Audio('audio/sfx/attackedParty.mp3'),
             battleStart: new Audio('audio/sfx/battleStart.mp3'),
             battleEnd: new Audio('audio/sfx/battleEnd.mp3'),
             ash: new Audio('audio/sfx/ash.mp3'),
@@ -12749,6 +12841,8 @@
                     if (currentEnemy.isWild && currentEnemy.id !== "vampire") {
                         updateKillCounter();
                     }
+
+                    player.party.giveExperience();
                     
                     if (currentEnemy.id === "mimic") {
                         updateBattleLog(`The <span class="enemy">MIMIC</span> has been defeated! You find <span class="BTC">₿ ${currentEnemy.bitcoins}</span> in its remains!`);
@@ -12842,9 +12936,12 @@
             const ally = randomEntry(player.party.get());
             const target = ally && Math.random() < 0.5 ? "ally" : "player";
 
-            target === "ally"
-                ? ally.hp = Math.max(ally.hp - totalDamage, 0)
-                : player.damage(totalDamage);
+            if (target === "ally") {
+                ally.hp = Math.max(ally.hp - totalDamage, 0);
+                playSFX('attackedParty');
+            } else {
+                player.damage(totalDamage);
+            }
 
             const targetLine = target === "ally"
                 ? `your <span class="friendly">${ally.name}</span>`
@@ -13447,7 +13544,8 @@
                             currentEnemy.id,
                             currentEnemy.name,
                             enemyHp,
-                            maxEnemyHp
+                            maxEnemyHp,
+                            playerMessage
                         );
                         updateBattleLog(
                             `The <span class="friendly">${currentEnemy.name}` +
