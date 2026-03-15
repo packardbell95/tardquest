@@ -156,14 +156,77 @@ const TardAPI = (function() {
     }
 
     /**
-     * Computes PoW proof for challenge submission
-     * Formula: SHA256(challenge_secret + session_id)
-     * @param {string} secret - Challenge secret from server
+     * Computes PoW proof by finding a nonce whose hash satisfies
+     * leading-zero difficulty.
+     * Formula: SHA256(`${sid}:${challenge_id}:${challenge_salt}:${nonce}`)
+     * Output format: nonce:hash
+     *
+     * @param {Object} challenge - Challenge object
+     * @param {string} challenge.challenge_id - Challenge identifier
+     * @param {string} challenge.challenge_salt - Challenge salt
+     * @param {number} challenge.challenge_difficulty - Leading-zero hex difficulty
      * @param {string} sid - Session ID
+     * @param {Object} [options] - Mining options
+     * @param {number} [options.maxAttempts=200000] - Attempt ceiling before fallback/fail
+     * @param {number} [options.yieldEvery=250] - Event-loop yield cadence
+     * @returns {Promise<string>} Modern proof in nonce:hash format
+     */
+    async function computeModernPoWProof(challenge, sid, options = {}) {
+        const challengeId = String(challenge?.challenge_id || '');
+        const challengeSalt = String(challenge?.challenge_salt || '');
+        const difficultyRaw = Number(challenge?.challenge_difficulty ?? 4);
+        const difficulty = Math.max(1, Math.min(8, Number.isFinite(difficultyRaw) ? Math.floor(difficultyRaw) : 4));
+
+        if (!challengeId || !challengeSalt || !sid) {
+            throw new Error('Missing PoW challenge fields');
+        }
+
+        const maxAttemptsRaw = Number(options.maxAttempts ?? 200000);
+        const maxAttempts = Math.max(1, Number.isFinite(maxAttemptsRaw) ? Math.floor(maxAttemptsRaw) : 200000);
+        const yieldEveryRaw = Number(options.yieldEvery ?? 250);
+        const yieldEvery = Math.max(1, Number.isFinite(yieldEveryRaw) ? Math.floor(yieldEveryRaw) : 250);
+        const prefix = '0'.repeat(difficulty);
+
+        const nonceSeedArray = new Uint32Array(1);
+        crypto.getRandomValues(nonceSeedArray);
+        const nonceSeed = nonceSeedArray[0];
+
+        for (let i = 0; i < maxAttempts; i++) {
+            const nonce = (nonceSeed + i).toString(36);
+            const payload = `${sid}:${challengeId}:${challengeSalt}:${nonce}`;
+            const hash = await computeSHA256(payload);
+
+            if (hash.startsWith(prefix)) {
+                return `${nonce}:${hash}`;
+            }
+
+            if ((i + 1) % yieldEvery === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        throw new Error('Modern PoW attempt limit exceeded');
+    }
+
+    /**
+     * Computes PoW proof for challenge submission.
+     *
+     * @param {Object} challenge - Challenge object
+     * @param {string} sid - Session ID
+     * @param {Object} [options] - Additional options
      * @returns {Promise<string>} Challenge proof
      */
-    async function computePoWProof(secret, sid) {
-        return computeSHA256(secret + sid);
+    async function computePoWProof(challenge, sid, options = {}) {
+        if (!challenge || !sid) {
+            throw new Error('Missing challenge data or session id for PoW');
+        }
+
+        const hasModernFields = !!(challenge.challenge_id && challenge.challenge_salt);
+        if (!hasModernFields) {
+            throw new Error('Challenge object missing PoW fields');
+        }
+
+        return computeModernPoWProof(challenge, sid, options);
     }
 
     /**
@@ -258,13 +321,25 @@ const TardAPI = (function() {
             log.info('Session created:', sessionId);
 
             // Store PoW challenge if provided
-            if (data.challenge_id && data.challenge_secret) {
+            const challengeSalt = data.challenge_salt || null;
+            const challengeDifficulty = Number.isFinite(Number(data.challenge_difficulty))
+                ? Math.max(1, Math.min(8, Math.floor(Number(data.challenge_difficulty))))
+                : 4;
+
+            if (data.challenge_secret) {
+                // Intentionally ignored: this is from the old PoW system,
+                // which will still be supported by the server for a transitional period.
+                log.warn('Ignoring legacy challenge_secret from /api/start response');
+            }
+
+            if (data.challenge_id && challengeSalt) {
                 challengeData = {
                     challenge_id: data.challenge_id,
-                    challenge_secret: data.challenge_secret
+                    challenge_salt: challengeSalt,
+                    challenge_difficulty: challengeDifficulty
                 };
                 sessionStorage.setItem(LS_CHALLENGE_KEY, JSON.stringify(challengeData));
-                log.info('PoW challenge received');
+                log.info('PoW challenge received (difficulty', challengeDifficulty + ')');
             }
 
             // Reset game state tracking
@@ -420,10 +495,7 @@ const TardAPI = (function() {
 
             // Add PoW proof if challenge exists
             if (challengeData) {
-                const proof = await computePoWProof(
-                    challengeData.challenge_secret,
-                    sessionId
-                );
+                const proof = await computePoWProof(challengeData, sessionId);
                 body.challenge_id = challengeData.challenge_id;
                 body.challenge_proof = proof;
             }

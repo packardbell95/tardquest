@@ -131,6 +131,11 @@ function injectSharedStyles() {
     .tardboard-gamepad-hint {display:flex;gap:0.25em;font-size:0.92em;color:#aaa;}
     .tardboard-gamepad-hint img {height:10px;width:10px;vertical-align:middle;opacity:0.85;}
     .tardboard-api {margin-bottom:.5em;text-align:left;}
+    .tardboard-loading {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.9em;min-width:280px;padding:0.3em 0;}
+    .tardboard-spinner {width:28px;height:28px;border:3px solid #2a2a2a;border-top-color:#fff;border-radius:50%;animation:tardboard-spin 0.8s linear infinite;}
+    .tardboard-loading-title {font-size:1.1em;color:#fff;}
+    .tardboard-loading-sub {font-size:0.92em;color:#bbb;line-height:1.4;}
+    @keyframes tardboard-spin {to {transform:rotate(360deg);}}
     `;
     document.head.appendChild(style);
 }
@@ -340,6 +345,22 @@ function showInfoDialog(message, onOk, autoCloseMs) {
 }
 
 /**
+ * Shows a non-dismissible loading dialog while score submission is in progress.
+ */
+function showSubmissionLoadingDialog() {
+    createDialog({
+        bodyHtml: `
+            <div class="tardboard-loading">
+                <div class="tardboard-spinner" aria-hidden="true"></div>
+                <div class="tardboard-loading-title">Submitting Score...</div>
+                <div class="tardboard-loading-sub">Solving proof-of-work challenge.<br>Please wait.</div>
+            </div>
+        `,
+        buttons: []
+    });
+}
+
+/**
  * Shows a dialog when anti-cheat validation fails
  * @param {string} [reason] - Reason for validation failure
  */
@@ -356,9 +377,11 @@ function showValidationFailDialog(reason) {
  * @param {string} captchaToken - Captcha verification token
  */
 async function submitHighscore(playerInitials, captchaToken) {
+    showSubmissionLoadingDialog();
     try {
         // Use TardAPI to submit the score with PoW proof if available
         const result = await TardAPI.submitScore(playerInitials, { captcha_token: captchaToken });
+        removeDialog();
 
         if (result.success) {
             showInfoDialog('<br>Highscore saved!<br>', () => {
@@ -373,6 +396,7 @@ async function submitHighscore(playerInitials, captchaToken) {
         }
     } catch (err) {
         log.error('Submission error:', err);
+        removeDialog();
         showInfoDialog(`Error submitting score: ${err.message}<br>The game will reset as normal.`, () => {
             TardAPI.clearSession();
             window.location.reload();
