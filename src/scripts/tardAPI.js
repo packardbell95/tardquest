@@ -26,7 +26,7 @@ const TardAPI = (function() {
     const API_BASE = 'https://vocapepper.com:9601';
 
     /** @const {string} Client API version (major.minor must match server) */
-    const CLIENT_API_VERSION = '3.0.251123';
+    const CLIENT_API_VERSION = '3.2.260315';
 
     /** @const {string} LocalStorage key for session ID persistence */
     const LS_SESSION_KEY = 'tardquestSID';
