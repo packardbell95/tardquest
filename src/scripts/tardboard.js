@@ -86,6 +86,13 @@ function ensureTurnstileScript() {
  * @param {Document|Element} [root=document] - Root element to search for status indicator
  */
 function updateApiIndicator(root = document) {
+    if (!TardAPI.apiFeaturesEnabled) {
+        const status = root.querySelector('#tardboard-api-status');
+        if (!status) return;
+        status.textContent = 'API Disabled';
+        status.style.color = '#aaa';
+        return;
+    }
     TardAPI.checkApiStatus().then(connected => {
         const status = root.querySelector('#tardboard-api-status');
         if (!status) return;
@@ -384,6 +391,9 @@ async function submitHighscore(playerInitials, captchaToken) {
     window.setTimeout = function(cb, delay) {
         const str = cb && cb.toString ? cb.toString() : '';
         if (str.includes('window.location.reload') || str.includes('location.reload')) {
+            if (!TardAPI.apiFeaturesEnabled) {
+                return originalSetTimeout.apply(this, arguments);
+            }
             const replacement = function() {
                 if (typeof window._inputBlocked !== 'undefined') window._inputBlocked = false;
                 showInitialsDialog(data => {

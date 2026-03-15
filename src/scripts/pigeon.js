@@ -224,6 +224,33 @@
         show();
     }
 
+    function reportMurder() {
+        const sid = getSessionId();
+        if (!sid) {
+            log.warn('Murder report aborted: missing session id');
+            return Promise.resolve(false);
+        }
+
+        return fetch(`${TardAPI.API_BASE}/api/pigeon/murder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ SID: sid, session_id: sid })
+        })
+        .then(r => r.json().catch(() => ({})).then(j => ({ ok: r.ok, j })))
+        .then(({ ok, j }) => {
+            if (!ok) {
+                log.warn('Murder report failed', j);
+                return false;
+            }
+            log.info('Murder reported');
+            return true;
+        })
+        .catch(e => {
+            log.error('Murder report network error', e);
+            return false;
+        });
+    }
+
     /**
      * Requests delivery of any pending messages from the API
      * @param {boolean} [force=false] - Whether to force the request regardless of timing
@@ -292,7 +319,10 @@
         hasPendingMessages: () => !!pendingDeliveredMessage,
         
         /** Ensures delivery polling is active */
-        ensurePolling
+        ensurePolling,
+
+        /** Reports a pigeon murder */
+        reportMurder
     };
 })();
 

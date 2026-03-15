@@ -34,6 +34,9 @@ const TardAPI = (function() {
     /** @const {string} LocalStorage key for PoW challenge data */
     const LS_CHALLENGE_KEY = 'vocaguardChallengeData';
 
+    /** @const {string} LocalStorage key for API feature toggle */
+    const LS_API_FEATURES_KEY = 'tardquestApiFeaturesEnabled';
+
     // --- Logging Utility ---
 
     const log = {
@@ -74,6 +77,46 @@ const TardAPI = (function() {
 
     /** @type {boolean} Whether API has failed permanently */
     let apiFailedPermanently = false;
+
+    /** @type {boolean} Global API feature kill switch */
+    let apiFeaturesEnabled = (function() {
+        try {
+            return localStorage.getItem(LS_API_FEATURES_KEY) !== 'false';
+        } catch {
+            return true;
+        }
+    })();
+
+    function getApiDisabledResult() {
+        return { success: false, error: 'API features disabled' };
+    }
+
+    function setApiFeaturesEnabled(enabled) {
+        apiFeaturesEnabled = !!enabled;
+
+        try {
+            localStorage.setItem(
+                LS_API_FEATURES_KEY,
+                apiFeaturesEnabled ? 'true' : 'false'
+            );
+        } catch {
+            // Ignore storage failures (private mode, blocked storage, etc.)
+        }
+
+        if (!apiFeaturesEnabled) {
+            clearSession();
+            apiFailedPermanently = false;
+            sessionAttempts = 0;
+            firstSessionAttemptTime = null;
+            updateInFlight = false;
+            return;
+        }
+
+        // Reset failure/attempt state when re-enabled.
+        apiFailedPermanently = false;
+        sessionAttempts = 0;
+        firstSessionAttemptTime = null;
+    }
 
     // Load challenge data from storage if it exists
     try {
@@ -128,6 +171,10 @@ const TardAPI = (function() {
      * @returns {Promise<boolean>} True if API is accessible
      */
     async function checkApiStatus() {
+        if (!apiFeaturesEnabled) {
+            return false;
+        }
+
         try {
             const res = await fetch(`${API_BASE}/api/status`, { method: 'GET', mode: 'cors' });
             return res.ok;
@@ -145,6 +192,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Session creation result with session_id and optionally challenge data
      */
     async function createSession() {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         // Prevent endless retry loops if API is unavailable
         if (apiFailedPermanently) {
             return { success: false, error: 'API unavailable (giving up after timeout)' };
@@ -242,6 +293,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Validation result with session status
      */
     async function validateSession() {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         if (!sessionId) {
             return { success: false, error: 'No active session' };
         }
@@ -273,6 +328,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Update result
      */
     async function updateProgress() {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         if (updateInFlight) {
             // log.debug('Update already in flight, skipping');
             return { success: false, error: 'Update in flight' };
@@ -342,6 +401,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Submission result
      */
     async function submitScore(name, options = {}) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         if (!sessionId) {
             return { success: false, error: 'No active session' };
         }
@@ -403,6 +466,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Leaderboard data { success, leaderboard } or { success:false, error }
      */
     async function getLeaderboard(options = {}) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         const { limit, force = false } = options;
 
         if (apiFailedPermanently && !force) {
@@ -464,6 +531,10 @@ const TardAPI = (function() {
      * @returns {boolean} True if session was loaded
      */
     function loadSessionFromStorage() {
+        if (!apiFeaturesEnabled) {
+            return false;
+        }
+
         const stored = sessionStorage.getItem(LS_SESSION_KEY);
         if (stored) {
             sessionId = stored;
@@ -492,6 +563,7 @@ const TardAPI = (function() {
         // Configuration
         API_BASE,
         CLIENT_API_VERSION,
+        LS_API_FEATURES_KEY,
 
         // Session management
         createSession,
@@ -501,6 +573,7 @@ const TardAPI = (function() {
         getLeaderboard,
         loadSessionFromStorage,
         clearSession,
+        setApiFeaturesEnabled,
 
         // Utilities
         checkApiStatus,
@@ -510,6 +583,7 @@ const TardAPI = (function() {
 
         // State getters
         get sessionId() { return sessionId; },
+        get apiFeaturesEnabled() { return apiFeaturesEnabled; },
         get hasActiveSession() { return !!sessionId; },
         get hasChallenge() { return !!challengeData; },
         get challenge() { return challengeData; },

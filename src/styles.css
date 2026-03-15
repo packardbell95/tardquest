@@ -247,6 +247,62 @@ a:link {
     }
 }
 
+#apiToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #888;
+
+    & input[type="checkbox"] {
+        display: none;
+    }
+
+    & .slider {
+        position: relative;
+        width: 28px;
+        height: 14px;
+        background: #444;
+        border: 1px solid #666;
+        transition: background 0.2s, border-color 0.2s;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 1px;
+            width: 10px;
+            height: 10px;
+            background: #888;
+            transform: translateY(-50%);
+            transition: left 0.2s, background 0.2s;
+        }
+    }
+
+    & .label {
+        display: block;
+        line-height: 1;
+        user-select: none;
+    }
+
+    &:has(input:checked) .slider {
+        background: #030;
+        border-color: #0f0;
+
+        &::after {
+            left: 15px;
+            background: #0f0;
+        }
+    }
+
+    &:has(input:checked) .label {
+        color: #0f0;
+    }
+}
+
 #titleScreen #startGameBtn #preloaderStatus {
     position: static;
     left: auto;

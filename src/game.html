@@ -10239,6 +10239,11 @@
                     `stained a dark red!</span>`
                 );
             },
+            reportMurder: function() {
+                if (typeof PigeonMessaging?.reportMurder === 'function') {
+                    PigeonMessaging.reportMurder();
+                }
+            },
         };
 
         const boulder = {
@@ -12363,6 +12368,10 @@
             }, 3000); // Slide anim back out of viewport after this duration
         }
 
+        function animPigeonKill() {
+            // @TheMilkMan6669 - TODO: Add pigeon kill animation
+        }
+
         function shakeScreen() {
             const $children = document.getElementById('viewport').children;
 
@@ -12534,6 +12543,10 @@
 
                 if (vampire.encounteredPlayer()) {
                     vampire.encounter();
+                }
+
+                if (pigeon.isAt(player.x, player.y)) {
+                    pigeon.encounter();
                 }
 
                 const fireOnEnter =
@@ -13649,6 +13662,27 @@
                 }
                 if (!found) {
                     updateBattleLog('<span class="erok">CHEAT: Erok not spawned. Try a different spot.</span>');
+                }
+                return;
+            }
+
+            if (cmd === "/spawn p") {
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (MAP.getCell(nx, ny)?.type === 'floor') {
+                        pigeon.isActiveOnFloor = true;
+                        pigeon.x = nx;
+                        pigeon.y = ny;
+                        pigeon.steps = [];
+                        updateBattleLog('<span class="pigeon">CHEAT: Carrier pigeon spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="pigeon">CHEAT: Carrier pigeon not spawned. Try a different spot.</span>');
                 }
                 return;
             }
@@ -15659,7 +15693,6 @@
                 },
                 landingHtml: () => {
                     return (
-                        `<span class="gambler">&lt;GAMBLER&gt;</span> ` +
                         `"Welcome, dungeon dweller! ` +
                         `<span class="friendly">Roll a 12</span> and ` +
                         `<span class="BTC">boost one of yer stats.</span> ` +
@@ -15789,6 +15822,12 @@
                         description: "Let the beast roam free",
                     });
 
+                    options.push({
+                        id: "kill",
+                        displayText: "Kill",
+                        description: "Go on, you know you want to. It's just a dumb bird, right? It won't even fight back!",
+                    });
+
                     return options;
                 },
                 select: (selectedOptionId) => {
@@ -15799,6 +15838,10 @@
                         } else {
                             updateBattleLog('<span class="enemy">Pigeon messaging system not available.</span>');
                         }
+                    } else if (selectedOptionId === "kill") {
+                        animPigeonKill();
+                        pigeon.reportMurder();
+                        pigeon.onExplode(pigeon.x, pigeon.y); //VOCAP: placeholder death behavior
                     }
                     menu.close();
                 },

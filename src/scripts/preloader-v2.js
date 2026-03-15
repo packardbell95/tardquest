@@ -37,6 +37,7 @@
     const SW_READY_TIMEOUT_MS = 3000;             // Fallback timeout for SW readiness
     const SIZE_CACHE_KEY = 'tqAssetSizes_v1';     // localStorage key for persisted size hints
     const MAX_CONCURRENCY = 12;
+    const PRELOAD_CACHE_NAME = 'tardquest-v1';     // Must match SW's CACHE_NAME for shared caching
 
     /* --------------------------------------------------------------------- *
      *  STATIC MANIFEST
@@ -660,6 +661,14 @@
                         rec._placeholder = false;
                     }
                     persistedSizes[url] = rec.bytesTotal;
+                }
+
+                // Clone response before consuming body for progress tracking.
+                // Store the clone in Cache API so assets are served from cache
+                // when game code later requests them (prevents double-download).
+                if ('caches' in window){
+                    const toCache = resp.clone();
+                    caches.open(PRELOAD_CACHE_NAME).then(c => c.put(url, toCache)).catch(()=>{});
                 }
 
                 if (resp.body && 'getReader' in resp.body){
