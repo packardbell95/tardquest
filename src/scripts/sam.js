@@ -92,6 +92,7 @@
                 resolve(true);
             };
 
+            opts?.onSourceCreated?.(source);
             source.start(0);
         });
     }

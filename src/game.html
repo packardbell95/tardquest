@@ -6938,6 +6938,7 @@
         const SpeechSynthesizer = {
             isSpeaking: false,
             queue: [],
+            activeSource: null,
             pronunciationOverrides: {
                 "gauge": "gayge",
                 "ps2": "pee ess too",
@@ -6982,7 +6983,11 @@
                     totalDelays: 5,
                     lowpassFilterCutoffHz: 1760,
                 };
+                options.onSourceCreated = (source) => {
+                    SpeechSynthesizer.activeSource = source;
+                };
                 options.onEnded = () => {
+                    SpeechSynthesizer.activeSource = null;
                     SpeechSynthesizer.isSpeaking = false;
                     onEnded?.();
                     // Play next in queue if present
@@ -6993,6 +6998,25 @@
                 };
 
                 new SamJs(options).speak(normalizedSentence);
+            },
+
+            stop: () => {
+                SpeechSynthesizer.queue = [];
+                if (SpeechSynthesizer.activeSource) {
+                    try { SpeechSynthesizer.activeSource.stop(); } catch (_) {}
+                    SpeechSynthesizer.activeSource = null;
+                }
+                SpeechSynthesizer.isSpeaking = false;
+            },
+
+            skipToLast: () => {
+                if (SpeechSynthesizer.queue.length <= 1) return;
+                const last = SpeechSynthesizer.queue[SpeechSynthesizer.queue.length - 1];
+                SpeechSynthesizer.queue = [last];
+                if (SpeechSynthesizer.activeSource) {
+                    try { SpeechSynthesizer.activeSource.stop(); } catch (_) {}
+                    SpeechSynthesizer.activeSource = null;
+                }
             },
 
             applyPronunciationOverrides: (text) => {
@@ -10239,10 +10263,32 @@
                     `stained a dark red!</span>`
                 );
             },
-            reportMurder: function() {
+            onMurder: function() {
+                //VOCAP: menu didn't close when the pigeon was murdered by the player, so now it does.
+                menu.close();
+
+                pigeon.isActiveOnFloor = false;
+
+                const writableCellTypes = [
+                    "floor", "rubble1", "rubble2", "crater", "tardspireBanner"
+                ];
+
+                const overwriteCell = writableCellTypes.includes(
+                    MAP.getCell(pigeon.x, pigeon.y)?.type
+                );
+
+                if (overwriteCell) {
+                    MAP.setCell(pigeon.x, pigeon.y, "bloodyCrater");
+                }
+
                 if (typeof PigeonMessaging?.reportMurder === 'function') {
                     PigeonMessaging.reportMurder();
                 }
+
+                updateBattleLog(
+                    `The <span class="pigeon">CARRIER PIGEON</span> has been ` +
+                    `<span class="action">murdered. God is watching.</span>`
+                );
             },
         };
 
@@ -12369,8 +12415,52 @@
         }
 
         function animPigeonKill() {
-            // @TheMilkMan6669 - TODO: Add pigeon kill animation
+            //VOCAP: basically the same logic as animEatRat.
+            // We should consider refactoring to a more generic animOverlay({ id, videoSrc, duration }) function
+            const container = document.getElementById('viewport');
+            if (!container) return;
+
+            GameControl.disableControls();
+
+            let overlay = document.getElementById('animPigeonKill');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'animPigeonKill';
+                container.appendChild(overlay);
+            }
+
+            overlay.innerHTML = '';
+
+            const video = document.createElement('video');
+            video.src = 'assets/fp-anim/fp-pigeonMurder.webm';
+            video.autoplay = true;
+            video.loop = false;
+            video.playsInline = true;
+            video.disablePictureInPicture = true;
+
+            let cleaned = false;
+            const cleanup = () => {
+                if (cleaned) return;
+                cleaned = true;
+                overlay.innerHTML = '';
+                overlay.style.display = 'none';
+                GameControl.enableControls();
+            };
+
+            const fallback = setTimeout(cleanup, 3500);
+            video.addEventListener('ended', () => {
+                clearTimeout(fallback);
+                cleanup();
+            });
+            video.addEventListener('error', () => {
+                clearTimeout(fallback);
+                cleanup();
+            });
+
+            overlay.appendChild(video);
+            overlay.style.display = 'flex';
         }
+
 
         function shakeScreen() {
             const $children = document.getElementById('viewport').children;
@@ -14416,6 +14506,9 @@
             updateViewportHeader();
         });
         menu.setOnClose(() => {
+            //VOCAP: Skip to the last spoken line when closing menus,
+            //to avoid TTS building up a backlog of lines that will play after closing the menu
+            SpeechSynthesizer.skipToLast(); 
             document.getElementById("game").classList.remove("hidden");
             InventorySidebar.open("main");
             GameControl.update();
@@ -15840,8 +15933,7 @@
                         }
                     } else if (selectedOptionId === "kill") {
                         animPigeonKill();
-                        pigeon.reportMurder();
-                        pigeon.onExplode(pigeon.x, pigeon.y); //VOCAP: placeholder death behavior
+                        pigeon.onMurder(pigeon.x, pigeon.y);
                     }
                     menu.close();
                 },
