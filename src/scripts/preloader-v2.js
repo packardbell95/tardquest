@@ -52,7 +52,7 @@
         './assets/cursors/right.cur','./assets/cursors/touch.cur','./assets/cursors/turn-left.cur','./assets/cursors/turn-right.cur','./assets/cursors/up.cur',
 
         // fp-anim
-        './assets/fp-anim/fp-torch.gif','./assets/fp-anim/fp-trombone.gif','./assets/fp-anim/rat-chomp.webm',
+        './assets/fp-anim/fp-torch.gif','./assets/fp-anim/fp-trombone.gif','./assets/fp-anim/rat-chomp.webm','./assets/fp-anim/fp-pigeonMurder.webm',
 
         // gamepad/generic
         './assets/gamepad/generic/d-down.png','./assets/gamepad/generic/d-left.png','./assets/gamepad/generic/d-right.png','./assets/gamepad/generic/d-up.png',
