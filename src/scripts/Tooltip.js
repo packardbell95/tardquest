@@ -115,6 +115,10 @@ const Tooltip = {
      */
     refresh: ($element) => {
         if (! $element.dataset.tooltipid) {
+            Tooltip.initialize($element);
+        }
+
+        if (! $element.dataset.tooltipid) {
             console.warn("Cannot reload a nonexistent tooltip", { $element });
             return;
         }

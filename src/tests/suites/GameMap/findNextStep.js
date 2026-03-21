@@ -1,7 +1,7 @@
 // Tests for GameMap.findNextStep()
 function GameMap_findNextStep()
 {
-    const testMap = new GameMap();
+    const testMap = new GameMap(50, 40);
     testMap.fill(0, 0, 10, 10, "wall");
     testMap.fill(1, 1, 9, 9, "floor");
 

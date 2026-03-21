@@ -1,7 +1,7 @@
 // Test pathfinding around a distant obstacle using GameMap.findPath()
 function GameMap_findPathAroundObject()
 {
-    const testMap = new GameMap();
+    const testMap = new GameMap(100, 100);
 
     testMap.fill(0, 0, 80, 60, "wall");
     testMap.fill(1, 1, 79, 59, "floor");

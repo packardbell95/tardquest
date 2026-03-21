@@ -108,7 +108,7 @@
         './audio/sfx/alert.ogg','./audio/sfx/ash.mp3','./audio/sfx/attack.mp3','./audio/sfx/attacked.mp3','./audio/sfx/bat-wings-dry.ogg','./audio/sfx/bat-wings-wet.ogg','./audio/music/battle1.mp3','./audio/music/battle2.mp3','./audio/music/battle3.mp3','./audio/music/battle4.mp3',
         './audio/music/battle5.mp3','./audio/music/battle6.mp3','./audio/sfx/battleEnd.mp3','./audio/sfx/battleStart.mp3','./audio/sfx/breathe1.mp3','./audio/sfx/breathe2.mp3','./audio/music/erok.mp3',
         './audio/music/explore1.mp3','./audio/music/explore2.mp3','./audio/music/explore3.mp3','./audio/music/explore4.mp3','./audio/music/explore5.mp3','./audio/sfx/explosion.mp3','./audio/sfx/floorBreakScreamDie.mp3',
-        './audio/sfx/floorCrackSlight.mp3','./audio/sfx/footsteps.mp3','./audio/sfx/footsteps-descending.mp3','./audio/sfx/gamble.mp3','./audio/music/gamblers-theme.mp3','./audio/sfx/healTile.mp3','./audio/sfx/inventoryOpen.mp3',
+        './audio/sfx/floorCrackSlight.mp3','./audio/sfx/footsteps.mp3','./audio/sfx/footsteps-descending.mp3','./audio/sfx/gamble.mp3','./audio/music/gamblers-theme.mp3','./audio/sfx/healingTile.mp3','./audio/sfx/inventoryOpen.mp3',
         './audio/sfx/kaching.mp3','./audio/music/lurking.ogg','./audio/music/merchant.mp3','./audio/sfx/persuade.mp3','./audio/sfx/raisins.mp3','./audio/sfx/run.mp3',
         './audio/sfx/scream.mp3','./audio/music/title.mp3','./audio/sfx/torch.mp3','./audio/sfx/tromBONE.mp3','./audio/sfx/turn.mp3',
         './audio/sfx/uiCancel.mp3','./audio/sfx/uiOption.mp3','./audio/sfx/uiSelect.mp3','./audio/music/vampire-vengeful-fruit-intro.mp3','./audio/music/vampire-vengeful-fruit-main-loop.mp3',

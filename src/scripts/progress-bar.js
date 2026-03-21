@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Progress Bar Element for TardQuest
  *
@@ -31,6 +33,7 @@
 class ProgressBar extends HTMLElement {
     #updateScheduled = false;
     #old = {
+        label: "",
         percentage: 0,
         value: 0,
         max: 0,
@@ -38,31 +41,34 @@ class ProgressBar extends HTMLElement {
 
     static get observedAttributes() {
         return [
-            'height',
-            'placeholder',
-            'emptyColor',
-            'filledColor',
-            'cautionAtOrAbovePercentage',
-            'cautionAbovePercentage',
-            'cautionAtOrBelowPercentage',
-            'cautionBelowPercentage',
-            'dangerAtOrAbovePercentage',
-            'dangerAbovePercentage',
-            'dangerAtOrBelowPercentage',
-            'dangerBelowPercentage',
-            'value',
-            'max'
+            "height",
+            "placeholder",
+            "emptyColor",
+            "filledColor",
+            "cautionAtOrAbovePercentage",
+            "cautionAbovePercentage",
+            "cautionAtOrBelowPercentage",
+            "cautionBelowPercentage",
+            "dangerAtOrAbovePercentage",
+            "dangerAbovePercentage",
+            "dangerAtOrBelowPercentage",
+            "dangerBelowPercentage",
+            "value",
+            "max",
+            "label",
         ];
     }
 
     constructor() {
         super();
 
-        this.#old.value = parseFloat(this.getAttribute('value'));
-        this.#old.max = parseFloat(this.getAttribute('max'));
+        this.#old.label = String(this.getAttribute("label") || "");
+        this.#old.value = parseFloat(this.getAttribute("value"));
+        this.#old.max = parseFloat(this.getAttribute("max"));
         if (this.#old.max !== 0) {
-            this.#old.percentage =
-                Math.min(Math.ceil((this.#old.value / this.#old.max) * 100), 100);
+            this.#old.percentage = Math.min(Math.ceil(
+                (this.#old.value / this.#old.max) * 100
+            ), 100);
         }
 
         const shadow = this.attachShadow({ mode: "open" });
@@ -91,9 +97,17 @@ class ProgressBar extends HTMLElement {
             .container > .filled {
                 z-index: 2;
             }
-            .container > .label {
+            .container > .text {
                 z-index: 3;
-                left: -10px;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            .container > .text > .label {
+                margin-left: 10px;
+            }
+            .container > .text > .value {
+                margin-right: 10px;
             }
             .caution {
                 animation: fade 1s linear infinite;
@@ -105,20 +119,29 @@ class ProgressBar extends HTMLElement {
         shadow.appendChild(style);
 
         this.container = document.createElement("div");
-        this.container.classList.add('container');
+        this.container.classList.add("container");
 
         const $emptyBar = document.createElement("div");
-        $emptyBar.classList.add('empty');
+        $emptyBar.className = "empty";
 
         const $filledBar = document.createElement("div");
-        $filledBar.classList.add('filled');
+        $filledBar.className = "filled";
+
+        const $text = document.createElement("div");
+        $text.className = "text";
 
         const $label = document.createElement("div");
-        $label.classList.add('label');
+        $label.className = "label";
+        $label.textContent = String(this.getAttribute("label") || "");
+        $text.append($label);
+
+        const $value = document.createElement("div");
+        $value.className = "value";
+        $text.append($value);
 
         this.container.appendChild($emptyBar);
         this.container.appendChild($filledBar);
-        this.container.appendChild($label);
+        this.container.appendChild($text);
 
         this.shadowRoot.appendChild(this.container);
     }
@@ -133,7 +156,9 @@ class ProgressBar extends HTMLElement {
         }
 
         if (Object.keys(this.#old).includes(name)) {
-            this.#old[name] = parseFloat(oldValue);
+            this.#old[name] = name === "label"
+                ? String(oldValue)
+                : parseFloat(oldValue);
         }
 
         this.scheduleUpdate();
@@ -156,32 +181,37 @@ class ProgressBar extends HTMLElement {
         const isPlaceholder = this.hasAttribute("placeholder");
         const $empty = this.container.querySelector(".empty");
         const $filled = this.container.querySelector(".filled");
-        const $label = this.container.querySelector(".label");
+        const $label = this.container.querySelector(".text .label");
+        const $value = this.container.querySelector(".text .value");
 
         const duration = 250;
         const oldValue = this.#old.value;
-        const newValue = parseFloat(this.getAttribute('value'));
+        const newValue = parseFloat(this.getAttribute("value"));
         const oldMax = this.#old.max;
-        const newMax = parseFloat(this.getAttribute('max'));
-        const height = parseInt(this.getAttribute('height') || 14) + 'px';
+        const newMax = parseFloat(this.getAttribute("max"));
+        const height = parseInt(this.getAttribute("height") || 14) + "px";
         this.container.style.height = height;
         this.container.style.lineHeight = height;
 
         const filledColor = isPlaceholder
             ? "#1A1A1A"
-            : this.getAttribute('filledColor') || "#090";
+            : this.getAttribute("filledColor") || "#090";
         const emptyColor = isPlaceholder
             ? "#1A1A1A"
-            : this.getAttribute('emptyColor') || "#900";
+            : this.getAttribute("emptyColor") || "#900";
         const value = parseFloat(this.#old.value || 0);
-        const max = parseFloat(this.getAttribute('max') || 100);
-        const oldPercentage = oldMax ? Math.min(Math.ceil((oldValue / oldMax) * 100), 100) : 0;
-        const newPercentage = newMax ? Math.min(Math.ceil((newValue / newMax) * 100), 100) : 0;
+        const max = parseFloat(this.getAttribute("max") || 100);
+        const oldPercentage = oldMax
+            ? Math.min(Math.ceil((oldValue / oldMax) * 100), 100)
+            : 0;
+        const newPercentage = newMax
+            ? Math.min(Math.ceil((newValue / newMax) * 100), 100)
+            : 0;
 
-        this.container.style.setProperty('--filledColor', filledColor);
-        this.container.style.setProperty('--emptyColor', emptyColor);
-        this.container.style.setProperty('--cutoff', `${oldPercentage}%`);
-        this.container.style.transition = '--cutoff 3s';
+        this.container.style.setProperty("--filledColor", filledColor);
+        this.container.style.setProperty("--emptyColor", emptyColor);
+        this.container.style.setProperty("--cutoff", `${oldPercentage}%`);
+        this.container.style.transition = "--cutoff 3s";
 
         $empty.style.backgroundColor = emptyColor;
 
@@ -193,7 +223,15 @@ class ProgressBar extends HTMLElement {
                 transparent var(--cutoff),
                 transparent 100%
             )`;
-        $label.textContent = isPlaceholder ? "" : `${newValue}/${max}`;
+
+        const precision = 1;
+        const displayValue = Number(newValue.toFixed(precision)).toString();
+        const displayMax = Number(max.toFixed(precision)).toString();
+
+        $label.textContent = String(this.getAttribute("label") || "");
+        $value.textContent = ! isPlaceholder
+            ? `${displayValue}/${displayMax}`
+            : "";
 
         const startTime = performance.now();
 
@@ -202,36 +240,38 @@ class ProgressBar extends HTMLElement {
             const progress = Math.min(elapsed / duration, 1);
 
             // Linear interpolation between oldPercentage and newPercentage
-            const currentValue = (oldPercentage + (newPercentage - oldPercentage) * progress).toFixed(2);
-            this.container.style.setProperty('--cutoff', `${currentValue}%`);
+            const currentValue = (
+                oldPercentage + (newPercentage - oldPercentage) * progress
+            ).toFixed(2);
+            this.container.style.setProperty("--cutoff", `${currentValue}%`);
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
                 // Animation has ended
                 this.#old.value = newValue;
-                this.#old.max = parseFloat(this.getAttribute('max'));
+                this.#old.max = parseFloat(this.getAttribute("max"));
                 this.#old.percentage = newPercentage;
 
                 const status = this.getStatus(newPercentage);
                 $empty.classList.toggle(
-                    'caution',
-                    status?.direction === 'below' && status?.level === 'caution'
+                    "caution",
+                    status?.direction === "below" && status?.level === "caution"
                 );
 
                 $empty.classList.toggle(
-                    'danger',
-                    status?.direction === 'below' && status?.level === 'danger'
+                    "danger",
+                    status?.direction === "below" && status?.level === "danger"
                 );
 
                 $filled.classList.toggle(
-                    'caution',
-                    status?.direction === 'above' && status?.level === 'caution'
+                    "caution",
+                    status?.direction === "above" && status?.level === "caution"
                 );
 
                 $filled.classList.toggle(
-                    'danger',
-                    status?.direction === 'above' && status?.level === 'danger'
+                    "danger",
+                    status?.direction === "above" && status?.level === "danger"
                 );
             }
         }
@@ -246,7 +286,7 @@ class ProgressBar extends HTMLElement {
             return null;
         }
 
-        const dangerAtOrAbove = this.getAttribute('dangerAtOrAbovePercentage');
+        const dangerAtOrAbove = this.getAttribute("dangerAtOrAbovePercentage");
         if (dangerAtOrAbove !== null && activePercentage >= dangerAtOrAbove) {
             return {
                 level: "danger",
@@ -254,7 +294,7 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const dangerAbove = this.getAttribute('dangerAbovePercentage');
+        const dangerAbove = this.getAttribute("dangerAbovePercentage");
         if (dangerAbove !== null && activePercentage > dangerAbove) {
             return {
                 level: "danger",
@@ -262,7 +302,7 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const dangerAtOrBelow = this.getAttribute('dangerAtOrBelowPercentage');
+        const dangerAtOrBelow = this.getAttribute("dangerAtOrBelowPercentage");
         if (dangerAtOrBelow !== null && activePercentage <= dangerAtOrBelow) {
             return {
                 level: "danger",
@@ -270,7 +310,7 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const dangerBelow = this.getAttribute('dangerBelowPercentage');
+        const dangerBelow = this.getAttribute("dangerBelowPercentage");
         if (dangerBelow !== null && activePercentage < dangerBelow) {
             return {
                 level: "danger",
@@ -278,7 +318,8 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const cautionAtOrAbove = this.getAttribute('cautionAtOrAbovePercentage');
+        const cautionAtOrAbove =
+            this.getAttribute("cautionAtOrAbovePercentage");
         if (cautionAtOrAbove !== null && activePercentage >= cautionAtOrAbove) {
             return {
                 level: "caution",
@@ -286,7 +327,7 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const cautionAbove = this.getAttribute('cautionAbovePercentage');
+        const cautionAbove = this.getAttribute("cautionAbovePercentage");
         if (cautionAbove !== null && activePercentage > cautionAbove) {
             return {
                 level: "caution",
@@ -294,7 +335,8 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const cautionAtOrBelow = this.getAttribute('cautionAtOrBelowPercentage');
+        const cautionAtOrBelow =
+            this.getAttribute("cautionAtOrBelowPercentage");
         if (cautionAtOrBelow !== null && activePercentage <= cautionAtOrBelow) {
             return {
                 level: "caution",
@@ -302,7 +344,7 @@ class ProgressBar extends HTMLElement {
             };
         }
 
-        const cautionBelow = this.getAttribute('cautionBelowPercentage');
+        const cautionBelow = this.getAttribute("cautionBelowPercentage");
         if (cautionBelow !== null && activePercentage < cautionBelow) {
             return {
                 level: "caution",
@@ -314,4 +356,4 @@ class ProgressBar extends HTMLElement {
     }
 }
 
-customElements.define('progress-bar', ProgressBar);
+customElements.define("progress-bar", ProgressBar);

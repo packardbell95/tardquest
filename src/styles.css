@@ -948,39 +948,49 @@ a:link {
     pointer-events: none;
     z-index: 10;
 }
-.layer.enemy pre {
+.layer.enemy .row {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    width: 736px;
+    justify-content: center;
     margin: 0;
     line-height: 1;
-    display: inline-block;
-    font-size: 12px;
-    transform: scale(0.5);
-    transform-origin: center center;
-    color: #fff;
-}
 
-@keyframes layerHealingAnimation {
-    from { transform: translateY(0); }
-    to { transform: translateY(-100%) };
-}
+    &.back {
+        transform: translateY(-14px);
+        font-size: 2px;
+    }
 
-#game > .layer.healing {
-    background: linear-gradient(
-        0deg,
-        #0b00 0%,
-        #0b00 10%,
-        #0b0f 50%,
-        #ffff 55%,
-        #080f 60%,
-        #0800 90%,
-        #0800 100%
-    );
-    animation-name: layerHealingAnimation;
-    animation-duration: 0.76s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-    mix-blend-mode: screen;
-    width: 100%;
-    height: 1000%;
+    &.middle {
+        transform: translateY(-44px);
+        font-size: 3px;
+    }
+
+    &.front {
+        transform: translateY(-104px);
+        font-size: 5px;
+    }
+
+    & .art-container {
+        position: relative;
+        width: 82ch;
+
+        opacity: 1;
+        transition: opacity .2s;
+        &.obscured {
+            opacity: .2;
+        }
+
+        & .art,
+        & .mask {
+            position: absolute;
+        }
+
+        & .mask {
+            color: #000;
+        }
+    }
 }
 
 #game .layer,
@@ -1051,30 +1061,6 @@ a:link {
     75% {
         transform: translateX(0.8px) skewX(0.1deg) scaleY(1.005);
     }
-}
-
-#animBattleTransition {
-    position: absolute;
-    background-repeat: no-repeat;
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-    left: 0;
-    top: 0;
-    background-image: url(assets/transitions/battle-transition.gif);
-    background-size: cover;
-    background-position: bottom;
-    transform: translateY(-100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 15;
-}
-
-#animBattleTransition.active {
-    transform: translateY(0);
-}
-
-#animBattleTransition.reveal {
-    transform: translateY(-100%);
 }
 
 #animTorch {
@@ -1189,6 +1175,32 @@ a:link {
 
 #mouseControl .attack {
     cursor: url(assets/cursors/attack.cur), crosshair;
+}
+
+#viewportAnimation {
+    z-index: 10;
+/*    width: 368px;
+    height: 335px;*/
+    height: auto;
+
+    /* Fit the video within the viewport, below the "Viewport" header bar */
+    position: absolute;
+    top: 13px;
+    left: 0;
+}
+
+@keyframes highlightColor {
+  0%   { background-color: #00f; }
+  20%  { background-color: #90f; }
+  40%  { background-color: #00f; }
+  60%  { background-color: #99f; }
+  80%  { background-color: #00f; }
+  100% { background-color: #000; }
+}
+
+.highlight {
+    background-color: #00f;
+    animation: highlightColor 9s infinite alternate linear;
 }
 
 /** Menu Styles **/
@@ -1356,6 +1368,7 @@ a:link {
     word-wrap: break-word;
     white-space: pre-wrap;
     overflow-y: scroll;
+    text-indent: 2ch hanging;
 }
 
 #battleLog > * {
@@ -1408,7 +1421,7 @@ a:link {
 }
 
 #minimap .vampire,
-.mapCellDetails .enlargedTile.vampire {
+.mapCellDetails .enlargedCell.vampire {
     position: relative;
 
     &::before {
@@ -1451,7 +1464,7 @@ a:link {
 }
 
 #minimap .boulder,
-.mapCellDetails .enlargedTile.boulder {
+.mapCellDetails .enlargedCell.boulder {
     position: relative;
 
     &::before {
@@ -1467,7 +1480,7 @@ a:link {
     }
 }
 
-.mapCellDetails .enlargedTile.boulder::before {
+.mapCellDetails .enlargedCell.boulder::before {
     top: 0.4ch !important;
 }
 
@@ -1503,6 +1516,19 @@ a:link {
     pointer-events: none;
     font-size: 5px;
     line-height: 1;
+    color: #bff;
+
+    &.zoom2x {
+        &.flipped {
+            transform: scale(-2, 2) translate(-13ch, -3ch);
+        }
+        &:not(.flipped) {
+            transform: scale(2) translate(-3ch, -3ch);
+        }
+    }
+    &:not(.zoom2x).flipped {
+        transform: scaleX(-1);
+    }
 }
 
 #portraitArtOverlay.chest {
@@ -1659,6 +1685,7 @@ a:link {
 .minimap-footer {
     display: flex;
     flex-direction: row;
+    gap: 1ch;
     background-color: #a30000;
     color: #ffffff;
     margin: 1px;
@@ -1908,7 +1935,6 @@ a:link {
 }
 
 #partyMembers:empty::after {
-    content: "You ain't got no party. Go persuade some fools!";
     display: block;
     margin-top: 50px;
     text-align: center;
@@ -1916,24 +1942,23 @@ a:link {
     font-style: italic;
 }
 
-#partyMembers > [data-partyMemberId] {
-    background-color: #000;
+#partyMembers > [data-party-member-id] {
     clip-path: rect(0 100% 100% 0);
     height: 35px;
     margin-bottom: 8px;
     overflow: hidden;
-    transition:
-        background-color .5s linear,
-        clip-path .5s linear,
-        height .5s linear .5s,
-        margin-bottom .5s linear .5s;
-}
 
-#partyMembers > [data-partyMemberId].sweepItUp {
-    background-color: #900;
-    clip-path: rect(0 0% 100% 0);
-    height: 0;
-    margin-bottom: 0;
+    &.sweepItUp {
+        transition:
+            background-color .5s linear,
+            clip-path .5s linear,
+            height .5s linear .5s,
+            margin-bottom .5s linear .5s;
+        background-color: #900;
+        clip-path: rect(0 0% 100% 0);
+        height: 0;
+        margin-bottom: 0;
+    }
 }
 
 #viewport > .layer,
@@ -1955,6 +1980,7 @@ a:link {
     padding: 4px;
     grid-template-columns: 1fr 2fr;
     margin: 4px 2px;
+    line-height: 1.9ch;
 }
 
 #controlsMenu .control-list {
@@ -2205,6 +2231,45 @@ a:link {
     flex-direction: column;
     height: 273px;
     overflow: hidden;
+
+    &[name="weapons"] {
+        & > [data-id="goldenWang"]              { order:  0; }
+        & > [data-id="magicPencil"]             { order:  1; }
+        & > [data-id="cathodeRayTubeMonitor"]   { order:  2; }
+        & > [data-id="danceClub"]               { order:  3; }
+        & > [data-id="bludgeoningMace"]         { order:  4; }
+        & > [data-id="atlatlSpear"]             { order:  5; }
+        & > [data-id="nunchucks"]               { order:  6; }
+        & > [data-id="wiffleBallBat"]           { order:  7; }
+        & > [data-id="pointyStick"]             { order:  8; }
+        & > [data-id="fingerNail"]              { order:  9; }
+    }
+
+    &[name="armor"] {
+        & > [data-id="nokiaMail"]               { order:  0; }
+        & > [data-id="blackPlateArmor"]         { order:  1; }
+        & > [data-id="milaneseArmor"]           { order:  2; }
+        & > [data-id="leatherArmor"]            { order:  3; }
+        & > [data-id="barrelWithSuspenders"]    { order:  4; }
+        & > [data-id="graphicTee"]              { order:  5; }
+        & > [data-id="pectoralMass"]            { order:  6; }
+    }
+
+    &[name="rings"] {
+        & > [data-id="ringOfSexyUnderwear"]     { order:  0; }
+        & > [data-id="ringOfFrenchAccent"]      { order:  1; }
+        & > [data-id="ringValentines"]          { order:  2; }
+        & > [data-id="ringBloodstream"]         { order:  3; }
+        & > [data-id="ringOfHardening"]         { order:  4; }
+        & > [data-id="ringPectoralPiercing"]    { order:  5; }
+        & > [data-id="ringPinkyToe"]            { order:  6; }
+        & > [data-id="ringCrack"]               { order:  7; }
+        & > [data-id="ringGamble"]              { order:  8; }
+        & > [data-id="ringEscobar"]             { order:  9; }
+        & > [data-id="ringOfSightliness"]       { order: 10; }
+        & > [data-id="ringOfStinky"]            { order: 11; }
+        & > [data-id="ringOfAmplifiedAudio"]    { order: 12; }
+    }
 }
 
 #inventory > [name="main"] {
@@ -2508,8 +2573,28 @@ a:link {
 .player {
     color: #2aff00;
 }
+
+@keyframes minimap_healingTileGlow {
+    0% {
+        color: #6cff74;
+    }
+    25% {
+        color: #42f64e;
+    }
+    50% {
+        color: #42c6cc;
+    }
+    75% {
+        color: #40d24a;
+    }
+    100% {
+        color: #cdff42;
+    }
+}
+
 .healingTile {
     color: #6cff74;
+    animation: minimap_healingTileGlow 5s linear alternate infinite;
 }
 .treasureChest {
     color: #f19b32;
@@ -2528,6 +2613,18 @@ a:link {
 .exit {
     color: #f00;
 }
+
+@keyframes stunned {
+      0%    { color: #f78080; }
+     33%    { color: #e687bd; }
+     67%    { color: #ffd6a0; }
+    100%    { color: #e687bd; }
+}
+
+.stunned {
+    animation: stunned 1s linear alternate infinite;
+}
+
 .merchant {
     color: #f7f;
 }
@@ -2658,11 +2755,7 @@ a:link {
 }
 
 .scene_character_healingTile {
-    animation-name: scene_healingTileGlow;
-    animation-duration: 5s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: linear;
+    animation: scene_healingTileGlow 5s linear alternate infinite;
 }
 
 @keyframes scene_exitGlow {
@@ -2746,7 +2839,7 @@ a:link {
     border: 2px solid #fff;
 }
 
-.mapCellDetails .enlargedTile {
+.mapCellDetails .enlargedCell {
     width: 40px;
     height: 40px;
     aspect-ratio: 1;
@@ -2763,19 +2856,32 @@ a:link {
 }
 
 .mapCellDetails .details {
+    margin-top: 8px;
     display: flex;
     flex-direction: column;
-    height: 44px;
-}
 
-.mapCellDetails .details .coordinates {
-    font-size: 12px;
-    font-style: italic;
-    line-height: 16px;
-}
+    & .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 2ch;
+    }
 
-.mapCellDetails .details .name {
-    font-size: 18px;
+    & .coordinates {
+        font-style: italic;
+    }
+
+    & .name {
+        font-size: 18px;
+    }
+
+    & .party {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 40ch;
+        padding: 0 3ch;
+    }
 }
 
 @keyframes letsGo {
@@ -2966,12 +3072,53 @@ dialog.modal::backdrop {
     opacity: 0.8;
 }
 
-.layer.enemy.damaged {
-    animation: enemyDamaged 0.168s; /* VOCAP: 168ms is how long attack.mp3 is. */
+@keyframes rumble {
+     0% { transform: translate(0); }
+     1% { transform: translate(0); }
+    10% { transform: translate(3px, 1px); }
+    20% { transform: translate(-1px, 3px); }
+    30% { transform: translate(3px, -1px); }
+    20% { transform: translate(-1px, -3px); }
+    50% { transform: translate(3px, 1px); }
+    60% { transform: translate(-1px, 3px); }
+    70% { transform: translate(3px, -1px); }
+    80% { transform: translate(1px, 3px); }
+    90% { transform: translate(-1px, -1px); }
+    100%{ transform: translate(0);} }
+
+.rumble {
+    animation:
+        rumble 1ms cubic-bezier(0.680, -0.550, 0.265, 1.550) 0s 800
+        normal forwards;
 }
 
-.layer.enemy.damaged pre {
-    color: red !important;
+@keyframes damage-rumble {
+     0% { background-color: #ffff; transform: translate(0); }
+     1% { background-color: #900f; transform: translate(0); }
+    10% { background-color: #900d; transform: translate(-2px, -2px); }
+    20% { background-color: #900b; transform: translate(2px, -2px); }
+    30% { background-color: #9009; transform: translate(-2px, 2px); }
+    40% { background-color: #9007; transform: translate(2px, 2px); }
+    50% { background-color: #9005; transform: translate(-2px, -2px); }
+    60% { background-color: #9004; transform: translate(2px, -2px); }
+    70% { background-color: #9003; transform: translate(-2px, 2px); }
+    80% { background-color: #9002; transform: translate(-2px, -2px); }
+    90% { background-color: #9001; transform: translate(2px, -2px); }
+    100%{ background-color: #9000; transform: translate(0);} }
+
+.damage-rumble {
+    animation:
+        damage-rumble 1ms cubic-bezier(0.680, -0.550, 0.265, 1.550) 0s 800
+        normal forwards;
+}
+
+.layer.enemy .damaged {
+    --duration: 0.168s;
+    animation: enemyDamaged var(--duration);
+
+    & .art {
+        animation: enemyDamagedColor var(--duration);
+    }
 }
 
 @keyframes enemyDamaged {
@@ -2981,6 +3128,11 @@ dialog.modal::backdrop {
     60%  { transform: translate(-4px,0) skewX(-8deg) rotate(-3deg); }
     80%  { transform: translate(4px,0) skewX(8deg) rotate(3deg); }
     100% { transform: translate(0,0) skewX(0deg) rotate(0deg); }
+}
+
+@keyframes enemyDamagedColor {
+    from { color: #f00; }
+    to { color: unset; }
 }
 
 @keyframes PlayerDamaged {

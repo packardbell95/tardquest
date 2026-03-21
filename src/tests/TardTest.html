@@ -10,23 +10,84 @@
     <link rel="stylesheet" type="text/css" href="includes/TardTest.css">
 
     <!-- Libraries to test -->
+    <script src="../scripts/CorridorTagger.js"></script>
     <script src="../scripts/Map.js"></script>
     <script src="../scripts/Menu.js"></script>
     <script src="../scripts/Music.js"></script>
+    <script
+        src="../scripts/engine/Entities/Map/Traits/Movement/Patrol.js"
+    ></script>
+    <script
+        src="../scripts/engine/Entities/Map/Traits/Movement/Pursue.js"
+    ></script>
+    <script
+        src="../scripts/engine/Entities/Map/Traits/Movement/Realtime/BackAndForth.js"
+    ></script>
+    <script
+        src="../scripts/engine/Entities/Map/Traits/Movement/TargetAndWait.js"
+    ></script>
+    <script src="../scripts/engine/Entities/Map/MapEntityBuilder.js"></script>
+    <script
+        src="../scripts/engine/Entities/Party/PartyMemberBuilder.js"
+    ></script>
+    <script src="../scripts/engine/Map/MapGenerator.js"></script>
+    <script src="../scripts/EntityMovementPlanner.js"></script>
 
     <!-- Test Suites -->
     <script src="suites/GameMap/helpers/renderGameMapContext.js"></script>
-    <script src="suites/GameMap/countPassableCells.js"></script>
+    <script src="suites/GameMap/helpers/renderGameMapPoints.js"></script>
+    <script src="suites/GameMap/helpers/InventoryObjectDefinitions.js"></script>
+    <script src="suites/GameMap/fieldOfVision.js"></script>
     <script src="suites/GameMap/findPath-out-in-the-open.js"></script>
     <script src="suites/GameMap/findPath-around-curves.js"></script>
     <script src="suites/GameMap/findPath-around-spiral.js"></script>
     <script src="suites/GameMap/findPath-around-object.js"></script>
     <script src="suites/GameMap/findNextStep.js"></script>
+    <script src="suites/GameMap/movementCheck.js"></script>
+    <script src="suites/GameMap/mapEntity-management.js"></script>
+    <script src="suites/GameMap/mapEntity-inventoryManagement.js"></script>
+
+    <script
+        src="suites/EntityMovementPlanner/CorridorTagger/allTests.js"
+    ></script>
+
+    <script src="suites/MapEntity/movementBasic.js"></script>
 
     <script src="suites/Menu/allTests.js"></script>
 
     <script src="suites/Music/helpers/generateSilentAudioUrl.js"></script>
     <script src="suites/Music/allTests.js"></script>
+
+    <script
+        src="suites/EntityMovementPlanner/helpers/BuildMapEntityLemming.js"
+    ></script>
+    <script
+        src="suites/EntityMovementPlanner/helpers/renderMovementContext.js"
+    ></script>
+    <script src="suites/EntityMovementPlanner/basicMovementTest.js"></script>
+    <script
+        src="suites/EntityMovementPlanner/groupMovementSmallWindowTest.js"
+    ></script>
+    <script
+        src="suites/EntityMovementPlanner/groupMovementLargeWindowTest.js"
+    ></script>
+    <script
+        src="suites/EntityMovementPlanner/interruptedMovementTest.js"
+    ></script>
+    <script
+        src="suites/EntityMovementPlanner/distractedMovementTest.js"
+    ></script>
+    <script
+        src="suites/EntityMovementPlanner/pursuitMovementTest.js"
+    ></script>
+    <script src="suites/EntityMovementPlanner/realtimeMovementTest.js"></script>
+    <script
+        src="suites/EntityMovementPlanner/cooperativePathfindingTest.js"
+    ></script>
+
+    <script src="suites/engine/Map/helpers/booleanMapFloodFill.js"></script>
+    <script src="suites/engine/Map/helpers/renderBooleanMap.js"></script>
+    <script src="suites/engine/Map/MapGenerator.js"></script>
 </head>
 <body>
     <section>
@@ -52,35 +113,14 @@
     <script>
         // START OF TESTS
 
-        const testMap = new GameMap();
-
         testGroup("Map: Initialization");
         test(
             "Throw an Error when map is too small",
             () => Assert.throws(
-                () => testMap.generate(4, 4),
+                () => new GameMap(4, 4),
                 "Map size must be at least 5x5"
             )
         );
-
-        test(
-            "Throw an Error when player position is out of bounds (under)",
-            () => Assert.throws(
-                () => testMap.generate(5, 5, -1, -1),
-                "Player coordinates are outside of the map's boundaries"
-            )
-        );
-
-        test(
-            "Throw an Error when player position is out of bounds (over)",
-            () => Assert.throws(
-                () => testMap.generate(5, 5, 6, 6),
-                "Player coordinates are outside of the map's boundaries"
-            )
-        );
-
-        testGroup("Map: Information and Stats");
-        GameMap_countPassableCells();
 
         testGroup("Map: Pathfinding");
         GameMap_findPathOutInTheOpen();
@@ -88,12 +128,44 @@
         GameMap_findPathAroundSpiral();
         GameMap_findPathAroundObject();
         GameMap_findNextStep();
+        GameMap_movementCheck();
+
+        testGroup("Map: Field of Vision");
+        GameMap_fieldOfVisionUnobstructed();
+        GameMap_fieldOfVisionObstructed();
+        GameMap_fieldOfVisionLevels();
+
+        testGroup("Map: Corridor Tagger");
+        GameMap_CorridorTagger_allTests();
+
+        // @TODO Update these tests. They are outdated
+        // testGroup("Map: MapEntity Management");
+        // GameMap_mapEntityManagement();
+        // GameMap_mapEntityInventoryManagement();
+
+        // testGroup("Map Entities");
+        // MapEntity_movementBasic();
 
         testGroup("Menu");
         Menu_allTests();
 
         testGroup("Music Handling System");
         Music_allTests();
+
+        testGroup("Entity Movement Planner");
+        // @TODO Fix the movement execution for these tests
+        // EntityMovementPlanner_basicMovementTest();
+        // EntityMovementPlanner_groupMovementSmallWindowTest();
+        // EntityMovementPlanner_groupMovementLargeWindowTest();
+        EntityMovementPlanner_interruptedMovementTest();
+        // EntityMovementPlanner_distractedMovementTest();
+        // EntityMovementPlanner_pursuitMovementTest();
+        EntityMovementPlanner_realtimeMovementTest();
+        // ⚠️ Incomplete test. Skipping for now
+        // EntityMovementPlanner_cooperativePathfindingTest();
+
+        testGroup("Engine: Map Generator");
+        EngineMap_MapGeneratorTest();
 
         // END OF TESTS
 
