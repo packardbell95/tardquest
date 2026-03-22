@@ -366,18 +366,18 @@
     <div class="container">
         <!-- Title Bar -->
         <div class="title-bar">
-            ══════════════════════ TardQuest API Test Suite v3.1 ══════════════════════
+            ══════════════════════ TardQuest API Test Suite v3.2 ══════════════════════
         </div>
 
         <!-- Tab Bar -->
         <div class="tab-bar">
-            <div class="tab active" data-tab="session" onclick="switchTab('session', event)">[S]ession</div>
-            <div class="tab" data-tab="pigeons" onclick="switchTab('pigeons', event)">[P]igeons</div>
-            <div class="tab" data-tab="messaging" onclick="switchTab('messaging', event)">[M]essaging</div>
-            <div class="tab" data-tab="leaderboard" onclick="switchTab('leaderboard', event)">[L]eaderboard</div>
-            <div class="tab" data-tab="abuse" onclick="switchTab('abuse', event)">[A]buse</div>
-            <div class="tab" data-tab="health" onclick="switchTab('health', event)">[H]ealth</div>
-            <div class="tab" data-tab="suites" onclick="switchTab('suites', event)">[T]est Suites</div>
+            <div class="tab active" data-tab="session" onclick="switchTab('session', event)"><u>S</u>ession</div>
+            <div class="tab" data-tab="pigeons" onclick="switchTab('pigeons', event)"><u>P</u>igeons</div>
+            <div class="tab" data-tab="messaging" onclick="switchTab('messaging', event)"><u>M</u>essaging</div>
+            <div class="tab" data-tab="leaderboard" onclick="switchTab('leaderboard', event)"><u>L</u>eaderboard</div>
+            <div class="tab" data-tab="abuse" onclick="switchTab('abuse', event)"><u>A</u>buse</div>
+            <div class="tab" data-tab="health" onclick="switchTab('health', event)"><u>H</u>ealth</div>
+            <div class="tab" data-tab="suites" onclick="switchTab('suites', event)"><u>T</u>est Suites</div>
         </div>
 
         <!-- Status & Session Info -->
@@ -469,7 +469,7 @@
             <!-- Pigeon Messaging Tab -->
             <div class="test-panel" id="tab-messaging">
                 <h2>┌─ Carrier Pigeon Messaging ───────────────────────────────────────┐</h2>
-                <p class="helper-text">Send and receive messages via pigeons (/api/send, /api/get-messages)</p>
+                <p class="helper-text">Send and receive messages via pigeons (/api/pigeon/send, /api/pigeon/delivery)</p>
 
                 <h3>└─► Send Message</h3>
                 <div class="form-group">
@@ -492,6 +492,12 @@
                 <div class="button-group">
                     <button onclick="testPigeonDelivery()">Check for Messages</button>
                     <button onclick="testPigeonDeliveryRepeated()">Poll Messages (5x)</button>
+                </div>
+
+                <h3>└─► Pigeon Murder Reporting</h3>
+                <div class="button-group">
+                    <button onclick="testPigeonMurderReport()">Report Murder</button>
+                    <button onclick="testPigeonMurderStats()">Get Murder Stats</button>
                 </div>
 
                 <div class="output-window">
@@ -604,7 +610,7 @@
 
     <script>
         const API_BASE = 'https://vocapepper.com:9601'; // Change to your API base URL
-        const CLIENT_API_VERSION = '3.1.260111'; // Client API version, checked against MIN_CLIENT_VERSION on server
+        const CLIENT_API_VERSION = '3.2.260315'; // Client API version, checked against MIN_CLIENT_VERSION on server
         const LS_SESSION_KEY = 'vocaguardSessionId';
         const LS_CHALLENGE_KEY = 'vocaguardChallengeData';
         const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW'; // Replace with your actual site key
@@ -632,12 +638,12 @@
                         if (!btn.querySelector('.hotkey-badge')) {
                             const badge = document.createElement('span');
                             badge.className = 'hotkey-badge';
-                            badge.textContent = `[${k}]`;
+                            badge.innerHTML = `<u>${k}</u>`;
                             btn.prepend(badge);
                             btn.insertBefore(document.createTextNode(' '), badge.nextSibling);
                         } else {
                             const badge = btn.querySelector('.hotkey-badge');
-                            badge.textContent = `[${k}]`;
+                            badge.innerHTML = `<u>${k}</u>`;
                         }
                         k += 1;
                     } else {
@@ -804,10 +810,12 @@
             return data ? JSON.parse(data) : null;
         }
 
-        function setChallengeData(challengeId, challengeSecret) {
+        function setChallengeData(challengeId, challengeSalt, challengeDifficulty = 4, challengeSecret = null) {
             sessionStorage.setItem(LS_CHALLENGE_KEY, JSON.stringify({
                 challenge_id: challengeId,
-                challenge_secret: challengeSecret
+                challenge_salt: challengeSalt,
+                challenge_difficulty: Math.max(1, Math.min(8, Number(challengeDifficulty) || 4)),
+                challenge_secret: challengeSecret || challengeSalt
             }));
         }
 
@@ -826,10 +834,38 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Compute PoW challenge proof
-        async function computePoWProof(sessionId, challengeSecret) {
-            const input = challengeSecret + sessionId;
-            return await computeSHA256(input);
+        // Compute modern PoW challenge proof (nonce:hash)
+        async function computePoWProof(sessionId, challengeId, challengeSalt, challengeDifficulty = 4) {
+            const sid = String(sessionId || '');
+            const cid = String(challengeId || '');
+            const salt = String(challengeSalt || '');
+            const difficulty = Math.max(1, Math.min(8, Number(challengeDifficulty) || 4));
+
+            if (!sid || !cid || !salt) {
+                throw new Error('Missing PoW challenge fields');
+            }
+
+            const prefix = '0'.repeat(difficulty);
+            const seedArr = new Uint32Array(1);
+            crypto.getRandomValues(seedArr);
+            const seed = seedArr[0];
+            const maxAttempts = 200000;
+
+            for (let i = 0; i < maxAttempts; i++) {
+                const nonce = (seed + i).toString(36);
+                const payload = `${sid}:${cid}:${salt}:${nonce}`;
+                const hash = await computeSHA256(payload);
+
+                if (hash.startsWith(prefix)) {
+                    return `${nonce}:${hash}`;
+                }
+
+                if ((i + 1) % 250 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+
+            throw new Error('PoW mining exceeded attempt limit');
         }
 
         function computeExpForLevel(level) {
@@ -876,9 +912,12 @@
                     appendOutput('vocaguardOutput', `Server version: ${data.server_version}`, 'info');
                     
                     // Store PoW challenge if provided
-                    if (data.challenge_id && data.challenge_secret) {
-                        setChallengeData(data.challenge_id, data.challenge_secret);
+                    const challengeSalt = data.challenge_salt || data.challenge_secret;
+                    const challengeDifficulty = Number(data.challenge_difficulty) || 4;
+                    if (data.challenge_id && challengeSalt) {
+                        setChallengeData(data.challenge_id, challengeSalt, challengeDifficulty, data.challenge_secret || null);
                         appendOutput('vocaguardOutput', `✓ PoW challenge received: ${data.challenge_id}`, 'success');
+                        appendOutput('vocaguardOutput', `Difficulty: ${Math.max(1, Math.min(8, challengeDifficulty))}`, 'info');
                     } else {
                         appendOutput('vocaguardOutput', 'Note: No PoW challenge in response (VocaGuard disabled on server)', 'info');
                     }
@@ -909,8 +948,9 @@
 
         function clearSessionStorage() {
             sessionStorage.removeItem(LS_SESSION_KEY);
+            sessionStorage.removeItem(LS_CHALLENGE_KEY);
             updateSessionDisplay();
-            appendOutput('vocaguardOutput', 'Session storage cleared', 'info');
+            appendOutput('vocaguardOutput', 'Session and challenge storage cleared', 'info');
         }
 
         async function testVocaguardUpdate() {
@@ -1345,9 +1385,14 @@
                 };
                 
                 // Add PoW challenge if available (modern client flow)
-                if (challengeData && challengeData.challenge_id && challengeData.challenge_secret) {
+                if (challengeData && challengeData.challenge_id && challengeData.challenge_salt) {
                     appendOutput('leaderboardOutput', 'Computing PoW challenge proof...', 'info');
-                    const proof = await computePoWProof(sessionId, challengeData.challenge_secret);
+                    const proof = await computePoWProof(
+                        sessionId,
+                        challengeData.challenge_id,
+                        challengeData.challenge_salt,
+                        challengeData.challenge_difficulty
+                    );
                     leaderboardData.challenge_id = challengeData.challenge_id;
                     leaderboardData.challenge_proof = proof;
                     appendOutput('leaderboardOutput', `✓ PoW proof computed: ${proof.substring(0, 16)}...`, 'success');
@@ -1516,6 +1561,61 @@
             }
         }
 
+        async function testPigeonMurderReport() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            if (!sid) {
+                appendOutput('messagingOutput', 'No session ID', 'error');
+                return;
+            }
+
+            appendOutput('messagingOutput', 'Reporting pigeon murder...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/murder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sid, SID: sid })
+                });
+                const data = await res.json();
+                if (res.ok && data.murdered) {
+                    appendOutput(
+                        'messagingOutput',
+                        `✓ Murder reported. Total: ${data.murder_total} | Session: ${data.session_murder_total}`,
+                        'success'
+                    );
+                } else {
+                    appendOutput('messagingOutput', `✗ Murder report failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Network error: ${err.message}`, 'error');
+            }
+        }
+
+        async function testPigeonMurderStats() {
+            clearOutput('messagingOutput');
+            const sid = getSessionId();
+            const qs = sid ? `?session_id=${encodeURIComponent(sid)}` : '';
+
+            appendOutput('messagingOutput', 'Fetching pigeon murder stats...', 'info');
+            try {
+                const res = await fetch(`${API_BASE}/api/pigeon/murder${qs}`, {
+                    method: 'GET'
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    appendOutput('messagingOutput', `✓ Global murders: ${data.murder_total}`, 'success');
+                    appendOutput('messagingOutput', `Players with murders: ${data.players_with_murders}`, 'info');
+                    if (sid && typeof data.session_murder_total !== 'undefined') {
+                        appendOutput('messagingOutput', `Your session murders: ${data.session_murder_total}`, 'info');
+                    }
+                } else {
+                    appendOutput('messagingOutput', `✗ Stats fetch failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (err) {
+                appendOutput('messagingOutput', `Network error: ${err.message}`, 'error');
+            }
+        }
+
         // Automated Workflows
         async function runFullTestSuite() {
             if (isTestSuiteRunning) return;
@@ -1541,6 +1641,16 @@
                         if (data.session_id) {
                             setSessionId(data.session_id);
                             testLog(`✓ Session created: ${data.session_id.substring(0, 12)}...`, 'success');
+                            const challengeSalt = data.challenge_salt || data.challenge_secret;
+                            if (data.challenge_id && challengeSalt) {
+                                setChallengeData(
+                                    data.challenge_id,
+                                    challengeSalt,
+                                    data.challenge_difficulty || 4,
+                                    data.challenge_secret || null
+                                );
+                                testLog(`✓ PoW challenge loaded (difficulty ${Number(data.challenge_difficulty) || 4})`, 'info');
+                            }
                         } else {
                             testLog('✗ No session ID returned', 'error');
                         }
