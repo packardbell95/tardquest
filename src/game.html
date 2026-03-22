@@ -2723,6 +2723,8 @@
                     $partyMembers.appendChild($placeholder);
                 }
 
+                this.party = this.party.filter(e => ! e.isDead());
+
                 this.onPartyChange?.();
             };
 
