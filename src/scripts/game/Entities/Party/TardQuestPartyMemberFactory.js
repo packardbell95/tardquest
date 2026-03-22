@@ -301,7 +301,6 @@ const TardQuestPartyMemberFactory = {
         };
 
         partyMember.talkSlots = [
-            ["Maybe", "Suddenly", "Perhaps", "Definitely", "Hey!"],
             ["Do you want", "I need", "We should get", "I'm thinking about"],
             [
                 "cheese doodles", "greasy weenus", "blue cheese", "cheddar",

@@ -496,9 +496,23 @@ function PartyMemberBuilder(name, stats = {}) {
 
         generateStatement: function() {
             const chosen = this.talkSlots.map(slot => randomEntry(slot));
-            return chosen.length > 1
-                ? chosen.slice(0, -1).join(" ") + chosen[chosen.length - 1]
-                : chosen[0];
+            let statement = "";
+
+            for (let i = 0; i < chosen.length; i++) {
+                if (i === 0) {
+                    statement = chosen[i];
+                    continue;
+                }
+
+                // Add a space if the selected part starts with an alphanumeric
+                if (chosen[i].match(/^\w/)) {
+                    statement += " ";
+                }
+
+                statement += chosen[i];
+            }
+
+            return statement;
         },
 
         say: function(message, showPortrait = true) {
