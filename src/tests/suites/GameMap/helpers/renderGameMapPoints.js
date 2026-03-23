@@ -36,7 +36,7 @@ const renderGameMapPoints = (mapObject, points = []) => {
         console.warn("Points are neither an array nor object", { points });
         return [];
     })(points);
-            console.debug({ entities: mapObject.entities });
+
     for (let y = 0; y < mapObject.height; y++) {
         for (let x = 0; x < mapObject.width; x++) {
             const coordinates = `(${x}, ${y})`;

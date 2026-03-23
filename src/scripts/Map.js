@@ -1384,8 +1384,12 @@ class GameMap {
         });
     }
 
+    isExplored(x, y) {
+        return this.#cells?.[y]?.[x].isExplored ?? false;
+    }
+
     // Reveals a spot on the map, regardless of walls
-    revealSpot(spotX, spotY, radius) {
+    revealSpot(spotX, spotY, radius = 0) {
         for (let y = spotY - radius; y <= spotY + radius; y++) {
             for (let x = spotX - radius; x <= spotX + radius; x++) {
                 if (typeof this.#cells[y]?.[x] !== "undefined") {
@@ -1396,11 +1400,20 @@ class GameMap {
         }
     }
 
+    // Hides the entire map
+    conceal() {
+        this.#changeCellVisibility(false);
+    }
+
     // Reveals the entire map
     reveal() {
+        this.#changeCellVisibility(true);
+    }
+
+    #changeCellVisibility(isExplored) {
         for (let y = 0; y < this.#cells.length; y++) {
             for (let x = 0; x < this.#cells[y].length; x++) {
-                this.#cells[y][x].isExplored = true;
+                this.#cells[y][x].isExplored = isExplored;
                 this.#rerenderCoordinate(x, y);
             }
         }

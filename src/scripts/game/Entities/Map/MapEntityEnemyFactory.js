@@ -805,6 +805,116 @@ const MapEntityEnemyFactory = {
             this.leader?.say("Tsk. You almost scratched my satin cape!", false);
         };
 
+        /**
+         * Shows the focal point of the vampire on the minimap if the vampire's
+         * cell has previously been explored. Otherwise, just flashes the screen
+         * giallo-style for maximum suspense
+         *
+         * @param Map gameMap The game's map object
+         * @param function|null onAnimationEnd Optional post-animation callback
+         */
+        vampire.showFocalPoint = function(gameMap, onAnimationEnd) {
+            const $vampireFocalPoint =
+                document.getElementById("vampireFocalPoint");
+            if (! $vampireFocalPoint) {
+                console.error("Vampire focal point element was not found");
+                return;
+            }
+
+            const $desaturationOverlay = document.getElementById(
+                "vampireFocalPointDesaturationOverlay"
+            );
+            if (! $desaturationOverlay) {
+                console.error(
+                    "Focal point desaturation overlay element was not found"
+                );
+                return;
+            }
+
+            const vampireIsVisible = gameMap.isExplored(this.x, this.y);
+
+            const $minimapCell =
+                document.getElementById(`map_cell_${this.x}_${this.y}`);
+            if (! $minimapCell) {
+                console.error("Could not find the vampire on the minimap");
+                return;
+            }
+
+            const rect = $minimapCell.getBoundingClientRect();
+            const x = Math.round(rect.left + (rect.width / 2));
+            const y = Math.round(rect.top + (rect.height / 2));
+
+            const radiusStartPx = 2240;
+            const radiusEndPx = vampireIsVisible ? 16 : 2240;
+            const durationMs = 2000;
+            const easingCss = vampireIsVisible
+                ? "cubic-bezier(0.22, 1, 0.36, 1)"
+                : "cubic-bezier(1, 0, 0.75, 1)";
+
+            $vampireFocalPoint.style.setProperty("--center-x", `${x}px`);
+            $vampireFocalPoint.style.setProperty("--center-y", `${y}px`);
+            $vampireFocalPoint.style
+                .setProperty("--radius-start", `${radiusStartPx}px`);
+            $vampireFocalPoint.style
+                .setProperty("--radius-end", `${radiusEndPx}px`);
+
+            $desaturationOverlay.style.setProperty("--center-x", `${x}px`);
+            $desaturationOverlay.style.setProperty("--center-y", `${y}px`);
+            $desaturationOverlay.style
+                .setProperty("--radius-start", `${radiusStartPx}px`);
+            $desaturationOverlay.style
+                .setProperty("--radius-end", `${radiusEndPx}px`);
+
+
+            $vampireFocalPoint.style.animationDuration = `${durationMs}ms`;
+            $vampireFocalPoint.style.animationTimingFunction = easingCss;
+            $vampireFocalPoint.classList.remove("is-animating");
+            $vampireFocalPoint.offsetWidth; // Force reflow
+            $vampireFocalPoint.classList.add("is-animating");
+
+            $desaturationOverlay.style.animationDuration =
+                `${durationMs + 500}ms`;
+            $desaturationOverlay.style.animationTimingFunction = easingCss;
+            $desaturationOverlay.classList.remove("is-animating");
+            $desaturationOverlay.offsetWidth; // Force reflow
+            $desaturationOverlay.classList.add("is-animating");
+
+            music.stop();
+            playSFX("alert");
+
+            setTimeout(
+                () => {
+                    vampire.explorationMusicId =
+                        music.getLastTaggedTrackId("exploration");
+                    music.play("vampireLurking", "exploration");
+                },
+                2000
+            );
+
+            function handleAnimationEnd(event) {
+                if (event.target !== $desaturationOverlay) {
+                    return;
+                }
+
+                $desaturationOverlay.removeEventListener(
+                    "animationend",
+                    handleAnimationEnd
+                );
+
+                $vampireFocalPoint.classList.remove("is-animating");
+                $desaturationOverlay.classList.remove("is-animating");
+
+                if (typeof onAnimationEnd === "function") {
+                    onAnimationEnd();
+                }
+            }
+
+            $desaturationOverlay.addEventListener(
+                "animationend",
+                handleAnimationEnd
+            );
+        };
+
         return vampire;
     },
 

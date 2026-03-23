@@ -467,6 +467,7 @@ const TardQuestMapGenerator = {
             );
 
             gameMap.addEntity(this.vampireEntity);
+            this.vampireEntity.showFocalPoint(gameMap);
 
             // @TODO Use to make the vampire more aggressive each time
             this.totalVampireSummons++;

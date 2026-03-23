@@ -37,6 +37,7 @@
     <script src="suites/GameMap/helpers/renderGameMapContext.js"></script>
     <script src="suites/GameMap/helpers/renderGameMapPoints.js"></script>
     <script src="suites/GameMap/helpers/InventoryObjectDefinitions.js"></script>
+    <script src="suites/GameMap/general.js"></script>
     <script src="suites/GameMap/fieldOfVision.js"></script>
     <script src="suites/GameMap/findPath-out-in-the-open.js"></script>
     <script src="suites/GameMap/findPath-around-curves.js"></script>
@@ -121,6 +122,9 @@
                 "Map size must be at least 5x5"
             )
         );
+
+        testGroup("Map: General");
+        GameMap_isExplored();
 
         testGroup("Map: Pathfinding");
         GameMap_findPathOutInTheOpen();
