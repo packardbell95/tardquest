@@ -755,10 +755,13 @@ const MapEntityEnemyFactory = {
         vampire.addPartyMember(TardQuestPartyMemberFactory.vampire(level));
 
         vampire.getDisplayName = function() {
-            return "🧛 Gay Cocksucking Vampire";
+            return this.encounteredByPlayer
+                ? `🧛 <span class="gay">Gay Cocksucking Vampire`
+                : `🦇 <em>A menacing... fruit bat?</em>`;
         };
 
         vampire.getDisplayCharacter = function() {
+            // The vampire's character is provided by a CSS animation
             return " ";
         };
 
