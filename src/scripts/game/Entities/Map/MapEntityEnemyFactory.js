@@ -756,7 +756,7 @@ const MapEntityEnemyFactory = {
 
         vampire.getDisplayName = function() {
             return this.encounteredByPlayer
-                ? `🧛 <span class="gay">Gay Cocksucking Vampire`
+                ? `🧛 <span class="gay">Gay Cocksucking Vampire</span>`
                 : `🦇 <em>A menacing... fruit bat?</em>`;
         };
 
