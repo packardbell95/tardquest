@@ -114,7 +114,7 @@ const TardQuestMapGenerator = {
         // same space as the player
         let exitX, exitY;
 
-        for (let circuitBreaker = 0; circuitBreaker < 10; circuitBreaker++) {
+        for (let circuitBreaker = 0; circuitBreaker < 100; circuitBreaker++) {
             exitX = exitRegion.start.x + Math.floor(
                 Math.random() * (exitRegion.end.x - exitRegion.start.x)
             );
@@ -132,6 +132,8 @@ const TardQuestMapGenerator = {
 
         gameMap.addEntity(exitEntity);
         exitRegion.occupied = true;
+
+        let sigilPlaced = false;
 
         // @TODO This sometimes doesn't run which stops enemies from appearing
         for (const region of regions) {
@@ -159,6 +161,18 @@ const TardQuestMapGenerator = {
                 { x: region.end.x, y: region.start.y },
             ]);
             gameMap.addEntity(regionEnemyB);
+
+            if (! sigilPlaced && Math.random() < 0.5) {
+                const x = region.start.x +
+                    Math.round(region.end.x - region.start.x);
+                const y = region.start.y +
+                    Math.round(region.end.y - region.start.y);
+
+                this._placeVampireSummoningSigil(gameMap, x, y);
+                console.log("✡️ Sigil placed", { x, y });
+
+                sigilPlaced = true;
+            }
         }
 
         /**
@@ -402,5 +416,63 @@ const TardQuestMapGenerator = {
 
             gameMap.addEntity(treasureChest);
         }
+    },
+
+    _placeVampireSummoningSigil: function(gameMap, x, y) {
+        const sigil = MapEntityFeatureFactory.sigil(x, y);
+
+        sigil.tickCount = 0;
+        sigil.ticksUntilSummoning = 10;
+        sigil.totalVampireSummons = 0;
+        sigil.vampireEntity = null;
+
+        sigil.tick = function(gameMap) {
+            const vampireIsAlreadyActive = this.vampireEntity?.isAlive || false;
+            if (vampireIsAlreadyActive) {
+                return;
+            }
+
+            if (this.tickCount++ < this.ticksUntilSummoning) {
+                return;
+            }
+
+            const entityStangingOnSigil = gameMap.entities.some(e =>
+                e.x === this.x &&
+                e.y === this.y &&
+                typeof e.onTouch === "function"
+            );
+
+            if (entityStangingOnSigil) {
+                console.log("Cannot spawn vampire: sigil is blocked");
+                return;
+            }
+
+            // @TODO Add the animation, obviously
+            updateBattleLog(
+                "OH SHIT THE VAMPIRE HAS SPAWNED AND I HAVEN'T EVEN ADDED " +
+                "THE CODE FOR THE COOL FOCUS EFFECT BACK IN YET!"
+            );
+
+            this.vampireEntity = MapEntityEnemyFactory.vampire(
+                1,
+                this.x,
+                this.y,
+                Math.floor(Math.random() * 4)
+            );
+
+            // Vampires get faster after each respawn
+            this.vampireEntity.movesPerTurn = Math.min(
+                Math.max(sigil.totalVampireSummons + 1, 1),
+                EntityMovementPlanner.windowSize
+            );
+
+            gameMap.addEntity(this.vampireEntity);
+
+            // @TODO Use to make the vampire more aggressive each time
+            this.totalVampireSummons++;
+            this.tickCount = 0;
+        };
+
+        gameMap.addEntity(sigil);
     },
 };

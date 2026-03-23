@@ -280,4 +280,16 @@ const MapEntityFeatureFactory = {
 
         return treasureChest;
     },
+
+    /**
+     * SIGIL
+     */
+    sigil: function(x, y) {
+        const sigil = MapEntityBuilder("sigil", x, y);
+        sigil.getDisplayName = () => "✡️ Sigil";
+        sigil.getDisplayCharacter = () => "✡";
+        sigil.targetCheck = () => {};
+
+        return sigil;
+    },
 }

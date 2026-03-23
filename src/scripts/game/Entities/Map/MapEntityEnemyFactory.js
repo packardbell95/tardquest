@@ -741,7 +741,11 @@ const MapEntityEnemyFactory = {
         MapEntityTrait_AttachMovement_Pursue(vampire);
         vampire.inventory.contents.bitcoins = 40;
         vampire.objectsOfInterest = ["player"];
-        // @TODO Call the vampire's .targetEntity() when spawned
+        vampire.targetEntity(playerEntity.id); // Chase the player
+
+        vampire.getMovementPriority = function() {
+            return 50;
+        };
 
         // The vampire is always moving hastily
         vampire.isHastyMove = function() {
@@ -755,7 +759,7 @@ const MapEntityEnemyFactory = {
         };
 
         vampire.getDisplayCharacter = function() {
-            return ["▲", "▶", "▼", "◀"][this.direction] || "?";
+            return " ";
         };
 
         vampire.onTouch = function(gameMap, entity) {
@@ -793,6 +797,8 @@ const MapEntityEnemyFactory = {
                     `of glitter.`
                 );
             };
+
+            this.type = "corpse";
         };
 
         vampire.onExplode = function(gameMap, entity) {

@@ -403,8 +403,7 @@ const EntityMovementPlanner = {
             return;
         }
 
-        this.currentPlan =
-            this.generatePlan(gameMap, prioritizedEntityIds).slice(1);
+        this.currentPlan = this.generatePlan(gameMap, prioritizedEntityIds);
     },
 
     getNextPlannedMove: function() {
@@ -459,10 +458,6 @@ const EntityMovementPlanner = {
                 this.currentPlan =
                     this.currentPlan.filter(e => e.entityId !== entity.id);
 
-                // console.log(
-                //     "Cell is occupied. Cannot move into it",
-                //     { entity, move }
-                // );
                 continue;
             }
 
@@ -482,7 +477,16 @@ const EntityMovementPlanner = {
                 ! e.isRealtime &&
                 ! e.isStunned()
             )
-            .sort((a, b) => a.p === b.p ? a.id > b.id : a.p < b.p)
+            .sort(
+                (a, b) => {
+                    const aPriority = a.getMovementPriority();
+                    const bPriority = b.getMovementPriority();
+
+                    return aPriority === bPriority
+                        ? a.id > b.id
+                        : aPriority < bPriority;
+                }
+            )
             .map(e => e.id);
     },
 };

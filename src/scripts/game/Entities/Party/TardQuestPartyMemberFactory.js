@@ -720,8 +720,8 @@ const TardQuestPartyMemberFactory = {
                 experience: 0,
             },
             core: {
-                hp: vampire.baseHp,
-                maxHp: vampire.baseHp,
+                hp: 100,
+                maxHp: 100,
                 defense: 5,
                 strength: 5,
                 persuasion: 0,

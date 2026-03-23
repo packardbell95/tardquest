@@ -25,6 +25,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         target: null,
         targetReason: null,
         targetEntityId: null,
+        movesPerTurn: 1,
         alertLevel: 0,
         stunTurns: 0,
         objectsOfInterest: [],

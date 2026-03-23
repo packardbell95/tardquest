@@ -538,19 +538,27 @@ class GameMap {
             this.#entities.filter(e => preserveTypes.includes(e.type));
     }
 
+    updateEntities() {
+        this.moveEntities();
+        this.tickEntities();
+    }
+
     moveEntities() {
-        this.cleanDeactivatedEntities();
+        this.clearDeactivatedEntities();
 
         this.#EntityMovementPlanner.planMovement(this);
         const moves = this.#EntityMovementPlanner.getNextPlannedMove();
 
-        if (moves === null) {
+        const plan = this.#EntityMovementPlanner.currentPlan;
+        if (plan.length === 0) {
             return;
         }
 
-        for (const move of moves) {
+        const entityIdsToMove = plan[0].map(e => e.entityId);
+
+        for (const id of entityIdsToMove) {
             const entity =
-                this.#entities.find(e => e.id === move.entityId);
+                this.#entities.find(e => e.id === id);
             if (! entity) {
                 console.error(
                     "Entity disappeared before move!",
@@ -559,30 +567,47 @@ class GameMap {
                 continue;
             }
 
-            const hasCoordinate =
-                Number.isInteger(move.x) &&
-                Number.isInteger(move.y);
+            for (let i = 0; i < entity.movesPerTurn && i < plan.length; i++) {
+                const move = plan[i].find(e => e.entityId === id);
+                if (! move) {
+                    console.log("Entity ran out of moves", { entity, plan });
+                    break;
+                }
 
-            if (! hasCoordinate) {
-                console.error("No coordinate set for move", { move, moves });
-                return;
-            }
+                const hasCoordinate =
+                    Number.isInteger(move.x) &&
+                    Number.isInteger(move.y);
 
-            this.#rerenderCoordinate(entity.x, entity.y);
-            entity.moveTowards(move, this);
+                if (! hasCoordinate) {
+                    console.error(
+                        "No coordinate set for move",
+                        { move, moves }
+                    );
+                    return;
+                }
 
-            // If the entity actually moved instead of just turned, make sure
-            // that the coordinate is also rerendered
-            if (move.x !== entity.x || move.y !== entity.y) {
                 this.#rerenderCoordinate(entity.x, entity.y);
+                entity.moveTowards(move, this);
+
+                // If the entity actually moved instead of just turned, make
+                // sure that the coordinate is also rerendered
+                if (move.x !== entity.x || move.y !== entity.y) {
+                    this.#rerenderCoordinate(entity.x, entity.y);
+                }
             }
         }
 
         this?.onMoveEntitiesEnd?.();
     }
 
+    tickEntities() {
+        for (const entity of this.entities) {
+            entity.tick?.(this);
+        }
+    }
+
     moveRealtimeEntities() {
-        this.cleanDeactivatedEntities();
+        this.clearDeactivatedEntities();
 
         const entities =
             this.entities.filter(e => e.isAlive && e.isActive && e.isRealtime);
@@ -592,7 +617,7 @@ class GameMap {
         }
     }
 
-    cleanDeactivatedEntities() {
+    clearDeactivatedEntities() {
         this.#entities = this.#entities.filter(e => e.isActive);
     }
 
@@ -1183,14 +1208,14 @@ class GameMap {
     }
 
     carvePath(mapSizeX, mapSizeY, exitPosition, stack) {
-        const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+        const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
         const step = Math.random() < 0.5 ? -1 : 1;
         let lastPosition = stack[stack.length - 1];
 
         for (let i = 0; i < 2; i++) {
             const nextPosition = {
-                x: lastPosition.x + (direction === 'horizontal' ? step : 0),
-                y: lastPosition.y + (direction === 'vertical' ? step : 0),
+                x: lastPosition.x + (direction === "horizontal" ? step : 0),
+                y: lastPosition.y + (direction === "vertical" ? step : 0),
             };
 
             const atMapEdge =
@@ -1203,7 +1228,7 @@ class GameMap {
                 return null;
             }
 
-            const alreadyVisited = stack.find((seenPosition) =>
+            const alreadyVisited = stack.find(seenPosition =>
                 seenPosition.x === nextPosition.x &&
                 seenPosition.y === nextPosition.y
             );

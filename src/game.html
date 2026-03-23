@@ -1330,6 +1330,10 @@
                     const entityType = mapEntity?.type;
 
                     if (entityType) {
+                        if (entityType === "vampire") {
+                            return "vampire";
+                        }
+
                         if (enemyTypes.includes(entityType)) {
                             const artName = mapEntity.isStunned()
                                 ? "stunnedEnemy"
@@ -3944,7 +3948,7 @@
                 render();
             }
 */
-            MAP.moveEntities();
+            MAP.updateEntities();
             render();
         }
 

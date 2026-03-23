@@ -1420,6 +1420,35 @@ a:link {
     color: #f00;
 }
 
+@keyframes sigilGlow {
+      0% { color: #FF9E4B; }
+     20% { color: #D90077; }
+     40% { color: #C00500; }
+     60% { color: #FF7600; }
+     80% { color: #DF4298; }
+    100% { color: #FF0700; }
+}
+
+@keyframes sigilGlowBackground {
+      0% { background-color: #FF9E4B; }
+     20% { background-color: #D90077; }
+     40% { background-color: #C00500; }
+     60% { background-color: #FF7600; }
+     80% { background-color: #DF4298; }
+    100% { background-color: #FF0700; }
+}
+
+.sigil {
+    animation: sigilGlow 8s ease-in-out infinite;
+    color: #FF0700;
+}
+
+.scene_character_sigil {
+    animation: sigilGlowBackground 8s ease-in-out infinite;
+    background-color: #FF0700;
+    color: #fff;
+}
+
 #minimap .vampire,
 .mapCellDetails .enlargedCell.vampire {
     position: relative;
