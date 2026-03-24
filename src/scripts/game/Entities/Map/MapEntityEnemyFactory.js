@@ -765,6 +765,11 @@ const MapEntityEnemyFactory = {
             return " ";
         };
 
+        vampire.battleRestrictions = [
+            "playerEntityPersuade",
+            "playerEntityRun",
+        ];
+
         vampire.onTouch = function(gameMap, entity) {
             if (entity.type === "player") {
                 const playerAdvantage =

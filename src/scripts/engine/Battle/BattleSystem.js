@@ -16,6 +16,28 @@ const BattleSystem = {
         joiningEnemy: [],
     },
 
+    /**
+     * Set of flags that can exist on each participating entity to dictate which
+     * moves can or can't be executed for the duration of the battle
+     *
+     * Battle constraint flags include:
+     * - "playerEntityAttack"
+     * - "playerEntityPersuade"
+     * - "playerEntityRun"
+     * - "playerEntityUseItem"
+     * - "playerEntityEquipWeapon"
+     * - "playerEntityEquipArmor"
+     * - "playerEntityEquipRing"
+     * - "enemyEntityAttack"
+     * - "enemyEntityPersuade"
+     * - "enemyEntityRun"
+     * - "enemyEntityUseItem"
+     * - "enemyEntityEquipWeapon"
+     * - "enemyEntityEquipArmor"
+     * - "enemyEntityEquipRing"
+     */
+    battleRestrictions: [],
+
     playerPartyMemberIndex: 0,
 
     onEncounter: null,
@@ -71,6 +93,7 @@ const BattleSystem = {
         this.playerEntity = playerEntity;
         this.enemyEntity = enemyEntity;
         this.generateTiebreakerScale();
+        this.setBattleRestrictions();
 
         this.entityAdvantage = ["player", "enemy"].includes(entityAdvantage)
              ? entityAdvantage
@@ -83,6 +106,86 @@ const BattleSystem = {
         );
 
         this.playerPartyMemberIndex = 0;
+    },
+
+    setBattleRestrictions: function() {
+        const validRestrictions = [
+            "playerEntityAttack",
+            "playerEntityPersuade",
+            "playerEntityRun",
+            "playerEntityUseItem",
+            "playerEntityEquipWeapon",
+            "playerEntityEquipArmor",
+            "playerEntityEquipRing",
+            "enemyEntityAttack",
+            "enemyEntityPersuade",
+            "enemyEntityRun",
+            "enemyEntityUseItem",
+            "enemyEntityEquipWeapon",
+            "enemyEntityEquipArmor",
+            "enemyEntityEquipRing",
+        ];
+
+        this.battleRestrictions = [];
+
+        for (const entity of [this.playerEntity, this.enemyEntity]) {
+            if (! Array.isArray(entity.battleRestrictions)) {
+                continue;
+            }
+
+            for (const restriction of entity.battleRestrictions) {
+                const addRestriction =
+                    validRestrictions.includes(restriction) &&
+                    ! this.battleRestrictions.includes(restriction);
+
+                if (addRestriction) {
+                    this.battleRestrictions.push(restriction);
+                }
+            }
+        }
+    },
+
+    actorIsPlayer: function(partyMember) {
+        return partyMember.parent.id === this.playerEntity.id;
+    },
+
+    attackRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "Attack");
+    },
+
+    persuadeRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "Persuade");
+    },
+
+    runRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "Run");
+    },
+
+    useItemRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "UseItem");
+    },
+
+    equipWeaponRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "EquipWeapon");
+    },
+
+    equipArmorRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "EquipArmor");
+    },
+
+    equipRingRestricted: function(partyMember) {
+        return this._hasBattleRestriction(partyMember, "EquipRing");
+    },
+
+    _hasBattleRestriction: function(partyMember, move) {
+        if (! partyMember) {
+            return true;
+        }
+
+        return this.battleRestrictions.includes(
+            (this.actorIsPlayer(partyMember) ? "playerEntity" : "enemyEntity") +
+            move
+        );
     },
 
     hasPersuasionAttempts: function(partyMember) {
@@ -132,31 +235,66 @@ const BattleSystem = {
     },
 
     attack: function(actor, target) {
+        if (this.attackRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "attack", actor, target });
+        return true;
     },
 
     persuade: function(actor, target, persuasionPhrase) {
+        if (this.persuadeRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "persuade", actor, target, persuasionPhrase });
+        return true;
     },
 
     run: function(actor) {
+        if (this.runRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "run", actor });
+        return true;
     },
 
     useItem: function(actor, itemId, target = null) {
+        if (this.useItemRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "use item", actor, itemId, target });
+        return true;
     },
 
     equipWeapon: function(actor, weaponId) {
+        if (this.equipWeaponRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "equip weapon", actor, weaponId });
+        return true;
     },
 
     equipArmor: function(actor, armorId) {
+        if (this.equipArmorRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "equip armor", actor, armorId });
+        return true;
     },
 
     equipRing: function(actor, hand, ringId) {
+        if (this.equipRingRestricted(actor)) {
+            return false;
+        }
+
         this.queueMove({ type: "equip ring", actor, ringId, hand });
+        return true;
     },
 
     queueMove: function(move) {
@@ -313,7 +451,7 @@ const BattleSystem = {
     },
 
     retarget: function(actor) {
-        const targetEntity = actor.parent.id === this.playerEntity.id
+        const targetEntity = this.actorIsPlayer(actor)
             ? this.enemyEntity
             : this.playerEntity;
 
@@ -345,6 +483,11 @@ const BattleSystem = {
     },
 
     performAttack: function(actor, target) {
+        if (this.attackRestricted(actor)) {
+            this.onAttackEnd?.(actor, target, null, false);
+            return false;
+        }
+
         const critChance = actor.getEffectiveCoreStat('luck') * 0.01;
         const isCriticalHit = Math.random() < critChance;
         const damageMultiplier = isCriticalHit ? 1.2 : 1;
@@ -366,6 +509,7 @@ const BattleSystem = {
         const attackKilledTarget = targetStartedWithHp && target.isDead();
 
         this.onAttackEnd?.(actor, target, damagePoints, attackKilledTarget);
+        return true;
     },
 
     performPersuade: function(actor, target, persuasionPhrase = null) {
@@ -382,11 +526,13 @@ const BattleSystem = {
 
         const targetPartySize =
             target.parent.party.filter(e => ! e.isDead()).length;
-        const canPersuade = targetPartySize === 1;
+        const canPersuade =
+            ! this.persuadeRestricted(actor) &&
+            targetPartySize === 1;
 
         if (! canPersuade) {
             this.onPersuadeEnd?.(actor, target, false);
-            return;
+            return false;
         }
 
         const totalChance = actor.getEffectiveCoreStat("persuasion") / 100;
@@ -394,8 +540,9 @@ const BattleSystem = {
 
         if (persuasionSucceeded) {
             console.log("Persuasion successful!");
-            const actorIsPlayer = actor.parent.id === this.playerEntity.id;
-            const targetParty = `joining${actorIsPlayer ? "Player" : "Enemy"}`;
+            const targetParty = this.actorIsPlayer(actor)
+                ? "joiningPlayer"
+                : "joiningEnemy";
 
             target.persuadedBy = {
                 partyMemberId: actor.id,
@@ -404,7 +551,6 @@ const BattleSystem = {
             };
 
             // Track the removed party member
-            console.log("Key", { targetParty });
             this.persuadedMembers[targetParty].push(target);
 
             // Remove member from the party
@@ -415,24 +561,31 @@ const BattleSystem = {
         }
 
         this.onPersuadeEnd?.(actor, target, persuasionSucceeded);
+        return true;
     },
 
     performRun: function(actor) {
-        // @TODO Revert this debug code
-        const runSucceeded = true; // Math.random() < 0.3;
+        const runSucceeded = ! this.runRestricted(actor) && Math.random() < 0.3;
         this.onRunEnd?.(actor, runSucceeded);
 
         if (runSucceeded) {
             this.endEncounter(
-                actor.parent.id === this.playerEntity.id
+                this.actorIsPlayer(actor)
                     ? "player ran"
                     : "enemy ran"
             );
         }
+
+        return runSucceeded;
     },
 
     performUseItem: function(actor, itemId, target) {
-        const successful = actor.useItem(itemId, target);
+        const successful =
+            ! this.useItemRestricted(actor) &&
+            actor.useItem(itemId, target);
+
         this?.onUseItemEnd(actor, itemId, target, successful);
+
+        return successful;
     },
 };
