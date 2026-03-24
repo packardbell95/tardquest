@@ -434,24 +434,50 @@ const GameControl = {
             });
     },
 
-    openPersuasionInputBox: () => {
+    /**
+     * PERSUASION / TALK
+     */
+    persuasionCancelCallback: () => {},
+    persuasionSubmitCallback: (playerMessage) => {},
+
+    openPersuasionInputBox: (submitCallback, cancelCallback) => {
+        GameControl.persuasionSubmitCallback =
+            typeof submitCallback === "function" ? submitCallback : () => {};
+        GameControl.persuasionCancelCallback =
+            typeof cancelCallback === "function" ? cancelCallback : () => {};
+
         GameControl.awaitingPersuasionText = true;
         GameControl.disableControls();
-        const $inputBox = document.getElementById("inputBox");
+        document.getElementById("inputBox").style.display = "flex";
+
         const $input = document.getElementById("persuadeInput");
-        $inputBox.style.display = "flex";
         $input.value = "";
 
         // Delay the focus to ensure it's applied after rendering
         setTimeout(() => $input.focus(), 10);
     },
 
+    cancelPersuasionInput: () => {
+        GameControl.closePersuasionInputBox();
+        GameControl.persuasionCancelCallback();
+    },
+
     closePersuasionInputBox: () => {
-        document.getElementById("inputBox").style.display = "none";
+        const $input = document.getElementById("inputBox");
+        $input.style.display = "none";
+        $input.value = "";
+
         setTimeout(() => {
             GameControl.awaitingPersuasionText = false;
             GameControl.enableControls();
         }, 200);
+    },
+
+    handlePersuasionInput: () => {
+        const input =
+            (document.getElementById("persuadeInput")?.value || "").trim();
+        GameControl.closePersuasionInputBox();
+        GameControl.persuasionSubmitCallback(input);
     },
 
     getInputDelayMs: () => {

@@ -494,9 +494,24 @@ function PartyMemberBuilder(name, stats = {}) {
                 ],
             ],
 
-        generateStatement: function() {
+        allowPlayerMessageTalkSlotOverride: true,
+
+        generateStatement: function(playerMessage) {
             const chosen = this.talkSlots.map(slot => randomEntry(slot));
+            const hasPlayerMessage = typeof playerMessage === "string";
             let statement = "";
+
+            const playerMessageFragments =
+                this.allowPlayerMessageTalkSlotOverride && hasPlayerMessage
+                    ? shuffle(
+                        playerMessage
+                            .split(/\s+/)
+                            // Remove trailing punctuation, convert to lowercase
+                            .map(e => e.replace(/\p{P}+$/u, "").toLowerCase())
+                            // Return anything that starts with a word character
+                            .filter(e => /^\w/.test(e))
+                    )
+                    : [];
 
             for (let i = 0; i < chosen.length; i++) {
                 if (i === 0) {
@@ -504,31 +519,49 @@ function PartyMemberBuilder(name, stats = {}) {
                     continue;
                 }
 
+                const usePlayerMessageFragment =
+                    playerMessageFragments.length > 0 &&
+                    Math.random() < 0.5;
+
+                const fragment = usePlayerMessageFragment
+                    ? playerMessageFragments.pop()
+                    : chosen[i];
+
                 // Add a space if the selected part starts with an alphanumeric
-                if (chosen[i].match(/^\w/)) {
+                if (/^\w/.test(fragment)) {
                     statement += " ";
                 }
 
-                statement += chosen[i];
+                if (usePlayerMessageFragment) {
+                    statement += `<span class="player">${fragment}</span>`;
+                } else {
+                    statement += fragment;
+                }
             }
 
             return statement;
         },
 
-        say: function(message, showPortrait = true) {
+        say: function(message, showPortrait = true, onComplete = null) {
             if (this.voice) {
                 if (showPortrait) {
                     const flipped = this.parent.id !== playerEntity.id;
                     Portrait.show(this.type, this.color, flipped);
                 }
 
-                const callback = showPortrait
-                    ? () => Portrait.hide()
-                    : () => {};
+                const callback = () => {
+                    showPortrait && Portrait.hide();
+                    onComplete?.();
+                };
+
+                // Remove any syntax from the message before speaking it
+                const $message = document.createElement("span");
+                $message.innerHTML = message;
+                const spokenMessage = $message.textContent;
 
                 // @TODO Suppress speech synthesis as a flag on the speech
                 // synthesizer itself
-                SpeechSynthesizer.speak(message, this.voice, callback);
+                SpeechSynthesizer.speak(spokenMessage, this.voice, callback);
             }
 
             const colorHtml = this.color ? ` style="color: ${this.color}"` : "";

@@ -1127,7 +1127,11 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             return false;
         },
 
-        talk: function(partyMemberId) {
+        talk: function(
+            partyMemberId = null,
+            playerMessage = null,
+            onTalkEnd = null
+        ) {
             const partyMember = partyMemberId
                 ? this.party.find(e => e.id === partyMemberId)
                 : randomEntry(
@@ -1137,7 +1141,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                     )
                 );
 
-            if (partyMember === null) {
+            if (! partyMember) {
                 console.debug("No party members to talk to", { partyMemberId });
                 return;
             }
@@ -1147,7 +1151,11 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             );
 
             const showPortrait = ! BattleSystem.isActive && partyMember?.type;
-            partyMember.say(partyMember.generateStatement(), showPortrait);
+            partyMember.say(
+                partyMember.generateStatement(playerMessage),
+                showPortrait,
+                onTalkEnd
+            );
         },
     };
 

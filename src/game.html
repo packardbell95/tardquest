@@ -8,8 +8,14 @@
     <title>TARDQUEST</title>
     <script>
         // Early SW registration
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('scripts/sw.js').catch(()=>{});
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("scripts/sw.js").catch(e => {
+                const errorMessage = e?.message ?? "Unknown error";
+                console.error(
+                    `Unexpected serviceWorker error: ${errorMessage}`,
+                    { e }
+                );
+            });
         }
     </script>
 </head>
@@ -35,11 +41,15 @@
             </div>
         </div>
         <div id="inputBox">
-            <input type="text" id="persuadeInput" placeholder="Say your piece...">
+            <input
+                type="text"
+                id="persuadeInput"
+                placeholder="Say your piece..."
+            >
             <button
                 id="confirmInputBox"
                 title="Confirm"
-                onclick="submitPersuasion()"
+                onclick="GameControl.handlePersuasionInput()"
             ></button>
             <button
                 id="closeInputBox"
@@ -3954,7 +3964,7 @@
                 }
 
                 if (e.key === "Enter") {
-                    submitPersuasion();
+                    GameControl.handlePersuasionInput();
                 }
             }
         );
@@ -4469,10 +4479,14 @@
                 ! menu.isOpen();
 
             if (talkToParty) {
-                // @TODO Placeholder behavior. Update this to take player input
-                playerEntity.talk();
-                // speakingOutsideCombat = true;
-                // tryPersuade(e);
+                GameControl.openPersuasionInputBox(playerInput => {
+                    GameControl.disableControls();
+                    const message = playerInput || "...";
+
+                    playerEntity.leader.say(message, true, () => {
+                        playerEntity.talk(null, playerInput);
+                    });
+                });
                 return;
             }
 
