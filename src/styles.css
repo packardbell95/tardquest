@@ -1670,8 +1670,8 @@ a:link {
     grid-template-rows: 110px 184px 162px 148px 30px;
     grid-template-areas:
         "battleLog  battleLog   battleLog"
-        "topLeft    viewport    inventory"
-        "stats      viewport    inventory"
+        "topLeft    viewport    rightSidebar"
+        "stats      viewport    rightSidebar"
         "controls   party       playerInput"
         "bottomBar  bottomBar   bottomBar";
 }
@@ -1733,7 +1733,7 @@ a:link {
 #stats          { grid-area: stats; }
 #controls       { grid-area: controls; }
 #party          { grid-area: party; overflow: hidden; }
-#inventory      { grid-area: inventory; }
+#rightSidebar   { grid-area: rightSidebar; }
 #playerInput    { grid-area: playerInput; }
 #viewport {
     grid-area: viewport;
@@ -2205,6 +2205,185 @@ a:link {
     background-image: url(assets/interface/ui/next.png);
 }
 
+.portrait {
+    aspect-ratio: 1;
+    mask-position: center;
+    mask-repeat: no-repeat;
+    background-color: #fff;
+    transition: transform 1s ease-in-out;
+
+    mask-image: url(assets/portraits/placeholder.png);
+
+    &.player {
+         mask-image: url(assets/portraits/player.png);
+    }
+    &.snailSentinel {
+         mask-image: url(assets/portraits/snailSentinel.png);
+    }
+    &.stupidDog {
+         mask-image: url(assets/portraits/stupidDog.png);
+    }
+    &.keeperOfTheToiletBowl {
+         mask-image: url(assets/portraits/keeperOfTheToiletBowl.png);
+    }
+    &.mysteriousScooter {
+         mask-image: url(assets/portraits/mysteriousScooter.png);
+    }
+    &.badassFlamingSkeleton {
+         mask-image: url(assets/portraits/badassFlamingSkeleton.png);
+    }
+    &.wangRat {
+         mask-image: url(assets/portraits/wangRat.png);
+    }
+    &.fridgeOfForgottenLeftovers {
+         mask-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
+    }
+    &.lughead {
+         mask-image: url(assets/portraits/lughead.png);
+    }
+    &.pissedOffPoultry {
+         mask-image: url(assets/portraits/pissedOffPoultry.png);
+    }
+    &.krampusElf {
+         mask-image: url(assets/portraits/krampusElf.png);
+    }
+    &.mimic {
+         mask-image: url(assets/portraits/mimic.png);
+    }
+    &.vampire {
+         mask-image: url(assets/portraits/vampire.png);
+    }
+}
+
+.portrait-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    & .portrait {
+        width: 36px;
+        height: 36px;
+    }
+
+    & > .foreground {
+        display: none;
+        pointer-events: none;
+        width: 50px;
+        height: 46.8px;
+        position: absolute;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    &.dead {
+        & .portrait {
+            filter: contrast(0);
+        }
+
+        & .foreground {
+            display: initial;
+            background-image: url(assets/portraits/overlays/x.png);
+        }
+    }
+
+    & .turn-number {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+    }
+}
+
+
+#rightSidebar {
+    overflow-y: hidden;
+}
+
+#battleQueueSection {
+    box-sizing: border-box;
+    border-bottom: 1px solid #fff;
+    height: 250px;
+    overflow: hidden;
+}
+
+#battleQueueSection,
+#battleQueueSection + #inventory {
+    transition: transform .1s ease-in;
+}
+
+#battleQueueSection:not(.open),
+#battleQueueSection:not(.open) + #inventory {
+    transform: translateY(-250px);
+}
+
+#battleQueueSection.open,
+#battleQueueSection.open + #inventory {
+    transform: translateY(0);
+}
+
+#battleQueueSection #battleQueue {
+    filter: brightness(0);
+    transition: filter 1.4s ease-in;
+}
+
+#battleQueueSection.open #battleQueue {
+    filter: brightness(1);
+}
+
+#battleQueue {
+    height: 234px;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    & > div {
+        --x: 0;
+        --y: 0;
+
+        position: absolute;
+
+        transform: translate(var(--x), var(--y));
+        transition: transform 300ms ease;
+
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+    /*
+        width: 36px;
+        height: 36px;
+    */
+
+        width: 50px;
+        height: 46.8px;
+
+
+
+
+
+        /*
+
+
+        --translate-x: 0;
+        --scroll-duration: 5s;
+        --steps: 1;
+
+        width: fit-content;
+        height: 23.4px;
+        padding: 0 1ch;
+        line-height: 23.4px;
+        transform: translateX(0);
+        transition: transform var(--scroll-duration);
+        transition-timing-function: steps(var(--steps));
+
+        &:hover {
+            transform: translateX(var(--translate-x ));
+        }
+        */
+    }
+}
+
 #inventorySidebarCloseButton {
     width: 100%;
 
@@ -2557,9 +2736,9 @@ a:link {
 }
 
 .party-member {
-    gap: 2px;
+    gap: 1ch;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 
     &.placeholder {
         & .name {
@@ -2573,20 +2752,32 @@ a:link {
             border-color: #262626 #1A1A1A #1A1A1A #262626;
         }
     }
+
+    & > .portrait {
+        width: 35px;
+        height: 35px;
+    }
+
+    & > .container {
+        flex-grow: 1;
+        gap: 2px;
+        display: flex;
+        flex-direction: column;
+    }
 }
 
-.party-member > .info {
+.party-member .info {
     display: flex;
     flex-direction: row;
     gap: 10px;
     align-items: center;
 }
 
-.party-member > .info > progress-bar {
+.party-member .info > progress-bar {
     flex-grow: 1;
 }
 
-.party-member > .info > .buttons {
+.party-member .info > .buttons {
     display: flex;
     flex-direction: row;
     gap: 4px;
@@ -3316,6 +3507,7 @@ dialog.modal::backdrop {
     inset: 0;
     pointer-events: none;
     background: #f00;
+    mix-blend-mode: darken;
 
     --center-x: 50%;
     --center-y: 50%;

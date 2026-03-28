@@ -246,7 +246,12 @@
                     <div class="touch" onclick="move('forward')"></div>
                 </div>
                 <div class="combat">
-                    <div class="attack" onclick="playerAttack()"></div>
+                    <div
+                        class="attack"
+                        onclick="playerAttack()"
+                        onmouseenter="previewBattleMove('attack')"
+                        onmouseleave="playerMouseLeave()"
+                    ></div>
                 </div>
             </div>
         </div>
@@ -261,65 +266,71 @@
             </div>
             <div id="partyMembers"></div>
         </div>
-        <div id="inventory">
-            <div id="inventorySidebarTitle" class="ui-header">Inventory</div>
-            <button
-                id="inventorySidebarCloseButton"
-                class="hidden"
-                onclick="InventorySidebar.open('main')"
-            ></button>
-            <button
-                id="inventorySidebarScrollUp"
-                class="hidden"
-                onClick="InventorySidebar.scrollUp()"
-            ></button>
-            <div name="main">
-                <button
-                    class="items"
-                    onclick="InventorySidebar.open('items')"
-                >
-                    <div class="container">
-                        <div class="icon"></div>
-                        <div class="label">Items</div>
-                    </div>
-                </button>
-                <button
-                    class="weapons"
-                    onclick="InventorySidebar.open('weapons')"
-                >
-                    <div class="container">
-                        <div class="icon"></div>
-                        <div class="label">Weapons</div>
-                    </div>
-                </button>
-                <button
-                    class="armor"
-                    onclick="InventorySidebar.open('armor')"
-                >
-                    <div class="container">
-                        <div class="icon"></div>
-                        <div class="label">Armor</div>
-                    </div>
-                </button>
-                <button
-                    class="rings"
-                    onclick="InventorySidebar.open('rings')"
-                >
-                    <div class="container">
-                        <div class="icon"></div>
-                        <div class="label">Rings</div>
-                    </div>
-                </button>
+        <div id="rightSidebar">
+            <div id="battleQueueSection">
+                <div class="ui-header">Battle Queue</div>
+                <div id="battleQueue"></div>
             </div>
-            <div name="items" class="hidden"></div>
-            <div name="weapons" class="hidden"></div>
-            <div name="armor" class="hidden"></div>
-            <div name="rings" class="hidden"></div>
-            <button
-                id="inventorySidebarScrollDown"
-                class="hidden"
-                onClick="InventorySidebar.scrollDown()"
-            ></button>
+            <div id="inventory">
+                <div id="inventorySidebarTitle" class="ui-header">Inventory</div>
+                <button
+                    id="inventorySidebarCloseButton"
+                    class="hidden"
+                    onclick="InventorySidebar.open('main')"
+                ></button>
+                <button
+                    id="inventorySidebarScrollUp"
+                    class="hidden"
+                    onClick="InventorySidebar.scrollUp()"
+                ></button>
+                <div name="main">
+                    <button
+                        class="items"
+                        onclick="InventorySidebar.open('items')"
+                    >
+                        <div class="container">
+                            <div class="icon"></div>
+                            <div class="label">Items</div>
+                        </div>
+                    </button>
+                    <button
+                        class="weapons"
+                        onclick="InventorySidebar.open('weapons')"
+                    >
+                        <div class="container">
+                            <div class="icon"></div>
+                            <div class="label">Weapons</div>
+                        </div>
+                    </button>
+                    <button
+                        class="armor"
+                        onclick="InventorySidebar.open('armor')"
+                    >
+                        <div class="container">
+                            <div class="icon"></div>
+                            <div class="label">Armor</div>
+                        </div>
+                    </button>
+                    <button
+                        class="rings"
+                        onclick="InventorySidebar.open('rings')"
+                    >
+                        <div class="container">
+                            <div class="icon"></div>
+                            <div class="label">Rings</div>
+                        </div>
+                    </button>
+                </div>
+                <div name="items" class="hidden"></div>
+                <div name="weapons" class="hidden"></div>
+                <div name="armor" class="hidden"></div>
+                <div name="rings" class="hidden"></div>
+                <button
+                    id="inventorySidebarScrollDown"
+                    class="hidden"
+                    onClick="InventorySidebar.scrollDown()"
+                ></button>
+            </div>
         </div>
         <div id="playerInput">
             <div class="section navigation hidden">
@@ -419,6 +430,8 @@
                                 </div>
                             '
                             onclick="playerAttack()"
+                            onmouseenter="previewBattleMove('attack')"
+                            onmouseleave="playerMouseLeave()"
                         ></button>
                         <button
                             name="persuade"
@@ -429,6 +442,8 @@
                                 </div>
                             '
                             onclick="tryPersuade()"
+                            onmouseenter="previewBattleMove('persuade')"
+                            onmouseleave="playerMouseLeave()"
                         ></button>
                         <button
                             name="run"
@@ -439,6 +454,8 @@
                                 </div>
                             '
                             onclick="tryRun()"
+                            onmouseenter="previewBattleMove('run')"
+                            onmouseleave="playerMouseLeave()"
                         ></button>
                     </div>
                 </div>
@@ -589,6 +606,7 @@
     </script>
     <script src="scripts/game/Map/TardQuestMapGenerator.js"></script>
     <script src="scripts/game/Map/TardQuestMinimapTooltipGenerator.js"></script>
+    <script src="scripts/game/BattleQueueSidebar.js"></script>
     <script src="scripts/game/GameControl.js"></script>
     <script src="scripts/game/TardQuestMenus.js"></script>
     <script>
@@ -1977,6 +1995,10 @@
                 // partyMember.refreshProgressionStat = refreshProgressionStat;
                 $stats.dataset.partyMemberId = partyMember.id;
 
+                const $portrait = $stats.querySelector(".portrait");
+                $portrait.classList.add(partyMember.type);
+                $portrait.style.backgroundColor = partyMember.color;
+
                 const $name = $stats.querySelector(".name");
                 $name.textContent = partyMember.name;
 
@@ -2168,10 +2190,17 @@
                 $placeholder.className = "party-member placeholder";
                 $placeholder.dataset.partyMemberId = "???";
 
+                const $portrait = document.createElement("div");
+                $portrait.className = "portrait";
+                $placeholder.appendChild($portrait);
+
+                const $container = document.createElement("div");
+                $container.className = "container";
+
                 const $name = document.createElement("div");
                 $name.className = "name";
                 $name.innerText = "Gabe Newell";
-                $placeholder.appendChild($name);
+                $container.appendChild($name);
 
                 const $info = document.createElement("div");
                 $info.className = "info";
@@ -2199,7 +2228,9 @@
                 $releaseButton.textContent = "Release";
                 $info.appendChild($releaseButton);
 
-                $placeholder.appendChild($info);
+                $container.appendChild($info);
+                $placeholder.appendChild($container);
+
                 return $placeholder;
             };
 
@@ -2207,9 +2238,17 @@
                 console.log("🔦 highlightPartyMember() called", { partyMemberId });
 
                 for (const partyMember of this.party) {
-                    partyMember.id === partyMemberId
-                        ? partyMember.$stats?.classList.add("highlight")
-                        : partyMember.$stats?.classList.remove("highlight");
+                    if (partyMember.id === partyMemberId) {
+                        partyMember.$stats?.classList.add("highlight");
+                        BattleQueueSidebar.highlight(partyMemberId);
+                    } else {
+                        partyMember.$stats?.classList.remove("highlight");
+                    }
+
+                }
+
+                if (partyMemberId === null && this.party.length === 0) {
+                    BattleQueueSidebar.clearHighlight();
                 }
             };
 
@@ -2347,7 +2386,6 @@
             // portrait displays and "Release" doesn't have a fallback handler
             // yet, which can softlock the battle system
             GameControl.disablePartyButtons();
-
             GameControl.disableInventorySidebarEquipmentButtons();
 
             // @TODO Make the advantages actually advantageous
@@ -2370,6 +2408,9 @@
             ViewportAnimation.play(
                 "battle-start-curtain-drop.webm",
                 {
+                    onCurtainClosing: () => {
+                        BattleQueueSidebar.open();
+                    },
                     onCurtainClose: () => {
                         console.log("🎭️ Curtain has closed");
                         sceneRenderer.enemyLayerEnabled = true;
@@ -2378,7 +2419,10 @@
                     onEnd: () => {
                         console.info("Playback complete!");
                         render();
-                        BattleSystem.nextMove();
+
+                        if (entityAdvantage === "enemy") {
+                            BattleSystem.nextMove();
+                        }
                     },
                 }
             );
@@ -2392,18 +2436,36 @@
                 if (canMove) {
                     Portrait.show(partyMember.type, partyMember.color);
                     this.playerEntity?.highlightPartyMember?.(partyMember.id);
+                    console.log("Selected", { partyMember });
                     break;
                 }
             }
 
+            BattleQueueSidebar.refresh();
             GameControl.enableControls();
         };
 
         BattleSystem.onCommandPhaseEnd = function() {
             GameControl.disableControls();
+            BattleQueueSidebar.refresh();
         };
 
         BattleSystem.onQueueMove = function(move) {
+            const isPlayerMove = BattleSystem.actorIsPlayer(move.actor);
+
+            if (isPlayerMove) {
+                const isMenuMove = [
+                    "use item",
+                    "equip weapon",
+                    "equip armor",
+                    "equip ring",
+                ].includes(move.type);
+
+                if (isMenuMove) {
+                    InventorySidebar.open("main");
+                }
+            }
+
             const partySize = this.playerEntity.party.length;
             this.playerPartyMemberIndex = this.playerEntity.party
                 .findIndex(e => e.id === move.actor.id) + 1;
@@ -2559,7 +2621,7 @@
             GameControl.enableControls();
             GameControl.enablePartyButtons();
             GameControl.enableInventorySidebarEquipmentButtons();
-            playerEntity?.highlightPartyMember?.();
+            playerEntity.highlightPartyMember?.();
             playerEntity.checkForDeath();
             enemyEntity.checkForDeath();
 
@@ -2589,7 +2651,12 @@
                                 sceneRenderer.enemyLayerEnabled = false;
                                 render();
                             },
+                            onCurtainOpening: () => {
+                                InventorySidebar.close();
+                                BattleQueueSidebar.close();
+                            },
                             onEnd: () => {
+                                // InventorySidebar.open("main");
                                 console.info("Playback complete!");
                                 playerEntity.purgeDeadPartyMembers();
                                 enemyEntity.purgeDeadPartyMembers();
@@ -3732,6 +3799,49 @@
             // The battle system already supports it
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
             BattleSystem.attack(activePartyMember, enemyPartyMember);
+        }
+
+        function playerMouseLeave() {
+            if (! BattleSystem.isActive) {
+                return;
+            }
+
+            BattleQueueSidebar.refresh();
+        }
+
+        function previewBattleMove(moveType) {
+            if (! BattleSystem.isActive) {
+                return;
+            }
+
+            const index = BattleSystem.playerPartyMemberIndex;
+            const activePartyMember = BattleSystem.playerEntity.party[index];
+
+            switch (moveType) {
+                case "attack":
+                    if (BattleSystem.attackRestricted(activePartyMember)) {
+                        return;
+                    }
+                    break;
+                case "persuade":
+                    if (BattleSystem.persuadeRestricted(activePartyMember)) {
+                        return;
+                    }
+                    break;
+                case "run":
+                    if (BattleSystem.runRestricted(activePartyMember)) {
+                        return;
+                    }
+                    break;
+                default:
+                    console.error("Unknown move type", { moveType });
+                    return;
+            }
+
+            BattleQueueSidebar.refresh([{
+                type: moveType,
+                actor: activePartyMember,
+            }]);
         }
 
         function playRandomAmbientSfx() {

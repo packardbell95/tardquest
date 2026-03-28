@@ -4,16 +4,45 @@
  * ℹ️ Different moves and statuses will affect the turn order
  */
 const BattleSystem = {
+    // Whether or not the battle system is active
     isActive: false,
+
+    // The player entity that's participating in the fight
     playerEntity: null,
+
+    // The opponent entity that's participating in the fight
     enemyEntity: null,
+
+    // Which side, if either, gets a free turn
+    // Valid values include "player", "enemy", or null
     entityAdvantage: null,
+
+    // A randomized list of all party member IDs used to break speed ties
+    // This list is generated at the start of each battle
     tiebreakerScale: [],
+
+    // The moves that are registered and executed for a given turn
     queuedMoves: [],
+
+    // @TODO Implement persuasion limits
+    // The number of persuasion attempts used, keyed by party member ID
     persuasionAttempts: {},
+
+    // Which members of either side will change teams post-battle
     persuadedMembers: {
         joiningPlayer: [],
         joiningEnemy: [],
+    },
+
+    // Speed stat adjustments based on the type of move being made
+    _moveSpeed: {
+        run: 10,
+        useItem: 7,
+        persuade: 5,
+        equipRing: 6,
+        equipWeapon: 5,
+        equipArmor: 4,
+        attack: 0,
     },
 
     /**
@@ -38,8 +67,11 @@ const BattleSystem = {
      */
     battleRestrictions: [],
 
+    // Tracks which of the player's party members are queuing moves
+    // This is updated outside of the battle system, but is reset within it
     playerPartyMemberIndex: 0,
 
+    // Various event callbacks used to tie into the battle system
     onEncounter: null,
     onQueueMove: null,
     onMoveStart: null,
@@ -57,6 +89,13 @@ const BattleSystem = {
     onEquipRingEnd: null,
     onEncounterEnd: null,
 
+    /**
+     * Start a fight between two opponents
+     *
+     * @param MapEntity playerEntity The player's entity
+     * @param MapEntity enemyEntity The opponent's entity
+     * @param "player"|"enemy"|null entityAdvantage Which side gets a free turn
+     */
     startEncounter: function(
         playerEntity,
         enemyEntity,
@@ -99,6 +138,8 @@ const BattleSystem = {
              ? entityAdvantage
              : null;
 
+        console.log("Entity advantage", { who: this.entityAdvantage });
+
         this.onEncounter?.(
             this.playerEntity,
             this.enemyEntity,
@@ -106,8 +147,21 @@ const BattleSystem = {
         );
 
         this.playerPartyMemberIndex = 0;
+
+        if (this.entityAdvantage !== "player") {
+            this.queueEnemyMoves();
+        }
     },
 
+    /**
+     * Sets restrictions on any moves within the battle system
+     *
+     * Restrictions may be set on either MapEntity via a "battleRestrictions"
+     * array. These will prevent moves of those class from being registered or
+     * executed. For instance, if either MapEntity has a battleRestrictions
+     * array containing "playerEntityRun", then the player's team cannot run
+     * from the battle for the duration of the fight
+     */
     setBattleRestrictions: function() {
         const validRestrictions = [
             "playerEntityAttack",
@@ -126,7 +180,12 @@ const BattleSystem = {
             "enemyEntityEquipRing",
         ];
 
-        this.battleRestrictions = [];
+        // Restricting these because they aren't implemented yet
+        this.battleRestrictions = [
+            "playerEntityEquipWeapon",
+            "playerEntityEquipArmor",
+            "playerEntityEquipRing",
+        ];
 
         for (const entity of [this.playerEntity, this.enemyEntity]) {
             if (! Array.isArray(entity.battleRestrictions)) {
@@ -149,6 +208,9 @@ const BattleSystem = {
         return partyMember.parent.id === this.playerEntity.id;
     },
 
+    // @TODO Make sure that these checks also include effective trait lookups
+    //       for the given party member, eg:
+    //       partyMember?.getEffectiveTrait("canAttack")
     attackRestricted: function(partyMember) {
         return this._hasBattleRestriction(partyMember, "Attack");
     },
@@ -226,7 +288,7 @@ const BattleSystem = {
     },
 
     /**
-     * @param outcome string "player won"|"enemy won"|"player ran"|"enemy ran"
+     * @param string outcome "player won"|"enemy won"|"player ran"|"enemy ran"
      */
     endEncounter: function(outcome) {
         this.onEncounterEnd?.(outcome, this.playerEntity, this.enemyEntity);
@@ -325,35 +387,104 @@ const BattleSystem = {
             }
 
             const target = this.getRandomPlayerPartyMember();
-            this.attack(actor, target);
+            target
+                ? this.attack(actor, target)
+                : console.error(
+                    "No random player party member selected",
+                    { playerEntity: this.playerEntity }
+                );
         }
     },
 
+    getOrderedMoves: function(tentativeMoves = []) {
+        const seenActorIds = [];
+        const filteredTentativeMoves = [];
+
+        for (const move of tentativeMoves) {
+            if (! Number.isInteger(move?.actor?.id)) {
+                console.error("Invalid move encountered", { move });
+                continue;
+            }
+
+            if (seenActorIds.includes(move.actor.id)) {
+                console.error(
+                    "The same actor was supplied with multiple tentative moves",
+                    { move }
+                );
+                continue;
+            }
+
+            seenActorIds.push(move.actor.id);
+            filteredTentativeMoves.push(move);
+        }
+
+        const partyMembers = this.playerEntity.party
+            .concat(this.enemyEntity.party);
+
+        for (const partyMember of partyMembers) {
+            const skipBackfill =
+                seenActorIds.includes(partyMember.id) ||
+                this.queuedMoves.some(e => e.actor.id === partyMember.id);
+
+            if (skipBackfill) {
+                continue;
+            }
+
+            filteredTentativeMoves.push({
+                type: "attack", // Assume attack as the default move in battle
+                actor: partyMember,
+            });
+        }
+
+        return this.queuedMoves
+            .filter(e => ! seenActorIds.includes(e.actor.id))
+            .concat(filteredTentativeMoves)
+            .sort((a, b) => {
+                console.log("Ordering moves", { a, b });
+                const aIsDead = a.actor.isDead();
+                const bIsDead = b.actor.isDead();
+
+                if (aIsDead && ! bIsDead) {
+                    return 1;
+                } else if (bIsDead && ! aIsDead) {
+                    return -1;
+                }
+
+                const aPartyMemberSpeed = a.actor.getEffectiveCoreStat("speed");
+                const bPartyMemberSpeed = b.actor.getEffectiveCoreStat("speed");
+
+                const aMoveSpeed = this._moveSpeed[a.type] ?? 0;
+                const bMoveSpeed = this._moveSpeed[b.type] ?? 0;
+
+                const aSpeed = aPartyMemberSpeed + aMoveSpeed;
+                const bSpeed = bPartyMemberSpeed + bMoveSpeed;
+
+                console.log("Speed check", {
+                    a, b, aSpeed, bSpeed, aPartyMemberSpeed, bPartyMemberSpeed,
+                    aMoveSpeed, bMoveSpeed,
+                });
+
+                if (aSpeed < bSpeed) {
+                    return 1;
+                }
+
+                if (aSpeed > bSpeed) {
+                    return -1;
+                }
+
+                return (
+                    this.tiebreakerScale.indexOf(a.actor.id) <
+                    this.tiebreakerScale.indexOf(b.actor.id)
+                ) ? 1 : -1;
+            });
+    },
+
     orderMoves: function() {
-        this.queuedMoves.sort((a, b) => {
-            console.log("Ordering moves", { a, b });
-
-            const aSpeed = a.actor.getEffectiveCoreStat("speed");
-            const bSpeed = b.actor.getEffectiveCoreStat("speed");
-
-            if (aSpeed < bSpeed) {
-                return 1;
-            }
-
-            if (aSpeed > bSpeed) {
-                return -1;
-            }
-
-            return (
-                this.tiebreakerScale.indexOf(a.actor.id) <
-                this.tiebreakerScale.indexOf(b.actor.id)
-            ) ? 1 : -1;
-        });
+        this.queuedMoves = this.getOrderedMoves();
     },
 
     commit: function() {
         this.onCommandPhaseEnd?.();
-        this.queueEnemyMoves();
         this.orderMoves();
         console.log(
             "Battle system is ready to process moves",
@@ -369,7 +500,7 @@ const BattleSystem = {
     },
 
     nextMove: function() {
-        console.log("nextMove() called", {moves: this.queuedMoves});
+        console.log("nextMove() called", { moves: this.queuedMoves });
         const playerLost = this.playerEntity.leader.isDead() ||
             this.playerEntity.party.filter(e => ! e.isDead()).length === 0;
         const enemyLost =
@@ -401,6 +532,7 @@ const BattleSystem = {
                 this.playerPartyMemberIndex = 0;
 
                 if (this.isActive) {
+                    this.queueEnemyMoves();
                     this.onCommandPhaseStart?.();
                 }
             }

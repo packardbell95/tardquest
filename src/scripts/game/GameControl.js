@@ -342,8 +342,7 @@ const GameControl = {
 
     updateCombatControls: () => {
         const index = BattleSystem.playerPartyMemberIndex;
-        const activePartyMember =
-            BattleSystem.playerEntity?.party?.[index];
+        const activePartyMember = BattleSystem.playerEntity?.party?.[index];
 
         document
             .querySelectorAll("#playerInput .section.battle [name]")

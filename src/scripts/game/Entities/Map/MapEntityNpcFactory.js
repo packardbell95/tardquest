@@ -253,10 +253,15 @@ const MapEntityNpcFactory = {
                     }
                     this.leader.say(
                         "Ah, whatever. Fucker. You win this time...",
-                        false
+                        false,
+                        () => playSFX("ran")
                     );
                 } else {
-                    this.leader.say("Tough luck, kid! Heh heh heh!", false);
+                    this.leader.say(
+                        "Tough luck, kid! Heh heh heh!",
+                        false,
+                        () => playSFX("ran")
+                    );
                 }
 
                 onFinish?.();

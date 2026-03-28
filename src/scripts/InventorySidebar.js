@@ -219,8 +219,28 @@ const InventorySidebar = {
             return;
         }
 
+        InventorySidebar.updateRightSidebar(sectionName);
+
         playSFX(sectionName === "main" ? "uiCancel" : "inventoryOpen");
         $section.classList.remove("hidden");
+    },
+
+    updateRightSidebar: (sectionName) => {
+        if (! BattleSystem.isActive) {
+            return;
+        }
+
+        const $battleQueueSection =
+            document.getElementById("battleQueueSection");
+
+        if (! $battleQueueSection) {
+            console.error("No element for the battle queue section was found");
+            return;
+        }
+
+        sectionName === "main"
+            ? $battleQueueSection.classList.add("open")
+            : $battleQueueSection.classList.remove("open");
     },
 
     // Refreshes the items in a given section, or all sections if no
@@ -349,10 +369,7 @@ const InventorySidebar = {
         const $items = document.querySelector(`#inventory [name="items"]`);
 
         // Create and update item buttons
-        const playerItemIds =
-            Object.keys(playerEntity.inventory.contents.items);
-
-        for (const itemId of playerItemIds) {
+        for (const itemId of Object.keys(ITEMS)) {
             InventorySidebar.refreshItem(itemId);
         }
     },
@@ -360,7 +377,7 @@ const InventorySidebar = {
     refreshItem: (itemId) => {
         const $items = document.querySelector(`#inventory [name="items"]`);
         let $button = $items.querySelector(`[data-id="${itemId}"]`);
-        const quantity = playerEntity.inventory.contents.items[itemId];
+        const quantity = playerEntity.inventory.contents.items[itemId] || 0;
 
         if (! $button && quantity > 0) {
             // Create the item entry in the list

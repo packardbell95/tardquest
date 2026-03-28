@@ -447,12 +447,6 @@ const TardQuestMapGenerator = {
                 return;
             }
 
-            // @TODO Add the animation, obviously
-            updateBattleLog(
-                "OH SHIT THE VAMPIRE HAS SPAWNED AND I HAVEN'T EVEN ADDED " +
-                "THE CODE FOR THE COOL FOCUS EFFECT BACK IN YET!"
-            );
-
             this.vampireEntity = MapEntityEnemyFactory.vampire(
                 1,
                 this.x,
