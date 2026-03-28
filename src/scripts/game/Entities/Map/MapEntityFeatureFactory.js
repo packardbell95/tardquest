@@ -13,11 +13,6 @@ const MapEntityFeatureFactory = {
 
         exit.getDisplayName = () => "🏁 Exit";
         exit.getDisplayCharacter = () => "E";
-
-        // @TODO Put targeting and movement logic elsewhere so that this does
-        // not have to be reset for immobile entities
-        exit.targetCheck = () => {};
-
         exit.onEnter = function(gameMap, entity) {
             console.log("onEnter()", { entity });
             if (entity?.type === "player") {
@@ -40,8 +35,6 @@ const MapEntityFeatureFactory = {
         const healingTile = MapEntityBuilder("healingTile", x, y);
         healingTile.getDisplayName = () => "🟩 Healing Tile";
         healingTile.getDisplayCharacter = () => "H";
-        healingTile.targetCheck = () => {};
-
         healingTile.onEnter = function(gameMap, entity) {
             function performHeal() {
                 const results = {
@@ -138,8 +131,6 @@ const MapEntityFeatureFactory = {
         const treasureChest = MapEntityBuilder("treasureChest", x, y);
         treasureChest.getDisplayName = () => "🎁 Treasure Chest";
         treasureChest.getDisplayCharacter = () => "T";
-        treasureChest.targetCheck = () => {};
-
         treasureChest.onTouch = function(gameMap, entity) {
             if (entity?.type === "player") {
                 const treasureChest = this;
@@ -288,7 +279,6 @@ const MapEntityFeatureFactory = {
         const sigil = MapEntityBuilder("sigil", x, y);
         sigil.getDisplayName = () => "✡️ Sigil";
         sigil.getDisplayCharacter = () => "✡";
-        sigil.targetCheck = () => {};
 
         return sigil;
     },

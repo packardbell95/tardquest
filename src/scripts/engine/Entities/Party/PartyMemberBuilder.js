@@ -532,11 +532,9 @@ function PartyMemberBuilder(name, stats = {}) {
                     statement += " ";
                 }
 
-                if (usePlayerMessageFragment) {
-                    statement += `<span class="player">${fragment}</span>`;
-                } else {
-                    statement += fragment;
-                }
+                statement += usePlayerMessageFragment
+                    ? `<span class="player">${fragment}</span>`
+                    : fragment;
             }
 
             return statement;

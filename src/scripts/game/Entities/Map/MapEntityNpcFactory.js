@@ -16,10 +16,6 @@ const MapEntityNpcFactory = {
         };
 
         merchant.getDisplayCharacter = () => "M";
-
-        // @TODO Put targeting and movement logic elsewhere so that this does
-        // not have to be reset for immobile entities
-        merchant.targetCheck = () => {};
         merchant.addPartyMember(TardQuestPartyMemberFactory.merchant());
 
         // Wares are not the same as the merchant's personal inventory
@@ -143,10 +139,6 @@ const MapEntityNpcFactory = {
         };
 
         gambler.getDisplayCharacter = () => "G";
-
-        // @TODO Put targeting and movement logic elsewhere so that this does
-        // not have to be reset for immobile entities
-        gambler.targetCheck = () => {};
         gambler.addPartyMember(TardQuestPartyMemberFactory.gambler());
 
         gambler.onTouch = function(gameMap, entity) {
@@ -339,10 +331,6 @@ const MapEntityNpcFactory = {
         };
 
         erok.getDisplayCharacter = () => "E";
-
-        // @TODO Put targeting and movement logic elsewhere so that this does
-        // not have to be reset for immobile entities
-        erok.targetCheck = () => {};
         erok.addPartyMember(TardQuestPartyMemberFactory.erok());
 
         erok.onTouch = function(gameMap, entity) {
