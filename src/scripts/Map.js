@@ -499,11 +499,42 @@ class GameMap {
     }
 
     sortEntities(entities = []) {
-        const types = ["player", "creature", "item", "trap", "terrain"];
+        return entities.sort((a, b) => {
+            const aIsPlayer = a.type === "player";
+            const bIsPlayer = b.type === "player";
 
-        return entities.sort((a, b) =>
-            types.indexOf(b.type) < types.indexOf(a.type)
-        );
+            if (aIsPlayer && ! bIsPlayer) {
+                return -1;
+            } else if (! aIsPlayer && bIsPlayer) {
+                return 1;
+            }
+
+            const aIsTangible = typeof a.onTouch === "function";
+            const bIsTangible = typeof b.onTouch === "function";
+
+            if (aIsTangible && ! bIsTangible) {
+                return -1;
+            } else if (! aIsTangible && bIsTangible) {
+                return 1;
+            }
+
+            const aIsEnterable = typeof a.onEnter === "function";
+            const bIsEnterable = typeof b.onEnter === "function";
+
+            if (aIsEnterable && ! bIsEnterable) {
+                return -1;
+            } else if (! aIsEnterable && bIsEnterable) {
+                return 1;
+            }
+
+            if (a.id > b.id) {
+                return -1;
+            } else if (a.id < b.id) {
+                return 1;
+            }
+
+            return 0;
+        });
     }
 
     getEntitiesAt(x, y) {
@@ -517,10 +548,6 @@ class GameMap {
             return [];
         }
 
-        // @TODO Determine if sorting entities here is really necessary
-        // The only reason it's here is to help with cell interactions,
-        // but if a single interactible entitiy or feature is present, then
-        // does it really matter?
         return this.sortEntities(out);
     }
 
