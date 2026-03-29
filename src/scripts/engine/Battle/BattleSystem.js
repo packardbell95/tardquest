@@ -396,6 +396,29 @@ const BattleSystem = {
         }
     },
 
+    getBackfilledOrderedMoves: function(tentativeMoves = []) {
+        const backfilledMoves = [...this.queuedMoves, ...tentativeMoves];
+
+        const partyMembers = this.playerEntity.party
+            .concat(this.enemyEntity.party);
+
+        for (const partyMember of partyMembers) {
+            const skipBackfill = backfilledMoves
+                .some(e => e.actor.id === partyMember.id);
+
+            if (skipBackfill) {
+                continue;
+            }
+
+            const isPlayer = this.actorIsPlayer(partyMember);
+            const type = isPlayer && ! partyMember.isDead() ? "attack" : null;
+
+            backfilledMoves.push({ actor: partyMember, type });
+        }
+
+        return this.getOrderedMoves(backfilledMoves);
+    },
+
     getOrderedMoves: function(tentativeMoves = []) {
         const seenActorIds = [];
         const filteredTentativeMoves = [];
@@ -418,29 +441,19 @@ const BattleSystem = {
             filteredTentativeMoves.push(move);
         }
 
-        const partyMembers = this.playerEntity.party
-            .concat(this.enemyEntity.party);
-
-        for (const partyMember of partyMembers) {
-            const skipBackfill =
-                seenActorIds.includes(partyMember.id) ||
-                this.queuedMoves.some(e => e.actor.id === partyMember.id);
-
-            if (skipBackfill) {
-                continue;
-            }
-
-            filteredTentativeMoves.push({
-                type: "attack", // Assume attack as the default move in battle
-                actor: partyMember,
-            });
-        }
-
         return this.queuedMoves
             .filter(e => ! seenActorIds.includes(e.actor.id))
             .concat(filteredTentativeMoves)
             .sort((a, b) => {
-                console.log("Ordering moves", { a, b });
+                const aSuppressed = ! a.type;
+                const bSuppressed = ! b.type;
+
+                if (aSuppressed && ! bSuppressed) {
+                    return 1;
+                } else if (! aSuppressed && bSuppressed) {
+                    return -1;
+                }
+
                 const aIsDead = a.actor.isDead();
                 const bIsDead = b.actor.isDead();
 

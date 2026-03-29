@@ -107,7 +107,8 @@ const BattleQueueSidebar = {
         }
 
         const partyMembers = this.getPartyMembers();
-        const orderedMoves = BattleSystem.getOrderedMoves(tentativeMoves);
+        const orderedMoves =
+            BattleSystem.getBackfilledOrderedMoves(tentativeMoves);
         console.log({ partyMembers, orderedMoves });
 
         for (const partyMember of partyMembers) {

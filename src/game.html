@@ -1945,7 +1945,6 @@
             GameControl.disablePartyButtons();
             GameControl.disableInventorySidebarEquipmentButtons();
 
-            // @TODO Make the advantages actually advantageous
             if (entityAdvantage === "player") {
                 playerEntity.leader.say("SURPRISE, MOTHERFUCKER!");
                 updateBattleLog(
@@ -1953,6 +1952,8 @@
                     `${enemyEntity.leader.name}!`
                 );
             } else if (entityAdvantage === "enemy") {
+                GameControl.disableControls();
+
                 playSFX("scream");
                 updateBattleLog(
                     `${enemyEntity.leader.name} gets the drop on ` +
