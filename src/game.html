@@ -2282,13 +2282,20 @@
                 isEnemy
             );
             move.actor?.parent?.highlightPartyMember?.(move.actor.id);
+            BattleQueueSidebar.highlight(move.actor.id, move?.target?.id);
 
             const entityIds = [move.actor?.id, move.target?.id].filter(e => e);
             SceneRenderer.highlightEntities(entityIds);
         };
 
         BattleSystem.onMoveEnd = function(move) {
-            console.log({ move });
+            if (move.actor) {
+                BattleQueueSidebar.refreshPortraitStatus(move.actor);
+            }
+
+            if (move.target) {
+                BattleQueueSidebar.refreshPortraitStatus(move.target);
+            }
         };
 
         BattleSystem.onAttackEnd = function(

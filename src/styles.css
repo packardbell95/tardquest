@@ -1203,6 +1203,20 @@ a:link {
     animation: highlightColor 9s infinite alternate linear;
 }
 
+@keyframes targetHighlightColor {
+  0%   { background-color: #f00; }
+  20%  { background-color: #f09; }
+  40%  { background-color: #f00; }
+  60%  { background-color: #f99; }
+  80%  { background-color: #f00; }
+  100% { background-color: #000; }
+}
+
+.target-highlight {
+    background-color: #f00;
+    animation: targetHighlightColor 9s infinite alternate linear;
+}
+
 /** Menu Styles **/
 #menu:not(.hidden) {
     background: #000;

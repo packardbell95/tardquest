@@ -76,7 +76,6 @@ const BattleQueueSidebar = {
         $container.append($background);
 
         const $partyMember = document.createElement("div");
-        // $partyMember.dataset.partyMemberId = partyMember.id;
         $partyMember.classList.add("portrait", partyMember.type);
 
         if (partyMember.color) {
@@ -132,10 +131,7 @@ const BattleQueueSidebar = {
 
             $partyMember.classList.remove("hidden");
 
-            partyMember.isDead()
-                ? $partyMember.classList.add("dead")
-                : $partyMember.classList.remove("dead");
-
+            this.refreshPortraitStatus(partyMember);
             const positionX = (moveIndex & 1) === 0 ? 0 : itemSizeX;
             const positionY = ((moveIndex & ~1) >> 1) * itemSizeY;
 
@@ -151,16 +147,35 @@ const BattleQueueSidebar = {
         }
     },
 
-    highlight: function(partyMemberId) {
-        this._highlight(partyMemberId);
+    refreshPortraitStatus: function(partyMember) {
+        const $partyMember = partyMember.$battleQueueSidebarElement;
+        if (! $partyMember) {
+            console.error(
+                "Party member's battle queue sidebar element disappeared",
+                { partyMember }
+            );
+            return;
+        }
+
+        partyMember.isDead()
+            ? $partyMember.classList.add("dead")
+            : $partyMember.classList.remove("dead");
+    },
+
+    highlight: function(actorPartyMemberId, targetPartyMemberId) {
+        this._highlight(actorPartyMemberId, targetPartyMemberId);
     },
 
     clearHighlight: function() {
         this._highlight();
     },
 
-    _highlight: function(partyMemberId = null) {
-        const classname = "highlight";
+    _highlight: function(
+        actorPartyMemberId = null,
+        targetPartyMemberId = null
+    ) {
+        const actorClassname = "highlight";
+        const targetClassname = "target-highlight";
 
         for (const partyMember of this.getPartyMembers()) {
             const $element = partyMember?.$battleQueueSidebarElement;
@@ -172,9 +187,13 @@ const BattleQueueSidebar = {
                 continue;
             }
 
-            partyMember.id === partyMemberId
-                ? $element.classList.add(classname)
-                : $element.classList.remove(classname);
+            partyMember.id === actorPartyMemberId
+                ? $element.classList.add(actorClassname)
+                : $element.classList.remove(actorClassname);
+
+            partyMember.id === targetPartyMemberId
+                ? $element.classList.add(targetClassname)
+                : $element.classList.remove(targetClassname);
         }
     },
 };
