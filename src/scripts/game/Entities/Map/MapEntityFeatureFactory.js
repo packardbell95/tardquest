@@ -125,6 +125,28 @@ const MapEntityFeatureFactory = {
     },
 
     /**
+     * CRATER
+     */
+    crater: function(x, y) {
+        const crater = MapEntityBuilder("crater", x, y);
+        crater.getDisplayName = () => "⚫️ Crater";
+        crater.getDisplayCharacter = () => "●";
+
+        return crater;
+    },
+
+    /**
+     * BLOODY CRATER
+     */
+    bloodyCrater: function(x, y) {
+        const bloodyCrater = MapEntityBuilder("bloodyCrater", x, y);
+        bloodyCrater.getDisplayName = () => "🔴 Bloody Crater";
+        bloodyCrater.getDisplayCharacter = () => "●";
+
+        return bloodyCrater;
+    },
+
+    /**
      * TREASURE CHEST
      */
     treasureChest: function(x, y) {
@@ -268,6 +290,44 @@ const MapEntityFeatureFactory = {
 
             this.die(entity);
         }
+
+        treasureChest.onExplode = function(gameMap, entity) {
+            const treasureChestWasMimic = this.leader?.type === "mimic";
+            const killedByPlayer = entity.id === playerEntity.id;
+
+            if (treasureChestWasMimic) {
+                const treasure = this.getFullInventoryContents();
+                playSFX("scream");
+
+                if (killedByPlayer) {
+                    updateBattleLog(
+                        `<span class="action">WHAT THE FUCK? That was a ` +
+                        `mimic?!</span> You obtained <span class="BTC">₿ ` +
+                        `${treasure.bitcoins}</span> from the intestines ` +
+                        `spilled from its gaping maw.`
+                    );
+                }
+
+                entity.inventory.giveBitcoins(treasure.bitcoins);
+
+                const bloodyCrater =
+                    MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+                gameMap.addEntity(bloodyCrater);
+            } else {
+                if (killedByPlayer) {
+                    updateBattleLog(
+                        `Gee willikers! You just <span class="action">` +
+                        `destroyed</span> a <span class="friendly">perfectly ` +
+                        `good treasure chest!</span> Oh well.</span>`
+                    );
+                }
+
+                const crater = MapEntityFeatureFactory.crater(this.x, this.y);
+                gameMap.addEntity(crater);
+            }
+
+            this.die(entity);
+        };
 
         return treasureChest;
     },

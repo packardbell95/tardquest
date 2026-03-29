@@ -3029,9 +3029,17 @@ a:link {
     mix-blend-mode: luminosity;
 }
 
+.crater {
+    color: #555;
+}
+
 .scene_character_crater {
     color: #0009 !important;
     background-color: transparent !important;
+}
+
+.bloodyCrater {
+    color: #900;
 }
 
 .scene_character_bloodyCrater {

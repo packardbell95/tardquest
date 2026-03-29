@@ -125,6 +125,28 @@ const MapEntityNpcFactory = {
             );
         };
 
+        merchant.onExplode = function(gameMap, entity) {
+            playSFX("scream");
+            this.leader.say("AIEEEEEEEEEEEEEE!", false);
+
+            const killedByPlayer = entity.id === playerEntity.id;
+
+            if (killedByPlayer) {
+                updateBattleLog(
+                    `You <span class="action">fucking vaporized</span> the ` +
+                    `<span class="friendly">merchant</span>!`
+                );
+            }
+
+            const bloodyCrater =
+                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+            bloodyCrater.getDisplayName = () =>
+                "🔴 <em>Cleanup on aisle three...</em>";
+            gameMap.addEntity(bloodyCrater);
+
+            this.die(entity);
+        };
+
         return merchant;
     },
 
@@ -317,6 +339,31 @@ const MapEntityNpcFactory = {
             }
         }
 
+        gambler.onExplode = function(gameMap, entity) {
+            playSFX("scream");
+            this.leader.say("AUGH!!", false);
+
+            const killedByPlayer = entity.id === playerEntity.id;
+
+            if (killedByPlayer) {
+                const rewardBtc = (5 + Math.round(Math.random() * 5)) * 10;
+                playerEntity.inventory.giveBitcoins(rewardBtc);
+                updateBattleLog(
+                    `The <span class="gambler">gambler</span> has been ` +
+                    `<span class="action">reduced to a confetti of shrapnel ` +
+                    `and bone!</span> You find <span class="BTC">` +
+                    `${rewardBtc} BTC</span> among the remains. Awesome!`
+                );
+            }
+
+            const bloodyCrater =
+                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+            bloodyCrater.getDisplayName = () => "🔴 Post-Explodent Rodent";
+            gameMap.addEntity(bloodyCrater);
+
+            this.die(entity);
+        };
+
         return gambler;
     },
 
@@ -343,6 +390,33 @@ const MapEntityNpcFactory = {
                     { gameMap, entity, touched: this }
                 );
             }
+        };
+
+        erok.onExplode = function(gameMap, entity) {
+            playSFX("scream");
+            this.leader.say("i died oh noes", false);
+
+            const killedByPlayer = entity.id === playerEntity.id;
+
+            if (killedByPlayer) {
+                // You better believe there's a price to pay
+                const previousLuck = playerEntity.leader.stats.core.luck;
+                const badLuck = -Math.min(10, previousLuck - 1);
+                playerEntity.leader.incrementCoreStat("luck", badLuck);
+
+                updateBattleLog(
+                    `OH NO! <span class="friendly">Erok</span> has been ` +
+                    `<span class="action">blown the fuck up!</span> ` +
+                    `You monster... ` +
+                    `<strong class="enemy">${badLuck} LUCK</strong>`
+                );
+            }
+
+            const bloodyCrater =
+                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+            gameMap.addEntity(bloodyCrater);
+
+            this.die(entity);
         };
 
         return erok;
