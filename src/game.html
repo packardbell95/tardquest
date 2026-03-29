@@ -1580,12 +1580,14 @@
                 const $talkButton = $stats.querySelector(".talk");
                 $talkButton.disabled = false;
                 $talkButton.onclick = function() {
+                    this.blur();
                     playerEntity.talk(partyMember.id);
                 };
 
                 const $releaseButton = $stats.querySelector(".release");
                 $releaseButton.disabled = false;
                 $releaseButton.onclick = function() {
+                    this.blur();
                     partyMember.release();
                 };
 
