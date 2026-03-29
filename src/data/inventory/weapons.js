@@ -9,6 +9,7 @@ const WEAPONS = Object.freeze({
         coreStatModifiers: {
             strength: 1,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 4,
         price: 0,
         weight: 0,
@@ -23,6 +24,7 @@ const WEAPONS = Object.freeze({
         coreStatModifiers: {
             strength: 4,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 6,
         price: 20,
         weight: 3,
@@ -37,6 +39,7 @@ const WEAPONS = Object.freeze({
         coreStatModifiers: {
             strength: 6,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 8,
         price: 30,
         weight: 5,
@@ -51,6 +54,7 @@ const WEAPONS = Object.freeze({
         coreStatModifiers: {
             strength: 9,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 12,
         price: 70,
         weight: 7,
@@ -65,6 +69,7 @@ const WEAPONS = Object.freeze({
         coreStatModifiers: {
             strength: 13,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 16,
         price: 90,
         weight: 10,
@@ -72,13 +77,14 @@ const WEAPONS = Object.freeze({
     },
     bludgeoningMace: {
         article: "a",
-        name:
-            "BLUDGEONING MACE",
-        description: "A stick with a spikey metal ball at the end.",
+        name: "BLUDGEONING MACE",
+        description:
+            "A stick with a spikey metal ball at the end.",
         damage: { base: 16, randomMultiplier: 19 },
         coreStatModifiers: {
             strength: 16,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 19,
         price: 150,
         weight: 12,
@@ -88,13 +94,13 @@ const WEAPONS = Object.freeze({
         article: "a",
         name: "DANCE CLUB",
         description:
-            "A club long enough to pole dance on... maybe it is " +
-            "one? You don't know. Legend has it, an obscure " +
-            "forum user once wielded one...",
+            "A club long enough to pole dance on. Maybe it is one? You don't " +
+            "know. Legend has it, an obscure forum user once wielded one...",
         damage: { base: 20, randomMultiplier: 23 },
         coreStatModifiers: {
             strength: 20,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 23,
         price: 200,
         weight: 13,
@@ -109,6 +115,10 @@ const WEAPONS = Object.freeze({
         coreStatModifiers: {
             strength: 30,
         },
+        coreTraitModifiers: {
+            sightRange: 1,
+            sightSensitivity: 64,
+        },
         maxRandomDamageBonus: 35,
         price: 400,
         weight: 20,
@@ -118,12 +128,12 @@ const WEAPONS = Object.freeze({
         article: "a",
         name: "MAGIC PENCIL",
         description:
-            "SpongeBob SquarePants - Season 2, Episode 14B - " +
-            "Frankendoodle.",
+            "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle.",
         damage: { base: 12, randomMultiplier: 50 },
         coreStatModifiers: {
             strength: 12,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 50,
         price: 700,
         weight: 3,
@@ -133,12 +143,13 @@ const WEAPONS = Object.freeze({
         article: "a",
         name: "GOLDEN WANG",
         description:
-            "With the power of the Golden Wang, the Discordian " +
-            "parasite shall perish!",
+            "With the power of the Golden Wang, the Discordian parasite " +
+            "shall perish!",
         damage: { base: 69, randomMultiplier: 69 },
         coreStatModifiers: {
             strength: 69,
         },
+        coreTraitModifiers: {},
         maxRandomDamageBonus: 69,
         price: 6900,
         weight: 69,

@@ -96,10 +96,10 @@ function PartyMemberBuilder(name, stats = {}) {
                     ARMOR[this.equipped?.armor]
                         ?.coreStatModifiers[statName] || 0
                 ) + (
-                    RINGS[this.equipped?.ring?.leftHand]
+                    RINGS[this.equipped?.ring?.left]
                         ?.coreStatModifiers[statName] || 0
                 ) + (
-                    RINGS[this.equipped?.ring?.rightHand]
+                    RINGS[this.equipped?.ring?.right]
                         ?.coreStatModifiers[statName] || 0
                 );
         },
@@ -145,7 +145,7 @@ function PartyMemberBuilder(name, stats = {}) {
             fieldOfView: 90,
             hearingRange: 5,
             persuasionAttempts: 0,
-            hands: ["left", "right"],
+            hands: ["left", "right"], // @TODO Remove?
             canAttack: true,
             canPersuade: false,
             canRun: true,
@@ -160,8 +160,82 @@ function PartyMemberBuilder(name, stats = {}) {
             },
         },
 
-        getEffectiveTrait: function(trait) {
-            return this.traits?.[trait] || null;
+        getEffectiveTrait: function(traitName) {
+            switch (traitName) {
+                // Integer values
+                case "sightRange":
+                case "sightSensitivity":
+                case "fieldOfView":
+                case "hearingRange":
+                case "persuasionAttempts":
+                    return (
+                        (this.traits?.[traitName] || 0) +
+                        (
+                            traitName === "sightRange" &&
+                            this?.parent?.isHoldingTorch
+                                ? 2
+                                : 0
+                        ) +
+                        (
+                            WEAPONS[this.equipped?.weapon]
+                                ?.coreTraitModifiers?.[traitName] || 0
+                        ) + (
+                            ARMOR[this.equipped?.armor]
+                                ?.coreTraitModifiers?.[traitName] || 0
+                        ) + (
+                            RINGS[this.equipped?.ring?.left]
+                                ?.coreTraitModifiers?.[traitName] || 0
+                        ) + (
+                            RINGS[this.equipped?.ring?.right]
+                                ?.coreTraitModifiers?.[traitName] || 0
+                        )
+                    );
+
+                // Boolean values
+                // @TODO Figure out how to handle tiebreakers
+                //       This shouldn't happen normally, but if two pieces of
+                //       gear affect the same trait oppositely, one must win
+                case "canAttack":
+                case "canPersuade":
+                case "canRun":
+                case "canUse":
+                case "canEquip":
+                    const weaponHasTrait =
+                        typeof WEAPONS[this.equipped?.weapon]
+                            ?.coreTraitModifiers?.[traitName] === "boolean";
+                    if (weaponHasTrait) {
+                        return WEAPONS[this.equipped.weapon]
+                            .coreTraitModifiers[traitName];
+                    }
+
+                    const armorHasTrait =
+                        typeof ARMOR[this.equipped?.armor]
+                            ?.coreTraitModifiers?.[traitName] === "boolean";
+                    if (armorHasTrait) {
+                        return ARMOR[this.equipped.armor]
+                            .coreTraitModifiers[traitName];
+                    }
+
+                    const leftRingHasTrait =
+                        typeof RINGS[this.equipped?.ring?.left]
+                            ?.coreTraitModifiers?.[traitName] === "boolean";
+                    if (leftRingHasTrait) {
+                        return RINGS[this.equipped.ring.left]
+                            .coreTraitModifiers[traitName];
+                    }
+
+                    const rightRingHasTrait =
+                        typeof RINGS[this.equipped?.ring?.right]
+                            ?.coreTraitModifiers?.[traitName] === "boolean";
+                    if (rightRingHasTrait) {
+                        return RINGS[this.equipped.ring.right]
+                            .coreTraitModifiers[traitName];
+                    }
+
+                    break;
+            }
+
+            return this.traits?.[traitName] || null;
         },
 
         release: function() {

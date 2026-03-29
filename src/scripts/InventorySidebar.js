@@ -612,6 +612,7 @@ const InventorySidebar = {
             }
 
             InventorySidebar.refreshWeapon(weaponId);
+            render();
         };
 
         return $button;
@@ -740,6 +741,7 @@ const InventorySidebar = {
             }
 
             InventorySidebar.refreshArmorPiece(armorId);
+            render();
         };
 
         return $button;
@@ -793,18 +795,11 @@ const InventorySidebar = {
         const ringIsEquipped =
             Object.values(playerEntity.leader.equipped.ring).includes(ringId);
 
-        if (ringIsEquipped) {
-            $button.classList.add("equipped");
-        } else {
-            $button.classList.remove("equipped");
-        }
+        ringIsEquipped
+            ? $button.classList.add("equipped")
+            : $button.classList.remove("equipped");
 
-        InventorySidebar.updateTooltip(
-            $button,
-            "rings",
-            ringId,
-            RINGS[ringId]
-        );
+        InventorySidebar.updateTooltip($button, "rings", ringId, RINGS[ringId]);
     },
 
     createRingButton: (ringId) => {
@@ -878,6 +873,7 @@ const InventorySidebar = {
                     }
 
                     InventorySidebar.refreshRing(newRingId);
+                    render();
                 }
             );
         };
@@ -957,8 +953,14 @@ const InventorySidebar = {
             [leftHtml, rightHtml].filter(e => e).join("<br>");
 
         const titleText = `Equip ${ring.article} ${ring.name}`;
+
+        // Adjust the article to refer to a singular, eg: "a pinky toe ring"
+        // becomes "the pinky toe ring", but "Pablo Escobar's Golden Ring" stays
+        // unchanged
+        const article = ring?.article !== "" ? "the" : "";
+
         const modalMessageHtml =
-            `<p>Which hand should wear ${ring.article} ` +
+            `<p>Which hand should wear ${article} ` +
             `<span class="friendly">${ring.name}</span>?` +
             (
                 currentlyEquippedHtml

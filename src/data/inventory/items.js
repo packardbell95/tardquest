@@ -441,10 +441,8 @@ const ITEMS = Object.freeze({
                         const nx = playerEntity.x + DX[playerEntity.direction];
                         const ny = playerEntity.y + DY[playerEntity.direction];
                         const setBloodyCrater =
-                            ['floor', 'rubble1', 'rubble2']
-                                .includes(
-                                    MAP.getCell(nx, ny)?.type
-                                );
+                            ["floor", "rubble1", "rubble2"]
+                                .includes(MAP.getCell(nx, ny)?.type);
                         if (setBloodyCrater) {
                             MAP.setCell(nx, ny, "bloodyCrater");
                         }

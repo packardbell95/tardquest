@@ -10,6 +10,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             persuasion: 5,
         },
+        coreTraitModifiers: {},
         price: 60,
         merchantStockChance: 0.5,
         chestDrop: true,
@@ -25,6 +26,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             persuasion: 7,
         },
+        coreTraitModifiers: {},
         price: 100,
         merchantStockChance: 0.3,
         chestDrop: true,
@@ -41,6 +43,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             maxHp: 5,
         },
+        coreTraitModifiers: {},
         price: 60,
         merchantStockChance: 0.5,
         chestDrop: true,
@@ -54,6 +57,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             maxHp: 8,
         },
+        coreTraitModifiers: {},
         price: 100,
         merchantStockChance: 0.3,
         chestDrop: true,
@@ -70,6 +74,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             defense: 2,
         },
+        coreTraitModifiers: {},
         price: 60,
         merchantStockChance: 0.4,
         chestDrop: true,
@@ -83,6 +88,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             defense: 5,
         },
+        coreTraitModifiers: {},
         price: 100,
         merchantStockChance: 0.3,
         chestDrop: true,
@@ -100,6 +106,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             speed: 1,
         },
+        coreTraitModifiers: {},
         price: 60,
         merchantStockChance: 0.4,
         chestDrop: true,
@@ -113,6 +120,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             speed: 2,
         },
+        coreTraitModifiers: {},
         price: 100,
         merchantStockChance: 0.3,
         chestDrop: true,
@@ -128,6 +136,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             luck: 5,
         },
+        coreTraitModifiers: {},
         price: 150,
         merchantStockChance: 0.1,
         chestDrop: true,
@@ -142,6 +151,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             luck: 10,
         },
+        coreTraitModifiers: {},
         price: 200,
         merchantStockChance: 0.07,
         chestDrop: true,
@@ -156,6 +166,10 @@ const RINGS = Object.freeze({
             "A ring with an eyeball so realistic looking, it could actually " +
             "be real. Allows you to see better in the Tardspire.",
         coreStatModifiers: {},
+        coreTraitModifiers: {
+            sightRange: 3,
+            sightSensitivity: 128,
+        },
         price: 180,
         merchantStockChance: 0.2,
         chestDrop: false,
@@ -168,6 +182,7 @@ const RINGS = Object.freeze({
             "A ring so stinky, SO putrid, that even monsters will reconsider " +
             "confronting you. Causes enemies to move away from you more often.",
         coreStatModifiers: {},
+        coreTraitModifiers: {},
         price: 200,
         merchantStockChance: 0.2,
         chestDrop: false,
@@ -182,6 +197,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {
             persuasion: 10,
         },
+        coreTraitModifiers: {},
         price: 130,
         merchantStockChance: 0.2,
         chestDrop: false,
