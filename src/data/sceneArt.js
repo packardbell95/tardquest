@@ -1647,7 +1647,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     '  .'   .  '    ..   '   .
                     %%%%% .;' .   '   . ' .
@@ -1656,7 +1656,7 @@ const sceneArt = {
                 `
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%    . '     ;'  '   . ,
                     %%%%%'  ..    ',.    .  '   ';,
@@ -1665,21 +1665,21 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %.  .; '
                     .'
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%. ,  . ,
                     . ;'  ,. .  :,
                 `
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%% ;'.   .  ,
                     %% , . '    '  .
@@ -1697,7 +1697,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%.'  ';
                 `,
@@ -1897,7 +1897,7 @@ const sceneArt = {
                 `
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%'      .   ;   '      '
                     %%%%%,  ; , ' .   .  ' ,  ,   .
@@ -1918,7 +1918,7 @@ const sceneArt = {
                 `
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%.  '   .  ,
                     % '    ,   .    ;
@@ -1936,7 +1936,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%'.  ;.
                 `,
@@ -2706,7 +2706,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
                     %%%▄▒███████████████
@@ -2724,7 +2724,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%▄
                     %%%▄██
@@ -2915,7 +2915,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▀██████████████████████▀
                     %%▀██████████████████▀
@@ -2925,7 +2925,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%▄██████████████████████▄
                     %%%▄██████████████████████████▄
@@ -2942,7 +2942,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄▄▄▄▄▄▄▄▄▄▄
                     ▄▄███████████▀
@@ -2950,7 +2950,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄▄▄▄▄▄▄▄▄▄▄
                     ▄████████████████▄
@@ -2958,7 +2958,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▄▄▄▄▄▄▄▄▄▄▄
                     %▀███████████▄▄
@@ -2966,7 +2966,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▀████████████▀
                 `,
@@ -3156,7 +3156,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%
                     %%%%%%%%        %
@@ -3171,7 +3171,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%% %% %
                     %%%%%%%%%%%%%       %
@@ -3194,7 +3194,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%▄▄▄▄▄▄▄
                     %%%%▄█▄▄▄▄▄▄█▀
@@ -3202,7 +3202,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄▄▄▄▄▄▄▄▄▄
                     %%%█▄▄▄▄▄▄▄▄▄▄█
@@ -3210,7 +3210,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▄▄▄▄▄▄▄
                     ▀█▄▄▄▄▄▄█▄
@@ -3218,19 +3218,21 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▀████████▀
                 `,
             },
             {
                 automaskBlockCharacters: true,
+                transparentCharacter: "%",
                 data: `
                     %%▄████▄
                 `,
             },
             {
                 automaskBlockCharacters: true,
+                transparentCharacter: "%",
                 data: `
                     %%▀▀
                 `,
@@ -3243,6 +3245,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
+                transparentCharacter: "%",
                 data: `
                     %%▄▄██▀▀
                 `,
@@ -3408,7 +3411,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▀▀█▀▀▄%%▄▄
                     ▀▀▀▀%%%%%%%%%%%%▀▄
@@ -3417,7 +3420,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%▄
                     %%%%%%%%%▀▀█▀▀▄
@@ -3427,7 +3430,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▘%▗▄▖
                     %▀▘%%▄
@@ -3435,7 +3438,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%▄%%%%%▖
                     %%%▀▀▀%%%%%%▝▄
@@ -3443,7 +3446,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄▄%%%%▗▄▖
                     %▀▀▀%%%%%%%%▝▄
@@ -3451,7 +3454,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%▄%%%▗▄▖
                     %%%▀▀▀%%%%%▝▄
@@ -3459,21 +3462,21 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %░░%░%%%░░%%░
                 `,
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %░░%░░%%░
                 `,
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▔%%▔
                 `,
@@ -3486,7 +3489,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▒░▒▒░▒
                 `,
@@ -3652,7 +3655,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▀▀█▀▀▄▄▄▄▄%%▄▀
                     ▀▀▀▀%%%%%%▄▄▄▀▀▀▀▄
@@ -3661,7 +3664,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%▄
                     %%%%%%%%%▀▀█▀▀▄▄▄▄▄%%%%%▄▀
@@ -3671,7 +3674,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▘%▗▟▖
                     %▀▘%▝▄
@@ -3679,7 +3682,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▀▀▄▄▘%▗▟▖
                     %%%▀▀▀%%%▀▘%▝▄
@@ -3687,7 +3690,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▀▀▄▄▘%%%▗▟▖
                     %▀▀▀%%%%%▀▘%▝▄
@@ -3695,7 +3698,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%▀▀▄▄▘%▗▟▖
                     %%%▀▀▀%%%▀▘▝▄
@@ -3703,21 +3706,21 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▒▒%▒░░%▒▒░░▒%
                 `,
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▒▒░▒▒░░▒%
                 `,
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▔▔%%▔
                 `,
@@ -3730,7 +3733,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▒░▒▒░▒
                 `,
@@ -3896,7 +3899,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▀▀█▀▀▄▄▄▄▄%%▄▀▀▀▄▀
                     ▀█▀▀%▀▄%▄%▄▄▄▀▀▀▀▄
@@ -3905,7 +3908,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%▄
                     %%%%%%%%%▀▀█▀▀▄▄▄▄▄%%%%%▄▀▀▀▄▀
@@ -3915,7 +3918,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▀%▗▟▞▞
                     %▜▚▚▝▄
@@ -3923,7 +3926,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▀▀▄▄▀%▗▟▞▞
                     %%%▜▜▀▞%%▜▚▚▝▄
@@ -3931,7 +3934,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▀▀▄▄▀%%%▗▟▞▞
                     %▜▜▀▞%▚%%▜▚▚▝▄
@@ -3939,7 +3942,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%▀▀▄▄▀%▗▟▞▞
                     %▜▜▀▞%▚%▜▚▚▝▄
@@ -4136,7 +4139,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▀████████████████████████████▀
                     %%▀████████████████████████▀
@@ -4146,7 +4149,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%▄██████████████████████████▄
                     %%%%%▄██████████████████████████████▄
@@ -4164,7 +4167,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄▄█████████████▀
                     ▄▄███████████████▀
@@ -4173,7 +4176,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄████████████▄
                     %%▄████████████████▄
@@ -4182,7 +4185,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     █████████████▄▄
                     %▀███████████████▄▄
@@ -4191,7 +4194,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                   ▀██████████████████▀
                   %%▀██████████████▀
@@ -4199,7 +4202,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                   %%▄████████▄
                   ▄████████████▄
@@ -4384,7 +4387,7 @@ const sceneArt = {
         art: [
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▀████████████████████████████▀
                     %%▀████████████████████████▀
@@ -4394,7 +4397,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%▄██████████████████████████▄
                     %%%%%▄██████████████████████████████▄
@@ -4412,7 +4415,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄▄█████████████▀
                     ▄▄███████████████▀
@@ -4421,7 +4424,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▄████████████▄
                     %%▄████████████████▄
@@ -4430,7 +4433,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     █████████████▄▄
                     %▀███████████████▄▄
@@ -4439,7 +4442,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                   ▀██████████████████▀
                   %%▀██████████████▀
@@ -4447,7 +4450,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                   %%▄████████▄
                   ▄████████████▄
@@ -4628,7 +4631,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4654,7 +4657,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%
                     %%%%%%%%%%%%%%%%
@@ -4670,7 +4673,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%
                     %%%%%%%%%%%%%%%%
@@ -4686,7 +4689,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%
                     %%%%%%%%%%%%%%%%
@@ -4702,7 +4705,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%%%%%%
@@ -4714,7 +4717,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%%%%%%
@@ -4726,7 +4729,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%%%%%%
@@ -4738,7 +4741,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %%▄▄%%
@@ -4910,7 +4913,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%▄▄▄%%%%%%%%▄%%%%%%%%%%%%%%%%%
@@ -4936,7 +4939,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█%%%%%%%%%%%%
                     %%█ █%%█%%%▄▀%%%
@@ -4952,7 +4955,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█%%%%%%%%%%%%
                     %%█ █%%█%%%▄▀%%%
@@ -4968,7 +4971,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█%%%%%%%%%%%%
                     %%█ █%%█%%%▄▀%%%
@@ -4984,7 +4987,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%▄%%%%%%%%
@@ -4996,7 +4999,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%▄%%%%%%%%
@@ -5008,7 +5011,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%▄%%%%%%%%
@@ -5020,7 +5023,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %█▄▄%%
@@ -5192,7 +5195,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%▄▄▄▄%%▄▄▄▄▄▄▄▄▄▄▄▄▄%%%%%%%%
@@ -5218,7 +5221,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%█%▄▀▀█▄▄▄▄%%
                     %%%▄██ ▄▀  ▄▀%%%
@@ -5234,7 +5237,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%█%▄▀▀█▄▄▄▄%%
                     %%%▄██ ▄▀  ▄▀%%%
@@ -5250,7 +5253,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%█%▄▀▀█▄▄▄▄%%
                     %%%▄██ ▄▀  ▄▀%%%
@@ -5266,7 +5269,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%▄%▄▄▄▄%%
@@ -5278,7 +5281,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%▄%▄▄▄▄%%
@@ -5290,7 +5293,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%▄%▄▄▄▄%%
@@ -5302,7 +5305,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %%▄▄█%
@@ -5474,7 +5477,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%%%%%%%%%%▄%%%%%%%%▄▄▄%%%%%%
@@ -5500,7 +5503,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%█%%%
                     %%%▀▄%%%█%%█ █%%
@@ -5516,7 +5519,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%█%%%
                     %%%▀▄%%%█%%█ █%%
@@ -5532,7 +5535,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%█%%%
                     %%%▀▄%%%█%%█ █%%
@@ -5548,7 +5551,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%▄%%%%
@@ -5560,7 +5563,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%▄%%%%
@@ -5572,7 +5575,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%▄%%%%
@@ -5584,7 +5587,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %%▄▄█%
@@ -5756,7 +5759,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%▄▄▄▄▄▄▄▄▄▄▄▄▄%%▄▄▄▄%%%%%%%%
@@ -5782,7 +5785,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄█▀▀▄%█%%%%
                     %%%▀▄  ▀▄ ██▄%%%
@@ -5798,7 +5801,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄█▀▀▄%█%%%%
                     %%%▀▄  ▀▄ ██▄%%%
@@ -5814,7 +5817,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄█▀▀▄%█%%%%
                     %%%▀▄  ▀▄ ██▄%%%
@@ -5830,7 +5833,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%▄▄▄▄%▄%%%%%
@@ -5842,7 +5845,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%▄▄▄▄%▄%%%%%
@@ -5854,7 +5857,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%▄▄▄▄%▄%%%%%
@@ -5866,7 +5869,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %█▄▄%%
@@ -6038,7 +6041,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%▄▄▄%%%%%%%%▄%%%%%%%%%%%%%%%%%
@@ -6064,7 +6067,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█%%%%%%%%%%%%
                     %%█ █%%█%%%▄▀%%%
@@ -6080,7 +6083,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█%%%%%%%%%%%%
                     %%█ █%%█%%%▄▀%%%
@@ -6096,7 +6099,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█%%%%%%%%%%%%
                     %%█ █%%█%%%▄▀%%%
@@ -6112,7 +6115,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%▄%%%%%%%%
@@ -6124,7 +6127,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%▄%%%%%%%%
@@ -6136,7 +6139,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%▄%%%%%%%%
@@ -6148,7 +6151,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %█▄▄%%
@@ -6320,7 +6323,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%▄▄▄▄%%▄▄▄▄▄▄▄▄▄▄▄▄▄%%%%%%%%
@@ -6346,7 +6349,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%█%▄▀▀█▄▄▄▄%%
                     %%%▄██ ▄▀  ▄▀%%%
@@ -6362,7 +6365,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%█%▄▀▀█▄▄▄▄%%
                     %%%▄██ ▄▀  ▄▀%%%
@@ -6378,7 +6381,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%█%▄▀▀█▄▄▄▄%%
                     %%%▄██ ▄▀  ▄▀%%%
@@ -6394,7 +6397,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%▄%▄▄▄▄%%
@@ -6406,7 +6409,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%▄%▄▄▄▄%%
@@ -6418,7 +6421,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%▄%▄▄▄▄%%
@@ -6430,7 +6433,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %%▄▄█%
@@ -6602,7 +6605,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%%%%%%%%%%▄%%%%%%%%▄▄▄%%%%%%
@@ -6628,7 +6631,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%█%%%
                     %%%▀▄%%%█%%█ █%%
@@ -6644,7 +6647,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%█%%%
                     %%%▀▄%%%█%%█ █%%
@@ -6660,7 +6663,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%█%%%
                     %%%▀▄%%%█%%█ █%%
@@ -6676,7 +6679,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%▄%%%%
@@ -6688,7 +6691,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%▄%%%%
@@ -6700,7 +6703,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%%%%%%%▄%%%%
@@ -6712,7 +6715,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %%▄▄█%
@@ -6884,7 +6887,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%%%%%%%▄▄▄▄▄▄▄▄▄▄▄▄▄%%▄▄▄▄%%%%%%%%
@@ -6910,7 +6913,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄█▀▀▄%█%%%%
                     %%%▀▄  ▀▄ ██▄%%%
@@ -6926,7 +6929,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄█▀▀▄%█%%%%
                     %%%▀▄  ▀▄ ██▄%%%
@@ -6942,7 +6945,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▄▄▄▄█▀▀▄%█%%%%
                     %%%▀▄  ▀▄ ██▄%%%
@@ -6958,7 +6961,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%▄▄▄▄%▄%%%%%
@@ -6970,7 +6973,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%▄▄▄▄%▄%%%%%
@@ -6982,7 +6985,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%
                     %%▄▄▄▄%▄%%%%%
@@ -6994,7 +6997,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%
                     %█▄▄%%
@@ -7165,7 +7168,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%▄▄▄▄
                     %%%%%%%%%%██
@@ -7191,7 +7194,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%▗▄▖
                     %%%▝▚▖█
@@ -7207,7 +7210,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▗▄▖
                     %%▝▚▖█
@@ -7223,7 +7226,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▗▄▖
                     ▝▚▖█
@@ -7239,7 +7242,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%╲▂▖
                     %%%▐╲
@@ -7251,7 +7254,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %╲▂▖
                     %%▐╲
@@ -7263,7 +7266,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                   ╲▂▖
                   %▐╲
@@ -7275,7 +7278,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %┬
                     %│╲▎
@@ -7448,7 +7451,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▄██████████████████▄
                     █▀   █          █   ▀█
@@ -7650,7 +7653,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%█▀▄▄
                     %%%%%%%%▌  ▀▀▄▀
@@ -7668,7 +7671,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%█▄
                     %%%█▄██▀
@@ -7682,7 +7685,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%▟▄▂
                     %▝▛▀▂
@@ -7860,7 +7863,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%▄%▄
                     ▌%%%%%%%█▀▄▀▄
@@ -7877,7 +7880,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▌%%%█▄█▄
                     █%%%█  ╼▀▀▄
@@ -7888,7 +7891,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     ▌%▙▙▂
                     ▌▟█▞▀▀
@@ -8064,7 +8067,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%%%%%%%▄▀█
                     %%%%%%%%%%%%%%%%▄▀ ▀▀▄
@@ -8079,7 +8082,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%%%%▄
                     %%%%%%%%%%%█▀▄▄▄
@@ -8092,7 +8095,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %
                     %%%%%%%%▄
@@ -8271,7 +8274,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                        ▄▄▄▄▄%%%%%%%%%%
                        %█   █%%%%▄▄%%%
@@ -8285,7 +8288,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                       %%█▄%%%%%%
                       %%█ ▀▄▀▀▄▄
@@ -8296,7 +8299,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                       %▄%%%
                       %%▀▄▀
@@ -8471,7 +8474,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%▄%▄
                     %%%%%%%%███
@@ -8483,7 +8486,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %
                     %
@@ -8493,7 +8496,7 @@ const sceneArt = {
                 `,
             },
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %
                     %
@@ -8667,7 +8670,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%%%▄▄▄▄████████████▄▄▄▄
                     %%%%%▄████▛██▞█▞██▟▛▟██▚█▜████▄
@@ -8677,7 +8680,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▃▄▄▄▄▄▄▄▄▃
                     %▀▀████▄▄▄▄████▀▀
@@ -8685,7 +8688,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▁▂▂▂▂▂▂▁
                     ▀████████▀
@@ -8693,7 +8696,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▂▂▂▂
                     ▀▀▀▀▀▀
@@ -8861,7 +8864,7 @@ const sceneArt = {
         },
         art: [
             {
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%%%▘%▄▄▄▄████████████▄▄▄▄%▘
                     %%%%%▄██▘ ▀▝▞██▟▛██▛██▀████▀██▄▗
@@ -8871,7 +8874,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %%%%▃▄▄▄▄▄▄▄▄▃
                     %▀▀████▄▄▄▄████▀▀
@@ -8879,7 +8882,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▁▂▂▂▂▂▂▁
                     ▀████████▀
@@ -8887,7 +8890,7 @@ const sceneArt = {
             },
             {
                 automaskBlockCharacters: true,
-                transparentCharacter: '%',
+                transparentCharacter: "%",
                 data: `
                     %▂▂▂▂
                     ▀▀▀▀▀▀
