@@ -1474,6 +1474,65 @@
             playerPartyMember.equipped.weapon = "fingerNail";
             playerPartyMember.equipped.armor = "pectoralMass";
 
+            const onWeaponChange = function(
+                previousWeaponId = null,
+                currentWeaponId = null
+            ) {
+                console.log(
+                    `${this.name} changed weapons`,
+                    { previousWeaponId, currentWeaponId }
+                );
+
+                if (previousWeaponId) {
+                    InventorySidebar.refreshWeapon(previousWeaponId);
+                }
+
+                if (currentWeaponId) {
+                    InventorySidebar.refreshWeapon(currentWeaponId);
+                }
+            };
+
+            const onArmorChange = function(
+                previousArmorId = null,
+                currentArmorId = null
+            ) {
+                console.log(
+                    `${this.name} changed armor`,
+                    { previousArmorId, currentArmorId }
+                );
+
+                if (previousArmorId) {
+                    InventorySidebar.refreshArmor(previousArmorId);
+                }
+
+                if (currentArmorId) {
+                    InventorySidebar.refreshArmor(currentArmorId);
+                }
+            };
+
+            const onRingChange = function(
+                hand,
+                previousRingId = null,
+                currentRingId = null
+            ) {
+                console.log(
+                    `${this.name} changed rings`,
+                    { hand, previousRingId, currentRingId }
+                );
+
+                if (previousRingId) {
+                    InventorySidebar.refreshRing(previousRingId);
+                }
+
+                if (currentRingId) {
+                    InventorySidebar.refreshRing(currentRingId);
+                }
+            };
+
+            playerPartyMember.onWeaponChange = onWeaponChange;
+            playerPartyMember.onArmorChange = onArmorChange;
+            playerPartyMember.onRingChange = onRingChange;
+
             playerPartyMember.statPoints = PLAYER_STARTING_STAT_POINTS;
             playerEntity.addPartyMember(playerPartyMember);
 
@@ -1600,6 +1659,10 @@
                     document.getElementById("partyMembers")
                         .append($placeholder);
                 };
+
+                partyMember.onWeaponChange = onWeaponChange;
+                partyMember.onArmorChange = onArmorChange;
+                partyMember.onRingChange = onRingChange;
 
                 $stats.classList.remove("placeholder");
             };
@@ -2335,6 +2398,9 @@
                             if (attackWasFatal) {
                                 actor.parent?.killedMonsters?.(1);
                             }
+
+                            BattleQueueSidebar
+                                .refreshPortraitStatus(move.actor);
                         },
                         onEnd,
                     }

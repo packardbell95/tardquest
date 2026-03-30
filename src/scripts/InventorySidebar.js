@@ -377,8 +377,8 @@ const InventorySidebar = {
     refreshItem: (itemId) => {
         const $items = document.querySelector(`#inventory [name="items"]`);
         let $button = $items.querySelector(`[data-id="${itemId}"]`);
-        const quantity = playerEntity.inventory.contents.items[itemId] || 0;
 
+        const quantity = InventorySidebar.getItemQuantity(itemId);
         if (! $button && quantity > 0) {
             // Create the item entry in the list
             $button = InventorySidebar.createItemButton(itemId);
@@ -416,6 +416,12 @@ const InventorySidebar = {
         );
     },
 
+    getItemQuantity: (itemId) => {
+        return itemId
+            ? (playerEntity.inventory.contents.items[itemId] || 0)
+            : 0;
+    },
+
     createItemButton: (itemId) => {
         const item = ITEMS[itemId];
         if (! item) {
@@ -423,9 +429,7 @@ const InventorySidebar = {
             return null;
         }
 
-        const quantity =
-            playerEntity.inventory.contents.items[itemId] || 0;
-
+        const quantity = InventorySidebar.getItemQuantity(itemId);
         if (quantity <= 0) {
             console.error(
                 "Cannot create a button for an item that the player doesn't " +
@@ -502,10 +506,8 @@ const InventorySidebar = {
     refreshWeapon: (weaponId) => {
         const $weapons = document.querySelector(`#inventory [name="weapons"]`);
         let $button = $weapons.querySelector(`[data-id="${weaponId}"]`);
-        const quantity =
-            (playerEntity.inventory.contents.weapons[weaponId] || 0) +
-            (playerEntity.leader.equipped.weapon === weaponId ? 1 : 0);
 
+        const quantity = InventorySidebar.getWeaponQuantity(weaponId);
         if (! $button && quantity > 0) {
             // Create the weapon entry in the list
             $button = InventorySidebar.createWeaponButton(weaponId);
@@ -548,6 +550,17 @@ const InventorySidebar = {
         );
     },
 
+    getWeaponQuantity: (weaponId) => {
+        if (! weaponId) {
+            return 0;
+        }
+
+        return (
+            (playerEntity.inventory.contents.weapons[weaponId] || 0) +
+            (playerEntity.leader.equipped.weapon === weaponId ? 1 : 0)
+        );
+    },
+
     createWeaponButton: (weaponId) => {
         const weapon = WEAPONS[weaponId];
         if (! weapon) {
@@ -555,10 +568,7 @@ const InventorySidebar = {
             return null;
         }
 
-        const quantity =
-            (playerEntity.inventory.contents.weapons[weaponId] || 0) +
-            (playerEntity.leader.equipped.weapon === weaponId ? 1 : 0);
-
+        const quantity = InventorySidebar.getWeaponQuantity(weaponId);
         if (quantity <= 0) {
             console.error(
                 "Cannot create a button for a weapon that the player doesn't " +
@@ -633,10 +643,8 @@ const InventorySidebar = {
     refreshArmorPiece: (armorId) => {
         const $armor = document.querySelector(`#inventory [name="armor"]`);
         let $button = $armor.querySelector(`[data-id="${armorId}"]`);
-        const quantity =
-            (playerEntity.inventory.contents.armor[armorId] || 0) +
-            (playerEntity.leader.equipped.armor === armorId ? 1 : 0);
 
+        const quantity = InventorySidebar.getArmorQuantity(armorId);
         if (! $button && quantity > 0) {
             // Create the armor entry in the list
             const $button = InventorySidebar.createArmorButton(armorId);
@@ -678,6 +686,17 @@ const InventorySidebar = {
         );
     },
 
+    getArmorQuantity: (armorId) => {
+        if (! armorId) {
+            return 0;
+        }
+
+        return (
+            (playerEntity.inventory.contents.armor[armorId] || 0) +
+            (playerEntity.leader.equipped.armor === armorId ? 1 : 0)
+        );
+    },
+
     createArmorButton: (armorId) => {
         const armor = ARMOR[armorId];
         if (! armor) {
@@ -685,10 +704,7 @@ const InventorySidebar = {
             return null;
         }
 
-        const quantity =
-            (playerEntity.inventory.contents.armor[armorId] || 0) +
-            (playerEntity.leader.equipped.armor === armorId ? 1 : 0);
-
+        const quantity = InventorySidebar.getArmorQuantity(armorId);
         if (quantity <= 0) {
             console.error(
                 "Cannot create a button for armor that the player doesn't have",
@@ -762,11 +778,8 @@ const InventorySidebar = {
     refreshRing: (ringId) => {
         const $ring = document.querySelector(`#inventory [name="rings"]`);
         let $button = $ring.querySelector(`[data-id="${ringId}"]`);
-        const quantity =
-            (playerEntity.inventory.contents.rings[ringId] || 0) +
-            (playerEntity.leader.equipped.ring.left === ringId ? 1 : 0) +
-            (playerEntity.leader.equipped.ring.right === ringId ? 1 : 0);
 
+        const quantity = InventorySidebar.getRingQuantity(ringId);
         if (! $button && quantity > 0) {
             // Create the ring entry in the list
             $button = InventorySidebar.createRingButton(ringId);
@@ -802,6 +815,18 @@ const InventorySidebar = {
         InventorySidebar.updateTooltip($button, "rings", ringId, RINGS[ringId]);
     },
 
+    getRingQuantity: function (ringId) {
+        if (! ringId) {
+            return 0;
+        }
+
+        return (
+            (playerEntity.inventory.contents.rings[ringId] || 0) +
+            (playerEntity.leader.equipped.ring.left === ringId ? 1 : 0) +
+            (playerEntity.leader.equipped.ring.right === ringId ? 1 : 0)
+        );
+    },
+
     createRingButton: (ringId) => {
         const ring = RINGS[ringId];
         if (! ring) {
@@ -809,11 +834,7 @@ const InventorySidebar = {
             return null;
         }
 
-        const quantity =
-            (playerEntity.inventory.contents.rings[ringId] || 0) +
-            (playerEntity.leader.equipped.ring.left === ringId ? 1 : 0) +
-            (playerEntity.leader.equipped.ring.right === ringId ? 1 : 0);
-
+        const quantity = InventorySidebar.getRingQuantity(ringId);
         if (quantity <= 0) {
             console.error(
                 "Cannot create a button for a ring that the player doesn't " +

@@ -5,6 +5,9 @@ const WEAPONS = Object.freeze({
         name: "FINGERNAIL",
         description:
             "Your very own fingernail! Careful not to break it!",
+        coreStatRequirements: {
+            strength: 0,
+        },
         damage: { base: 1, randomMultiplier: 4 },
         coreStatModifiers: {
             strength: 1,
@@ -13,13 +16,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 4,
         price: 0,
         weight: 0,
-        requiredStr: 0,
     },
     pointyStick: {
         article: "a",
         name: "POINTY STICK",
         description:
             "A stick that fell off of a tree somewhere.",
+        coreStatRequirements: {
+            strength: 7,
+        },
         damage: { base: 4, randomMultiplier: 6 },
         coreStatModifiers: {
             strength: 4,
@@ -28,13 +33,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 6,
         price: 20,
         weight: 3,
-        requiredStr: 7,
     },
     wiffleBallBat: {
         article: "a",
         name: "WIFFLE BALL BAT",
         description:
             "A hollow bat made of plastic.",
+        coreStatRequirements: {
+            strength: 11,
+        },
         damage: { base: 6, randomMultiplier: 8 },
         coreStatModifiers: {
             strength: 6,
@@ -43,13 +50,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 8,
         price: 30,
         weight: 5,
-        requiredStr: 11,
     },
     nunchucks: {
         article: "",
         name: "NUNCHUCKS",
         description:
             "Two pieces of wood connected by a chain.",
+        coreStatRequirements: {
+            strength: 14,
+        },
         damage: { base: 9, randomMultiplier: 12 },
         coreStatModifiers: {
             strength: 9,
@@ -58,13 +67,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 12,
         price: 70,
         weight: 7,
-        requiredStr: 14,
     },
     atlatlSpear: {
         article: "an",
         name: "ATLATL SPEAR",
         description:
             "A spear with a throwing lever.",
+        coreStatRequirements: {
+            strength: 17,
+        },
         damage: { base: 13, randomMultiplier: 16 },
         coreStatModifiers: {
             strength: 13,
@@ -73,13 +84,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 16,
         price: 90,
         weight: 10,
-        requiredStr: 17,
     },
     bludgeoningMace: {
         article: "a",
         name: "BLUDGEONING MACE",
         description:
             "A stick with a spikey metal ball at the end.",
+        coreStatRequirements: {
+            strength: 20,
+        },
         damage: { base: 16, randomMultiplier: 19 },
         coreStatModifiers: {
             strength: 16,
@@ -88,7 +101,6 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 19,
         price: 150,
         weight: 12,
-        requiredStr: 20,
     },
     danceClub: {
         article: "a",
@@ -96,6 +108,9 @@ const WEAPONS = Object.freeze({
         description:
             "A club long enough to pole dance on. Maybe it is one? You don't " +
             "know. Legend has it, an obscure forum user once wielded one...",
+        coreStatRequirements: {
+            strength: 24,
+        },
         damage: { base: 20, randomMultiplier: 23 },
         coreStatModifiers: {
             strength: 20,
@@ -104,13 +119,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 23,
         price: 200,
         weight: 13,
-        requiredStr: 24,
     },
     cathodeRayTubeMonitor: {
         article: "a",
         name: "CATHODE RAY TUBE MONITOR",
         description:
             "A CRT monitor. Heavy as piss.",
+        coreStatRequirements: {
+            strength: 32,
+        },
         damage: { base: 30, randomMultiplier: 35 },
         coreStatModifiers: {
             strength: 30,
@@ -122,13 +139,15 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 35,
         price: 400,
         weight: 20,
-        requiredStr: 32,
     },
     magicPencil: {
         article: "a",
         name: "MAGIC PENCIL",
         description:
             "SpongeBob SquarePants - Season 2, Episode 14B - Frankendoodle.",
+        coreStatRequirements: {
+            strength: 38,
+        },
         damage: { base: 12, randomMultiplier: 50 },
         coreStatModifiers: {
             strength: 12,
@@ -137,7 +156,6 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 50,
         price: 700,
         weight: 3,
-        requiredStr: 38,
     },
     goldenWang: {
         article: "a",
@@ -145,6 +163,9 @@ const WEAPONS = Object.freeze({
         description:
             "With the power of the Golden Wang, the Discordian parasite " +
             "shall perish!",
+        coreStatRequirements: {
+            strength: 69,
+        },
         damage: { base: 69, randomMultiplier: 69 },
         coreStatModifiers: {
             strength: 69,
@@ -153,6 +174,5 @@ const WEAPONS = Object.freeze({
         maxRandomDamageBonus: 69,
         price: 6900,
         weight: 69,
-        requiredStr: 69,
     },
 });

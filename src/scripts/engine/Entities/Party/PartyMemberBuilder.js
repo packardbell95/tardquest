@@ -379,6 +379,52 @@ function PartyMemberBuilder(name, stats = {}) {
             }
         },
 
+        _statsMeetRequirements(requirements) {
+            if (! requirements) {
+                return true;
+            }
+
+            const keys = Object.keys(requirements);
+
+            for (const key of keys) {
+                if (requirements[key] > this.stats.core[key]) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+        canEquipWeapon(weaponId) {
+            const weapon = WEAPONS[weaponId];
+            if (! weapon) {
+                console.error("Unknown weapon", { weaponId });
+                return false;
+            }
+
+            return this._statsMeetRequirements(weapon.coreStatRequirements);
+        },
+
+        canEquipArmor(armorId) {
+            const armor = ARMOR[armorId];
+            if (! armor) {
+                console.error("Unknown armor", { armorId });
+                return false;
+            }
+
+            return this._statsMeetRequirements(armor.coreStatRequirements);
+        },
+
+        canEquipRing(ringId) {
+            const ring = RINGS[ringId];
+            if (! ring) {
+                console.error("Unknown ring", { ringId });
+                return false;
+            }
+
+            return this._statsMeetRequirements(ring.coreStatRequirements);
+        },
+
         useItem(itemId, target) {
             const item = ITEMS[itemId];
             if (! item) {
@@ -413,13 +459,21 @@ function PartyMemberBuilder(name, stats = {}) {
         },
 
         unequipWeapon() {
+            return this._unequipWeapon();
+        },
+
+        _unequipWeapon(suppressCallback = false) {
             if (! this.equipped.weapon) {
                 return true;
             }
 
-            const currentWeapon = this.equipped.weapon;
-            this.parent.inventory.addWeapon(currentWeapon);
+            const previousWeaponId = this.equipped.weapon;
+            this.parent.inventory.addWeapon(previousWeaponId);
             this.equipped.weapon = null;
+
+            if (! suppressCallback) {
+                this.onWeaponChange?.(previousWeaponId, null);
+            }
 
             return true;
         },
@@ -433,22 +487,42 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
-            if (! this.unequipWeapon()) {
+            if (! this.canEquipWeapon(weaponId)) {
+                console.info(
+                    "Party member is not strong enough for this weapon",
+                    { weaponId }
+                );
                 return false;
             }
 
-            partyMember.equipped.weapon = weaponId;
+            const previousWeaponId = this.equipped.weapon;
+
+            if (! this._unequipWeapon(true)) {
+                return false;
+            }
+
+            this.equipped.weapon = weaponId;
+            this.onWeaponChange?.(previousWeaponId, weaponId);
+
             return true;
         },
 
         unequipArmor() {
+            return this._unequipArmor();
+        },
+
+        _unequipArmor(suppressCallback = false) {
             if (! this.equipped.armor) {
                 return true;
             }
 
-            const currentArmor = this.equipped.armor;
-            this.parent.inventory.addArmor(currentArmor);
+            const previousArmorId = this.equipped.armor;
+            this.parent.inventory.addArmor(previousArmorId);
             this.equipped.armor = null;
+
+            if (! suppressCallback) {
+                this.onArmorChange?.(previousArmorId, null);
+            }
 
             return true;
         },
@@ -462,7 +536,17 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
-            if (! this.unequipArmor()) {
+            if (! this.canEquipArmor(armorId)) {
+                console.info(
+                    "Party member is not strong enough for this armor",
+                    { armorId }
+                );
+                return false;
+            }
+
+            const previousArmorId = this.equipped.armor;
+
+            if (! this._unequipArmor(true)) {
                 return false;
             }
 
@@ -474,11 +558,18 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
-            partyMember.equipped.armor = armorId;
+            this.equipped.armor = armorId;
+            this.onArmorChange?.(previousArmorId, armorId);
+
             return true;
         },
 
         unequipRing(hand) {
+            console.log("unequipRing()", { hand });
+            return this._unequipRing(false, hand);
+        },
+
+        _unequipRing(suppressCallback, hand) {
             if (! ["left", "right"].includes(hand)) {
                 console.warn(
                     "Tried to unequip a ring on an unknown hand",
@@ -487,18 +578,23 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
-            const currentRing = this.equipped.ring[hand];
-            if (! currentRing) {
+            const previousRingId = this.equipped.ring[hand];
+            if (! previousRingId) {
                 return true;
             }
 
-            this.parent.inventory.addRing(currentRing);
+            this.parent.inventory.addRing(previousRingId);
             this.equipped.ring[hand] = null;
+
+            if (! suppressCallback) {
+                this.onRingChange?.(hand, previousRingId, null);
+            }
 
             return true;
         },
 
         equipRing(hand, ringId) {
+            console.log("equipRing()", { hand, ringId });
             if (! ["left", "right"].includes(hand)) {
                 console.warn(
                     "Tried to equip a ring on an unknown hand",
@@ -515,7 +611,17 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
-            if (! this.unequipRing(hand)) {
+            if (! this.canEquipRing(ringId)) {
+                console.info(
+                    "Party member is not strong enough for this ring",
+                    { ringId }
+                );
+                return false;
+            }
+
+            const previousRingId = this.equipped.ring[hand];
+
+            if (! this._unequipRing(true, hand)) {
                 return false;
             }
 
@@ -527,7 +633,9 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
-            partyMember.equipped.ring[hand] = ringId;
+            this.equipped.ring[hand] = ringId;
+            this.onRingChange?.(hand, previousRingId, ringId);
+
             return true;
         },
 

@@ -148,6 +148,15 @@ const BattleQueueSidebar = {
     },
 
     refreshPortraitStatus: function(partyMember) {
+        // @TODO Don't even call this function if there is no party member
+        if (! partyMember) {
+            console.log(
+                "refreshPortraitStatus(): Party member not found",
+                { partyMember }
+            );
+            return;
+        }
+
         const $partyMember = partyMember.$battleQueueSidebarElement;
         if (! $partyMember) {
             console.error(
