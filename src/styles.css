@@ -236,8 +236,8 @@ a:link {
     border-style: solid;
     border-width: 2px;
     border-top-width: 10px;
-    border-color: #ffffff;
-    background-color: #000000;
+    border-color: #fff;
+    background-color: #000;
     font-size: 12px;
     z-index: 999;
 
@@ -1275,7 +1275,8 @@ a:link {
 }
 
 #menu .selectionDescription {
-    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #menu .escapeMessage {
@@ -1284,6 +1285,55 @@ a:link {
     width: 100%;
     text-align: end;
 }
+
+.description {
+    min-height: 3em;
+}
+
+.stats-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 4ch;
+}
+
+.stats-container {
+    border: 1px solid #fff;
+    margin-bottom: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    & table {
+        border-collapse: collapse;
+        width: 100%;
+
+        & th,
+        & td {
+            border: 1px solid #fff;
+            border-bottom: none;
+            padding: 0 1ch;
+            min-width: 4ch;
+
+            &:last-child {
+                border-right: none;
+            }
+
+            &:first-child {
+                border-left: none;
+            }
+        }
+
+        & td.value {
+            text-align: right;
+        }
+
+        & th:first-child {
+            border: none;
+        }
+    }
+}
+
 /** End of Menu Styles **/
 
 #animation:not(.hidden) {
@@ -2876,6 +2926,10 @@ a:link {
     color: #666;
     text-decoration: line-through;
 }
+.good {
+    color: #0f0;
+}
+.bad,
 .tooExpensive {
     color: #f00;
 }

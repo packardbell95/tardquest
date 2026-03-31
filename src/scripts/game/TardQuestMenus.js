@@ -33,6 +33,89 @@ menu.setOnClose(() => {
     }
 });
 
+menu.getStatClassName = function(
+    currentValue,
+    newValue,
+    higherIsBetter = true
+) {
+    if (currentValue === newValue) {
+        return "";
+    }
+
+    const isImprovement =
+        (higherIsBetter && newValue > currentValue) ||
+        (! higherIsBetter && newValue < currentValue);
+
+    return isImprovement ? "good" : "bad";
+}
+
+menu.getStatsHtml = function(captionText, stats) {
+    const keys = Object.keys(stats);
+    if (keys.length < 1) {
+        return "";
+    }
+
+    const tableRows = [];
+    for (const key of keys) {
+        if (typeof stats[key].value === "undefined") {
+            console.error("Undefined value", { key, stat: stats[key] });
+        }
+
+        const displayValue = (stats[key].value || 0).toLocaleString(undefined);
+        const rowHtml = `<tr>
+            <td>${key}</td>
+            <td class="value ${stats[key].className}">${displayValue}</td>
+        </tr>`;
+
+        tableRows.push(rowHtml);
+    }
+
+    return `<div class="stats-container"><table>
+        <caption>${captionText}</caption>
+        <tbody>${tableRows.join("")}</tbody>
+    </table></div>`;
+}
+
+menu.getRequirementsHtml = function(requirements) {
+    const stats = Object.keys(requirements);
+    if (stats.length < 1) {
+        return "";
+    }
+
+    const tableRows = [];
+    for (const stat of stats) {
+        const statName = stat.slice(0, 1).toLocaleUpperCase() + stat.slice(1);
+        const value = requirements[stat];
+        const playerValue = playerEntity.leader.stats.core[stat];
+        const displayValue = value.toLocaleString(undefined);
+        const displayPlayerValue = playerValue.toLocaleString(undefined);
+        const playerMeetsRequirement = playerValue >= value;
+        const requirementClass = playerMeetsRequirement
+            ? "good"
+            : "tooExpensive";
+
+        const rowHtml = `<tr>
+            <td>${statName}</td>
+            <td class="value">${displayValue}</td>
+            <td class="value ${requirementClass}">${displayPlayerValue}</td>
+        </tr>`;
+
+        tableRows.push(rowHtml);
+    }
+
+    return `<div class="stats-container"><table>
+        <caption>Requirements</caption>
+        <thead>
+            <tr>
+                <th></th>
+                <th>Needed</th>
+                <th>Have</th>
+            </tr>
+        </thead>
+        <tbody>${tableRows.join("")}</tbody>
+    </table></div>`;
+}
+
 menu.setMenus({
     gameSettings: {
         title: "GAME SETTINGS",
@@ -507,6 +590,7 @@ menu.setMenus({
         title: "EQUIP WEAPON",
         getOptions: () => {
             const equippedWeaponId = playerEntity.leader.equipped.weapon;
+            const equippedWeapon = WEAPONS[equippedWeaponId];
             const ownedWeapons = Object.keys(playerEntity.getPartyWeapons());
 
             return ownedWeapons.map(weaponId => {
@@ -519,27 +603,47 @@ menu.setMenus({
                     return null;
                 }
 
+                const statsHtml = menu.getStatsHtml("Weapon Stats", {
+                    "Base Damage": {
+                        value: weapon.damage.base,
+                        className: menu.getStatClassName(
+                            equippedWeapon.damage.base,
+                            weapon.damage.base
+                        ),
+                    },
+                    "Random Multiplier": {
+                        value: weapon.damage.randomMultiplier,
+                        className: menu.getStatClassName(
+                            equippedWeapon.damage.randomMultiplier,
+                            weapon.damage.randomMultiplier
+                        ),
+                    },
+                    "Load": {
+                        value: weapon.weight,
+                        className: "",
+                    }
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(weapon.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${weapon.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
                 const isEquipped = weaponId === equippedWeaponId;
-                const requiredStrength = weapon.requiredStr || 0;
                 const playerMeetsReqirements =
-                    playerEntity.leader.stats.core.strength >= requiredStrength;
-                const requirementClass =
-                    playerMeetsReqirements ? "friendly" : "enemy";
-                const requiredStrengthHtml =
-                    `<span class="${requirementClass}">` +
-                    `STR ${requiredStrength}</span>`;
+                    playerEntity.leader.canEquipWeapon(weaponId);
 
                 return {
                     id: weaponId,
                     displayText:
                         weapon.name + (isEquipped ? " (Equipped)" : ""),
-                    description:
-                        `${weapon.description}\n` +
-                        `Base Damage: ${weapon.damage.base}, ` +
-                        `Random Multiplier: ` +
-                            `${weapon.damage.randomMultiplier}\n` +
-                        `LOAD: ${weapon.weight}\n` +
-                        `Stat Requirement: ${requiredStrengthHtml}`,
+                    description: descriptionHtml,
                     className: playerMeetsReqirements
                         ? (isEquipped ? "friendly" : undefined)
                         : "tooExpensive",
@@ -560,11 +664,8 @@ menu.setMenus({
                 return;
             }
 
-            const requiredStrength = weapon.requiredStr || 0;
-            const hasRequiredStrength =
-                playerEntity.leader.stats.core.strength >=
-                requiredStrength
-            if (! hasRequiredStrength) {
+            if (! playerEntity.leader.canEquipWeapon(selectedOptionId)) {
+                // @TODO Don't assume that a lack of strength is the reason
                 updateBattleLog(
                     `You <span class="enemy">require</span> ` +
                     `<span class="STR">${requiredStrength} STR` +
@@ -588,6 +689,7 @@ menu.setMenus({
         title: "EQUIP ARMOR",
         getOptions: () => {
             const equippedArmorId = playerEntity.leader.equipped.armor;
+            const equippedArmor = ARMOR[equippedArmorId];
             const ownedArmor = Object.keys(playerEntity.getPartyArmor());
 
             return ownedArmor.map(armorId => {
@@ -600,26 +702,41 @@ menu.setMenus({
                     return null;
                 }
 
+                const statsHtml = menu.getStatsHtml("Armor Stats", {
+                    "Defense": {
+                        value: armor.coreStatModifiers.defense,
+                        className: menu.getStatClassName(
+                            equippedArmor.coreStatModifiers.defense,
+                            armor.coreStatModifiers.defense,
+                        ),
+                    },
+                    "Load": {
+                        value: armor.weight,
+                        className: "",
+                    },
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(armor.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${armor.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
                 const isEquipped = armorId === equippedArmorId;
-                const requiredEndurance = armor.requiredEnd || 0;
-                const meetsRequirements =
-                    playerEntity.leader.stats.core.endurance >=
-                    requiredEndurance;
-                const requirementClass = meetsRequirements
-                    ? "friendly" : "enemy";
-                const requiredEnduranceHtml =
-                    `<span class="${requirementClass}">END ` +
-                    `${requiredEndurance}</span>`;
+                const playerMeetsReqirements =
+                    playerEntity.leader.canEquipArmor(armorId);
+
                 return {
                     id: armorId,
                     displayText:
                         armor.name + (isEquipped ? " (Equipped)" : ""),
-                    description:
-                        `${armor.description}\n` +
-                        `Defense: ${armor.defense}\n` +
-                        `LOAD: ${armor.weight}\n` +
-                        `Stat Requirement: ${requiredEnduranceHtml}`,
-                    className: ! meetsRequirements
+                    description: descriptionHtml,
+                    className: ! playerMeetsReqirements
                         ? "tooExpensive"
                         : (isEquipped ? "friendly" : undefined),
                 };
@@ -639,8 +756,8 @@ menu.setMenus({
                 return;
             }
 
-            const requiredEndurance = armor.requiredEnd || 0;
-            if (playerEntity.leader.stats.core.endurance < requiredEndurance) {
+            if (! playerEntity.leader.canEquipArmor(selectedOptionId)) {
+                // @TODO Don't assume that a lack of endurance is the reason
                 updateBattleLog(
                     `You need <span class="END">${requiredEndurance} ` +
                     `END</span> to wear this garment!`
@@ -706,6 +823,7 @@ menu.setMenus({
         title: "LEFT HAND",
         getOptions: () => {
             const equippedRingId = playerEntity.leader.equipped.ring.left;
+            const equippedRing = RINGS[equippedRingId];
             const ownedRings = Object.keys(playerEntity.getPartyRings());
 
             const options = ownedRings.map(ringId => {
@@ -718,6 +836,27 @@ menu.setMenus({
                     return null;
                 }
 
+                // @TODO Include other ring properties here
+                //       They're not included since we don't yet have a way to
+                //       translate stat and trait names to display names
+                const statsHtml = menu.getStatsHtml("Ring Stats", {
+                    "Load": {
+                        value: ring.weight,
+                        className: "",
+                    },
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(ring.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${ring.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
                 const isEquipped = Object
                     .values(playerEntity.leader.equipped.ring)
                     .includes(ringId);
@@ -726,12 +865,16 @@ menu.setMenus({
                 const className = isEquipped
                     ? (isEquipped ? "friendly" : "muted")
                     : undefined;
+                const playerMeetsReqirements =
+                    playerEntity.leader.canEquipRing(ringId);
 
                 return {
                     id: ringId,
                     displayText,
-                    description: ring.description,
-                    className,
+                    description: descriptionHtml,
+                    className: ! playerMeetsReqirements
+                        ? "tooExpensive"
+                        : (isEquipped ? "friendly" : undefined),
                 };
             });
 
@@ -780,6 +923,13 @@ menu.setMenus({
                 return;
             }
 
+            if (! playerEntity.leader.canEquipRing(selectedOptionId)) {
+                // @TODO No rings have requirements yet, but print the message
+                //       for failure here
+                updateBattleLog(`You don't qualify to wear this ring!`);
+                return;
+            }
+
             if (! playerEntity.leader.equipRing("left", selectedOptionId)) {
                 console.error(
                     "Could not equip the selected ring",
@@ -795,6 +945,7 @@ menu.setMenus({
         title: "RIGHT HAND",
         getOptions: () => {
             const equippedRingId = playerEntity.leader.equipped.ring.right;
+            const equippedRing = RINGS[equippedRingId];
             const ownedRings = Object.keys(playerEntity.getPartyRings());
 
             const options = ownedRings.map(ringId => {
@@ -807,6 +958,27 @@ menu.setMenus({
                     return null;
                 }
 
+                // @TODO Include other ring properties here
+                //       They're not included since we don't yet have a way to
+                //       translate stat and trait names to display names
+                const statsHtml = menu.getStatsHtml("Ring Stats", {
+                    "Load": {
+                        value: ring.weight,
+                        className: "",
+                    },
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(ring.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${ring.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
                 const isEquipped = Object
                     .values(playerEntity.leader.equipped.ring)
                     .includes(ringId);
@@ -815,12 +987,16 @@ menu.setMenus({
                 const className = isEquipped
                     ? (isEquipped ? "friendly" : "muted")
                     : undefined;
+                const playerMeetsReqirements =
+                    playerEntity.leader.canEquipRing(ringId);
 
                 return {
                     id: ringId,
                     displayText,
-                    description: ring.description,
-                    className,
+                    description: descriptionHtml,
+                    className: ! playerMeetsReqirements
+                        ? "tooExpensive"
+                        : (isEquipped ? "friendly" : undefined),
                 };
             });
 
@@ -1135,6 +1311,8 @@ menu.setMenus({
         },
         getOptions: (menuData) => {
             const bitcoins = playerEntity.inventory.contents.bitcoins;
+            const equippedWeaponId = playerEntity.leader.equipped.weapon;
+            const equippedWeapon = WEAPONS[equippedWeaponId];
             const merchantWeapons = menuData?.wares?.weapons || [];
             const options = merchantWeapons.map(weaponId => {
                 const weapon = WEAPONS[weaponId];
@@ -1149,16 +1327,46 @@ menu.setMenus({
                     `<span class="${requirementClass}">STR ` +
                     `${requiredStrength}</span>`;
 
+                const statsHtml = menu.getStatsHtml("Weapon Stats", {
+                    "Base Damage": {
+                        value: weapon.damage.base,
+                        className: menu.getStatClassName(
+                            equippedWeapon.damage.base,
+                            weapon.damage.base
+                        ),
+                    },
+                    "Random Multiplier": {
+                        value: weapon.damage.randomMultiplier,
+                        className: menu.getStatClassName(
+                            equippedWeapon.damage.randomMultiplier,
+                            weapon.damage.randomMultiplier
+                        ),
+                    },
+                    "Load": {
+                        value: weapon.weight,
+                        className: playerEntity.getWeight() + weapon.weight >=
+                            playerEntity.getWeightCapacity()
+                                ? "bad"
+                                : "",
+                    }
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(weapon.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${weapon.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
+
                 return {
                     id: weaponId,
                     displayText: weapon.name,
-                    description:
-                        `${weapon.description}\n` +
-                        `Base Damage: ${weapon.damage.base}, ` +
-                        `Random Multiplier: ` +
-                            `${weapon.damage.randomMultiplier}\n` +
-                        `LOAD: ${weapon.weight}\n` +
-                        `Stat Requirement: ${requiredStrengthHtml}`,
+                    description: descriptionHtml,
                     trailText:
                         `₿ ${weapon.price.toLocaleString(undefined)}`,
                     className: alreadyOwned
@@ -1238,6 +1446,8 @@ menu.setMenus({
         },
         getOptions: (menuData) => {
             const bitcoins = playerEntity.inventory.contents.bitcoins;
+            const equippedArmorId = playerEntity.leader.equipped.armor;
+            const equippedArmor = ARMOR[equippedArmorId];
             const merchantArmor = menuData?.wares?.armor || [];
             const options = merchantArmor.map(armorId => {
                 const armor = ARMOR[armorId];
@@ -1252,14 +1462,39 @@ menu.setMenus({
                 const requiredEnduranceHtml =
                     `<span class="${requirementClass}">END ` +
                     `${requiredEndurance}</span>`;
+
+                const statsHtml = menu.getStatsHtml("Armor Stats", {
+                    "Defense": {
+                        value: armor.coreStatModifiers.defense,
+                        className: menu.getStatClassName(
+                            equippedArmor.coreStatModifiers.defense,
+                            armor.coreStatModifiers.defense,
+                        ),
+                    },
+                    "Load": {
+                        value: armor.weight,
+                        className: playerEntity.getWeight() + armor.weight >=
+                            playerEntity.getWeightCapacity()
+                                ? "bad"
+                                : "",
+                    },
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(armor.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${armor.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
                 return {
                     id: armorId,
                     displayText: armor.name,
-                    description:
-                        `${armor.description}\n` +
-                        `Defense: ${armor.defense}\n` +
-                        `LOAD: ${armor.weight}\n` +
-                        `Stat Requirement: ${requiredEnduranceHtml}`,
+                    description: descriptionHtml,
                     trailText: `₿ ${armor.price}`,
                     className: alreadyOwned
                         ? "muted"
@@ -1331,10 +1566,34 @@ menu.setMenus({
                 const tooExpensive = ring.price > bitcoins;
                 const alreadyOwned = playerEntity.partyOwnsRing(ringId);
 
+                // @TODO Include other ring properties here
+                //       They're not included since we don't yet have a way to
+                //       translate stat and trait names to display names
+                const statsHtml = menu.getStatsHtml("Ring Stats", {
+                    "Load": {
+                        value: ring.weight,
+                        className: playerEntity.getWeight() + ring.weight >=
+                            playerEntity.getWeightCapacity()
+                                ? "bad"
+                                : "",
+                    },
+                });
+
+                const requirementsHtml =
+                    menu.getRequirementsHtml(ring.coreStatRequirements);
+
+                const descriptionHtml = `
+                    <div class="description">${ring.description}</div>
+                    <div class="stats-section">
+                        ${statsHtml}
+                        ${requirementsHtml}
+                    </div>
+                `;
+
                 return {
                     id: ringId,
                     displayText: ring.name,
-                    description: ring.description,
+                    description: descriptionHtml,
                     trailText:
                         `₿ ${ring.price.toLocaleString(undefined)}`,
                     className: alreadyOwned
