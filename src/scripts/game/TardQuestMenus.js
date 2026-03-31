@@ -1318,15 +1318,6 @@ menu.setMenus({
                 const weapon = WEAPONS[weaponId];
                 const tooExpensive = weapon.price > bitcoins;
                 const alreadyOwned = playerEntity.partyOwnsWeapon(weaponId);
-                const requiredStrength = weapon.requiredStr || 0;
-                const requirementClass =
-                    playerEntity.leader.stats.core.strength >= requiredStrength
-                        ? "friendly"
-                        : "enemy";
-                const requiredStrengthHtml =
-                    `<span class="${requirementClass}">STR ` +
-                    `${requiredStrength}</span>`;
-
                 const statsHtml = menu.getStatsHtml("Weapon Stats", {
                     "Base Damage": {
                         value: weapon.damage.base,
@@ -1453,16 +1444,6 @@ menu.setMenus({
                 const armor = ARMOR[armorId];
                 const tooExpensive = armor.price > bitcoins;
                 const alreadyOwned = playerEntity.partyOwnsArmor(armorId);
-                const requiredEndurance = armor.requiredEnd || 0;
-                const requirementClass =
-                    playerEntity.leader.stats.core.endurance >=
-                    requiredEndurance
-                        ? "friendly"
-                        : "enemy";
-                const requiredEnduranceHtml =
-                    `<span class="${requirementClass}">END ` +
-                    `${requiredEndurance}</span>`;
-
                 const statsHtml = menu.getStatsHtml("Armor Stats", {
                     "Defense": {
                         value: armor.coreStatModifiers.defense,
