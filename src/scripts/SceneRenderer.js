@@ -77,8 +77,10 @@ const SceneRenderer = {
         const layerClasses = ["layer"];
         if (playerEntity.enteringCombat) {
             layerClasses.push("darkening");
+            playerEntity.enteringCombat = false;
         } else if (playerEntity.leavingCombat) {
             layerClasses.push("lightening");
+            playerEntity.leavingCombat = false;
         } else if (BattleSystem.isActive) {
             layerClasses.push("dark");
         }

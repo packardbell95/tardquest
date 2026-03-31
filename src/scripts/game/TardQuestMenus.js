@@ -2448,13 +2448,13 @@ menu.setMenus({
                             onEnd: () => {
                                 console.info("Playback complete!");
                                 gameLayers.forEach(layer => {
-                                    layer.classList.remove('dark');
-                                    layer.classList.add('lightening');
+                                    layer.classList.remove("dark");
+                                    layer.classList.add("lightening");
                                 });
 
                                 setTimeout(() => {
                                     gameLayers.forEach(layer => {
-                                        layer.classList.remove('lightening');
+                                        layer.classList.remove("lightening");
                                     });
 
                                     GameControl.enableControls();
