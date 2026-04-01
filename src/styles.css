@@ -2542,6 +2542,11 @@ a:link {
         & > [data-id="ringOfStinky"]            { order: 11; }
         & > [data-id="ringOfAmplifiedAudio"]    { order: 12; }
     }
+
+    & button.unequippable {
+        background-color: #900;
+        border-color: #c00 #600 #600 #c00;
+    }
 }
 
 #inventory > [name="main"] {
@@ -3223,6 +3228,13 @@ a:link {
 .inventoryTooltip .details {
     display: flex;
     flex-direction: column;
+}
+
+.inventoryTooltip .info {
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+    margin-top: 1em;
 }
 
 .genericTooltip {

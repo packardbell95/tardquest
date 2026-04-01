@@ -278,7 +278,111 @@ const InventorySidebar = {
         );
     },
 
+    getStatsHtml: function(definition) {
+        const stats = {};
+        if (definition.damage) {
+            stats["Base Damage"] = {
+                value: definition.damage.base,
+                className: "",
+            };
+            stats["Random Damage Multiplier"] = {
+                value: definition.damage.multiplier,
+                className: "",
+            };
+        }
+
+        if (definition.coreStatModifiers?.defense) {
+            stats["Defense"] = {
+                value: definition.coreStatModifiers.defense,
+                className: "",
+            };
+        }
+
+        if (definition.weight) {
+            stats["Load"] = {
+                value: definition.weight,
+                className: "",
+            };
+        }
+
+        const keys = Object.keys(stats);
+        if (keys.length < 1) {
+            return "";
+        }
+
+        const tableRows = [];
+        for (const key of keys) {
+            if (typeof stats[key].value === "undefined") {
+                console.error("Undefined value", { key, stat: stats[key] });
+            }
+
+            const displayValue =
+                (stats[key].value || 0).toLocaleString(undefined);
+            const rowHtml = `<tr>
+                <td>${key}</td>
+                <td class="value ${stats[key].className}">${displayValue}</td>
+            </tr>`;
+
+            tableRows.push(rowHtml);
+        }
+
+        return `<div class="stats-container"><table>
+            <caption>Stats</caption>
+            <tbody>${tableRows.join("")}</tbody>
+        </table></div>`;
+    },
+
+    getRequirementsHtml: function(definition) {
+        const requirements = definition?.coreStatRequirements || {};
+        const stats = Object.keys(requirements);
+        if (stats.length < 1) {
+            return "";
+        }
+
+        const tableRows = [];
+        for (const stat of stats) {
+            const statName = stat.slice(0, 1).toLocaleUpperCase() +
+                stat.slice(1);
+            const value = requirements[stat];
+            const playerValue = playerEntity.leader.stats.core[stat];
+            const displayValue = value.toLocaleString(undefined);
+            const displayPlayerValue = playerValue.toLocaleString(undefined);
+            const playerMeetsRequirement = playerValue >= value;
+            const requirementClass = playerMeetsRequirement
+                ? "good"
+                : "tooExpensive";
+
+            const rowHtml = `<tr>
+                <td>${statName}</td>
+                <td class="value">${displayValue}</td>
+                <td class="value ${requirementClass}">${displayPlayerValue}</td>
+            </tr>`;
+
+            tableRows.push(rowHtml);
+        }
+
+        return `<div class="stats-container"><table>
+            <caption>Requirements</caption>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Needed</th>
+                    <th>Have</th>
+                </tr>
+            </thead>
+            <tbody>${tableRows.join("")}</tbody>
+        </table></div>`;
+    },
+
     setButtonTooltip: ($button, definition, equippedText = "") => {
+        const requirementsSection =
+            InventorySidebar.getRequirementsHtml(definition);
+        const statsSection = InventorySidebar.getStatsHtml(definition);
+
+        const infoSection = (requirementsSection || statsSection)
+            ? `<div class="info">${requirementsSection}${statsSection}</div>`
+            : "";
+
         $button.setAttribute(
             "data-tooltipHtml",
             `<div class="inventoryTooltip">
@@ -289,6 +393,7 @@ const InventorySidebar = {
                 <div class="details">
                     ${definition.description}
                 </div>
+                ${infoSection}
             </div>`
         );
         $button.setAttribute("data-tooltipPosition", "left");
