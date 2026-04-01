@@ -447,6 +447,9 @@ const InventorySidebar = {
         );
 
         $button.onclick = function () {
+            // Stop any keyboard presses from hitting the button again
+            this.blur();
+
             playSFX("uiSelect");
 
             // @TODO Allow party member selection so items can
@@ -481,9 +484,6 @@ const InventorySidebar = {
                     usageTarget
                 );
             }
-
-            // Stop any keyboard presses from hitting the button again
-            this.blur();
 
             InventorySidebar.refreshItem(itemId);
         };
@@ -585,7 +585,14 @@ const InventorySidebar = {
             quantity
         );
 
+        if (! playerEntity.leader.canEquipWeapon(weaponId)) {
+            $button.classList.add("unequippable");
+        }
+
         $button.onclick = function () {
+            // Stop any keyboard presses from hitting the button again
+            this.blur();
+
             playSFX("uiSelect");
             let previouslyEquippedWeaponId = null;
 
@@ -603,6 +610,13 @@ const InventorySidebar = {
                 previouslyEquippedWeaponId = activePartyMember.equipped.weapon;
 
                 BattleSystem.equipWeapon(activePartyMember, weaponId);
+            } else if (! playerEntity.leader.canEquipWeapon(weaponId)) {
+                const article = weapon.article === "" ? "" : "the";
+                updateBattleLog(
+                    `You are <span class="action">too wimpy</span> to wield ` +
+                    `${article} <span class="friendly">${weapon.name}</span>.`
+                );
+                return;
             } else {
                 previouslyEquippedWeaponId = playerEntity.leader.equipped.weapon;
 
@@ -613,9 +627,6 @@ const InventorySidebar = {
                     );
                 }
             }
-
-            // Stop any keyboard presses from hitting the button again
-            this.blur();
 
             if (previouslyEquippedWeaponId) {
                 InventorySidebar.refreshWeapon(previouslyEquippedWeaponId);
@@ -720,7 +731,14 @@ const InventorySidebar = {
             quantity
         );
 
+        if (! playerEntity.leader.canEquipArmor(armorId)) {
+            $button.classList.add("unequippable");
+        }
+
         $button.onclick = function () {
+            // Stop any keyboard presses from hitting the button again
+            this.blur();
+
             playSFX("uiSelect");
             let previouslyEquippedArmorId = null;
 
@@ -738,6 +756,12 @@ const InventorySidebar = {
                 previouslyEquippedArmorId = activePartyMember.equipped.armor;
 
                 BattleSystem.equipArmor(activePartyMember, armorId);
+            } else if (! playerEntity.leader.canEquipArmor(armorId)) {
+                updateBattleLog(
+                    `You are <span class="action">too basic</span> to wear ` +
+                    `the <span class="friendly">${armor.name}</span>.`
+                );
+                return;
             } else {
                 previouslyEquippedArmorId = playerEntity.leader.equipped.armor;
 
@@ -748,9 +772,6 @@ const InventorySidebar = {
                     );
                 }
             }
-
-            // Stop any keyboard presses from hitting the button again
-            this.blur();
 
             if (previouslyEquippedArmorId) {
                 InventorySidebar.refreshArmorPiece(previouslyEquippedArmorId);
@@ -851,7 +872,14 @@ const InventorySidebar = {
             quantity
         );
 
+        if (! playerEntity.leader.canEquipRing(ringId)) {
+            $button.classList.add("unequippable");
+        }
+
         $button.onclick = function () {
+            // Stop any keyboard presses from hitting the button again
+            this.blur();
+
             playSFX("uiSelect");
 
             if (BattleSystem.isActive) {
@@ -873,12 +901,17 @@ const InventorySidebar = {
                         : BattleSystem.unequipRing(partyMember, hand)
                 );
 
-                this.blur();
                 return;
             }
 
-            // Stop any keyboard presses from hitting the button again
-            this.blur();
+            if (! playerEntity.leader.canEquipRing(ringId)) {
+                const article = ring.article === "" ? "" : "the";
+                updateBattleLog(
+                    `You are <span class="action">too cheugy</span> to wear ` +
+                    `${article} <span class="friendly">${ring.name}</span>.`
+                );
+                return;
+            }
 
             InventorySidebar.promptForRingHand(
                 playerEntity.leader,

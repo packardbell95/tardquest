@@ -588,7 +588,7 @@ function PartyMemberBuilder(name, stats = {}) {
         _unequipRing(suppressCallback, hand) {
             if (! ["left", "right"].includes(hand)) {
                 console.warn(
-                    "Tried to unequip a ring on an unknown hand",
+                    "Tried to unequip a ring from an unknown hand",
                     { hand }
                 );
                 return false;
@@ -636,14 +636,6 @@ function PartyMemberBuilder(name, stats = {}) {
             }
 
             const previousRingId = this.equipped.ring[hand];
-
-            if (! this.parent.inventory.deductRing(ringId)) {
-                console.error(
-                    "Failed to take ring from the inventory",
-                    { ringId }
-                );
-                return false;
-            }
 
             if (! this._unequipRing(true, hand)) {
                 return false;
