@@ -497,6 +497,14 @@ function PartyMemberBuilder(name, stats = {}) {
 
             const previousWeaponId = this.equipped.weapon;
 
+            if (! this.parent.inventory.deductWeapon(weaponId)) {
+                console.error(
+                    "Failed to take weapon from the inventory",
+                    { weaponId }
+                );
+                return false;
+            }
+
             if (! this._unequipWeapon(true)) {
                 return false;
             }
@@ -545,6 +553,14 @@ function PartyMemberBuilder(name, stats = {}) {
             }
 
             const previousArmorId = this.equipped.armor;
+
+            if (! this.parent.inventory.deductArmor(armorId)) {
+                console.error(
+                    "Failed to take armor from the inventory",
+                    { armorId }
+                );
+                return false;
+            }
 
             if (! this._unequipArmor(true)) {
                 return false;
@@ -620,6 +636,14 @@ function PartyMemberBuilder(name, stats = {}) {
             }
 
             const previousRingId = this.equipped.ring[hand];
+
+            if (! this.parent.inventory.deductRing(ringId)) {
+                console.error(
+                    "Failed to take ring from the inventory",
+                    { ringId }
+                );
+                return false;
+            }
 
             if (! this._unequipRing(true, hand)) {
                 return false;

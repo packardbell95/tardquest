@@ -1490,6 +1490,8 @@
                 if (currentWeaponId) {
                     InventorySidebar.refreshWeapon(currentWeaponId);
                 }
+
+                this.parent.inventory?.onInventoryContentsChanged?.();
             };
 
             const onArmorChange = function(
@@ -1508,6 +1510,8 @@
                 if (currentArmorId) {
                     InventorySidebar.refreshArmor(currentArmorId);
                 }
+
+                this.parent.inventory?.onInventoryContentsChanged?.();
             };
 
             const onRingChange = function(
@@ -1527,6 +1531,8 @@
                 if (currentRingId) {
                     InventorySidebar.refreshRing(currentRingId);
                 }
+
+                this.parent.inventory?.onInventoryContentsChanged?.();
             };
 
             playerPartyMember.onWeaponChange = onWeaponChange;
