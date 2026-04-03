@@ -342,4 +342,42 @@ const MapEntityFeatureFactory = {
 
         return sigil;
     },
+
+    /**
+     * PIT of SPIKES
+     */
+    pitOfSpikes: function(x, y) {
+        const pitOfSpikes = MapEntityBuilder("pitOfSpikes", x, y);
+        pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
+        pitOfSpikes.getDisplayCharacter = () => "●";
+        pitOfSpikes.onEnter = function(gameMap, entity) {
+            console.log("onEnter()", { entity });
+            if (entity?.type === "player") {
+                music.stop();
+                animTorchEnd();
+                Portrait.show("death");
+                GameControl.disableControls();
+
+                document.getElementById("game").classList
+                    .add("descendingIntoFloor");
+                document.getElementById("viewport").classList
+                    .add("playerFellIntoAPitAndDied");
+                updateBattleLog(
+                    `<span class="action">AUUUUUGH!</span> You scream out as ` +
+                    `the flimsy floor collapses beneath your feet and you ` +
+                    `plunge into a pit of spikes waiting beneath!`
+                );
+
+                playSFX("floorBreakScreamDie");
+                playerEntity.die(this);
+            } else {
+                console.log(
+                    `🏁 Entered by ${entity.id}`,
+                    { gameMap, entity, entered: this }
+                );
+            }
+        };
+
+        return pitOfSpikes;
+    },
 }

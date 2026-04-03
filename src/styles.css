@@ -2899,7 +2899,8 @@ a:link {
 .unexplored {
     color: #545454;
 }
-.exit {
+.exit,
+.pitOfSpikes {
     color: #f00;
 }
 

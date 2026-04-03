@@ -1379,6 +1379,13 @@
                 );
             };
 
+            playerEntity.onDie = function(killedByEntity) {
+                gameOver = true;
+                animTorchEnd();
+                Portrait.show("death");
+                render();
+            };
+
             const playerPartyMember =
                 TardQuestPartyMemberFactory.player(baseStats);
             playerPartyMember.color = "#bff";
