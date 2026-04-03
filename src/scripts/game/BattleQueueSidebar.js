@@ -40,6 +40,7 @@ const BattleQueueSidebar = {
         this.refresh();
 
         $battleQueueSection.classList.add("open");
+        InventorySidebar?.open("main");
 
         if (BattleSystem.isActive) {
             const index = BattleSystem.playerPartyMemberIndex;

@@ -2386,7 +2386,7 @@ a:link {
 
 #battleQueueSection #battleQueue {
     filter: brightness(0);
-    transition: filter 1.4s ease-in;
+    transition: filter .4s ease-in;
 }
 
 #battleQueueSection.open #battleQueue {

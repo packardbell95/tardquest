@@ -1312,21 +1312,30 @@
                 category,
                 id
             ) {
-                if (category && id) {
-                    switch (category) {
-                        case "items":
-                            InventorySidebar.refreshItem(id);
-                            break;
-                        case "weapons":
-                            InventorySidebar.refreshWeapon(id);
-                            break;
-                        case "armor":
-                            InventorySidebar.refreshArmor(id);
-                            break;
-                        case "rings":
-                            InventorySidebar.refreshRing(id);
-                            break;
-                    }
+                switch (category) {
+                    case "items":
+                        id
+                            ? InventorySidebar.refreshItem(id)
+                            : InventorySidebar.refreshItems();
+                        break;
+                    case "weapons":
+                        id
+                            ? InventorySidebar.refreshWeapon(id)
+                            : InventorySidebar.refreshWeapons();
+                        break;
+                    case "armor":
+                        id
+                            ? InventorySidebar.refreshArmor(id)
+                            : InventorySidebar.refreshArmor();
+                        break;
+                    case "rings":
+                        id
+                            ? InventorySidebar.refreshRing(id)
+                            : InventorySidebar.refreshRings();
+                        break;
+                    default:
+                        InventorySidebar.refresh();
+                        break;
                 }
 
                 const $load =
@@ -1334,7 +1343,6 @@
                 $load.setAttribute("value", playerEntity.getWeight());
                 $load.setAttribute("max", playerEntity.getWeightCapacity());
             };
-            playerEntity.inventory.onInventoryContentsChanged();
 
             playerEntity.maxPartyMembers = 4; // 3 + player
             playerEntity.onReleasePartyMember = function(partyMember) {
@@ -1499,7 +1507,7 @@
                     InventorySidebar.refreshWeapon(currentWeaponId);
                 }
 
-                this.parent.inventory?.onInventoryContentsChanged?.();
+                this.parent.inventory?.onInventoryContentsChanged?.("weapons");
             };
 
             const onArmorChange = function(
@@ -1519,7 +1527,7 @@
                     InventorySidebar.refreshArmor(currentArmorId);
                 }
 
-                this.parent.inventory?.onInventoryContentsChanged?.();
+                this.parent.inventory?.onInventoryContentsChanged?.("armor");
             };
 
             const onRingChange = function(
@@ -1540,7 +1548,7 @@
                     InventorySidebar.refreshRing(currentRingId);
                 }
 
-                this.parent.inventory?.onInventoryContentsChanged?.();
+                this.parent.inventory?.onInventoryContentsChanged?.("rings");
             };
 
             playerPartyMember.onWeaponChange = onWeaponChange;
@@ -2011,6 +2019,8 @@
             return playerEntity;
         })();
 
+        playerEntity.inventory.onInventoryContentsChanged();
+
         BattleSystem.onEncounter = function(
             playerEntity,
             enemyEntity,
@@ -2254,13 +2264,25 @@
             playerEntity,
             enemyEntity
         ) {
+            const refreshUi = () => {
+                SceneRenderer.enemyLayerEnabled = false;
+                playerEntity.purgeDeadPartyMembers();
+                enemyEntity.purgeDeadPartyMembers();
+
+                GameControl.enableControls();
+                GameControl.enablePartyButtons();
+                GameControl.enableInventorySidebarEquipmentButtons();
+                GameControl.update();
+            };
+
             console.log("🥊 ENCOUNTER HAS ENDED", { outcome });
-            GameControl.enableControls();
-            GameControl.enablePartyButtons();
-            GameControl.enableInventorySidebarEquipmentButtons();
             playerEntity.highlightPartyMember?.();
             playerEntity.checkForDeath();
             enemyEntity.checkForDeath();
+
+            if (outcome !== "player won") {
+                refreshUi();
+            }
 
             // @TODO Consolidate party cleanup calls
             switch (outcome) {
@@ -2280,6 +2302,7 @@
                         {
                             onCurtainClose: () => {
                                 console.log("🎭️ Curtain has closed");
+                                InventorySidebar.close();
                                 playerBattleVictory(
                                     outcome,
                                     playerEntity,
@@ -2289,12 +2312,14 @@
                                 render();
                             },
                             onCurtainOpening: () => {
-                                InventorySidebar.close();
+                                refreshUi();
                                 BattleQueueSidebar.close();
                             },
                             onEnd: () => {
-                                // InventorySidebar.open("main");
                                 console.info("Playback complete!");
+                                if (! menu.isOpen()) {
+                                    InventorySidebar.open("main");
+                                }
                                 playerEntity.purgeDeadPartyMembers();
                                 enemyEntity.purgeDeadPartyMembers();
                                 render();
@@ -2310,9 +2335,6 @@
                     );
 
                     claimPostBattleRewards(enemyEntity, playerEntity);
-                    SceneRenderer.enemyLayerEnabled = false;
-                    playerEntity.purgeDeadPartyMembers();
-                    enemyEntity.purgeDeadPartyMembers();
                     break;
                 case "player ran":
                     // playerEntity.leader.say("Gee willikers, I'm outta here!");
@@ -2320,9 +2342,6 @@
                         `<span>${playerEntity.leader.name}</span> ran away ` +
                         `from the <span>${enemyEntity.leader.name}</span>!`
                     );
-                    SceneRenderer.enemyLayerEnabled = false;
-                    playerEntity.purgeDeadPartyMembers();
-                    enemyEntity.purgeDeadPartyMembers();
 
                     playerEntity.leaveCombat();
                     // await npcMove();
@@ -2331,18 +2350,12 @@
                     updateBattleLog(
                         `<span>${enemyEntity.leader.name}</span> ran away!`
                     );
-                    SceneRenderer.enemyLayerEnabled = false;
-                    playerEntity.purgeDeadPartyMembers();
-                    enemyEntity.purgeDeadPartyMembers();
                     break;
                 default:
                     console.warn(
                         "onEncounterEnd() was passed an unrecognized outcome",
                         { outcome }
                     );
-                    SceneRenderer.enemyLayerEnabled = false;
-                    playerEntity.purgeDeadPartyMembers();
-                    enemyEntity.purgeDeadPartyMembers();
                     break;
             }
 
