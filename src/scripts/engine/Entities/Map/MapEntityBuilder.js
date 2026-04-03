@@ -894,8 +894,14 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             );
         },
 
+        // Returns "normal", "warning", or "danger" depending on load
         getWeightLevel: function() {
-            return "normal";
+            const percentage =
+                this.getWeight() / this.getWeightCapacity();
+
+            return percentage < 0.5
+                ? "normal"
+                : (percentage < 0.8 ? "warning" : "danger");
         },
 
         getPartyWeapons: function() {

@@ -734,6 +734,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.traits.sightRange = 6;
         partyMember.traits.fieldOfView = 90;
         partyMember.traits.hearingRange = 7;
+        partyMember.traits.isFlying = true;
 
         partyMember.voice = {
             pitch: 92,

@@ -351,6 +351,10 @@ const MapEntityFeatureFactory = {
         pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
         pitOfSpikes.getDisplayCharacter = () => "●";
         pitOfSpikes.onEnter = function(gameMap, entity) {
+            if (entity.leader.traits.isFlying) {
+                return;
+            }
+
             console.log("onEnter()", { entity });
             if (entity?.type === "player") {
                 music.stop();
@@ -364,20 +368,86 @@ const MapEntityFeatureFactory = {
                     .add("playerFellIntoAPitAndDied");
                 updateBattleLog(
                     `<span class="action">AUUUUUGH!</span> You scream out as ` +
-                    `the flimsy floor collapses beneath your feet and you ` +
-                    `plunge into a pit of spikes waiting beneath!`
+                    `you plunge into a pit of spikes waiting beneath!`
                 );
 
                 playSFX("floorBreakScreamDie");
                 playerEntity.die(this);
             } else {
                 console.log(
-                    `🏁 Entered by ${entity.id}`,
-                    { gameMap, entity, entered: this }
+                    `🕳️ ${entity.leader.name} fell into a pit of spikes`,
+                    { entity, gameMap }
                 );
+                entity.die(this);
             }
         };
 
         return pitOfSpikes;
+    },
+
+    /**
+     * CRACKED FLOOR
+     */
+    crackedFloor: function(x, y) {
+        const crackedFloor = MapEntityBuilder("crackedFloor", x, y);
+
+        crackedFloor.crackedLevel = 1;
+        crackedFloor.getDisplayName = function() {
+            switch (this.crackedLevel) {
+                case 1:
+                    return "🚧 Slightly-Cracked Floor";
+                case 2:
+                    return "⚠️ Cracked Floor";
+                case 3:
+                    return "⚠️ Severely-Cracked Floor";
+                default:
+                    return "🚧 Ambiguously-Cracked Floor";
+            }
+        };
+
+        crackedFloor.getDisplayCharacter = function() {
+            return this.crackedLevel === 3 ? "✖" : "✕";
+        };
+
+        crackedFloor.onEnter = function(gameMap, entity) {
+            if (entity.leader.traits.isFlying) {
+                return;
+            }
+
+            console.log("onEnter()", { entity });
+
+            this.crackedLevel += ({
+                normal: 1,
+                warning: 2,
+                danger: 3,
+            })[entity.getWeightLevel()] || 0;
+
+            if (this.crackedLevel > 3) {
+                const pitOfSpikes =
+                    MapEntityFeatureFactory.pitOfSpikes(this.x, this.y);
+
+                if (entity?.type === "player") {
+                    updateBattleLog(
+                        `The flimsy floor collapses beneath your feet!`
+                    );
+                }
+
+                gameMap.addEntity(pitOfSpikes);
+                this.die(entity);
+
+                gameMap.triggerOnEnterEvent(pitOfSpikes);
+            } else if (entity?.type === "player") {
+                const cautionText = this.crackedLevel > 1
+                    ? " It would be a good idea to avoid stepping here again."
+                    : "";
+                const message =
+                    `<span class="action">The floor cracks under your feet!` +
+                    `</span>${cautionText}`;
+
+                updateBattleLog(message);
+            }
+        };
+
+        return crackedFloor;
     },
 }

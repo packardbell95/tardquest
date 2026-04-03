@@ -151,6 +151,7 @@ function PartyMemberBuilder(name, stats = {}) {
             canRun: true,
             canUse: true,
             canEquip: true,
+            isFlying: false,
         },
 
         rewards: {

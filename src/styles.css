@@ -3052,6 +3052,10 @@ a:link {
     animation: scene_healingTileGlow 5s linear alternate infinite;
 }
 
+.scene_character_pitOfSpikes {
+    color: #6664;
+}
+
 @keyframes scene_exitGlow {
     0% {
         color: #FFF000;

@@ -344,6 +344,14 @@ const SceneRenderer = {
                     return "vampire";
                 }
 
+                if (entityType === "crackedFloor") {
+                    return ({
+                        1: "crackedFloorSlight",
+                        2: "crackedFloor",
+                        3: "crackedFloorSevere",
+                    })[mapEntity.crackedLevel || 1] ?? "crackedFloorSlight";
+                }
+
                 if (enemyTypes.includes(entityType)) {
                     const artName = mapEntity.isStunned()
                         ? "stunnedEnemy"

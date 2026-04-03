@@ -648,6 +648,38 @@ class GameMap {
         this.#entities = this.#entities.filter(e => e.isActive);
     }
 
+    /**
+     * Helper function to force an onEnter() event on behalf of a given entity
+     * for any other entities that are on top of it
+     *
+     * Used for instances where a new enterable entity is placed on the map
+     * beneath other entities, eg: the pit of spikes
+     *
+     * @param Object entity The entity whose onEnter event should be fired
+     */
+    triggerOnEnterEvent(entity) {
+        if (! entity.isActive) {
+            console.error("Entity is inactive", { entity });
+            return;
+        }
+
+        if (typeof entity.onEnter !== "function") {
+            console.error("Entity has no onEnter() function", { entity });
+            return;
+        }
+
+        const actorEntities = this.#entities.filter(e =>
+            e.isActive &&
+            e.x === entity.x &&
+            e.y === entity.y &&
+            e.id !== entity.id
+        );
+
+        for (const actorEntity of actorEntities) {
+            entity.onEnter(this, actorEntity);
+        }
+    }
+
     // Generates the map
     // playerStartX and playerStartY point to where the player resides, so this
     // spot should not be filled in
