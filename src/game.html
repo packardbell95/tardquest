@@ -1356,15 +1356,6 @@
                     return;
                 }
 
-                // @TODO Make these messages specific to the entity type
-                partyMember.say(randomEntry([
-                    "This field trip is over.",
-                    "I guess this is goodbye.",
-                    "Well fuck you too, asshole.",
-                    "Actually, I quit!",
-                    "But I love you!",
-                ]));
-
                 const bye = randomEntry([
                     "SEE YA!",
                     "BYE!",
@@ -1680,9 +1671,18 @@
                 };
 
                 partyMember.onRelease = function() {
+                    console.log("onRelease() called");
+                    Array.isArray(this.releaseMessages)
+                        ? this.say(
+                            randomEntry(this.releaseMessages),
+                            true,
+                            playSFX("ran")
+                        )
+                        : playSFX("ran");
+
                     const selector =
                         `#partyMembers [data-party-member-id="${this.id}"]`;
-                    document.querySelector(selector).remove();
+                    document.querySelector(selector)?.remove();
                     const $placeholder =
                         this.parent.getPartyMemberPlaceholder();
                     document.getElementById("partyMembers")

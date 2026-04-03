@@ -214,6 +214,11 @@ const TardQuestPartyMemberFactory = {
             ["?", "!", "!!!", "?!", "...", ".",]
         ];
 
+        partyMember.releaseMessages = [
+            "I'm a snail, but you're a slimeball.",
+            "No need to pour salt on my wounds.",
+        ];
+
         return partyMember;
     },
 
@@ -259,6 +264,12 @@ const TardQuestPartyMemberFactory = {
             ["grrr", "mrrp", "rrrarf", "yip"],
             ["borf", "hamburger", "rrrow", "yap"],
             ["?", "!", "!!!", "?!", "...", ".",],
+        ];
+
+        partyMember.releaseMessages = [
+            "Grrrrrrrrr...",
+            "Borf bark borf motherfucker borf woof woof. Asshole.",
+            "Mrr gorf wuff. Borf.",
         ];
 
         return partyMember;
@@ -307,6 +318,11 @@ const TardQuestPartyMemberFactory = {
                 "cheeto crumbs", "toilet paper", "a DVD-VCR combo player",
             ],
             ["?", "!", "!!!", "?!", "...", ".",]
+        ];
+
+        partyMember.releaseMessages = [
+            "Time to hit the road-ent.",
+            "Later, verminator.",
         ];
 
         return partyMember;
@@ -362,6 +378,11 @@ const TardQuestPartyMemberFactory = {
                 "bidet our prey away",
             ],
             ["!", "!!!", "...", "."]
+        ];
+
+        partyMember.releaseMessages = [
+            "You have flushed away our alliance!",
+            "My work here is done.",
         ];
 
         return partyMember;
@@ -424,6 +445,12 @@ const TardQuestPartyMemberFactory = {
             ["!", "!!!", "...", "."]
         ];
 
+        partyMember.releaseMessages = [
+            "Later, skaters.",
+            "Given the boot, away I scoot.",
+            "Flip off, bub.",
+        ];
+
         return partyMember;
     },
 
@@ -472,6 +499,12 @@ const TardQuestPartyMemberFactory = {
                 "You're more of a flamer than I am.",
                 "AHHHHHHHHH!!!",
             ],
+        ];
+
+        partyMember.releaseMessages = [
+            "K.",
+            "Back to the crypt.",
+            "Well fuck you too, asshole.",
         ];
 
         return partyMember;
@@ -523,6 +556,11 @@ const TardQuestPartyMemberFactory = {
             [ "carrot", "egg", "hummus", "orange juice", "pasta" ],
             [ "pudding", "salad", "soy sauce", "strawberry", "yogurt" ],
             [ "?", "!", "!!!", "?!", "...", "." ],
+        ];
+
+        partyMember.releaseMessages = [
+            "My time here has expired.",
+            "Was it something I said?",
         ];
 
         return partyMember;
@@ -577,6 +615,11 @@ const TardQuestPartyMemberFactory = {
             [ "?", "!", "!!!", "?!", "...", "." ],
         ];
 
+        partyMember.releaseMessages = [
+            "Nothing can stop me now!",
+            "Bye-bye...",
+        ];
+
         return partyMember;
     },
 
@@ -625,6 +668,11 @@ const TardQuestPartyMemberFactory = {
             [ "?", "!", "!!!", "?!", "...", "." ],
         ];
 
+        partyMember.releaseMessages = [
+            "Bok bok!",
+            "Cluck you, jerk.",
+        ];
+
         return partyMember;
     },
 
@@ -663,6 +711,11 @@ const TardQuestPartyMemberFactory = {
             mouth: 255,
             throat: 194,
         };
+
+        partyMember.releaseMessages = [
+            "You're on my naughty list now!",
+            "I long for the wintry Alpine wilderness.",
+        ];
 
         return partyMember;
     },
@@ -703,6 +756,12 @@ const TardQuestPartyMemberFactory = {
             throat: 170,
         };
 
+        partyMember.releaseMessages = [
+            "This field trip is over.",
+            "Auf wiedersehen.",
+            "Bye.",
+        ];
+
         return partyMember;
     },
 
@@ -742,6 +801,11 @@ const TardQuestPartyMemberFactory = {
             mouth: 139,
             throat: 158,
         };
+
+        partyMember.releaseMessages = [
+            "Back into the closet I go. Er, I mean, my coffin.",
+            "The dancefloor is missing its queen!",
+        ];
 
         return partyMember;
     },

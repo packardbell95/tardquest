@@ -977,6 +977,7 @@ const MapEntityEnemyFactory = {
 
             this.getDisplayName = () => "☠️ Former Creature";
             this.getDisplayCharacter = () => "◌";
+            this.getSceneArtId = () => "corpse";
             this.onTouch = null;
             this.onEnter = function(gameMap, actorEntity) {
                 updateBattleLog(
