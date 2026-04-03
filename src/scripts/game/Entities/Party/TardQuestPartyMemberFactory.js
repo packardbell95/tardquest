@@ -1,8 +1,7 @@
 "use strict";
 
 /**
- * @TODO Incorporate flavor text here since leaders dictate personality traits
- * @TODO Inventory, including bitcoin amounts
+ * This object contains definitions for all of the party members in TardQuest
  */
 const TardQuestPartyMemberFactory = {
     /**

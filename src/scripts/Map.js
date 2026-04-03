@@ -2063,19 +2063,6 @@ class GameMap {
 
         return null;
     }
-
-    /**
-     * Helper function to only grab the next step coordinates from a starting
-     * point towards a target goal without returning the full list of steps
-     * @see findPath()
-     *
-     * @param start An array of the starting coordinates ([x, y])
-     * @param goal An array of the target coordinates ([x, y])
-     * @return array|null [x, y] coordinates for next step, or null for no step
-     */
-    findNextStep(start, goal) {
-        return this.findPath(start, goal)?.[1] ?? null;
-    }
 }
 
 /** Simple binary min-heap with decrease-key support via rescore(node). */
