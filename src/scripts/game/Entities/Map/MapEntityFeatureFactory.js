@@ -13,6 +13,7 @@ const MapEntityFeatureFactory = {
 
         exit.getDisplayName = () => "🏁 Exit";
         exit.getDisplayCharacter = () => "E";
+        exit.getSceneArtId = () => "exit";
         exit.onEnter = function(gameMap, entity) {
             console.log("onEnter()", { entity });
             if (entity?.type === "player") {
@@ -35,6 +36,7 @@ const MapEntityFeatureFactory = {
         const healingTile = MapEntityBuilder("healingTile", x, y);
         healingTile.getDisplayName = () => "🟩 Healing Tile";
         healingTile.getDisplayCharacter = () => "H";
+        healingTile.getSceneArtId = () => "healingTile";
         healingTile.onEnter = function(gameMap, entity) {
             function performHeal() {
                 const results = {
@@ -131,6 +133,7 @@ const MapEntityFeatureFactory = {
         const crater = MapEntityBuilder("crater", x, y);
         crater.getDisplayName = () => "⚫️ Crater";
         crater.getDisplayCharacter = () => "●";
+        crater.getSceneArtId = () => "crater";
 
         return crater;
     },
@@ -142,6 +145,7 @@ const MapEntityFeatureFactory = {
         const bloodyCrater = MapEntityBuilder("bloodyCrater", x, y);
         bloodyCrater.getDisplayName = () => "🔴 Bloody Crater";
         bloodyCrater.getDisplayCharacter = () => "●";
+        bloodyCrater.getSceneArtId = () => "bloodyCrater";
 
         return bloodyCrater;
     },
@@ -153,6 +157,7 @@ const MapEntityFeatureFactory = {
         const treasureChest = MapEntityBuilder("treasureChest", x, y);
         treasureChest.getDisplayName = () => "🎁 Treasure Chest";
         treasureChest.getDisplayCharacter = () => "T";
+        treasureChest.getSceneArtId = () => "treasureChest";
         treasureChest.onTouch = function(gameMap, entity) {
             if (entity?.type === "player") {
                 const treasureChest = this;
@@ -339,6 +344,7 @@ const MapEntityFeatureFactory = {
         const sigil = MapEntityBuilder("sigil", x, y);
         sigil.getDisplayName = () => "✡️ Sigil";
         sigil.getDisplayCharacter = () => "✡";
+        sigil.getSceneArtId = () => "sigil";
 
         return sigil;
     },
@@ -350,6 +356,7 @@ const MapEntityFeatureFactory = {
         const pitOfSpikes = MapEntityBuilder("pitOfSpikes", x, y);
         pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
         pitOfSpikes.getDisplayCharacter = () => "●";
+        pitOfSpikes.getSceneArtId = () => "pitOfSpikes";
         pitOfSpikes.onEnter = function(gameMap, entity) {
             if (entity.leader.traits.isFlying) {
                 return;
@@ -407,6 +414,19 @@ const MapEntityFeatureFactory = {
 
         crackedFloor.getDisplayCharacter = function() {
             return this.crackedLevel === 3 ? "✖" : "✕";
+        };
+
+        crackedFloor.getSceneArtId = function() {
+            switch (this.crackedLevel) {
+                case 1:
+                    return "crackedFloorSlight";
+                case 2:
+                    return "crackedFloor";
+                case 3:
+                    return "crackedFloorSevere";
+                default:
+                    return "crackedFloorSlight";
+            }
         };
 
         crackedFloor.onEnter = function(gameMap, entity) {

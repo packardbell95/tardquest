@@ -722,6 +722,7 @@ const MapEntityEnemyFactory = {
             }
         };
 
+        mimic.getSceneArtId = () => "treasureChest";
         mimic.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
 
         mimic.onExplode = function(gameMap, entity) {
@@ -793,6 +794,8 @@ const MapEntityEnemyFactory = {
                 );
             }
         };
+
+        vampire.getSceneArtId = () => "vampire";
 
         vampire.onDie = function() {
             this.getDisplayName =
@@ -929,6 +932,36 @@ const MapEntityEnemyFactory = {
     _buildRoamingEnemy: function(type, x, y, direction) {
         const entity = MapEntityBuilder(type, x, y, direction);
         entity.className = "roamingEnemy";
+
+        entity.getSceneArtId = function(seenFromX, seenFromY) {
+            const baseId = this.isStunned() ? "stunnedEnemy" : "roamingEnemy";
+
+            const relativeDirectionTable = [
+                [2, 1, 0, 3], // Entity facing north
+                [1, 0, 3, 2], // Entity facing east
+                [0, 3, 2, 1], // Entity facing south
+                [3, 2, 1, 0], // Entity facing west
+            ];
+
+            const deltaX = seenFromX - this.x;
+            const deltaY = seenFromY - this.y;
+
+            const directionToVantagePoint =
+                Math.abs(deltaX) > Math.abs(deltaY)
+                    ? (deltaX > 0 ? 1 : 3)
+                    : (deltaY > 0 ? 0 : 2);
+
+            const direction =relativeDirectionTable
+                [entity.direction][directionToVantagePoint];
+
+            const directionName = ["Front", "Right", "Back", "Left"][direction];
+            if (! directionName) {
+                console.error("Unknown direction", { direction });
+                return "void";
+            }
+
+            return baseId + directionName;
+        };
 
         return entity;
     },

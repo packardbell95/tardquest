@@ -16,6 +16,7 @@ const MapEntityNpcFactory = {
         };
 
         merchant.getDisplayCharacter = () => "M";
+        merchant.getSceneArtId = () => "merchant";
         merchant.addPartyMember(TardQuestPartyMemberFactory.merchant());
 
         // Wares are not the same as the merchant's personal inventory
@@ -161,6 +162,7 @@ const MapEntityNpcFactory = {
         };
 
         gambler.getDisplayCharacter = () => "G";
+        gambler.getSceneArtId = () => "gambler";
         gambler.addPartyMember(TardQuestPartyMemberFactory.gambler());
 
         gambler.onTouch = function(gameMap, entity) {
@@ -378,6 +380,7 @@ const MapEntityNpcFactory = {
         };
 
         erok.getDisplayCharacter = () => "E";
+        erok.getSceneArtId = () => "erok";
         erok.addPartyMember(TardQuestPartyMemberFactory.erok());
 
         erok.onTouch = function(gameMap, entity) {

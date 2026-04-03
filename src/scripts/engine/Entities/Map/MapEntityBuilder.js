@@ -12,9 +12,8 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
 
     const mapEntity = {
         id: MapEntityBuilder.entityId++,
-        type,
+        type, // @TODO Could we just use leader.type instead?
         className: "generic-entity",
-        sceneArtId: type,
         isActive: true,
         isAlive: true,
         x,
@@ -620,6 +619,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 ? this.type.charAt(0).toUpperCase() + this.type.slice(1)
                 : "(Unnamed Entity)";
         },
+
         getDisplayCharacter: function() {
             console.warn(
                 "Using default display character. Override it, programmer!",
@@ -627,6 +627,10 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             );
 
             return this.type.substr(0, 1).toUpperCase();
+        },
+
+        getSceneArtId: function(seenFromX, seenFromY) {
+            return this?.leader?.type || "void";
         },
 
         getExpReward: function() {

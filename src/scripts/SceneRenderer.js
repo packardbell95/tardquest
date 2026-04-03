@@ -276,7 +276,11 @@ const SceneRenderer = {
 
         if (! BattleSystem.isActive) {
             for (let i = (subject?.entities?.length || 0) - 1; i >= 0; i--) {
-                const name = SceneRenderer.getEntityName(subject, i);
+                const name = subject.entities[i].getSceneArtId(
+                    playerEntity.x,
+                    playerEntity.y
+                );
+
                 if (name) {
                     names.push(name);
                 }
@@ -313,91 +317,6 @@ const SceneRenderer = {
         const adjustedValue = Math.round(normalizedValue * brightnessFactor);
 
         return Math.max(0, Math.min(maxBrightness, adjustedValue));
-    },
-
-    /**
-     * @TODO Replace this because it sucks
-     */
-    getEntityName: (entity, index = 0) => {
-        const mapEntity = entity?.entities?.[index];
-
-        if (! BattleSystem.isActive) {
-            const enemyTypes = [
-                "snailSentinel",
-                "stupidDog",
-                "wangRat",
-                "keeperOfTheToiletBowl",
-                "mysteriousScooter",
-                "badassFlamingSkeleton",
-                "fridgeOfForgottenLeftovers",
-                "lughead",
-                "pissedOffPoultry",
-                "krampusElf",
-                "mimic",
-                "vampire",
-            ];
-
-            const entityType = mapEntity?.type;
-
-            if (entityType) {
-                if (entityType === "vampire") {
-                    return "vampire";
-                }
-
-                if (entityType === "crackedFloor") {
-                    return ({
-                        1: "crackedFloorSlight",
-                        2: "crackedFloor",
-                        3: "crackedFloorSevere",
-                    })[mapEntity.crackedLevel || 1] ?? "crackedFloorSlight";
-                }
-
-                if (enemyTypes.includes(entityType)) {
-                    const artName = mapEntity.isStunned()
-                        ? "stunnedEnemy"
-                        : "roamingEnemy";
-
-                    return (
-                        artName +
-                        SceneRenderer.getRelativeDirection(mapEntity)
-                    );
-                }
-
-                return entityType === "mimic"
-                    ? "treasureChest"
-                    : entityType;
-            }
-        }
-    },
-
-    getRelativeDirection: function(entity) {
-        const relativeDirectionTable = [
-            /* entity facing N */ [2, 1, 0, 3],
-            /* entity facing E */ [1, 0, 3, 2],
-            /* entity facing S */ [0, 3, 2, 1],
-            /* entity facing W */ [3, 2, 1, 0]
-        ];
-
-        const deltaX = playerEntity.x - entity.x;
-        const deltaY = playerEntity.y - entity.y;
-
-        const directionToPlayer =
-            Math.abs(deltaX) > Math.abs(deltaY)
-                ? (deltaX > 0 ? 1 : 3)
-                : (deltaY > 0 ? 0 : 2);
-
-        const direction = relativeDirectionTable
-            [entity.direction][directionToPlayer];
-
-        switch (direction) {
-            case 0: return "Front";
-            case 1: return "Right";
-            case 2: return "Back";
-            case 3: return "Left";
-            default:
-                console.error("Unknown direction", { direction });
-                break;
-        }
     },
 
     formatArt: (art, isMask) => {
