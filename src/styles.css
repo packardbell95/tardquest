@@ -3443,6 +3443,104 @@ dialog.modal::backdrop {
     to { color: unset; }
 }
 
+@keyframes enemyCrtFlashed {
+    0%, 9.999% {
+        filter: invert(1);
+    }
+
+    10%, 19.999% {
+        filter: invert(0);
+    }
+
+    20%, 29.999% {
+        filter: invert(1);
+    }
+
+    30%, 39.999% {
+        filter: invert(0);
+    }
+
+    40%, 49.999% {
+        filter: invert(1);
+    }
+
+    50%, 59.999% {
+        filter: invert(0);
+    }
+
+    60%, 69.999% {
+        filter: invert(1);
+    }
+
+    70%, 79.999% {
+        filter: invert(0);
+    }
+
+    80%, 89.999% {
+        filter: invert(1);
+    }
+
+    90%, 100% {
+        filter: invert(0);
+    }
+}
+
+.layer.enemy .crt-flashed {
+    --duration: 0.5s;
+    animation: enemyCrtFlashed var(--duration);
+}
+
+.layer.enemy .poked {
+    --duration: 0.6s;
+    animation: enemyPoked var(--duration) linear;
+}
+
+.layer.enemy .poked .art {
+    animation: enemyPokedColor var(--duration) linear;
+}
+
+@keyframes enemyPoked {
+    0% {
+        transform: matrix3d(
+            1, 0, 0, 0.001,
+            0, 1, 0, 0.0005,
+            0, 0, 1, 0,
+            1, 1, 0, 1
+        );
+    }
+
+    50% {
+        transform: matrix3d(
+            0.7, 0.2, 0, 0.003,
+            0, 1, 0, 0.001,
+            0, 0, 1, 0,
+            1, 1, 0, 0.9
+        );
+    }
+
+    20%, 49.999%,
+    70%, 100% {
+        transform: matrix3d(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            1, 1, 0, 1
+        );
+    }
+}
+
+@keyframes enemyPokedColor {
+    0%, 50% {
+        color: #f00;
+    }
+
+    10%,
+    49.999%, 60%,
+    100% {
+        color: #f78080;
+    }
+}
+
 @keyframes PlayerDamaged {
     0% { transform: translate(0, 0); }
     20% { transform: translate(-6px, 0); }

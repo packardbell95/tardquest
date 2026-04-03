@@ -643,13 +643,21 @@
                         }
 
                         for (const cue of activeCues) {
-                            console.log("🎬️ Marker reached", { cue });
+                            console.log(
+                                "🎬️ Marker reached",
+                                { text: cue.text, cue }
+                            );
 
                             const eventName = "on" +
                                 cue.text.slice(0, 1).toUpperCase() +
                                 cue.text.slice(1);
 
-                            ViewportAnimation.events[eventName]?.();
+                            ViewportAnimation.events[eventName]
+                                ? ViewportAnimation.events[eventName]?.()
+                                : console.error(
+                                    "🎬️ Event not found!",
+                                    { eventName }
+                                );
                         }
                     };
 
@@ -2386,9 +2394,15 @@
 
             if (actor?.parent.id === playerEntity.id) {
                 // Player's party is attacking
-                const animation = actor.equipped.weapon === "magicPencil"
-                    ? "magic-pencil-attack.webm"
-                    : "slash.webm";
+                const animation = ({
+                    fingerNail: "fingernail.webm",
+                    pointyStick: "pointy-stick.webm",
+                    nunchucks: "nunchucks.webm",
+                    bludgeoningMace: "bludgeoning-mace.webm",
+                    cathodeRayTubeMonitor: "crt.webm",
+                    magicPencil: "magic-pencil.webm",
+                    goldenWang: "golden-wang.webm",
+                })[actor.equipped.weapon] || "slash.webm";
 
                 ViewportAnimation.play(
                     animation,
@@ -2399,6 +2413,51 @@
                                 `.layer.enemy [data-party-member-id="${id}"]`;
                             document.querySelector(selector)?.classList
                                 .add("damaged");
+                            target.updateHp();
+
+                            if (attackWasFatal) {
+                                actor.parent?.killedMonsters?.(1);
+                            }
+
+                            BattleQueueSidebar
+                                .refreshPortraitStatus(move.actor);
+                        },
+                        onCrtFlash: () => {
+                            console.log("📸 CRT flash!");
+                            const id = target.id;
+                            const selector =
+                                `.layer.enemy [data-party-member-id="${id}"]`;
+                            const $target = document.querySelector(selector);
+                            if (! $target) {
+                                console.warn(
+                                    "No target element found",
+                                    { target }
+                                );
+                                return;
+                            }
+
+                            $target.classList.remove("crt-flashed");
+                            $target.classList.add("crt-flashed");
+                        },
+                        // Note that "poke" is used by the fingerNail which does
+                        // not have an attackPeak event, so target statuses are
+                        // also updated here
+                        onPoke: () => {
+                            console.log("🍢 Poked!");
+                            const id = target.id;
+                            const selector =
+                                `.layer.enemy [data-party-member-id="${id}"]`;
+                            const $target = document.querySelector(selector);
+                            if (! $target) {
+                                console.warn(
+                                    "No target element found",
+                                    { target }
+                                );
+                                return;
+                            }
+
+                            $target.classList.add("poked");
+
                             target.updateHp();
 
                             if (attackWasFatal) {
