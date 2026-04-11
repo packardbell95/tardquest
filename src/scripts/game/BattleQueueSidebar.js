@@ -79,6 +79,12 @@ const BattleQueueSidebar = {
         const $partyMember = document.createElement("div");
         $partyMember.classList.add("portrait", partyMember.type);
 
+        const isEnemy =
+            BattleSystem.enemyEntity.party.some(e => e.id === partyMember.id);
+        if (isEnemy) {
+            $partyMember.classList.add("flipped");
+        }
+
         if (partyMember.color) {
             $partyMember.style.backgroundColor = partyMember.color;
         }
@@ -132,7 +138,7 @@ const BattleQueueSidebar = {
 
             $partyMember.classList.remove("hidden");
 
-            this.refreshPortraitStatus(partyMember);
+            this.refreshPortrait(partyMember);
             const positionX = (moveIndex & 1) === 0 ? 0 : itemSizeX;
             const positionY = ((moveIndex & ~1) >> 1) * itemSizeY;
 
@@ -140,19 +146,15 @@ const BattleQueueSidebar = {
             $partyMember.style.setProperty("--y", `${positionY}px`);
             $partyMember.querySelector(".turn-number").textContent =
                 (moveIndex + 1).toLocaleString(undefined);
-
-            console.log(
-                "👨‍⚖️ ORDER",
-                { partyMember, moveIndex, positionX, positionY }
-            );
         }
     },
 
-    refreshPortraitStatus: function(partyMember) {
+    refreshPortrait: function(partyMember) {
         // @TODO Don't even call this function if there is no party member
+        //       Or maybe use this to clean up tooltips
         if (! partyMember) {
             console.log(
-                "refreshPortraitStatus(): Party member not found",
+                "refreshPortrait(): Party member not found",
                 { partyMember }
             );
             return;
@@ -170,6 +172,176 @@ const BattleQueueSidebar = {
         partyMember.isDead()
             ? $partyMember.classList.add("dead")
             : $partyMember.classList.remove("dead");
+
+        this._updateTooltip(partyMember, $partyMember);
+    },
+
+    // @TODO When the party member disappears, clean up the tooltip
+    _updateTooltip(partyMember, $element) {
+        const actorIsEnemy = ! BattleSystem.playerEntity.party
+            .some(e => e.id === partyMember.id);
+        const modalClass = actorIsEnemy ? "enemy" : "friendly";
+        const actorIsLeader = actorIsEnemy
+            ? partyMember.id === BattleSystem.enemyEntity.leader?.id
+            : partyMember.id === BattleSystem.playerEntity.leader?.id;
+        const actorTitle = actorIsLeader
+            ? "Leader"
+            : (actorIsEnemy ? "Lackey" : "Ally");
+        const actorTitleClassname = actorIsLeader
+            ? "gold"
+            : (actorIsEnemy ? "enemy" : "friendly");
+        const actorStatus = "Normal"; // @TODO Update once statuses are ready
+        const actorLevel =
+            partyMember.stats.progression.level.toLocaleString(undefined);
+        const queuedMove =
+            BattleSystem.queuedMoves.find(e => e.actor.id === partyMember.id);
+
+        const backgroundColor = actorIsEnemy ? "#f00" : "#00f";
+        const actorPortraitClasses = [
+            "portrait",
+            partyMember.type,
+            actorIsEnemy ? "flipped" : "",
+            partyMember.isDead() ? "dead" : "",
+        ].filter(e => e).join(" ");
+
+        const nextMoveHtml =
+            this._getTooltipNextMoveSection(partyMember, queuedMove);
+
+        $element.setAttribute(
+            "data-tooltipHtml",
+            `<div class="battle-queue-modal ${modalClass}">
+                <div class="column left">
+                    <div
+                        class="${actorPortraitClasses}"
+                        style="background-color: ${partyMember.color}"
+                    ></div>
+                    <div
+                        class="${actorTitleClassname}"
+                        style="text-align: center;"
+                    >
+                        ${actorTitle}
+                    </div>
+                </div>
+                <div class="column right">
+                    <div class="actor">
+                        <div class="top">
+                            <em>${actorStatus}</em>
+                            <div>Level ${actorLevel}</div>
+                        </div>
+                        <div class="name">
+                            ${partyMember.name}
+                        </div>
+                        <div class="stat">
+                            <div style="flex-grow: 0;">
+                                HP
+                            </div>
+                            <progress-bar
+                                data-stat-core="hp"
+                                cautionAtOrBelowPercentage="25"
+                                dangerAtOrBelowPercentage="10"
+                                value="${partyMember.stats.core.hp}"
+                                max="${partyMember.stats.core.maxHp}"
+                                height="16"
+                            ></progress-bar>
+                        </div>
+                    </div>
+                    ${nextMoveHtml}
+                </div>
+            </div>`
+        );
+        $element.setAttribute("data-tooltipPosition", "left");
+        $element.setAttribute("data-tooltipGroupId", "battleQueueSidebar");
+        Tooltip.refresh($element);
+    },
+
+    _getTooltipNextMoveSection(partyMember, queuedMove) {
+        if (! queuedMove) {
+            return "";
+        }
+
+        const moveType = queuedMove.type;
+        const moveColor = this._getTooltipMoveColor(moveType);
+
+        const target = queuedMove?.target;
+        const targetIsEnemy =
+            target &&
+            ! BattleSystem.playerEntity?.party.some(e => e.id === target.id);
+        const targetPortraitClasses = [
+            "portrait",
+            target.type,
+            targetIsEnemy ? "flipped" : "",
+            target.isDead() ? "dead" : "",
+        ].filter(e => e).join(" ");
+
+        const summaryActionHtml = this._getSummaryActionHtml(moveType);
+        const targetNameHtml = target?.name
+            ? `<span class="${targetIsEnemy ? "enemy" : "friendly"}">` +
+                `${target.name}</span>`
+            : "";
+
+        const targetHtml = target
+            ? (
+                `<div style="width: 28px; height: 28px; image-rendering: pixelated; background-color: #f00; mask-image: url(assets/interface/ui/battle-icons/arrow-square.png); mask-size: contain; mask-position: center; mask-repeat: no-repeat;"></div>
+                <div
+                    class="${targetPortraitClasses}"
+                    style="width: 30px; height: 30px; mask-size: contain; background-color: ${target?.color || "#fff"};"
+                ></div>`
+            )
+            : "";
+
+        return (
+            `<div style="display: flex; flex-direction: column;">
+                <div>
+                    Next Move
+                </div>
+                <div style="display: flex; flex-direction: column; margin-left: 1ch;">
+                    <div style="display: flex; flex-direction: row; gap: 1ch;">
+                        <div style="width: 30px; height: 30px; image-rendering: pixelated; background-color: #f00; mask-image: url(assets/interface/ui/battle-icons/${moveType}.png); mask-size: contain; mask-position: center; mask-repeat: no-repeat;"></div>
+                        ${targetHtml}
+                    </div>
+                    <div>
+                        ${summaryActionHtml}
+                        ${targetNameHtml}
+                    </div>
+                </div>
+            </div>`
+        );
+    },
+
+    _getTooltipMoveColor: function(moveType) {
+        switch (moveType) {
+            case "attack":
+                return "#f00";
+            case "persuade":
+                return "#A23AB4";
+            case "run":
+                return "#00f";
+            // Other possible types include:
+            // "use item", "equip weapon", "equip armor", and "equip ring"
+            default:
+                return "#fff";
+        }
+    },
+
+    _getSummaryActionHtml: function(moveType) {
+        switch (moveType) {
+            case "attack":
+                return `<span class="action">Attacking</span>`;
+            case "persuade":
+                return `<span class="persuasion">Persuading</span>`;
+            case "run":
+                return `<span class="run">Running away</span>`;
+            case "use item":
+                return `<span>Using item</span>`;
+            case "equip weapon":
+                return `<span>Equipping weapon</span>`;
+            case "equip armor":
+                return `<span>Equipping armor</span>`;
+            case "equip ring":
+                return `<span>Equipping ring</span>`;
+            default:
+                return `<span>???</span>`;
+        }
     },
 
     highlight: function(actorPartyMemberId, targetPartyMemberId) {

@@ -72,6 +72,10 @@ button:disabled:hover {
     text-decoration: line-through;
 }
 
+.flipped {
+    transform: scaleX(-1);
+}
+
 .upside-down {
     display: inline-block;
     transform: scaleY(-1);
@@ -2448,6 +2452,71 @@ a:link {
     }
 }
 
+.battle-queue-modal {
+    display: flex;
+    flex-direction: row;
+    border: 4px double #fff9;
+    min-width: 300px;
+
+    &.friendly {
+        color: #fff;
+        background:
+            linear-gradient(#000, #000) padding-box,
+            linear-gradient(#00f, #00f) border-box;
+    }
+
+    &.enemy {
+        color: #fff;
+        background:
+            linear-gradient(#000, #000) padding-box,
+            linear-gradient(#f00, #f00) border-box;
+    }
+
+    & .column {
+        display: flex;
+        flex-direction: column;
+
+        &.left .portrait {
+            width: 72px;
+            height: 72px;
+            mask-size: contain;
+        }
+
+        &.right {
+            gap: 1em;
+            padding: 0 1ch;
+            flex-grow: 1;
+        }
+    }
+
+    & .actor {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+
+        & .top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1ch;
+        }
+
+        & .name {
+            font-size: 1.5em;
+        }
+
+        & .stat {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1ch;
+
+            & progress-bar {
+                flex-grow: 1;
+            }
+        }
+    }
+}
+
 #inventorySidebarCloseButton {
     width: 100%;
 
@@ -2918,7 +2987,7 @@ a:link {
 .merchant {
     color: #f7f;
 }
-.gambler {
+.gambler, .gold {
     color: #ffd700;
 }
 .erok {
@@ -2938,6 +3007,9 @@ a:link {
 .bad,
 .tooExpensive {
     color: #f00;
+}
+.run {
+    color: #00f;
 }
 
 .alignRight {
@@ -2970,7 +3042,7 @@ a:link {
 .STR {
     color: #f7603b;
 }
-.PRS {
+.PRS, .persuasion {
     color: #A23AB4;
 }
 .END {
@@ -3544,6 +3616,78 @@ dialog.modal::backdrop {
     100% {
         color: #f78080;
     }
+}
+
+@keyframes enemyDanceClubHits {
+    /* Riser */
+    0% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(0);
+    }
+
+    14.15% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(5) brightness(1) hue-rotate(0);
+    }
+
+    /* Kick, slide */
+    18.78% {
+        transform: translateX(-90px) skewX(20deg) scale(1, 1);
+        filter: contrast(1) brightness(5) hue-rotate(2000deg);
+    }
+
+    /* Pre-Bass, end slide */
+    33.85% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(3) hue-rotate(1800deg);
+    }
+
+    /* Bass */
+    33.86% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(1340.2deg);
+    }
+
+    /* Clap, slide */
+    48% {
+        transform: translateX(90px) skewX(-20deg) scale(1, 1);
+        filter: contrast(1) brightness(5) hue-rotate(1340deg);
+    }
+
+    62.45% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(3) hue-rotate(1140deg);
+    }
+
+    62.46% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(660.2deg);
+    }
+
+    70% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(5) hue-rotate(660deg);
+    }
+
+    77.515% {
+        transform: translateX(0) skewX(0) scale(-1, 1);
+        filter: contrast(1) brightness(3) hue-rotate(460deg);
+    }
+
+    92.49% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(260deg);
+    }
+
+    100% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(0);
+    }
+}
+
+.layer.enemy .dance-club-hits {
+    --duration: 1.332s;
+    animation: enemyDanceClubHits var(--duration);
 }
 
 @keyframes PlayerDamaged {

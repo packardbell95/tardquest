@@ -2149,6 +2149,7 @@
             const partyMember = this.playerEntity.party[index];
             Portrait.show(partyMember.type, partyMember.color);
             this.playerEntity?.highlightPartyMember?.(partyMember.id);
+            BattleQueueSidebar.refresh();
             GameControl.update();
         };
 
@@ -2386,11 +2387,11 @@
 
         BattleSystem.onMoveEnd = function(move) {
             if (move.actor) {
-                BattleQueueSidebar.refreshPortraitStatus(move.actor);
+                BattleQueueSidebar.refreshPortrait(move.actor);
             }
 
             if (move.target) {
-                BattleQueueSidebar.refreshPortraitStatus(move.target);
+                BattleQueueSidebar.refreshPortrait(move.target);
             }
         };
 
@@ -2401,6 +2402,18 @@
             attackWasFatal = false,
         ) {
             function onEnd() {
+                const id = target.id;
+                const selector =
+                    `.layer.enemy [data-party-member-id="${id}"]`;
+                const $target = document.querySelector(selector);
+                if ($target) {
+                    $target.classList.remove(
+                        "poked",
+                        "crt-flashed",
+                        "dance-club-hits"
+                    );
+                }
+
                 Portrait.hide();
                 actor?.parent?.highlightPartyMember?.();
                 console.info("Playback complete!");
@@ -2414,8 +2427,11 @@
                 const animation = ({
                     fingerNail: "fingernail.webm",
                     pointyStick: "pointy-stick.webm",
+                    wiffleBallBat: "wiffle-ball-bat.webm",
                     nunchucks: "nunchucks.webm",
+                    atlatlSpear: "atlatl-spear.webm",
                     bludgeoningMace: "bludgeoning-mace.webm",
+                    danceClub: "dance-club.webm",
                     cathodeRayTubeMonitor: "crt.webm",
                     magicPencil: "magic-pencil.webm",
                     goldenWang: "golden-wang.webm",
@@ -2436,8 +2452,7 @@
                                 actor.parent?.killedMonsters?.(1);
                             }
 
-                            BattleQueueSidebar
-                                .refreshPortraitStatus(move.actor);
+                            BattleQueueSidebar.refreshPortrait(move.actor);
                         },
                         onCrtFlash: () => {
                             console.log("📸 CRT flash!");
@@ -2481,8 +2496,24 @@
                                 actor.parent?.killedMonsters?.(1);
                             }
 
-                            BattleQueueSidebar
-                                .refreshPortraitStatus(move.actor);
+                            BattleQueueSidebar.refreshPortrait(move.actor);
+                        },
+                        onDanceClubHits: () => {
+                            console.log("🪩 Dance club hit!");
+                            const id = target.id;
+                            const selector =
+                                `.layer.enemy [data-party-member-id="${id}"]`;
+                            const $target = document.querySelector(selector);
+                            if (! $target) {
+                                console.warn(
+                                    "No target element found",
+                                    { target }
+                                );
+                                return;
+                            }
+
+                            $target.classList.remove("dance-club-hits");
+                            $target.classList.add("dance-club-hits");
                         },
                         onEnd,
                     }
