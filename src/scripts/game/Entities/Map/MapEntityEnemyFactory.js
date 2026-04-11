@@ -810,6 +810,7 @@ const MapEntityEnemyFactory = {
             };
 
             this.type = "corpse";
+            this.isActive = false;
         };
 
         vampire.onExplode = function(gameMap, entity) {
