@@ -2153,6 +2153,14 @@
             GameControl.update();
         };
 
+        BattleSystem.onRequeueMove = function(playerPartyMemberIndex) {
+            const partyMember = this.playerEntity.party[playerPartyMemberIndex];
+            Portrait.show(partyMember.type, partyMember.color);
+            this.playerEntity?.highlightPartyMember?.(partyMember.id);
+            BattleQueueSidebar.refresh();
+            GameControl.update();
+        };
+
         function playerLeaderWillLevelUp(playerEntity, defeatedEntity) {
             const leader = playerEntity.leader;
             if (! leader || leader.isDead()) {

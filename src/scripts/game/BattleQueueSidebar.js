@@ -69,8 +69,17 @@ const BattleQueueSidebar = {
     },
 
     generatePartyMemberElement: function(partyMember) {
+        const isEnemy =
+            BattleSystem.enemyEntity.party.some(e => e.id === partyMember.id);
+
         const $container = document.createElement("div");
         $container.classList.add("portrait-container");
+        if (! isEnemy) {
+            $container.classList.add("clickable");
+            $container.onclick = () => BattleSystem.setPlayerPartyMemberIndex(
+                playerEntity.party.findIndex(e => e.id === partyMember.id)
+            );
+        }
 
         const $background = document.createElement("div");
         $background.classList.add("background");
@@ -79,8 +88,6 @@ const BattleQueueSidebar = {
         const $partyMember = document.createElement("div");
         $partyMember.classList.add("portrait", partyMember.type);
 
-        const isEnemy =
-            BattleSystem.enemyEntity.party.some(e => e.id === partyMember.id);
         if (isEnemy) {
             $partyMember.classList.add("flipped");
         }

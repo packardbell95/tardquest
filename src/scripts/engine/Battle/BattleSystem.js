@@ -74,6 +74,7 @@ const BattleSystem = {
     // Various event callbacks used to tie into the battle system
     onEncounter: null,
     onQueueMove: null,
+    onRequeueMove: null,
     onMoveStart: null,
     onMoveEnd: null,
     onActionPhaseStart: null,
@@ -373,6 +374,21 @@ const BattleSystem = {
         this.queuedMoves.push(move);
 
         this.onQueueMove?.(move);
+    },
+
+    setPlayerPartyMemberIndex: function(index) {
+        if (! Number.isInteger(index)) {
+            return;
+        }
+
+        const partyMember = this.playerEntity.party[index];
+
+        if (! partyMember || partyMember.isDead()) {
+            return;
+        }
+
+        this.playerPartyMemberIndex = index;
+        this.onRequeueMove?.(index);
     },
 
     getRandomPlayerPartyMember: function() {

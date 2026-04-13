@@ -740,7 +740,7 @@ a:link {
     transform: translateY(-7em);
 }
 
-.top {
+#spire .top {
     transition: transform 1s linear;
 
     &:nth-child(1) {
@@ -765,7 +765,7 @@ a:link {
     }
 }
 
-.go .top {
+.go #spire .top {
     &:nth-child(1) {
         transform: translateY(-4em) rotateX(90deg) translateY(-40px) translateZ(120px);
     }
@@ -2283,43 +2283,87 @@ a:link {
     mask-image: url(assets/portraits/placeholder.png);
 
     &.player {
-         mask-image: url(assets/portraits/player.png);
+        mask-image: url(assets/portraits/player.png);
     }
     &.snailSentinel {
-         mask-image: url(assets/portraits/snailSentinel.png);
+        mask-image: url(assets/portraits/snailSentinel.png);
     }
     &.stupidDog {
-         mask-image: url(assets/portraits/stupidDog.png);
+        mask-image: url(assets/portraits/stupidDog.png);
     }
     &.keeperOfTheToiletBowl {
-         mask-image: url(assets/portraits/keeperOfTheToiletBowl.png);
+        mask-image: url(assets/portraits/keeperOfTheToiletBowl.png);
     }
     &.mysteriousScooter {
-         mask-image: url(assets/portraits/mysteriousScooter.png);
+        mask-image: url(assets/portraits/mysteriousScooter.png);
     }
     &.badassFlamingSkeleton {
-         mask-image: url(assets/portraits/badassFlamingSkeleton.png);
+        mask-image: url(assets/portraits/badassFlamingSkeleton.png);
     }
     &.wangRat {
-         mask-image: url(assets/portraits/wangRat.png);
+        mask-image: url(assets/portraits/wangRat.png);
     }
     &.fridgeOfForgottenLeftovers {
-         mask-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
+        mask-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
     }
     &.lughead {
-         mask-image: url(assets/portraits/lughead.png);
+        mask-image: url(assets/portraits/lughead.png);
     }
     &.pissedOffPoultry {
-         mask-image: url(assets/portraits/pissedOffPoultry.png);
+        mask-image: url(assets/portraits/pissedOffPoultry.png);
     }
     &.krampusElf {
-         mask-image: url(assets/portraits/krampusElf.png);
+        mask-image: url(assets/portraits/krampusElf.png);
     }
     &.mimic {
-         mask-image: url(assets/portraits/mimic.png);
+        mask-image: url(assets/portraits/mimic.png);
     }
     &.vampire {
-         mask-image: url(assets/portraits/vampire.png);
+        mask-image: url(assets/portraits/vampire.png);
+    }
+}
+
+.portrait-container.clickable:hover {
+    & .portrait {
+        &.player {
+            background-image: url(assets/portraits/player.png);
+        }
+        &.snailSentinel {
+            background-image: url(assets/portraits/snailSentinel.png);
+        }
+        &.stupidDog {
+            background-image: url(assets/portraits/stupidDog.png);
+        }
+        &.keeperOfTheToiletBowl {
+            background-image: url(assets/portraits/keeperOfTheToiletBowl.png);
+        }
+        &.mysteriousScooter {
+            background-image: url(assets/portraits/mysteriousScooter.png);
+        }
+        &.badassFlamingSkeleton {
+            background-image: url(assets/portraits/badassFlamingSkeleton.png);
+        }
+        &.wangRat {
+            background-image: url(assets/portraits/wangRat.png);
+        }
+        &.fridgeOfForgottenLeftovers {
+            background-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
+        }
+        &.lughead {
+            background-image: url(assets/portraits/lughead.png);
+        }
+        &.pissedOffPoultry {
+            background-image: url(assets/portraits/pissedOffPoultry.png);
+        }
+        &.krampusElf {
+            background-image: url(assets/portraits/krampusElf.png);
+        }
+        &.mimic {
+            background-image: url(assets/portraits/mimic.png);
+        }
+        &.vampire {
+            background-image: url(assets/portraits/vampire.png);
+        }
     }
 }
 
@@ -2327,6 +2371,17 @@ a:link {
     display: flex;
     justify-content: center;
     align-items: center;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    cursor: help;
+
+    &.clickable {
+        cursor: pointer;
+
+        &:hover {
+            border-color: #ffd700;
+        }
+    }
 
     & .portrait {
         width: 36px;
