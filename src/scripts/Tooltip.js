@@ -100,7 +100,7 @@ const Tooltip = {
         }
 
         $element.dataset.tooltipid = `tq_tooltip_${crypto.randomUUID()}`;
-        $element.addEventListener("mouseenter", (e) => Tooltip._display(e));
+        $element.addEventListener("mouseenter", (e) => Tooltip._show(e));
         $element.addEventListener("click", (e) => Tooltip._checkInteraction(e));
         $element.addEventListener("mouseleave", (e) => Tooltip._hide(e));
     },
@@ -152,6 +152,9 @@ const Tooltip = {
     _lastElementForGroup: {},
     _lastGroupDisplayMs: {},
     _lastGroupHideMs: {},
+    _openTooltipIds: new Set(),
+    _orphanedTooltipPollingIntervalMs: 1000,
+    _orphanedTooltipIntervalId: null,
 
     _isVisible: ($element) => {
         const computedStyle = window.getComputedStyle($element);
@@ -241,7 +244,7 @@ const Tooltip = {
         return lastDismissedMs < Tooltip._dismissalMs;
     },
 
-    _display: (e) => {
+    _show: (e) => {
         const $target = e.target;
         const groupId = $target.dataset?.tooltipgroupid;
 
@@ -255,6 +258,22 @@ const Tooltip = {
         }
 
         const $tooltip = Tooltip._getTooltip($target);
+        Tooltip._openTooltipIds.add($tooltip.id);
+        if (Tooltip._orphanedTooltipIntervalId) {
+            clearInterval(Tooltip._orphanedTooltipIntervalId);
+        }
+
+        Tooltip._orphanedTooltipIntervalId = setInterval(() => {
+            for (const id of Tooltip._openTooltipIds) {
+                const isOrphaned =
+                    ! document.querySelector(`[data-tooltipid="${id}"]`);
+
+                if (isOrphaned) {
+                    Tooltip._hideById(id);
+                }
+            }
+        }, Tooltip._orphanedTooltipPollingIntervalMs);
+
         const delayMs = parseInt(
             Tooltip.groupSettings?.[groupId]?.delayMs ||
             0,
@@ -307,7 +326,18 @@ const Tooltip = {
     },
 
     _hide: (e) => {
-        const tooltipId = e.target?.dataset?.tooltipid;
+        Tooltip._hideById(
+            e.target?.dataset?.tooltipid,
+            e.target?.dataset?.tooltipgroupid
+        );
+    },
+
+    _hideById: (tooltipId, groupId = null) => {
+        Tooltip._openTooltipIds.delete(tooltipId);
+        if (Tooltip._openTooltipIds.size < 1) {
+            clearInterval(Tooltip._orphanedTooltipIntervalId);
+        }
+
         if (! tooltipId) {
             console.warn(
                 "Cannot hide tooltip: No tooltip ID exists on the target",
@@ -316,7 +346,6 @@ const Tooltip = {
             return;
         }
 
-        const groupId = e.target.dataset?.tooltipgroupid;
         if (groupId) {
             Tooltip._lastGroupHideMs[groupId] = performance.now();
         }
