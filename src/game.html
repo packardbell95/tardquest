@@ -2824,6 +2824,14 @@
         let preloaderEnabled = true;
 
         const MAP = new GameMap(WIDTH, HEIGHT);
+
+        // Only run the realtime movement handler if there are realtime entities
+        MAP.onEntityChange = function() {
+            this.entities.some(e => e.isRealtime)
+                ? MapEntityRealtimeMovementHandler.start(this)
+                : MapEntityRealtimeMovementHandler.stop();
+        };
+
         MAP.onMoveEntitiesEnd = function() {
             for (const entity of this.entities) {
                 if (entity.isStunned()) {
@@ -4495,9 +4503,6 @@
             }
         });
 
-        InventorySidebar.refresh();
-        generateMap();
-
         //startBoulderMovement();
         MapEntityRealtimeMovementHandler.canMove = () => ! (
             // @TODO animationActive is only for the gambler's dice roll
@@ -4508,7 +4513,10 @@
             menu.isOpen() ||
             gameOver
         );
-        MapEntityRealtimeMovementHandler.start(MAP);
+
+        playerEntity.refreshStats();
+        InventorySidebar.refresh();
+        generateMap();
 
         updateSeenTiles();
         music.playRandom("exploration");

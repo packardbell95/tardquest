@@ -7740,6 +7740,248 @@ const sceneArt = {
         ],
     },
 
+    destroyedTreasureChest: {
+        positions: {
+            p0_0: {
+                artIndex: 0,
+                drawAt: { x: -19, y: 24 },
+            },
+            p0_1: {
+                artIndex: 11,
+                drawAt: { x: 5, y: 24 },
+            },
+            p0_2: {
+                artIndex: 0,
+                drawAt: { x: 45, y: 24 },
+            },
+            p1_0: {
+                artIndex: 0,
+                drawAt: { x: -12, y: 20 },
+            },
+            p1_1: {
+                artIndex: 1,
+                drawAt: { x: 8, y: 20 },
+            },
+            p1_2: {
+                artIndex: 0,
+                drawAt: { x: 38, y: 20 },
+            },
+            p2_0: {
+                artIndex: 2,
+                drawAt: { x: 0, y: 18 },
+            },
+            p2_1: {
+                artIndex: 3,
+                drawAt: { x: 3, y: 17 },
+            },
+            p2_2: {
+                artIndex: 4,
+                drawAt: { x: 16, y: 17 },
+            },
+            p2_3: {
+                artIndex: 5,
+                drawAt: { x: 32, y: 17 },
+            },
+            p2_4: {
+                artIndex: 2,
+                drawOptions: { flippedX: true },
+                drawAt: { x: 42, y: 18 },
+            },
+            p3_0: {
+                artIndex: 10,
+                drawAt: { x: -9, y: 15 },
+            },
+            p3_1: {
+                artIndex: 10,
+                drawAt: { x: -3, y: 16 },
+            },
+            p3_2: {
+                artIndex: 10,
+                drawAt: { x: 8, y: 16 },
+            },
+            p3_3: {
+                artIndex: 7,
+                drawAt: { x: 20, y: 16 },
+            },
+            p3_4: {
+                artIndex: 10,
+                drawOptions: { flippedX: true },
+                drawAt: { x: 29, y: 16 },
+            },
+            p3_5: {
+                artIndex: 10,
+                drawOptions: { flippedX: true },
+                drawAt: { x: 36, y: 16 },
+            },
+            p3_6: {
+                artIndex: 10,
+                drawOptions: { flippedX: true },
+                drawAt: { x: 46, y: 15 },
+            },
+            p4_0: {
+                artIndex: 8,
+                drawAt: { x: 2, y: 15 },
+            },
+            p4_1: {
+                artIndex: 8,
+                drawAt: { x: 7, y: 15 },
+            },
+            p4_2: {
+                artIndex: 8,
+                drawAt: { x: 12, y: 15 },
+            },
+            p4_3: {
+                artIndex: 8,
+                drawAt: { x: 17, y: 15 },
+            },
+            p4_4: {
+                artIndex: 8,
+                drawAt: { x: 22, y: 15 },
+            },
+            p4_5: {
+                artIndex: 8,
+                drawAt: { x: 27, y: 15 },
+            },
+            p4_6: {
+                artIndex: 8,
+                drawAt: { x: 32, y: 15 },
+            },
+            p4_7: {
+                artIndex: 8,
+                drawAt: { x: 37, y: 15 },
+            },
+            p4_8: {
+                artIndex: 8,
+                drawAt: { x: 42, y: 15 },
+            },
+            p5_0: {
+                artIndex: 9,
+                drawAt: { x: 14, y: 14 },
+            },
+            p5_1: {
+                artIndex: 9,
+                drawAt: { x: 16, y: 14 },
+            },
+            p5_2: {
+                artIndex: 9,
+                drawAt: { x: 18, y: 14 },
+            },
+            p5_3: {
+                artIndex: 9,
+                drawAt: { x: 20, y: 14 },
+            },
+            p5_4: {
+                artIndex: 9,
+                drawAt: { x: 22, y: 14 },
+            },
+            p5_5: {
+                artIndex: 9,
+                drawAt: { x: 24, y: 14 },
+            },
+            p5_6: {
+                artIndex: 9,
+                drawAt: { x: 26, y: 14 },
+            },
+            p5_7: {
+                artIndex: 9,
+                drawAt: { x: 28, y: 14 },
+            },
+            p5_8: {
+                artIndex: 9,
+                drawAt: { x: 30, y: 14 },
+            },
+            p5_9: {
+                artIndex: 9,
+                drawAt: { x: 32, y: 14 },
+            },
+            p5_10: {
+                artIndex: 9,
+                drawAt: { x: 34, y: 14 },
+            },
+        },
+        art: [
+            {
+                transparentCharacter: "%",
+                data: `
+                    %
+                    %
+                    %%%%'   . ▗# ;'  ' ▗ #, '
+                    %%%%%%.#▘. ▗' ▘#▗▘   ▗
+                `
+            },
+            {
+                transparentCharacter: "%",
+                data: `
+                    %
+                    %
+                    %%%%' ▗ ;' ▘, . ▘ .#  ,▘,  #  ▘ .
+                    %%%  ▗. ▘.▗  ▘ # ▗ ▘  #▗.▘  ▘'
+                `,
+            },
+            {
+                transparentCharacter: "%",
+                data: `
+                    %.▗▗.▘ '
+                    .▘# ▘
+                `,
+            },
+            {
+                transparentCharacter: "%",
+                data: `
+                    %%%%%. ▘. ▗ ▗
+                    '▗.'▘,▘. # ▘:,
+                `
+            },
+            {
+                transparentCharacter: "%",
+                data: `
+                    %
+                    %% ,  .'.'  .' ,
+                `,
+            },
+            {
+                data: `
+                    .  ▗▗  .  ,
+                     ▘    ▗ ▘ # ▘ ;
+                `,
+            },
+            {
+                data: `
+                    '▗ ▘▗ :  ▗' #.
+                `,
+            },
+            {
+                transparentCharacter: "%",
+                data: `
+                    %%. . ..
+                `,
+            },
+            {
+                data: `
+                      . .
+                `,
+            },
+            {
+                data: `
+                    .
+                `,
+            },
+            {
+                data: `
+                    . .' " . '
+                `,
+            },
+            {
+                data: `
+                     ' ▗  ▘ .   '   ' ,.     ;  ▗  ., ▗ .  '
+                    ▘    ▗'  ;     ▗  # .;  ▗             .
+                      ▘'  ,'▗  ' .,   ▗    ▘ '.  ▘ ' ▘   ' .
+                    ▘  '      ' ▗ '      ▘    . ',  ; .
+                `,
+            },
+        ],
+    },
+
     merchant: {
         relativeColor: { r: 247, g: 119, b: 247 },
         positions: {

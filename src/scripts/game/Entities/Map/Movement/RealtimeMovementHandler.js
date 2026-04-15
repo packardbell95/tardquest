@@ -6,12 +6,25 @@ const MapEntityRealtimeMovementHandler = {
     movementIntervalMs: 500,
 
     /**
+     * Determines whether or not an update should be made
+     * This method is intended to be overridden with game state logic
+     *
+     * @return bool True if realtime movements can be made
+     */
+    canMove: function() {
+        return true;
+    },
+
+    /**
      * Starts the movement handler
      *
      * @param GameMap gameMap The instance of the gamp map to poll
      */
     start: function(gameMap) {
-        console.log("MapEntityRealtimeMovementHandler: start()", { gameMap });
+        if (this._isAlreadyActive(gameMap)) {
+            return;
+        }
+
         this.stop();
 
         if (! (gameMap instanceof GameMap)) {
@@ -30,12 +43,26 @@ const MapEntityRealtimeMovementHandler = {
     },
 
     /**
+     * Checks to see if the handler is already running for the given gameMap
+     *
+     * @param GameMap gameMap The instance of the active gamp map
+     * @return bool True if the game map is already being updated
+     */
+    _isAlreadyActive: function(gameMap) {
+        if (! gameMap instanceof GameMap || gameMap !== this._gameMap) {
+            return false;
+        }
+
+        return this._intervalId !== null;
+    },
+
+    /**
      * Stops the movement handler
      */
     stop: function() {
-        console.log("MapEntityRealtimeMovementHandler: stop()");
         if (this._intervalId) {
             clearInterval(this._intervalId);
+            this._intervalId = null;
         }
     },
 
@@ -43,10 +70,6 @@ const MapEntityRealtimeMovementHandler = {
      * Pings the game map instance to move the realtime entities
      */
     _tick: function() {
-        console.log(
-            "MapEntityRealtimeMovementHandler: Tick",
-            { canMove: this.canMove(), hasGameMap: Boolean(this._gameMap) }
-        );
         if (! this.canMove()) {
             return;
         }
@@ -58,15 +81,5 @@ const MapEntityRealtimeMovementHandler = {
 
         this._gameMap.moveRealtimeEntities();
         render();
-    },
-
-    /**
-     * Determines whether or not an update should be made
-     * This method is intended to be overridden with game state logic
-     *
-     * @return bool True if realtime movements can be made
-     */
-    canMove: function() {
-        return true;
     },
 };

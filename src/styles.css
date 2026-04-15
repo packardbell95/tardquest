@@ -3009,7 +3009,8 @@ a:link {
     color: #6cff74;
     animation: minimap_healingTileGlow 5s linear alternate infinite;
 }
-.treasureChest {
+.treasureChest,
+.destroyedTreasureChest {
     color: #f19b32;
 }
 .wall,
@@ -3226,6 +3227,11 @@ a:link {
     animation-timing-function: ease-out;
     background-color: #793311;
     color: #ffd700;
+}
+
+.scene_character_destroyedTreasureChest {
+    color: #630;
+    background-color: transparent !important;
 }
 
 .scene_character_tardspireBanner {

@@ -144,7 +144,7 @@ const MapEntityFeatureFactory = {
     bloodyCrater: function(x, y) {
         const bloodyCrater = MapEntityBuilder("bloodyCrater", x, y);
         bloodyCrater.getDisplayName = () => "🔴 Bloody Crater";
-        bloodyCrater.getDisplayCharacter = () => "●";
+        bloodyCrater.getDisplayCharacter = () => "◌";
         bloodyCrater.getSceneArtId = () => "bloodyCrater";
 
         return bloodyCrater;
@@ -335,6 +335,24 @@ const MapEntityFeatureFactory = {
         };
 
         return treasureChest;
+    },
+
+    /**
+     * DESTROYED TREASURE CHEST
+     */
+    destroyedTreasureChest: function(x, y) {
+        const destroyedTreasureChest =
+            MapEntityBuilder("destroyedTreasureChest", x, y);
+        destroyedTreasureChest.getDisplayName =
+            () => "🪹 Destroyed Treasure Chest";
+        destroyedTreasureChest.getDisplayCharacter = () => "◌";
+        destroyedTreasureChest.getSceneArtId = () => "destroyedTreasureChest";
+
+        destroyedTreasureChest.onExplode = function(gameMap, entity) {
+            this.die(entity);
+        };
+
+        return destroyedTreasureChest;
     },
 
     /**
@@ -532,7 +550,7 @@ const MapEntityFeatureFactory = {
                         return `<li>${hpMessage}${diedMessage}</li>`;
                     }).filter(e => e).join("")
                 ) + `</ul>`;
-            } else {
+            } else if (entity.leader) {
                 // Calculate distance-based scream volume
                 const distance =
                     Math.abs(playerEntity.x - entity.x) +
@@ -553,6 +571,11 @@ const MapEntityFeatureFactory = {
                 playSFX("scream", volume);
                 playSFX("bouldingBallStrike", volume);
 
+                entity.die(this);
+            } else if (entity.type === "treasureChest") {
+                const destroyedTreasureChest = MapEntityFeatureFactory
+                    .destroyedTreasureChest(entity.x, entity.y);
+                entity.gameMap.addEntity(destroyedTreasureChest);
                 entity.die(this);
             }
         };

@@ -969,26 +969,24 @@ const MapEntityEnemyFactory = {
 
     _commonFunctions: {
         onDie: function() {
-            this.type = "corpse";
+            const bloodyCrater =
+                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
 
-            if (! this.leader) {
-                this.isActive = false;
-                return;
-            }
+            bloodyCrater.onEnter = function(gameMap, actorEntity) {
+                if (actorEntity.leader) {
+                    updateBattleLog(
+                        `${actorEntity.leader.name} stepped in a gooey ` +
+                        `puddle that was a former creature. Ew.`
+                    );
+                }
+            };
 
-            this.getDisplayName = () => "☠️ Former Creature";
-            this.getDisplayCharacter = () => "◌";
-            this.getSceneArtId = () => "corpse";
-            this.onTouch = null;
-            this.onEnter = function(gameMap, actorEntity) {
-                updateBattleLog(
-                    `${actorEntity.leader.name} stepped in a gooey puddle ` +
-                    `that was a former creature. Ew.`
-                );
+            bloodyCrater.onExplode = function(gameMap, entity) {
+                this.die(entity);
             };
-            this.onExplode = function() {
-                this.isActive = false;
-            };
+
+            this.gameMap.addEntity(bloodyCrater);
+            this.isActive = false;
         },
     },
 }

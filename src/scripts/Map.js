@@ -491,11 +491,18 @@ class GameMap {
     }
 
     addEntity(entity) {
+        entity.gameMap = this;
         this.#entities.push(entity);
+        this.onEntityChange?.();
     }
 
     purgeInactiveEntities() {
+        const lastEntityCount = this.#entities.length;
         this.#entities = this.#entities.filter(e => e.isActive);
+
+        if (lastEntityCount !== this.#entities.length) {
+            this.onEntityChange?.();
+        }
     }
 
     sortEntities(entities = []) {
@@ -561,8 +568,14 @@ class GameMap {
             return;
         }
 
+        const lastEntityCount = this.#entities.length;
+
         this.#entities =
             this.#entities.filter(e => preserveTypes.includes(e.type));
+
+        if (this.#entities.length !== lastEntityCount) {
+            this.onEntityChange?.();
+        }
     }
 
     updateEntities() {
@@ -645,7 +658,12 @@ class GameMap {
     }
 
     clearDeactivatedEntities() {
+        const lastEntityCount = this.#entities.length;
         this.#entities = this.#entities.filter(e => e.isActive);
+
+        if (lastEntityCount !== this.#entities.length) {
+            this.onEntityChange?.();
+        }
     }
 
     /**
@@ -1432,12 +1450,11 @@ class GameMap {
                 return;
             }
 
-            const cellEntities =
-                this.#entities.filter(e =>
-                    e.isActive &&
-                    e.x === x &&
-                    e.y === y
-                );
+            const cellEntities = this.#entities.filter(e =>
+                e.isActive &&
+                e.x === x &&
+                e.y === y
+            );
 
             cell.refreshElement(cellEntities);
         });
