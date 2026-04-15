@@ -1103,7 +1103,7 @@ a:link {
     transform: translate(200px, 100px);
 }
 
-#animBoulderHit {
+#animBouldingBallHit {
     position: absolute;
     background-repeat: no-repeat;
     width: 41px;
@@ -1111,7 +1111,7 @@ a:link {
     image-rendering: pixelated;
     right: 20px;
     top: -200px;
-    background-image: url(assets/interface/ui/boulder-hit.gif);
+    background-image: url(assets/interface/ui/boulding-ball-hit.gif);
     background-size: contain;
     background-position: center;
     transform: translateY(0);
@@ -1120,7 +1120,7 @@ a:link {
     z-index: 1000;
 }
 
-#animBoulderHit.onscreen {
+#animBouldingBallHit.onscreen {
     transform: translateY(220px);
 }
 
@@ -1560,8 +1560,8 @@ a:link {
     }
 }
 
-#minimap .boulder,
-.mapCellDetails .enlargedCell.boulder {
+#minimap .bouldingBall,
+.mapCellDetails .enlargedCell.bouldingBall {
     position: relative;
 
     &::before {
@@ -1572,38 +1572,38 @@ a:link {
         overflow: hidden;
         content: " ";
         display: inline-block;
-        animation: boulderRoll 0.6s infinite;
+        animation: bouldingBallRoll 0.6s infinite;
         color: #8B5A28;
     }
 }
 
-.mapCellDetails .enlargedCell.boulder::before {
+.mapCellDetails .enlargedCell.bouldingBall::before {
     top: 0.4ch !important;
 }
 
-#minimap .boulder {
+#minimap .bouldingBall {
     width: 1ch;
 }
 
-@keyframes boulderRoll {
+@keyframes bouldingBallRoll {
     0%, 25% {
-        content: "o";
-        transform: scaleY(1);
+        content: "⚉";
+        transform: rotate(45deg) scaleX(1) scaleY(1);
     }
 
     25.01%, 50% {
-        content: "o";
-        transform: scaleY(-1);
+        content: "⚈";
+        transform: rotate(90deg) scaleX(1) scaleY(-1);
     }
 
     50.01%, 75% {
-        content: "o";
-        transform: scaleY(1);
+        content: "●";
+        transform: rotate(135deg) scaleX(1) scaleY(1);
     }
 
     75.01%, 100% {
-        content: "o";
-        transform: scaleY(-1);
+        content: "⚈";
+        transform: rotate(90deg) scaleX(-1) scaleY(-1);
     }
 }
 

@@ -470,4 +470,93 @@ const MapEntityFeatureFactory = {
 
         return crackedFloor;
     },
+
+    /**
+     * BOULDING BALL
+     */
+    bouldingBall: function(x, y) {
+        const bouldingBall = MapEntityBuilder("bouldingBall", x, y);
+        MapEntityTrait_AttachRealtimeMovement_BackAndForth(bouldingBall);
+
+        bouldingBall.getDisplayName = () => "🪨 Boulding Ball";
+        // Empty character because this is styled by a CSS rule
+        bouldingBall.getDisplayCharacter = () => " ";
+        bouldingBall.getSceneArtId = () => "bouldingBall";
+
+        bouldingBall.onTouch = function(gameMap, entity) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            if (entity.type === "bouldingBall") {
+                this.turnAround();
+                entity.turnAround();
+            }
+        };
+
+        bouldingBall.onEnter = function(gameMap, entity) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            console.log("onEnter()", { entity });
+
+            if (entity?.type === "player") {
+                playSFX("bouldingBallStrike");
+                animBouldingBallStrike();
+
+                const damageValues = entity.damagePartyFractional(1 / 3);
+                const damageMessage =
+                    `<span class="action">YEOUCH!</span> A vicious, ` +
+                    `bloodthirsty Boulding Ball takes 1/3rd of your party's ` +
+                    `health!`;
+
+                const damageList = `<ul>` + (
+                    damageValues.map(e => {
+                        const { partyMemberId, damageHp } = e;
+
+                        const partyMember = playerEntity.party
+                            .find(p => e.id === partyMemberId);
+
+                        if (! partyMember) {
+                            return "";
+                        }
+
+                        const hpMessage = `${partyMember.name} lost ` +
+                            `<span class="enemy">${damageHp}</span>`;
+
+                        const diedMessage = partyMember.isDead()
+                            ? ` and <strong>died!</strong>`
+                            : "";
+
+                        return `<li>${hpMessage}${diedMessage}</li>`;
+                    }).filter(e => e).join("")
+                ) + `</ul>`;
+            } else {
+                // Calculate distance-based scream volume
+                const distance =
+                    Math.abs(playerEntity.x - entity.x) +
+                    Math.abs(playerEntity.y - entity.y);
+
+                    const maxRange = 10;
+                    const maxVolume = 1;
+                    const minVolume = 0.1;
+
+                const volume = distance <= maxRange
+                    ? Math.max(
+                        minVolume,
+                        maxVolume -
+                            ((distance - 1) / (maxRange - 1)) *
+                                (maxVolume - minVolume))
+                    : 0; // No sound if too far
+
+                playSFX("scream", volume);
+                playSFX("bouldingBallStrike", volume);
+
+                entity.die(this);
+            }
+        };
+
+        return bouldingBall;
+    },
 }

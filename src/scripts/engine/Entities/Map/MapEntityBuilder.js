@@ -1105,15 +1105,21 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
          * Damages the whole party relative to each member's max HP
          *
          * @param float fractionalHp The fractional value of the member's max HP
+         * @return Array of objects containing party damage values
          */
         damagePartyFractional: function(fractionalHp) {
+            const damageValues = [];
+
             for (const partyMember of this?.party || []) {
                 const damageHp = Math.ceil(
                     partyMember.getEffectiveCoreStat("maxHp") * fractionalHp
                 );
 
                 partyMember.damage(damageHp);
+                damageValues.push({ partyMemberId: partyMember.id, damageHp });
             }
+
+            return damageValues;
         },
 
         givePartyExperience: function(experiencePoints) {

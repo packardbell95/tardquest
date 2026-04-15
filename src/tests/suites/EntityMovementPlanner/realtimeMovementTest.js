@@ -34,7 +34,7 @@ function EntityMovementPlanner_realtimeMovementTest()
         );
 
         bouldingBall.testId = entityId++;
-        MapEntityTrait_AttachAutonomousMovement_BackAndForth(bouldingBall);
+        MapEntityTrait_AttachRealtimeMovement_BackAndForth(bouldingBall);
         bouldingBall.onTouch = function(gameMap, entity) {
             if (entity.type === "bouldingBall") {
                 this.turnAround();

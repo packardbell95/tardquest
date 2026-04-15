@@ -6,7 +6,7 @@
  *
  * @param object entity The entity that will receive oscillating behavior
  */
-function MapEntityTrait_AttachAutonomousMovement_BackAndForth(entity) {
+function MapEntityTrait_AttachRealtimeMovement_BackAndForth(entity) {
     if (entity === null || typeof entity !== "object") {
         console.error("Entity is not an object", { entity });
         return;
@@ -49,15 +49,6 @@ function MapEntityTrait_AttachAutonomousMovement_BackAndForth(entity) {
             this.moveForward(gameMap);
         }
 
-        const entities = gameMap.entities.filter(e =>
-            e.id !== this.id &&
-            e.x === this.x &&
-            e.y === this.y &&
-            typeof e.onTrample === "function"
-        );
-
-        for (const entity of entities) {
-            entity.onTrample(gameMap, this);
-        }
+        gameMap.triggerOnEnterEvent(this);
     };
 }

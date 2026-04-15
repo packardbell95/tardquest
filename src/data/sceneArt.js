@@ -4718,7 +4718,7 @@ const sceneArt = {
         ],
     },
 
-    boulder: {
+    bouldingBall: {
         relativeColor: { r: 199, g: 111, b: 40 },
         positions: {
             p0_0: {

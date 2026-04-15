@@ -233,7 +233,7 @@
             <div id="animation" class="hidden"></div>
             <div id="animTorch" class="offscreen"></div>
             <div id="animTrombone" class="offscreen"></div>
-            <div id="animBoulderHit" class="fixed"></div>
+            <div id="animBouldingBallStrike" class="fixed"></div>
             <div id="menu"></div>
             <div id="mouseControl">
                 <div class="navigation">
@@ -602,6 +602,9 @@
     <script src="scripts/game/Entities/Map/MapEntityEnemyFactory.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityFeatureFactory.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityNpcFactory.js"></script>
+    <script
+        src="scripts/game/Entities/Map/Movement/RealtimeMovementHandler.js"
+    ></script>
     <script
         src="scripts/game/Entities/Party/TardQuestPartyMemberFactory.js">
     </script>
@@ -2781,7 +2784,7 @@
             merchantNear: new Audio("audio/sfx/merchant-near.ogg"),
             erokNear: new Audio("audio/sfx/erok-near.ogg"),
             boulderNear: new Audio("audio/sfx/boulder-near.ogg"),
-            boulderHit: new Audio("audio/sfx/boulder-hit.ogg"),
+            bouldingBallStrike: new Audio("audio/sfx/boulding-ball-strike.ogg"),
             ran: new Audio("audio/sfx/ran.ogg"),
             runFailed: new Audio("audio/sfx/runFailed.ogg"),
         };
@@ -3076,7 +3079,7 @@
         };
 
         function playSFX(name, volume = 1.0) {
-            if (! sfxEnabled || volume < 0) {
+            if (! sfxEnabled || volume <= 0) {
                 return;
             }
 
@@ -3185,18 +3188,19 @@
             $trombone.classList.remove("onscreen");
         }
 
-        function animBoulderHit() {
-            const $boulderHit = document.getElementById("animBoulderHit");
-            if (!$boulderHit) {
-                console.error("Boulder hit animation element not found");
+        // @TODO Move this to the boulding ball object definition
+        function animBouldingBallStrike() {
+            const $strike = document.getElementById("animBouldingBallStrike");
+            if (! $strike) {
+                console.error("Boulding ball strike element not found");
                 return;
             }
 
-            $boulderHit.classList.add("onscreen");
+            $strike.classList.add("onscreen");
 
             setTimeout(() => {
-                $boulderHit.classList.remove("onscreen");
-            }, 3000); // Slide anim back out of viewport after this duration
+                $strike.classList.remove("onscreen");
+            }, 3000);
         }
 
         function shakeScreen() {
@@ -4493,7 +4497,19 @@
 
         InventorySidebar.refresh();
         generateMap();
+
         //startBoulderMovement();
+        MapEntityRealtimeMovementHandler.canMove = () => ! (
+            // @TODO animationActive is only for the gambler's dice roll
+            //       This might already be covered by menu.isOpen(). Remove?
+            animationActive ||
+            playerEntity.inCombat ||
+            window._inputBlocked ||
+            menu.isOpen() ||
+            gameOver
+        );
+        MapEntityRealtimeMovementHandler.start(MAP);
+
         updateSeenTiles();
         music.playRandom("exploration");
         scheduleNextAmbientSfx();
