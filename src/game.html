@@ -684,14 +684,15 @@
                 const $video = this.$video;
                 const filePath = this.path + filename;
 
-                // If there are events beyond just onEnd, assume there is a VTT
+                // If there are events beyond just onEnd, assume a VTT (.txt)
                 // file available to load so those events can be identified
+                // VTTs are stored as .txt to avoid MIME type filtering
                 const hasCustomEvents = Object.keys(this.events)
                     .filter(e => e !== "onEnd").length > 0;
 
                 if (hasCustomEvents) {
                     const $track = document.createElement("track");
-                    $track.src = filePath.replace(/\.\w+$/, ".vtt");
+                    $track.src = filePath.replace(/\.\w+$/, ".txt");
                     $track.kind = "metadata";
                     $video.replaceChildren($track);
                 } else {
