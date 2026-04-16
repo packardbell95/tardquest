@@ -104,7 +104,7 @@ const TardQuestMapGenerator = {
         );
         playerRegion.occupied = true;
 
-        MAP.revealFieldOfView(
+        gameMap.revealFieldOfView(
             player.x,
             player.y,
             player.leader.getEffectiveTrait("sightRange")
@@ -269,7 +269,7 @@ const TardQuestMapGenerator = {
 
         // Place healing tiles
         const totalHealingTiles = 1 + Math.floor(Math.random() * 4);
-        const availableCoordinates = MAP
+        const availableCoordinates = gameMap
             .getEmptyCellCoordinates()
             // Make sure we don't spawn anything on the exit
             .filter(e => e.x !== exitX && e.y !== exitY);
@@ -348,6 +348,64 @@ const TardQuestMapGenerator = {
         // Update the dungeon floor counter
         document.getElementById("dungeonFloor").textContent =
             floor.toLocaleString(undefined);
+    },
+
+    generateHallwayOfDoom: function(gameMap, floor) {
+        gameMap.filterEntities(["player"]);
+
+        const player = gameMap.entities.find(e => e.type === "player");
+        if (! player) {
+            console.error(
+                "Player entity not found!",
+                { entities: gameMap.entities }
+            );
+            return;
+        }
+
+        player.x = 1;
+        player.y = 5;
+        player.direction = 1;
+
+        const exitEntity = MapEntityFeatureFactory.exit(27, 5);
+        gameMap.addEntity(exitEntity);
+
+        for (let x = 0; x < gameMap.width; x++) {
+            for (let y = 0; y < gameMap.height; y++) {
+                const placeWall =
+                    x === 0 ||
+                    x === gameMap.width - 1 ||
+                    y === 0 ||
+                    y === gameMap.height - 1 ||
+                    (
+                        (x === 5 || x === gameMap.width - 5 - 1) &&
+                        (y < 5 || y > gameMap.height - 5 - 1)
+                    );
+
+                const type = placeWall ? "wall" : "floor";
+                gameMap.setCell(x, y, type, { isExplored: false });
+            }
+        }
+
+        for (let i = 0; i < 18; i++) {
+            const yOffset =
+                Math.floor((Math.sin(i / 9 * Math.PI * 2) + 1) * 2);
+
+            const topBouldingBall = MapEntityFeatureFactory.bouldingBall(
+                6 + i,
+                1 + yOffset,
+            );
+            topBouldingBall.direction = 2;
+            gameMap.addEntity(topBouldingBall);
+
+            const bottomBouldingBall = MapEntityFeatureFactory.bouldingBall(
+                6 + i,
+                gameMap.height - 1 - yOffset,
+            );
+            bottomBouldingBall.direction = 0;
+            gameMap.addEntity(bottomBouldingBall);
+        }
+
+        gameMap.reveal();
     },
 
     _placeTreasureChests: function(

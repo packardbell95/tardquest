@@ -580,6 +580,19 @@ const MapEntityFeatureFactory = {
             }
         };
 
+        bouldingBall.onExplode = function(gameMap, entity) {
+            const killedByPlayer = entity.id === playerEntity.id;
+
+            if (killedByPlayer) {
+                updateBattleLog(
+                    `You reduced the boulding ball into ` +
+                    `<span class="action">dust!</span>`
+                );
+            }
+
+            this.die(entity);
+        };
+
         return bouldingBall;
     },
 }
