@@ -968,24 +968,27 @@ const MapEntityEnemyFactory = {
     },
 
     _commonFunctions: {
-        onDie: function() {
-            const bloodyCrater =
-                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+        onDie: function(killedBy) {
+            if (killedBy.type !== "pit") {
+                const bloodyCrater =
+                    MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
 
-            bloodyCrater.onEnter = function(gameMap, actorEntity) {
-                if (actorEntity.leader) {
-                    updateBattleLog(
-                        `${actorEntity.leader.name} stepped in a gooey ` +
-                        `puddle that was a former creature. Ew.`
-                    );
-                }
-            };
+                bloodyCrater.onEnter = function(gameMap, actorEntity) {
+                    if (actorEntity.leader) {
+                        updateBattleLog(
+                            `${actorEntity.leader.name} stepped in a gooey ` +
+                            `puddle that was a former creature. Ew.`
+                        );
+                    }
+                };
 
-            bloodyCrater.onExplode = function(gameMap, entity) {
-                this.die(entity);
-            };
+                bloodyCrater.onExplode = function(gameMap, entity) {
+                    this.die(entity);
+                };
 
-            this.gameMap.addEntity(bloodyCrater);
+                this.gameMap.addEntity(bloodyCrater);
+            }
+
             this.isActive = false;
         },
     },

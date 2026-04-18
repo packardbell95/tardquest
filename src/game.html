@@ -2788,6 +2788,7 @@
             bouldingBallStrike: new Audio("audio/sfx/boulding-ball-strike.ogg"),
             ran: new Audio("audio/sfx/ran.ogg"),
             runFailed: new Audio("audio/sfx/runFailed.ogg"),
+            pitDrop: new Audio("audio/sfx/pitDrop.ogg"),
         };
 
         const sfxAmb = {
@@ -4634,7 +4635,8 @@
         }
 
         if (autoDicerollEnabled) {
-            rollDiceForStats();
+            // @TODO Fix this!
+            // rollDiceForStats();
             updateBattleLog(
                 `Stat allocation complete! You consume an  unsuspecting rat ` +
                 `to ensure you are in good health, and ` +

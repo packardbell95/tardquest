@@ -2998,7 +2998,7 @@ const sceneArt = {
         ],
     },
 
-    pitOfSpikes: {
+    pit: {
         positions: {
             p0_0: {
                 artIndex: 0,

@@ -368,14 +368,14 @@ const MapEntityFeatureFactory = {
     },
 
     /**
-     * PIT of SPIKES
+     * PIT
      */
-    pitOfSpikes: function(x, y) {
-        const pitOfSpikes = MapEntityBuilder("pitOfSpikes", x, y);
-        pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
-        pitOfSpikes.getDisplayCharacter = () => "●";
-        pitOfSpikes.getSceneArtId = () => "pitOfSpikes";
-        pitOfSpikes.onEnter = function(gameMap, entity) {
+    pit: function(x, y) {
+        const pit = MapEntityBuilder("pit", x, y);
+        pit.getDisplayName = () => "🕳️ Pit";
+        pit.getDisplayCharacter = () => "●";
+        pit.getSceneArtId = () => "pit";
+        pit.onEnter = function(gameMap, entity) {
             if (entity.leader.traits.isFlying) {
                 return;
             }
@@ -393,21 +393,31 @@ const MapEntityFeatureFactory = {
                     .add("playerFellIntoAPitAndDied");
                 updateBattleLog(
                     `<span class="action">AUUUUUGH!</span> You scream out as ` +
-                    `you plunge into a pit of spikes waiting beneath!`
+                    `you plunge into a pit waiting beneath!`
                 );
 
                 playSFX("floorBreakScreamDie");
                 playerEntity.die(this);
             } else {
+                playSFX("pitDrop");
+                const interfaceClassList =
+                    document.getElementById("interface")?.classList;
+
+                // @TODO Maybe make this its own weaker rumble
+                if (interfaceClassList) {
+                    setTimeout(() => interfaceClassList.add("rumble"), 700);
+                    setTimeout(() => interfaceClassList.remove("rumble"), 1600);
+                }
+
                 console.log(
-                    `🕳️ ${entity.leader.name} fell into a pit of spikes`,
+                    `🕳️ ${entity.leader.name} fell into a pit`,
                     { entity, gameMap }
                 );
                 entity.die(this);
             }
         };
 
-        return pitOfSpikes;
+        return pit;
     },
 
     /**

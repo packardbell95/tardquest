@@ -619,4 +619,63 @@ const ITEMS = Object.freeze({
         weight: 1,
         price: 10,
     },
+
+    lodeGun: {
+        article: "a",
+        name: "LODE GUN",
+        description:
+            "A single-shot cannon that fires a heavy projectile. With almost "+
+            "no range, this is impractical as a weapon, but it's great for " +
+            "blasting holes in floors, I guess.",
+        battleUsage: {
+            available: false,
+        },
+        use: (actorMember, targetMember) => {
+            if (BattleSystem.isActive) {
+                updateBattleLog(
+                    `You want to use a gun in battle? Don't be ridiculous!`
+                );
+
+                return false;
+            }
+
+            const actorEntity = actorMember.parent;
+            const { x, y } = actorEntity.getCoordinateInFront();
+            const canFireLodeGun = ! actorEntity.gameMap.cellIsOccupied(x, y);
+
+            if (! canFireLodeGun) {
+                updateBattleLog(
+                    `There <span class="action">isn't enough clearance` +
+                    `</span> to use the <span class="friendly">Lode Gun!</span>`
+                );
+
+                return false;
+            }
+
+            ViewportAnimation.play(
+                "lode-gun.webm",
+                {
+                    onGroundImpact: () => {
+                        document.getElementById("interface")?.classList
+                            .add("rumble");
+                        const pit = MapEntityFeatureFactory.pit(x, y);
+                        actorEntity.gameMap.addEntity(pit);
+                    },
+                    onHoleFormed: () => {
+                        render();
+                    },
+                    onEnd: () => {
+                        document.getElementById("interface")?.classList
+                            .remove("rumble");
+                    },
+                }
+            );
+
+            return true;
+        },
+        merchantStockChance: 1.0,
+        chestDrop: true,
+        weight: 3,
+        price: 20,
+    },
 });

@@ -3025,7 +3025,7 @@ a:link {
     color: #545454;
 }
 .exit,
-.pitOfSpikes {
+.pit {
     color: #f00;
 }
 
@@ -3180,7 +3180,7 @@ a:link {
     animation: scene_healingTileGlow 5s linear alternate infinite;
 }
 
-.scene_character_pitOfSpikes {
+.scene_character_pit {
     color: #6664;
 }
 
