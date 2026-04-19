@@ -376,7 +376,7 @@ const MapEntityFeatureFactory = {
         pit.getDisplayCharacter = () => "●";
         pit.getSceneArtId = () => "pit";
         pit.onEnter = function(gameMap, entity) {
-            if (entity.leader.traits.isFlying) {
+            if (entity.leader?.traits.isFlying) {
                 return;
             }
 
@@ -399,20 +399,38 @@ const MapEntityFeatureFactory = {
                 playSFX("floorBreakScreamDie");
                 playerEntity.die(this);
             } else {
-                playSFX("pitDrop");
-                const interfaceClassList =
-                    document.getElementById("interface")?.classList;
+                // @TODO Replace with tag check once that has been implemented
+                const shouldFallIntoPit = ! (
+                    entity.leader?.traits.isFlying ||
+                    [
+                        "exit",
+                        "healingTile",
+                        "crater",
+                        "bloodyCrater",
+                        "destroyedTreasureChest",
+                        "sigil",
+                        "pit",
+                        "crackedFloor",
+                    ].includes(entity.type)
+                );
 
-                // @TODO Maybe make this its own weaker rumble
-                if (interfaceClassList) {
-                    setTimeout(() => interfaceClassList.add("rumble"), 700);
-                    setTimeout(() => interfaceClassList.remove("rumble"), 1600);
+                if (shouldFallIntoPit) {
+                    playSFX("pitDrop");
+                    const interfaceClassList =
+                        document.getElementById("interface")?.classList;
+
+                    // @TODO Maybe make this its own weaker rumble
+                    if (interfaceClassList) {
+                        setTimeout(() => interfaceClassList.add("rumble"), 700);
+                        setTimeout(() => interfaceClassList.remove("rumble"), 1600);
+                    }
+
+                    console.log(
+                        `🕳️ ${entity.leader.name} fell into a pit`,
+                        { entity, gameMap }
+                    );
                 }
 
-                console.log(
-                    `🕳️ ${entity.leader.name} fell into a pit`,
-                    { entity, gameMap }
-                );
                 entity.die(this);
             }
         };
@@ -458,7 +476,7 @@ const MapEntityFeatureFactory = {
         };
 
         crackedFloor.onEnter = function(gameMap, entity) {
-            if (entity.leader.traits.isFlying) {
+            if (entity.leader?.traits.isFlying) {
                 return;
             }
 

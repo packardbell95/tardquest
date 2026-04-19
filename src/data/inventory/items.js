@@ -691,6 +691,7 @@ const ITEMS = Object.freeze({
                             .add("rumble");
                         const pit = MapEntityFeatureFactory.pit(x, y);
                         actorEntity.gameMap.addEntity(pit);
+                        actorEntity.gameMap.triggerOnEnterEvent(pit);
                     },
                     onHoleFormed: () => {
                         render();
