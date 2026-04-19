@@ -398,6 +398,14 @@ const MapEntityFeatureFactory = {
 
                 playSFX("floorBreakScreamDie");
                 playerEntity.die(this);
+            } else if (entity?.type === "bouldingBall") {
+                // Boulding balls and pits cancel each other out
+                entity.die(this);
+                this.die(entity);
+
+                const crater = MapEntityFeatureFactory.crater(this.x, this.y);
+                crater.getDisplayName = () => "⚫️ Filled Pit";
+                this.gameMap.addEntity(crater);
             } else {
                 // @TODO Replace with tag check once that has been implemented
                 const shouldFallIntoPit = ! (
@@ -424,11 +432,6 @@ const MapEntityFeatureFactory = {
                         setTimeout(() => interfaceClassList.add("rumble"), 700);
                         setTimeout(() => interfaceClassList.remove("rumble"), 1600);
                     }
-
-                    console.log(
-                        `🕳️ ${entity.leader.name} fell into a pit`,
-                        { entity, gameMap }
-                    );
                 }
 
                 entity.die(this);
@@ -490,7 +493,8 @@ const MapEntityFeatureFactory = {
 
             if (this.crackedLevel > 3) {
                 const pitOfSpikes =
-                    MapEntityFeatureFactory.pitOfSpikes(this.x, this.y);
+                    MapEntityFeatureFactory.pit(this.x, this.y);
+                pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
 
                 if (entity?.type === "player") {
                     updateBattleLog(
