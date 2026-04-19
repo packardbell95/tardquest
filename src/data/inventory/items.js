@@ -625,7 +625,7 @@ const ITEMS = Object.freeze({
         name: "LODE GUN",
         description:
             "A single-shot cannon that fires a heavy projectile. With almost "+
-            "no range, this is impractical as a weapon, but it's great for " +
+            "no range, this is impractical as a weapon. But it is great for " +
             "blasting holes in floors, I guess.",
         battleUsage: {
             available: false,
@@ -641,7 +641,38 @@ const ITEMS = Object.freeze({
 
             const actorEntity = actorMember.parent;
             const { x, y } = actorEntity.getCoordinateInFront();
-            const canFireLodeGun = ! actorEntity.gameMap.cellIsOccupied(x, y);
+            const targetCell = MAP.getCell(x, y);
+
+            const specialBlockedType = targetCell.entities.find(e =>
+                ["exit", "pit", "sigil"].includes(e.type)
+            )?.type;
+
+            switch (specialBlockedType) {
+                case "exit":
+                    updateBattleLog(
+                        `You reconsider your brillian decision of trying ` +
+                        `to <span class="enemy">destroy the fucking exit.` +
+                        `</span>`
+                    );
+                    return false;
+                case "pit":
+                    updateBattleLog(
+                        `<span class="enemy">There's already a hole </span>` +
+                        `in front of you, <em>genius.</em>`
+                    );
+                    return false;
+                case "sigil":
+                    updateBattleLog(
+                        `<span class="enemy">A mysterious force</span> ` +
+                        `prevents you from firing the ` +
+                        `<span class="friendly">Lode Gun</span> here.`
+                    );
+                    return false;
+            }
+
+            const canFireLodeGun =
+                ! targetCell.isWall &&
+                ! targetCell.entities.some(e => typeof e.onTouch === "function");
 
             if (! canFireLodeGun) {
                 updateBattleLog(

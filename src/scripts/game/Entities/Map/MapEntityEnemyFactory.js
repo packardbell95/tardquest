@@ -969,7 +969,7 @@ const MapEntityEnemyFactory = {
 
     _commonFunctions: {
         onDie: function(killedBy) {
-            if (killedBy.type !== "pit") {
+            if (killedBy?.type !== "pit") {
                 const bloodyCrater =
                     MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
 

@@ -2738,6 +2738,9 @@ a:link {
     &.items-carrierPigeon .icon {
         background-image: url(assets/interface/items/carrier-pigeon.png);
     }
+    &.items-lodeGun .icon {
+        background-image: url(assets/interface/items/lode-gun.png);
+    }
 
     /** Weapons Section **/
     &.weapons-fingerNail .icon {
