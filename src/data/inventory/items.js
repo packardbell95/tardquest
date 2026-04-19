@@ -672,7 +672,10 @@ const ITEMS = Object.freeze({
 
             const canFireLodeGun =
                 ! targetCell.isWall &&
-                ! targetCell.entities.some(e => typeof e.onTouch === "function");
+                ! targetCell.entities.some(e =>
+                    e.type !== "bouldingBall" &&
+                    typeof e.onTouch === "function"
+                );
 
             if (! canFireLodeGun) {
                 updateBattleLog(
