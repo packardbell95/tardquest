@@ -147,6 +147,10 @@ const MapEntityFeatureFactory = {
         bloodyCrater.getDisplayCharacter = () => "◌";
         bloodyCrater.getSceneArtId = () => "bloodyCrater";
 
+        bloodyCrater.onExplode = function(gameMap, entity) {
+            this.die(entity);
+        };
+
         return bloodyCrater;
     },
 
@@ -583,14 +587,15 @@ const MapEntityFeatureFactory = {
                     }).filter(e => e).join("")
                 ) + `</ul>`;
             } else if (entity.leader) {
+                // @TODO Replace after proximity audio has been implemented
                 // Calculate distance-based scream volume
                 const distance =
                     Math.abs(playerEntity.x - entity.x) +
                     Math.abs(playerEntity.y - entity.y);
 
-                    const maxRange = 10;
-                    const maxVolume = 1;
-                    const minVolume = 0.1;
+                const maxRange = 10;
+                const maxVolume = 1;
+                const minVolume = 0.1;
 
                 const volume = distance <= maxRange
                     ? Math.max(
@@ -604,6 +609,14 @@ const MapEntityFeatureFactory = {
                 playSFX("bouldingBallStrike", volume);
 
                 entity.die(this);
+
+                const bloodyCrater =
+                    MapEntityFeatureFactory.bloodyCrater(entity.x, entity.y);
+
+                bloodyCrater.getDisplayName = () =>
+                    `🔴 Former ${entity.leader.name}`;
+
+                entity.gameMap.addEntity(bloodyCrater);
             } else if (entity.type === "treasureChest") {
                 const destroyedTreasureChest = MapEntityFeatureFactory
                     .destroyedTreasureChest(entity.x, entity.y);

@@ -109,12 +109,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        snailSentinel.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         snailSentinel.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("AIEEEE! YOU KILLED ME!", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return snailSentinel;
@@ -167,12 +167,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        stupidDog.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         stupidDog.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("*Yelps loudly*", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return stupidDog;
@@ -227,12 +227,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        wangRat.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         wangRat.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("EEEEEEEEEEEEAAAAAHHHH!!!", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return wangRat;
@@ -298,13 +298,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        keeperOfTheToiletBowl.onDie =
-            MapEntityEnemyFactory._commonFunctions.onDie;
-
         keeperOfTheToiletBowl.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("MY DIGNITY HAS BEEN FLUSHED AWAY!", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return keeperOfTheToiletBowl;
@@ -361,12 +360,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        mysteriousScooter.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         mysteriousScooter.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("GYROSCOPE MALFUNCTION", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return mysteriousScooter;
@@ -424,9 +423,6 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        badassFlamingSkeleton.onDie =
-            MapEntityEnemyFactory._commonFunctions.onDie;
-
         badassFlamingSkeleton.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say(
@@ -434,6 +430,8 @@ const MapEntityEnemyFactory = {
                 false
             );
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return badassFlamingSkeleton;
@@ -491,13 +489,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        fridgeOfForgottenLeftovers.onDie =
-            MapEntityEnemyFactory._commonFunctions.onDie;
-
         fridgeOfForgottenLeftovers.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("*SPLAT*", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return fridgeOfForgottenLeftovers;
@@ -549,12 +546,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        lughead.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         lughead.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("ow", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return lughead;
@@ -609,12 +606,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        pissedOffPoultry.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         pissedOffPoultry.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("ACK!", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return pissedOffPoultry;
@@ -669,12 +666,12 @@ const MapEntityEnemyFactory = {
             }
         };
 
-        krampusElf.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
-
         krampusElf.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("AUGH!", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return krampusElf;
@@ -723,12 +720,13 @@ const MapEntityEnemyFactory = {
         };
 
         mimic.getSceneArtId = () => "treasureChest";
-        mimic.onDie = MapEntityEnemyFactory._commonFunctions.onDie;
 
         mimic.onExplode = function(gameMap, entity) {
             console.log({ boom: this });
             this.leader?.say("CRAP!", false);
             this.die(entity);
+            MapEntityEnemyFactory._commonFunctions
+                .afterExplode(gameMap, this.x, this.y);
         };
 
         return mimic;
@@ -968,28 +966,23 @@ const MapEntityEnemyFactory = {
     },
 
     _commonFunctions: {
-        onDie: function(killedBy) {
-            if (killedBy?.type !== "pit") {
-                const bloodyCrater =
-                    MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+        afterExplode: function(gameMap, x, y) {
+            const bloodyCrater = MapEntityFeatureFactory.bloodyCrater(x, y);
 
-                bloodyCrater.onEnter = function(gameMap, actorEntity) {
-                    if (actorEntity.leader) {
-                        updateBattleLog(
-                            `${actorEntity.leader.name} stepped in a gooey ` +
-                            `puddle that was a former creature. Ew.`
-                        );
-                    }
-                };
+            bloodyCrater.onEnter = function(gameMap, actorEntity) {
+                if (actorEntity.leader) {
+                    updateBattleLog(
+                        `${actorEntity.leader.name} stepped in a gooey ` +
+                        `puddle that was a former creature. Ew.`
+                    );
+                }
+            };
 
-                bloodyCrater.onExplode = function(gameMap, entity) {
-                    this.die(entity);
-                };
+            bloodyCrater.onExplode = function(gameMap, entity) {
+                this.die(entity);
+            };
 
-                this.gameMap.addEntity(bloodyCrater);
-            }
-
-            this.isActive = false;
+            gameMap.addEntity(bloodyCrater);
         },
     },
 }
