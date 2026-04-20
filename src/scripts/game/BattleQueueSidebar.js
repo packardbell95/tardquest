@@ -275,9 +275,9 @@ const BattleQueueSidebar = {
             ! BattleSystem.playerEntity?.party.some(e => e.id === target.id);
         const targetPortraitClasses = [
             "portrait",
-            target.type,
+            target?.type,
             targetIsEnemy ? "flipped" : "",
-            target.isDead() ? "dead" : "",
+            target?.isDead() ? "dead" : "",
         ].filter(e => e).join(" ");
 
         const summaryActionHtml = this._getSummaryActionHtml(moveType);
