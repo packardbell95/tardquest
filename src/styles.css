@@ -1356,48 +1356,6 @@ a:link {
     z-index: 9;
 }
 
-@keyframes explosionColors {
-    0% {
-        background-color: #FFF5AD;
-        opacity: 1;
-    }
-
-    32% {
-        background-color: #F00;
-        opacity: 1;
-    }
-
-    38% {
-        background-color: #FFBC14;
-        opacity: 1;
-    }
-
-    45% {
-        background-color: #FFF;
-        opacity: 1;
-    }
-
-    50% {
-        background-color: #464FFC;
-        opacity: 1;
-    }
-
-    100% {
-        background-color: #000;
-        opacity: 0;
-    }
-}
-
-#animation.explosion {
-    font-size: 12px;
-    mix-blend-mode: lighten;
-    animation-name: explosionColors;
-    animation-duration: 240ms;
-    animation-iteration-count: 1;
-    animation-direction: forwards;
-    animation-timing-function: linear;
-}
-
 @keyframes fadeGradient {
     0% {
         opacity: 0;
@@ -2024,14 +1982,24 @@ a:link {
     justify-content: right;
 }
 
-#partyMembers {
+.party-members {
     display: flex;
     flex-direction: column;
     padding: 4px;
     margin-top: 2px;
 }
 
-#partyMembers:empty::after {
+#enemyParty .party-members {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 2ch;
+
+    & .party-member .name {
+        letter-spacing: -0.25ch;
+    }
+}
+
+.party-members:empty::after {
     display: block;
     margin-top: 50px;
     text-align: center;
@@ -2039,7 +2007,7 @@ a:link {
     font-style: italic;
 }
 
-#partyMembers > [data-party-member-id] {
+.party-members > [data-party-member-id] {
     clip-path: rect(0 100% 100% 0);
     height: 35px;
     margin-bottom: 8px;
@@ -3764,23 +3732,6 @@ dialog.modal::backdrop {
 }
 
 #interface.shake {
-    animation: PlayerDamaged 0.168s;
-}
-
-#animDamageTaken {
-    position: absolute;
-    width: 692px;
-    height: 642px;
-    padding: -4px;
-    background: rgba(255,0,0,0.33) !important;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 69420;
-    transition: opacity 0.168s;
-}
-
-#animDamageTaken.active {
-    opacity: 1;
     animation: PlayerDamaged 0.168s;
 }
 

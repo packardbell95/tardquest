@@ -365,7 +365,7 @@ function PartyMemberBuilder(name, stats = {}) {
 
             // Progression stats
             const hasExperienceCallback =
-                typeof handlers.progression.experience === "function";
+                typeof handlers.progression?.experience === "function";
             if (hasExperienceCallback) {
                 handlers.progression.experience(
                     this.stats.progression.experience,
@@ -374,7 +374,7 @@ function PartyMemberBuilder(name, stats = {}) {
             }
 
             const hasLevelCallback =
-                typeof handlers.progression.level === "function";
+                typeof handlers.progression?.level === "function";
             if (hasLevelCallback) {
                 handlers.progression.level(this.stats.progression.level);
             }

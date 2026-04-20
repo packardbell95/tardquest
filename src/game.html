@@ -24,7 +24,6 @@
     <div id="vampireFocalPoint"></div>
     <div id="vampireFocalPointDesaturationOverlay"></div>
     <div id="interface" class="hidden">
-        <div id="animDamageTaken"></div>
         <div id="battleLog"></div>
         <div id="topLeft">
             <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
@@ -256,15 +255,28 @@
             </div>
         </div>
         <div id="party">
-            <div class="ui-header">
-                Party
-                (
-                    <span id="totalPartyMembers">0</span>
-                    /
-                    <span id="maxPartyMembers">3</span>
-                )
+            <div id="playerParty">
+                <div class="ui-header">
+                    Party
+                    (
+                        <span class="total-party-members">0</span>
+                        /
+                        <span class="max-party-members">3</span>
+                    )
+                </div>
+                <div class="party-members"></div>
             </div>
-            <div id="partyMembers"></div>
+            <div id="enemyParty" class="hidden">
+                <div class="ui-header">
+                    Enemy Party
+                    (
+                        <span class="total-party-members">0</span>
+                        /
+                        <span class="max-party-members">3</span>
+                    )
+                </div>
+                <div class="party-members"></div>
+            </div>
         </div>
         <div id="rightSidebar">
             <div id="battleQueueSection">
@@ -632,7 +644,7 @@
                     if (! eventTrack) {
                         console.warn(
                             "No metadata text track found",
-                            { textTracks: $video.textTracks }
+                            { videoFilename: $video.src.replace(/^.+\//, "") }
                         );
                         return;
                     }
@@ -1590,7 +1602,8 @@
             };
 
             playerEntity.onAddPartyMember = function(partyMember) {
-                const $partyMembers = document.getElementById("partyMembers");
+                const $partyMembers =
+                    document.querySelector("#playerParty .party-members");
                 if (! $partyMembers) {
                     console.error(
                         "Party members section not found!",
@@ -1689,7 +1702,8 @@
                     document.querySelector(selector)?.remove();
                     const $placeholder =
                         this.parent.getPartyMemberPlaceholder();
-                    document.getElementById("partyMembers")
+
+                    document.querySelector("#playerParty .party-members")
                         .append($placeholder);
                 };
 
@@ -1707,16 +1721,47 @@
             playerEntity.onPartyChange = function() {
                 console.log("onPartyChange() called");
 
-                document.getElementById("totalPartyMembers").innerText =
+                const $playerParty = document.getElementById("playerParty");
+                if (! $playerParty) {
+                    console.error("Player party section not found!");
+                    return;
+                }
+
+
+                const $totalPartyMembers =
+                    $playerParty.querySelector(".total-party-members");
+                if (! $totalPartyMembers) {
+                    console.error(
+                        "Player's total party member section not found!",
+                        { $playerParty }
+                    );
+                    return;
+                }
+
+                $totalPartyMembers.innerText =
                     (this.party.length - 1).toLocaleString(undefined);
-                document.getElementById("maxPartyMembers").innerText =
+
+
+                const $maxPartyMembers =
+                    $playerParty.querySelector(".max-party-members");
+                if (! $maxPartyMembers) {
+                    console.error(
+                        "Player's max party member section not found!",
+                        { $playerParty }
+                    );
+                    return;
+                }
+
+                $maxPartyMembers.innerText =
                     (this.maxPartyMembers - 1).toLocaleString(undefined);
 
-                const $partyMembers = document.getElementById("partyMembers");
+
+                const $partyMembers =
+                    $playerParty.querySelector(".party-members");
                 if (! $partyMembers) {
                     console.error(
                         "Party members section not found!",
-                        { partyMember }
+                        { $playerParty }
                     );
                     return;
                 }
@@ -1832,7 +1877,14 @@
             */
 
             playerEntity.initializePartySection = function() {
-                const $partyMembers = document.getElementById("partyMembers");
+                const $partyMembers =
+                    document.querySelector("#playerParty .party-members");
+
+                if (! $partyMembers) {
+                    console.error("Party members section not found!");
+                    return;
+                }
+
                 const placeholders = [];
                 const maxPartyMembersMinusPlayer = this.maxPartyMembers - 1;
 
@@ -1864,7 +1916,7 @@
                 const $info = document.createElement("div");
                 $info.className = "info";
 
-                const $healthBar = document.createElement('progress-bar');
+                const $healthBar = document.createElement("progress-bar");
                 $healthBar.className = "health-bar";
                 $healthBar.setAttribute("data-stat-core", "hp");
                 $healthBar.setAttribute("placeholder", true);
@@ -1948,7 +2000,14 @@
             };
 
             playerEntity.purgeDeadPartyMembers = function() {
-                const $partyMembers = document.getElementById("partyMembers");
+                const $partyMembers =
+                    document.querySelector("#playerParty .party-members");
+
+                if (! $partyMembers) {
+                    console.error("Party members section not found!");
+                    return;
+                }
+
                 const totalMembers = this.party.length;
                 let newPlaceholders = 0;
 
@@ -2048,6 +2107,7 @@
             // yet, which can softlock the battle system
             GameControl.disablePartyButtons();
             GameControl.disableInventorySidebarEquipmentButtons();
+            GameControl.initializeEnemyPartySection(enemyEntity);
 
             if (entityAdvantage === "player") {
                 playerEntity.leader.say("SURPRISE, MOTHERFUCKER!");
@@ -2104,11 +2164,13 @@
             }
 
             BattleQueueSidebar.refresh();
+            GameControl.showPlayerPartySection();
             GameControl.enableControls();
         };
 
         BattleSystem.onCommandPhaseEnd = function() {
             GameControl.disableControls();
+            GameControl.showPlayerPartySection();
             BattleQueueSidebar.refresh();
         };
 
@@ -2288,6 +2350,9 @@
             playerEntity,
             enemyEntity
         ) {
+            GameControl.showPlayerPartySection();
+            GameControl.clearEnemyPartySection(enemyEntity);
+
             const refreshUi = () => {
                 SceneRenderer.enemyLayerEnabled = false;
                 playerEntity.purgeDeadPartyMembers();
@@ -2388,6 +2453,10 @@
             console.log("Move started", { move });
             const isEnemy = move.actor.parent.id === this.enemyEntity.id;
 
+            isEnemy
+                ? GameControl.showEnemyPartySection()
+                : GameControl.showPlayerPartySection();
+
             // @TODO Handle the enemy color on the actor, not here as a fallback
             Portrait.show(
                 move.actor.type,
@@ -2439,6 +2508,8 @@
             }
 
             if (actor?.parent.id === playerEntity.id) {
+                GameControl.showEnemyPartySection();
+
                 // Player's party is attacking
                 const animation = ({
                     fingerNail: "fingernail.webm",
@@ -2467,6 +2538,9 @@
                             if (attackWasFatal) {
                                 actor.parent?.killedMonsters?.(1);
                             }
+
+                            target.$stats.classList.add("damage-rumble");
+                            target.updateHp();
 
                             BattleQueueSidebar.refreshPortrait(move.actor);
                         },
@@ -2512,6 +2586,9 @@
                                 actor.parent?.killedMonsters?.(1);
                             }
 
+                            target.$stats.classList.add("damage-rumble");
+                            target.updateHp();
+
                             BattleQueueSidebar.refreshPortrait(move.actor);
                         },
                         onDanceClubHits: () => {
@@ -2536,6 +2613,8 @@
                 );
             } else {
                 // Enemy's party is attacking
+                GameControl.showPlayerPartySection();
+
                 ViewportAnimation.play(
                     "pov-punched.webm",
                     {

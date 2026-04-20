@@ -433,6 +433,154 @@ const GameControl = {
             });
     },
 
+    initializeEnemyPartySection: (enemyEntity) => {
+        const $enemyParty = document.getElementById("enemyParty");
+        if (! $enemyParty) {
+            console.error("Enemy party element not found");
+            return;
+        }
+
+        const $totalPartyMembers =
+            $enemyParty.querySelector(".total-party-members");
+        if (! $totalPartyMembers) {
+            console.error(
+                "Total party members section not found",
+                { $enemyParty }
+            );
+            return;
+        }
+        $totalPartyMembers.textContent = enemyEntity.party
+            .filter(e => ! e.isDead()).length.toLocaleString(undefined);
+
+        const $maxPartyMembers =
+            $enemyParty.querySelector(".max-party-members");
+        if (! $maxPartyMembers) {
+            console.error(
+                "Max party members section not found",
+                { $enemyParty }
+            );
+            return;
+        }
+        $maxPartyMembers.textContent = enemyEntity.party.length
+            .toLocaleString(undefined);
+
+        const $partyMembers = $enemyParty.querySelector(".party-members");
+        if (! $partyMembers) {
+            console.error("Party members section not found", { $partyMembers });
+            return;
+        }
+
+        const partyMemberElements = [];
+
+        for (const partyMember of enemyEntity.party) {
+            const $partyMember = document.createElement("div");
+            $partyMember.className = "party-member";
+            $partyMember.dataset.partyMemberId = partyMember.id;
+
+            const $portrait = document.createElement("div");
+            $portrait.classList.add("portrait", "flipped", partyMember.type);
+            $portrait.style.backgroundColor = partyMember.color;
+            $partyMember.appendChild($portrait);
+
+            const $container = document.createElement("div");
+            $container.className = "container";
+
+            const $name = document.createElement("div");
+            $name.className = "name";
+            $name.innerText = partyMember.name;
+            $container.appendChild($name);
+
+            const $info = document.createElement("div");
+            $info.className = "info";
+
+            const $healthBar = document.createElement("progress-bar");
+            $healthBar.className = "health-bar";
+            $healthBar.setAttribute("data-stat-core", "hp");
+            $healthBar.setAttribute("height", 20);
+            $healthBar.setAttribute(
+                "value",
+                partyMember.getEffectiveCoreStat("hp")
+            );
+            $healthBar.setAttribute(
+                "max",
+                partyMember.getEffectiveCoreStat("maxHp")
+            );
+            $healthBar.setAttribute("cautionAtOrBelowPercentage", 25);
+            $healthBar.setAttribute("dangerAtOrBelowPercentage", 10);
+            $info.appendChild($healthBar);
+
+            $container.appendChild($info);
+            $partyMember.appendChild($container);
+
+            partyMemberElements.push($partyMember);
+
+            partyMember.$stats = $partyMember;
+
+            partyMember.statEventHandlers = {
+                core: {
+                    hp: (effectiveHp) => {
+                        partyMember.$stats
+                            .querySelector(`[data-stat-core="hp"]`)
+                            .setAttribute("value", effectiveHp);
+                    },
+                    maxHp: (effectiveMaxHp) => {
+                        partyMember.$stats
+                            .querySelector(`[data-stat-core="hp"]`)
+                            .setAttribute("max", effectiveMaxHp);
+                    },
+                },
+            };
+        }
+
+        $partyMembers.replaceChildren(...partyMemberElements);
+    },
+
+    clearEnemyPartySection: (enemyEntity) => {
+        // Remove stat element references
+        for (const partyMember of enemyEntity.party) {
+            delete partyMember.statEventHandlers;
+            delete partyMember.$stats;
+        }
+
+        const $partyMembers =
+            document.querySelector("#enemyParty .party-members");
+        if (! $partyMembers) {
+            console.error("Enemy party members element not found");
+            return;
+        }
+
+        $partyMembers.replaceChildren();
+    },
+
+    showPlayerPartySection: () => {
+        GameControl._showPartySection();
+    },
+
+    showEnemyPartySection: () => {
+        GameControl._showPartySection(false);
+    },
+
+    _showPartySection: (showPlayerParty = true) => {
+        const $playerParty = document.getElementById("playerParty");
+        if (! $playerParty) {
+            console.error("Player party section not found");
+            return;
+        }
+
+        const $enemyParty = document.getElementById("enemyParty");
+        if (! $enemyParty) {
+            console.error("Enemy party section not found");
+        }
+
+        if (showPlayerParty) {
+            $playerParty.classList.remove("hidden");
+            $enemyParty.classList.add("hidden");
+        } else {
+            $playerParty.classList.add("hidden");
+            $enemyParty.classList.remove("hidden");
+        }
+    },
+
     /**
      * PERSUASION / TALK
      */
