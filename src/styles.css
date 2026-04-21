@@ -1982,6 +1982,22 @@ a:link {
     justify-content: right;
 }
 
+#party {
+    display: flex;
+    flex-direction: column;
+}
+
+#playerParty,
+#enemyParty {
+    height: 153px;
+    transition: transform 300ms ease;
+}
+
+#playerParty:not(.active),
+#enemyParty.active {
+    transform: translateY(-153px);
+}
+
 .party-members {
     display: flex;
     flex-direction: column;
@@ -1993,10 +2009,6 @@ a:link {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0 2ch;
-
-    & .party-member .name {
-        letter-spacing: -0.25ch;
-    }
 }
 
 .party-members:empty::after {

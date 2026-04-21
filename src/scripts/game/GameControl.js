@@ -470,7 +470,7 @@ const GameControl = {
             return;
         }
 
-        const partyMemberElements = [];
+        $partyMembers.replaceChildren();
 
         for (const partyMember of enemyEntity.party) {
             const $partyMember = document.createElement("div");
@@ -487,7 +487,6 @@ const GameControl = {
 
             const $name = document.createElement("div");
             $name.className = "name";
-            $name.innerText = partyMember.name;
             $container.appendChild($name);
 
             const $info = document.createElement("div");
@@ -512,8 +511,7 @@ const GameControl = {
             $container.appendChild($info);
             $partyMember.appendChild($container);
 
-            partyMemberElements.push($partyMember);
-
+            $partyMembers.appendChild($partyMember);
             partyMember.$stats = $partyMember;
 
             partyMember.statEventHandlers = {
@@ -530,9 +528,83 @@ const GameControl = {
                     },
                 },
             };
+
+            // Adjust letter spacing before filling in the name so it all fits
+            const letterSpacingCh = GameControl._calculateLetterSpacingCh(
+                $name, partyMember.name
+            );
+
+            if (letterSpacingCh !== null) {
+                $name.style.letterSpacing = `${letterSpacingCh}ch`;
+            }
+
+            $name.textContent = partyMember.name;
+        }
+    },
+
+    _calculateLetterSpacingCh: ($element, text) => {
+        if (! ($element instanceof Element)) {
+            console.error("$element must be a DOM element", { $element });
+            return null;
         }
 
-        $partyMembers.replaceChildren(...partyMemberElements);
+        if (typeof text !== "string") {
+            console.error("text must be a string", { text });
+            return null;
+        }
+
+        const targetWidthPx = $element.getBoundingClientRect().width;
+        const characterCount = text.length;
+
+        if (characterCount <= 1) {
+            return null;
+        }
+
+        const gapCount = characterCount - 1;
+
+        // Reuse a hidden measuring node so we get real DOM text metrics.
+        const $measurementNode = document.createElement("span");
+        const computedStyle = window.getComputedStyle($element);
+
+        $measurementNode.textContent = text;
+        Object.assign($measurementNode.style, {
+            position: "absolute",
+            visibility: "hidden",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+            left: "-999999px",
+            top: "0",
+
+            font: computedStyle.font,
+            fontKerning: computedStyle.fontKerning,
+            fontFeatureSettings: computedStyle.fontFeatureSettings,
+            fontVariationSettings: computedStyle.fontVariationSettings,
+            fontStretch: computedStyle.fontStretch,
+            fontStyle: computedStyle.fontStyle,
+            fontVariant: computedStyle.fontVariant,
+            fontWeight: computedStyle.fontWeight,
+            fontSize: computedStyle.fontSize,
+            fontFamily: computedStyle.fontFamily,
+            textTransform: computedStyle.textTransform,
+        });
+
+        document.body.appendChild($measurementNode);
+        let spacing;
+
+        for (spacing = 0; spacing > -1; spacing -= 0.01) {
+            $measurementNode.style.letterSpacing = `${spacing}ch`;
+
+            const naturalWidthPx =
+                $measurementNode.getBoundingClientRect().width;
+
+            if (naturalWidthPx <= targetWidthPx) {
+                $measurementNode.remove();
+                return spacing;
+            }
+        }
+
+        $measurementNode.remove();
+        return spacing;
     },
 
     clearEnemyPartySection: (enemyEntity) => {
@@ -572,12 +644,20 @@ const GameControl = {
             console.error("Enemy party section not found");
         }
 
+        const alreadyShowingRequestedSection =
+            (showPlayerParty && $playerParty.classList.contains("active")) ||
+            (! showPlayerParty && $enemyParty.classList.contains("active"));
+
+        if (alreadyShowingRequestedSection) {
+            return;
+        }
+
         if (showPlayerParty) {
-            $playerParty.classList.remove("hidden");
-            $enemyParty.classList.add("hidden");
+            $playerParty.classList.add("active");
+            $enemyParty.classList.remove("active");
         } else {
-            $playerParty.classList.add("hidden");
-            $enemyParty.classList.remove("hidden");
+            $enemyParty.classList.add("active");
+            $playerParty.classList.remove("active");
         }
     },
 
