@@ -68,6 +68,45 @@ button:disabled:hover {
     cursor: not-allowed;
 }
 
+.button {
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    background-position: 50% 50%;
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    &:disabled:hover {
+        background-color: unset;
+    }
+
+    &:not(:disabled) {
+        background-color: #00f;
+        &:hover  { border-color: #99f #00c #00c #99f; }
+        &:active { border-color: #00c #99f #99f #00c; }
+    }
+
+    &.success:not(:disabled) {
+        color: #fff;
+        background-color: #090;
+        &:hover  { border-color: #3c3 #090 #090 #3c3; }
+        &:active { border-color: #090 #3c3 #3c3 #090; }
+    }
+
+    &.danger:not(:disabled) {
+        background-color: #f00;
+        &:hover  { border-color: #f99 #c00 #c00 #f99; }
+        &:active { border-color: #c00 #f99 #f99 #c00; }
+    }
+
+    &:not(:disabled):active {
+        background-position: calc(50% + 2px) calc(50% + 2px);
+    }
+
+    &:disabled {
+        opacity: 0.25;
+    }
+}
+
 .strikethrough {
     text-decoration: line-through;
 }
@@ -1171,6 +1210,9 @@ a:link {
 #mouseControl .touch {
     clip-path: polygon(10% 15%, 90% 15%, 90% 85%, 10% 85%);
     cursor: url(assets/cursors/touch.cur), grab;
+    &.attack {
+        cursor: url(assets/cursors/attack.cur), crosshair;
+    }
 }
 
 #mouseControl .touch:active {
@@ -1982,11 +2024,6 @@ a:link {
     justify-content: right;
 }
 
-#party {
-    display: flex;
-    flex-direction: column;
-}
-
 #playerParty,
 #enemyParty {
     height: 153px;
@@ -2009,6 +2046,21 @@ a:link {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0 2ch;
+    padding: 2px;
+    cursor: pointer;
+
+    & .party-member.button {
+        & > * {
+            position: relative;
+        }
+
+        &:not(:disabled):active {
+            & > * {
+                top: 2px;
+                left: 2px;
+            }
+        }
+    }
 }
 
 .party-members:empty::after {

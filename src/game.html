@@ -1727,7 +1727,6 @@
                     return;
                 }
 
-
                 const $totalPartyMembers =
                     $playerParty.querySelector(".total-party-members");
                 if (! $totalPartyMembers) {
@@ -1740,7 +1739,6 @@
 
                 $totalPartyMembers.innerText =
                     (this.party.length - 1).toLocaleString(undefined);
-
 
                 const $maxPartyMembers =
                     $playerParty.querySelector(".max-party-members");
@@ -1755,7 +1753,6 @@
                 $maxPartyMembers.innerText =
                     (this.maxPartyMembers - 1).toLocaleString(undefined);
 
-
                 const $partyMembers =
                     $playerParty.querySelector(".party-members");
                 if (! $partyMembers) {
@@ -1766,11 +1763,20 @@
                     return;
                 }
 
+                const newPlaceholders = Math.min(
+                    (
+                        playerEntity.maxPartyMembers -
+                        playerEntity.party.filter(e => ! e.isDead()).length
+                    ),
+                    3
+                );
+
                 $partyMembers.querySelectorAll(".placeholder")
                     .forEach(e => e.remove());
 
-                for (let i = $partyMembers.children.length; i < 3; i++) {
-                    $partyMembers.append(this.getPartyMemberPlaceholder());
+                for (let i = 0; i < newPlaceholders; i++) {
+                    $placeholder = this.getPartyMemberPlaceholder();
+                    $partyMembers.appendChild($placeholder);
                 }
             };
 
@@ -2012,6 +2018,10 @@
                 let newPlaceholders = 0;
 
                 for (const $partyMember of $partyMembers.children) {
+                    if ($partyMember.classList.contains("placeholder")) {
+                        continue;
+                    }
+
                     const partyMemberId =
                         parseInt($partyMember.dataset.partyMemberId, 10);
 
@@ -2039,13 +2049,7 @@
                     }
                 }
 
-                for (let i = 0; i < newPlaceholders; i++) {
-                    $placeholder = this.getPartyMemberPlaceholder();
-                    $partyMembers.appendChild($placeholder);
-                }
-
                 this.party = this.party.filter(e => ! e.isDead());
-
                 this.onPartyChange?.();
             };
 
@@ -2220,6 +2224,7 @@
             Portrait.show(partyMember.type, partyMember.color);
             this.playerEntity?.highlightPartyMember?.(partyMember.id);
             BattleQueueSidebar.refresh();
+            GameControl.showPlayerPartySection();
             GameControl.update();
         };
 
@@ -2409,8 +2414,6 @@
                                 if (! menu.isOpen()) {
                                     InventorySidebar.open("main");
                                 }
-                                playerEntity.purgeDeadPartyMembers();
-                                enemyEntity.purgeDeadPartyMembers();
                                 render();
                             },
                         }
@@ -3636,6 +3639,9 @@
                 return;
             }
 
+            document.querySelector(`#battleInput [name="attack"]`)
+                ?.setAttribute("disabled", "true");
+
             const index = BattleSystem.playerPartyMemberIndex;
             const activePartyMember = BattleSystem.playerEntity.party[index];
             if (! activePartyMember?.getEffectiveTrait("canAttack")) {
@@ -3646,10 +3652,18 @@
                 return;
             }
 
+
+
+            const attackTargetCallback = (targetPartyMember) =>
+                BattleSystem.attack(activePartyMember, targetPartyMember);
+
             // @TODO Implement target selection in the UI
             // The battle system already supports it
+            GameControl.showEnemyPartySection(attackTargetCallback);
+/*
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
             BattleSystem.attack(activePartyMember, enemyPartyMember);
+*/
         }
 
         function playerMouseLeave() {

@@ -222,25 +222,37 @@ const GameControl = {
         const controlsEnabled =
             GameControl.enabled &&
             ! playerEntity.movementDisabled;
+
         const touchEnabled =
             controlsEnabled &&
-            typeof cellInFrontOfPlayer?.onTouch === "function";
+            cellInFrontOfPlayer.entities.some(e =>
+                e.isActive &&
+                typeof e.onTouch === "function"
+            );
+
+        // @TODO Replace this with tag check once entity tags are implemented
+        const enemyIsInFrontOfPlayer =
+            touchEnabled &&
+            cellInFrontOfPlayer.entities.some(e => e.isActive &&
+                (e.type === "vampire" || e.className === "roamingEnemy")
+            );
+
         const moveForwardEnabled =
             controlsEnabled &&
             ! touchEnabled &&
             cellInFrontOfPlayer?.isWall === false;
 
-        // No "Touch" or "Interact" on the button menu yet since it's the same
-        // as moving forward anyways
-        if (moveForwardEnabled) {
+        if (moveForwardEnabled || touchEnabled) {
             $playerInput.querySelector('[name="forward"]')
                 ?.removeAttribute("disabled");
         } else {
             $playerInput.querySelector('[name="forward"]')
                 ?.setAttribute("disabled", "true");
         }
-        $mouseControl.querySelector(".touch")?.classList
-            .toggle("hidden", ! touchEnabled);
+        const $touch = $mouseControl.querySelector(".touch");
+        $touch?.classList.toggle("hidden", ! touchEnabled);
+        $touch?.classList.toggle("attack", enemyIsInFrontOfPlayer);
+
         $mouseControl.querySelector(".forward")?.classList
             .toggle("hidden", ! moveForwardEnabled);
 
@@ -474,7 +486,7 @@ const GameControl = {
 
         for (const partyMember of enemyEntity.party) {
             const $partyMember = document.createElement("div");
-            $partyMember.className = "party-member";
+            $partyMember.className = "party-member button";
             $partyMember.dataset.partyMemberId = partyMember.id;
 
             const $portrait = document.createElement("div");
@@ -624,15 +636,15 @@ const GameControl = {
         $partyMembers.replaceChildren();
     },
 
-    showPlayerPartySection: () => {
-        GameControl._showPartySection();
+    showPlayerPartySection: (selectedEntityCallback = null) => {
+        GameControl._showPartySection(true, selectedEntityCallback);
     },
 
-    showEnemyPartySection: () => {
-        GameControl._showPartySection(false);
+    showEnemyPartySection: (selectedEntityCallback = null) => {
+        GameControl._showPartySection(false, selectedEntityCallback);
     },
 
-    _showPartySection: (showPlayerParty = true) => {
+    _showPartySection: (showPlayerParty, selectedEntityCallback) => {
         const $playerParty = document.getElementById("playerParty");
         if (! $playerParty) {
             console.error("Player party section not found");
@@ -658,6 +670,25 @@ const GameControl = {
         } else {
             $enemyParty.classList.add("active");
             $playerParty.classList.remove("active");
+        }
+
+        const enemyPartyMemberButtons =
+            $enemyParty.querySelectorAll(`.party-member[data-party-member-id]`);
+
+        const addCallback =
+            BattleSystem.isActive &&
+            typeof selectedEntityCallback === "function";
+
+        for (const $partyMember of enemyPartyMemberButtons) {
+            const partyMemberId =
+                parseInt($partyMember.dataset.partyMemberId, 10);
+
+            const partyMember = BattleSystem.enemyEntity.party
+                .find(e => e.id === partyMemberId);
+
+            $partyMember.onclick = addCallback && partyMember
+                ? () => selectedEntityCallback(partyMember)
+                : null;
         }
     },
 
