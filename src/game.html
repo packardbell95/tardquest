@@ -3011,14 +3011,34 @@
             return null;
         }
 
+        // @TODO Fix the generator so that the regeneration loop isn't needed
         function generateMap() {
-            TardQuestMapGenerator.generate(MAP, floor);
+            let attempts = 0;
+            const maxAttempts = 1000;
 
-            // vampire.initialize();
+            while (attempts++ < maxAttempts) {
+                TardQuestMapGenerator.generate(MAP, floor);
 
-            // @TODO Remove this debug code, obviously
-            // MAP.fill(1, 1, MAP.width - 2, MAP.height - 2, "floor");
-            // MAP.reveal();
+                const player = MAP.entities.find(e => e.type === "player");
+                const exit = MAP.entities.find(e => e.type === "exit");
+
+                if (! player || ! exit) {
+                    console.error("Failed to place entities", { player, exit });
+                    continue;
+                }
+
+                const path =
+                    MAP.findPath([player.x, player.y], [exit.x, exit.y]);
+
+                if (path === null) {
+                    console.error("Failed to generate a traversable map");
+                    continue;
+                }
+
+                return;
+            }
+
+            throw new Error(`Map generation exceeded ${maxAttempts} attempts`);
         }
 
         function loadSettings() {
