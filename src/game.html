@@ -2170,11 +2170,13 @@
             BattleQueueSidebar.refresh();
             GameControl.showPlayerPartySection();
             GameControl.enableControls();
+            // GameControl.BattleUi.initialize();
         };
 
         BattleSystem.onCommandPhaseEnd = function() {
             GameControl.disableControls();
             GameControl.showPlayerPartySection();
+            GameControl.BattleUi.blur();
             BattleQueueSidebar.refresh();
         };
 
@@ -2226,6 +2228,7 @@
             BattleQueueSidebar.refresh();
             GameControl.showPlayerPartySection();
             GameControl.update();
+            GameControl.BattleUi.initialize();
         };
 
         BattleSystem.onRequeueMove = function(playerPartyMemberIndex) {
@@ -2357,6 +2360,7 @@
         ) {
             GameControl.showPlayerPartySection();
             GameControl.clearEnemyPartySection(enemyEntity);
+            GameControl.BattleUi.blur();
 
             const refreshUi = () => {
                 SceneRenderer.enemyLayerEnabled = false;
@@ -3679,7 +3683,7 @@
 
             // @TODO Implement target selection in the UI
             // The battle system already supports it
-            GameControl.showEnemyPartySection(attackTargetCallback);
+            GameControl.showEnemyPartySection(attackTargetCallback, true);
 /*
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
             BattleSystem.attack(activePartyMember, enemyPartyMember);
@@ -4508,6 +4512,21 @@
                         break;
                     case "p":
                         tryPersuade(e);
+                        break;
+                    case "arrowup":
+                        GameControl.BattleUi.up();
+                        break;
+                    case "arrowdown":
+                        GameControl.BattleUi.down();
+                        break;
+                    case "arrowleft":
+                        GameControl.BattleUi.left();
+                        break;
+                    case "arrowright":
+                        GameControl.BattleUi.right();
+                        break;
+                    case "enter":
+                        GameControl.BattleUi.select();
                         break;
                 }
             } else {

@@ -2090,6 +2090,12 @@ a:link {
     }
 }
 
+/* Not aesthetic, but visible. Will change later */
+.ui-active {
+    background-color: orange;
+    border-color: darkorange;
+}
+
 #viewport > .layer,
 #viewport > #animation,
 #viewport > #animTorch,

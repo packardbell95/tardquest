@@ -151,6 +151,8 @@ const BattleSystem = {
 
         if (this.entityAdvantage !== "player") {
             this.queueEnemyMoves();
+        } else if (this.entityAdvantage !== "enemy") {
+            this.onCommandPhaseStart?.();
         }
     },
 

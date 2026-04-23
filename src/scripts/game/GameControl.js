@@ -636,12 +636,20 @@ const GameControl = {
         $partyMembers.replaceChildren();
     },
 
-    showPlayerPartySection: (selectedEntityCallback = null) => {
+    showPlayerPartySection: (selectedEntityCallback = null, focus = false) => {
         GameControl._showPartySection(true, selectedEntityCallback);
+
+        if (focus) {
+            GameControl.BattleUi.initialize("player party");
+        }
     },
 
-    showEnemyPartySection: (selectedEntityCallback = null) => {
+    showEnemyPartySection: (selectedEntityCallback = null, focus = false) => {
         GameControl._showPartySection(false, selectedEntityCallback);
+
+        if (focus) {
+            GameControl.BattleUi.initialize("enemy party");
+        }
     },
 
     _showPartySection: (showPlayerParty, selectedEntityCallback) => {
@@ -747,5 +755,306 @@ const GameControl = {
             playerEntity.leader.getEffectiveCoreStat("speed") * 0.05;
 
         return Math.max(minDelayMs, baseDelayMs * (1 - speedModifier));
+    },
+
+    BattleUi: {
+        activeClassname: "ui-active",
+        // battleInput, enemyParty, playerParty, inventory, battleQueue?
+
+        _getCurrentActiveElement: function() {
+            const $activeElement =
+                document.querySelector(`.${this.activeClassname}`);
+            const sectionSelector =
+                "#battleInput, #enemyParty, #playerParty, #inventory, " +
+                "#battleQueue";
+
+            return {
+                $activeElement,
+                $section: $activeElement?.closest(sectionSelector) || null,
+            };
+        },
+
+        initialize: function (sectionName) {
+            switch (sectionName) {
+                case "player party":
+                    this._PlayerParty(null, "initialize");
+                    break;
+                case "enemy party":
+                    this._EnemyParty(null, "initialize");
+                    break;
+                case "inventory":
+                    this._Inventory(null, "initialize");
+                    break;
+                case "battle queue":
+                    this._BattleQueue(null, "initialize");
+                    break;
+                case "battle input":
+                default:
+                    this._BattleInput(null, "initialize");
+                    break;
+            }
+        },
+        up: function () {
+            this._nav("up");
+        },
+        down: function() {
+            this._nav("down");
+        },
+        left: function() {
+            this._nav("left");
+        },
+        right: function() {
+            this._nav("right");
+        },
+        select: function() {
+            const $selectedElement =
+                document.querySelector(`.${this.activeClassname}`);
+
+            if ($selectedElement) {
+                playSFX("uiSelect");
+                $selectedElement.click();
+            }
+        },
+        blur: function() {
+            document.querySelectorAll(`.${this.activeClassname}`)
+                .forEach($e => $e.classList.remove(this.activeClassname));
+        },
+        _nav: function(direction) {
+            const { $activeElement, $section } =
+                this._getCurrentActiveElement();
+
+            if (! $activeElement) {
+                this._BattleInput(null, "initialize");
+                return;
+            }
+
+            switch ($section.id) {
+                case "battleInput":
+                    this._BattleInput($activeElement, direction);
+                    break;
+                case "playerParty":
+                    this._PlayerParty($activeElement, direction);
+                    break;
+                case "enemyParty":
+                    this._EnemyParty($activeElement, direction);
+                    break;
+                case "inventory":
+                    this._Inventory($activeElement, direction);
+                    break;
+                case "battleQueue":
+                    this._BattleQueue($activeElement, direction);
+                    break;
+            }
+        },
+
+        _activate: function ($element, playSfx = true) {
+            if ($element?.classList.contains(this.activeClassname)) {
+                return;
+            }
+
+            if (playSfx) {
+                playSFX("uiOption");
+            }
+
+            this.blur();
+            $element?.classList.add(this.activeClassname);
+        },
+
+        _BattleInput: function($activeElement, direction) {
+            switch (direction) {
+                case "initialize":
+                case "enter from top":
+                    this._activate(
+                        document.querySelector(`#battleInput [name="attack"]`),
+                        direction !== "initialize"
+                    );
+                    break;
+                case "down":
+                    if ($activeElement.nextElementSibling) {
+                        this._activate($activeElement.nextElementSibling);
+                    }
+                    break;
+                case "up":
+                    if ($activeElement.previousElementSibling) {
+                        this._activate($activeElement.previousElementSibling);
+                    }
+                    break;
+                case "left":
+                    const $playerParty = document.getElementById("playerParty");
+                    const playerPartyIsActive =
+                        $playerParty.classList.contains("active");
+
+                    playerPartyIsActive
+                        ? this._PlayerParty($activeElement, "enter from right")
+                        : this._EnemyParty($activeElement, "enter from right");
+                    break;
+                case "right":
+                    // Do nothing
+                    break;
+                case "enter from left":
+                    const $attackButton =
+                        document.querySelector(`#battleInput [name="attack"]`);
+
+                    if (! $attackButton) {
+                        console.error("Attack button not found");
+                        break;
+                    }
+
+                    this._activate($attackButton);
+                    break;
+            }
+        },
+
+        _PlayerParty: function($activeElement, direction) {
+            const index = Array
+                .from($activeElement.parentElement.children)
+                .indexOf($activeElement);
+
+            switch (direction) {
+                case "initialize":
+                    this._activate(
+                        document.querySelector(`#playerParty .party-member`),
+                        false
+                    );
+                    break;
+                case "up":
+                    if ($activeElement.previousElementSibling) {
+                        this._activate($activeElement.previousElementSibling);
+                    }
+                    break;
+                case "down":
+                    if ($activeElement.nextElementSibling) {
+                        this._activate($activeElement.nextElementSibling);
+                    }
+                    break;
+                case "left":
+                    // Do nothing
+                    break;
+                case "right":
+                    this._BattleInput($activeElement, "enter from left");
+                    break;
+                case "enter from right":
+                    const $playerParty =
+                        document.querySelector("#playerParty .party-members");
+
+                    if (! $playerParty) {
+                        console.error("Player party element not found");
+                        break;
+                    }
+
+                    if ($playerParty.children.length > 0) {
+                        this._activate($enemyParty.children[0]);
+                    }
+
+                    break;
+            }
+        },
+
+        _EnemyParty: function($activeElement, direction) {
+            const index = $activeElement && Array
+                .from($activeElement.parentElement.children)
+                .indexOf($activeElement);
+
+            switch (direction) {
+                case "initialize":
+                    this._activate(
+                        document.querySelector(`#enemyParty .party-member`),
+                        false
+                    );
+                    break;
+                case "up":
+                    if (index > 1) {
+                        const nextIndex = Math.max(index - 2, 0);
+                        this._activate(
+                            $activeElement.parentElement.children[nextIndex]
+                        );
+                    }
+                    break;
+                case "down":
+                    const nextIndex = Math.min(
+                        index + 2,
+                        BattleSystem.enemyEntity.party.length - 1
+                    );
+
+                    if (nextIndex >= 0) {
+                        this._activate(
+                            $activeElement.parentElement.children[nextIndex]
+                        );
+                    }
+                    break;
+                case "left":
+                    if (index & 1 === 1) {
+                        const nextIndex = index - 1;
+                        this._activate(
+                            $activeElement.parentElement.children[nextIndex]
+                        );
+                    }
+                    break;
+                case "right":
+                    const inLeftColumn = (index & 1) === 0;
+
+                    if (inLeftColumn) {
+                        if ($activeElement.nextElementSibling) {
+                            this._activate($activeElement.nextElementSibling);
+                            break;
+                        } else if ($activeElement.previousElementSibling) {
+                            this._activate(
+                                $activeElement.previousElementSibling
+                            );
+                            break;
+                        }
+                    }
+
+                    this._BattleInput($activeElement, "enter from left");
+                    break;
+                case "enter from right":
+                    const $enemyParty =
+                        document.querySelector("#enemyParty .party-members");
+
+                    if (! $enemyParty) {
+                        console.error("Enemy party element not found");
+                        break;
+                    }
+
+                    if ($enemyParty.children.length > 0) {
+                        this._activate($enemyParty.children[
+                            Math.min(1, $enemyParty.children.length - 1)
+                        ]);
+                    }
+
+                    break;
+            }
+        },
+
+        _Inventory: function($activeElement, direction) {
+            switch (direction) {
+                case "initialize":
+                case "enter from top":
+                case "enter from bottom":
+                    this._activate(
+                        document.querySelector(`#inventory .items`),
+                        direction !== "initialize"
+                    );
+                    break;
+                case "up":
+                    this._BattleQueue("enter from bottom");
+                    break;
+                case "down":
+                    this._Inventory("enter from top");
+                    break;
+                case "left":
+                    const $playerParty = document.getElementById("playerParty");
+                    const playerPartyIsActive =
+                        $playerParty.classList.contains("active");
+
+                    playerPartyIsActive
+                        ? this._PlayerParty($activeElement, "enter from right")
+                        : this._EnemyParty($activeElement, "enter from right");
+                    break;
+                case "right":
+                    // Do nothing
+                    break;
+            }
+        },
     },
 };
