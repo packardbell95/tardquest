@@ -137,7 +137,12 @@ const BattleQueueSidebar = {
             const moveIndex = orderedMoves.length > 0
                 ? orderedMoves.findIndex(e => e.actor.id === partyMember.id)
                 : partyMembers.findIndex(e => e.id === partyMember.id);
+
+            $partyMember.dataset.index = moveIndex;
+
             if (moveIndex === -1) {
+                $partyMember.dataset.x = -1;
+                $partyMember.dataset.y = -1;
                 $partyMember.classList.add("hidden");
                 $partyMember.querySelector(".turn-number").textContent = "";
                 continue;
@@ -146,8 +151,14 @@ const BattleQueueSidebar = {
             $partyMember.classList.remove("hidden");
 
             this.refreshPortrait(partyMember);
-            const positionX = (moveIndex & 1) === 0 ? 0 : itemSizeX;
-            const positionY = ((moveIndex & ~1) >> 1) * itemSizeY;
+            const x = moveIndex & 1;
+            const y = (moveIndex & ~1) >> 1;
+
+            $partyMember.dataset.x = x;
+            $partyMember.dataset.y = y;
+
+            const positionX = x === 0 ? 0 : itemSizeX;
+            const positionY = y * itemSizeY;
 
             $partyMember.style.setProperty("--x", `${positionX}px`);
             $partyMember.style.setProperty("--y", `${positionY}px`);

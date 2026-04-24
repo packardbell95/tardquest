@@ -877,6 +877,8 @@ const GameControl = {
                 case "up":
                     if ($activeElement.previousElementSibling) {
                         this._activate($activeElement.previousElementSibling);
+                    } else {
+                        this._Inventory($activeElement, "enter from bottom");
                     }
                     break;
                 case "left":
@@ -943,7 +945,7 @@ const GameControl = {
                     }
 
                     if ($playerParty.children.length > 0) {
-                        this._activate($enemyParty.children[0]);
+                        this._activate($playerParty.children[0]);
                     }
 
                     break;
@@ -1037,10 +1039,10 @@ const GameControl = {
                     );
                     break;
                 case "up":
-                    this._BattleQueue("enter from bottom");
+                    this._BattleQueue($activeElement, "enter from bottom");
                     break;
                 case "down":
-                    this._Inventory("enter from top");
+                    this._BattleInput($activeElement, "enter from top");
                     break;
                 case "left":
                     const $playerParty = document.getElementById("playerParty");
@@ -1053,6 +1055,61 @@ const GameControl = {
                     break;
                 case "right":
                     // Do nothing
+                    break;
+            }
+        },
+
+        _BattleQueue: function($activeElement, direction) {
+            const index = Number($activeElement.dataset.index);
+            const x = Number($activeElement.dataset.x);
+            const y = Number($activeElement.dataset.y);
+
+            switch (direction) {
+                case "initialize":
+                    this._activate(document.querySelector(
+                        `#battleQueue > [data-index="0"]`
+                    ));
+                    break;
+                case "enter from bottom":
+                    const elements = Array.from(
+                        document.querySelectorAll(`#battleQueue > [data-index]`)
+                    );
+
+                    const $lastElement = elements.reduce(($final, $e) => {
+                        const index = Number($e.dataset.index);
+                        if (! $final) {
+                            return $e;
+                        }
+
+                        const finalIndex = Number($final.dataset.index);
+                        return index > finalIndex ? $e : $final;
+                    }, null);
+
+                    this._activate($lastElement, false);
+                    break;
+                case "up":
+                    this._activate(document.querySelector(
+                        `#battleQueue > [data-x="${x}"][data-y="${y - 1}"]`
+                    ));
+                    break;
+                case "down":
+                    const $next = document.querySelector(
+                        `#battleQueue > [data-x="${x}"][data-y="${y - 1}"]`
+                    );
+
+                    $next
+                        ? this._activate($next)
+                        : this._Inventory($activeElement, "enter from top");
+                    break;
+                case "left":
+                    this._activate(document.querySelector(
+                        `#battleQueue > [data-x="${x - 1}"][data-y="${y}"]`
+                    ));
+                    break;
+                case "right":
+                    this._activate(document.querySelector(
+                        `#battleQueue > [data-x="${x + 1}"][data-y="${y}"]`
+                    ));
                     break;
             }
         },
