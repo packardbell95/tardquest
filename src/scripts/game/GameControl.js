@@ -759,18 +759,31 @@ const GameControl = {
 
     BattleUi: {
         activeClassname: "ui-active",
+
+        // Battle moves that include "attack", "persuade", "run", and "useItem"
+        currentAction: null,
+
         // battleInput, enemyParty, playerParty, inventory, battleQueue?
+
+        _getParentSection: function($element) {
+            if ($element?.id === "inventorySidebarCloseButton") {
+                return document.querySelector("#inventory [name]:not(.hidden)");
+            }
+
+            const sectionSelector =
+                "#stats, #battleInput, #enemyParty, #playerParty, " +
+                "#inventory [name]:not(.hidden), #battleQueue";
+
+            return $element?.closest(sectionSelector) || null;
+        },
 
         _getCurrentActiveElement: function() {
             const $activeElement =
                 document.querySelector(`.${this.activeClassname}`);
-            const sectionSelector =
-                "#battleInput, #enemyParty, #playerParty, #inventory, " +
-                "#battleQueue";
 
             return {
                 $activeElement,
-                $section: $activeElement?.closest(sectionSelector) || null,
+                $section: this._getParentSection($activeElement),
             };
         },
 
@@ -784,6 +797,9 @@ const GameControl = {
                     break;
                 case "inventory":
                     this._Inventory(null, "initialize");
+                    break;
+                case "inventory items":
+                    this._InventoryItems(null, "initialize");
                     break;
                 case "battle queue":
                     this._BattleQueue(null, "initialize");
@@ -828,26 +844,51 @@ const GameControl = {
                 return;
             }
 
-            switch ($section.id) {
+            // @TODO Use an attribute other than ID to identify sections to
+            //       consolidate these switch statements
+            // Note that these switches return early instead of breaking
+            switch ($section?.id) {
+                case "stats":
+                    this._Player($activeElement, direction);
+                    return;
                 case "battleInput":
                     this._BattleInput($activeElement, direction);
-                    break;
+                    return;
                 case "playerParty":
                     this._PlayerParty($activeElement, direction);
-                    break;
+                    return;
                 case "enemyParty":
                     this._EnemyParty($activeElement, direction);
-                    break;
+                    return;
                 case "inventory":
                     this._Inventory($activeElement, direction);
-                    break;
+                    return;
                 case "battleQueue":
                     this._BattleQueue($activeElement, direction);
-                    break;
+                    return;
             }
+
+            // Assume we're in the inventory section if we've reached this point
+            switch ($section?.getAttribute("name")) {
+                case "main":
+                    this._Inventory($activeElement, direction);
+                    return;
+                case "items":
+                    this._InventoryItems($activeElement, direction);
+                    return;
+            }
+
+            console.warn(
+                "Unknown section",
+                { $section, $activeElement, direction }
+            );
         },
 
         _activate: function ($element, playSfx = true) {
+            if (! $element) {
+                return;
+            }
+
             if ($element?.classList.contains(this.activeClassname)) {
                 return;
             }
@@ -857,7 +898,7 @@ const GameControl = {
             }
 
             this.blur();
-            $element?.classList.add(this.activeClassname);
+            $element.classList.add(this.activeClassname);
         },
 
         _BattleInput: function($activeElement, direction) {
@@ -878,10 +919,26 @@ const GameControl = {
                     if ($activeElement.previousElementSibling) {
                         this._activate($activeElement.previousElementSibling);
                     } else {
-                        this._Inventory($activeElement, "enter from bottom");
+                        const activeInventorySection = document
+                            .querySelector(`#inventory [name]:not(.hidden)`)
+                            ?.getAttribute("name");
+
+                        activeInventorySection === "items"
+                            ? this._InventoryItems(
+                                $activeElement,
+                                "enter from bottom"
+                            )
+                            : this._Inventory(
+                                $activeElement,
+                                "enter from bottom"
+                            );
                     }
                     break;
                 case "left":
+                    if (this.currentAction === null) {
+                        break;
+                    }
+
                     const $playerParty = document.getElementById("playerParty");
                     const playerPartyIsActive =
                         $playerParty.classList.contains("active");
@@ -907,17 +964,38 @@ const GameControl = {
             }
         },
 
+        _Player: function($activeElement, direction) {
+            switch (direction) {
+                case "initialize":
+                case "enter from right":
+                    this._activate(document.querySelector("#stats .core"));
+                    break;
+                case "right":
+                case "down":
+                    this._PlayerParty($activeElement, "enter from left");
+                    break;
+                case "left":
+                case "up":
+                    // Do nothing
+                    break;
+            }
+        },
+
         _PlayerParty: function($activeElement, direction) {
-            const index = Array
+            const index = $activeElement && Array
                 .from($activeElement.parentElement.children)
                 .indexOf($activeElement);
 
             switch (direction) {
                 case "initialize":
-                    this._activate(
-                        document.querySelector(`#playerParty .party-member`),
-                        false
+                    const $firstPartyMember = document.querySelector(
+                        "#playerParty .party-members [data-party-member-id]" +
+                        ":not(.placeholder)"
                     );
+
+                    $firstPartyMember
+                        ? this._activate($firstPartyMember)
+                        : this._Player($activeElement, "initialize");
                     break;
                 case "up":
                     if ($activeElement.previousElementSibling) {
@@ -930,23 +1008,26 @@ const GameControl = {
                     }
                     break;
                 case "left":
-                    // Do nothing
+                    this._Player($activeElement, "enter from right");
                     break;
                 case "right":
                     this._BattleInput($activeElement, "enter from left");
                     break;
+                case "enter from left":
                 case "enter from right":
-                    const $playerParty =
-                        document.querySelector("#playerParty .party-members");
+                    const $next = document.querySelector(
+                        "#playerParty .party-members [data-party-member-id]" +
+                        ":not(.placeholder)"
+                    );
 
-                    if (! $playerParty) {
-                        console.error("Player party element not found");
+                    if ($next) {
+                        this._activate($next);
                         break;
                     }
 
-                    if ($playerParty.children.length > 0) {
-                        this._activate($playerParty.children[0]);
-                    }
+                    direction === "enter from left"
+                        ? this._BattleInput($activeElement, "enter from left")
+                        : this._Player($activeElement, "enter from right")
 
                     break;
             }
@@ -1045,6 +1126,110 @@ const GameControl = {
                     this._BattleInput($activeElement, "enter from top");
                     break;
                 case "left":
+                    if (this.currentAction === null) {
+                        break;
+                    }
+
+                    const $playerParty = document.getElementById("playerParty");
+                    const playerPartyIsActive =
+                        $playerParty.classList.contains("active");
+
+                    playerPartyIsActive
+                        ? this._PlayerParty($activeElement, "enter from right")
+                        : this._EnemyParty($activeElement, "enter from right");
+                    break;
+                case "right":
+                    // Do nothing
+                    break;
+            }
+        },
+
+        _InventoryItems: function($activeElement, direction) {
+            const activeElementIsItem = Boolean($activeElement?.dataset.id);
+
+            switch (direction) {
+                case "initialize":
+                    this._activate(
+                        document.querySelector(
+                            `#inventory [name="items"] > button[data-id]` +
+                            `:first-child`
+                        ) ||
+                        document.getElementById("inventorySidebarCloseButton")
+                    );
+                    break;
+
+                case "enter from top":
+                    this._activate(
+                        document.getElementById("inventorySidebarCloseButton")
+                    );
+                    break;
+
+                case "enter from bottom":
+                    this._activate(
+                        document.querySelector(
+                            `#inventory [name="items"] > button[data-id]` +
+                            `:last-child`
+                        ) ||
+                        document.getElementById("inventorySidebarCloseButton")
+                    );
+                    break;
+
+                case "up":
+                    if ($activeElement.id === "inventorySidebarCloseButton") {
+                        // Can't go up any further
+                        break;
+                    }
+
+                    if ($activeElement.previousElementSibling) {
+                        const $next = $activeElement.previousElementSibling;
+                        this._activate($next);
+
+                        $next.scrollIntoView({
+                            behavior: "smooth",
+                            block: "nearest",
+                            inline: "nearest",
+                        });
+                    } else {
+                        const $next = document
+                            .getElementById("inventorySidebarCloseButton");
+
+                        this._activate($next);
+                    }
+
+                    break;
+                case "down":
+                    if ($activeElement.id === "inventorySidebarCloseButton") {
+                        const $next = document.querySelector(
+                            `#inventory [name="items"] > button[data-id]` +
+                            `:first-child`
+                        );
+
+                        $next
+                            ? this._activate($next)
+                            : this._BattleInput(
+                                $activeElement,
+                                "enter from top"
+                            );
+
+                        break;
+                    }
+
+                    if ($activeElement.nextElementSibling) {
+                        const $next = $activeElement.nextElementSibling;
+
+                        this._activate($next);
+
+                        $next.scrollIntoView({
+                            behavior: "smooth",
+                            block: "nearest",
+                            inline: "nearest",
+                        });
+                    } else {
+                        this._BattleInput($activeElement, "enter from top");
+                    }
+
+                    break;
+                case "left":
                     const $playerParty = document.getElementById("playerParty");
                     const playerPartyIsActive =
                         $playerParty.classList.contains("active");
@@ -1097,9 +1282,30 @@ const GameControl = {
                         `#battleQueue > [data-x="${x}"][data-y="${y - 1}"]`
                     );
 
-                    $next
-                        ? this._activate($next)
-                        : this._Inventory($activeElement, "enter from top");
+                    if ($next) {
+                        this._activate($next);
+                        break;
+                    }
+
+                    // @TODO If current party member can't open the inventory,
+                    //       skip this section and move to the battle input
+
+                    const activeSection = InventorySidebar
+                        ?.getCurrentSectionElement().getAttribute("name");
+
+                    switch (activeSection) {
+                        case "main":
+                            this._Inventory($activeElement, "enter from top");
+                            break;
+
+                        case "items":
+                            this._InventoryItems(
+                                $activeElement,
+                                "enter from top"
+                            );
+                            break;
+                    }
+
                     break;
                 case "left":
                     this._activate(document.querySelector(

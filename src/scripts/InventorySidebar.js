@@ -188,6 +188,10 @@ const InventorySidebar = {
             .add("hidden");
 
         InventorySidebar.hideScrollButtons();
+
+        if (BattleSystem.isActive) {
+            GameControl.BattleUi.initialize("inventory");
+        }
     },
 
     // Shows the requested section in the sidebar
@@ -211,7 +215,7 @@ const InventorySidebar = {
 
         const $section =
             InventorySidebar.getSectionElement(sectionName);
-        if (!$section) {
+        if (! $section) {
             console.error(
                 "Could not find the requested sidebar section",
                 { sectionName }
@@ -220,6 +224,10 @@ const InventorySidebar = {
         }
 
         InventorySidebar.updateRightSidebar(sectionName);
+
+        if (sectionName === "items" && BattleSystem.isActive) {
+            GameControl.BattleUi.initialize("inventory items");
+        }
 
         playSFX(sectionName === "main" ? "uiCancel" : "inventoryOpen");
         $section.classList.remove("hidden");
@@ -243,8 +251,7 @@ const InventorySidebar = {
             : $battleQueueSection.classList.remove("open");
     },
 
-    // Refreshes the items in a given section, or all sections if no
-    // name was provided
+    // Refreshes items in a given section or all sections if no name is provided
     refresh: (sectionName) => {
         if (! sectionName) {
             Object.keys(InventorySidebar.sections).forEach(name => {
@@ -556,29 +563,39 @@ const InventorySidebar = {
             this.blur();
 
             playSFX("uiSelect");
+            GameControl.showPlayerPartySection();
 
-            // @TODO Allow party member selection so items can
-            //       be used on others
             if (BattleSystem.isActive) {
+                // const index = BattleSystem.playerPartyMemberIndex;
+                // const activePartyMember =
+                //     BattleSystem.playerEntity?.party?.[index];
+                // if (! activePartyMember) {
+                //     console.warn(
+                //         "No active party members can queue item usage"
+                //     );
+                //     return;
+                // }
+
+                GameControl.BattleUi.currentAction = "useItem";
+
                 const index = BattleSystem.playerPartyMemberIndex;
-                const activePartyMember =
-                    BattleSystem.playerEntity?.party?.[index];
-                if (! activePartyMember) {
-                    console.warn(
-                        "No active party members can queue item usage"
-                    );
+                const actor = BattleSystem.playerEntity.party?.[index];
+
+                if (! actor?.getEffectiveTrait("canUse")) {
+                    console.warn("Party member cannot use items", { actor });
                     return;
                 }
 
-                const usageTarget = item.battleUsage.offensive
-                    ? BattleSystem.enemyEntity.leader
-                    : activePartyMember;
+                const useItemCallback = target =>
+                    BattleSystem.useItem(actor, itemId, target)
 
-                BattleSystem.useItem(
-                    activePartyMember,
-                    itemId,
-                    usageTarget
-                );
+                if (item.battleUsage.offensive) {
+                    GameControl.BattleUi.initialize("enemy party")
+                    GameControl.showEnemyPartySection(useItemCallback, true);
+                } else {
+                    GameControl.BattleUi.initialize("player party")
+                    GameControl.showPlayerPartySection(useItemCallback, true);
+                }
             } else {
                 const usageTarget = ! item.battleUsage.offensive
                     ? playerEntity.leader

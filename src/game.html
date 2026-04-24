@@ -3666,6 +3666,7 @@
             document.querySelector(`#battleInput [name="attack"]`)
                 ?.setAttribute("disabled", "true");
 
+            InventorySidebar.open("main");
             const index = BattleSystem.playerPartyMemberIndex;
             const activePartyMember = BattleSystem.playerEntity.party[index];
             if (! activePartyMember?.getEffectiveTrait("canAttack")) {
@@ -3681,8 +3682,7 @@
             const attackTargetCallback = (targetPartyMember) =>
                 BattleSystem.attack(activePartyMember, targetPartyMember);
 
-            // @TODO Implement target selection in the UI
-            // The battle system already supports it
+            GameControl.BattleUi.currentAction = "attack";
             GameControl.showEnemyPartySection(attackTargetCallback, true);
 /*
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
@@ -3925,6 +3925,7 @@
                 return;
             }
 
+            InventorySidebar.open("main");
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
             BattleSystem.run(activePartyMember);
         }
@@ -3945,6 +3946,8 @@
             }
 
             // @TODO Implement persuasion input
+            InventorySidebar.open("main");
+            GameControl.BattleUi.currentAction = "persuade";
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
             BattleSystem.persuade(
                 activePartyMember,

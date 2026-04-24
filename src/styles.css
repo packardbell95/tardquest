@@ -2092,8 +2092,8 @@ a:link {
 
 /* Not aesthetic, but visible. Will change later */
 .ui-active {
-    background-color: orange;
-    border-color: darkorange;
+    background-color: orange !important;
+    border-color: darkorange !important;
 }
 
 #viewport > .layer,
