@@ -563,7 +563,6 @@ const InventorySidebar = {
             this.blur();
 
             playSFX("uiSelect");
-            GameControl.showPlayerPartySection();
 
             if (BattleSystem.isActive) {
                 // const index = BattleSystem.playerPartyMemberIndex;
@@ -587,16 +586,18 @@ const InventorySidebar = {
                 }
 
                 const useItemCallback = target =>
-                    BattleSystem.useItem(actor, itemId, target)
+                    BattleSystem.useItem(actor, itemId, target);
 
                 if (item.battleUsage.offensive) {
-                    GameControl.BattleUi.initialize("enemy party")
+                    GameControl.BattleUi.initialize("enemy party");
                     GameControl.showEnemyPartySection(useItemCallback, true);
                 } else {
-                    GameControl.BattleUi.initialize("player party")
+                    GameControl.BattleUi.initialize("player party");
                     GameControl.showPlayerPartySection(useItemCallback, true);
                 }
             } else {
+                // @TODO Fix party selection here
+                // GameControl.showPlayerPartySection();
                 const usageTarget = ! item.battleUsage.offensive
                     ? playerEntity.leader
                     : null;

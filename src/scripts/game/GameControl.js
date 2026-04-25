@@ -680,12 +680,31 @@ const GameControl = {
             $playerParty.classList.remove("active");
         }
 
-        const enemyPartyMemberButtons =
-            $enemyParty.querySelectorAll(`.party-member[data-party-member-id]`);
-
         const addCallback =
             BattleSystem.isActive &&
             typeof selectedEntityCallback === "function";
+
+        const playerPartyMemberButtons = $playerParty.querySelectorAll(
+            `.party-member[data-party-member-id]:not(.placeholder)`
+        );
+
+        for (const $partyMember of playerPartyMemberButtons) {
+            const partyMemberId =
+                parseInt($partyMember.dataset.partyMemberId, 10);
+
+            const partyMember = BattleSystem.playerEntity.party
+                .find(e => e.id === partyMemberId);
+
+            const addClickHandler =
+                addCallback && partyMember && showPlayerParty;
+
+            $partyMember.onclick = addClickHandler
+                ? () => selectedEntityCallback(partyMember)
+                : null;
+        }
+
+        const enemyPartyMemberButtons = $enemyParty
+            .querySelectorAll(`.party-member[data-party-member-id]`);
 
         for (const $partyMember of enemyPartyMemberButtons) {
             const partyMemberId =
@@ -694,7 +713,10 @@ const GameControl = {
             const partyMember = BattleSystem.enemyEntity.party
                 .find(e => e.id === partyMemberId);
 
-            $partyMember.onclick = addCallback && partyMember
+            const addClickHandler =
+                addCallback && partyMember && ! showPlayerParty;
+
+            $partyMember.onclick = addClickHandler
                 ? () => selectedEntityCallback(partyMember)
                 : null;
         }
@@ -762,8 +784,6 @@ const GameControl = {
 
         // Battle moves that include "attack", "persuade", "run", and "useItem"
         currentAction: null,
-
-        // battleInput, enemyParty, playerParty, inventory, battleQueue?
 
         _getParentSection: function($element) {
             if ($element?.id === "inventorySidebarCloseButton") {
@@ -1279,11 +1299,20 @@ const GameControl = {
                     break;
                 case "down":
                     const $next = document.querySelector(
-                        `#battleQueue > [data-x="${x}"][data-y="${y - 1}"]`
+                        `#battleQueue > [data-x="${x}"][data-y="${y + 1}"]`
                     );
 
                     if ($next) {
                         this._activate($next);
+                        break;
+                    }
+
+                    const $altNext = document.querySelector(
+                        `#battleQueue > [data-x="${x - 1}"][data-y="${y + 1}"]`
+                    );
+
+                    if ($altNext) {
+                        this._activate($altNext);
                         break;
                     }
 
