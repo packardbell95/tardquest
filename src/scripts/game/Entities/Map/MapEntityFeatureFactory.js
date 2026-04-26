@@ -379,6 +379,9 @@ const MapEntityFeatureFactory = {
         pit.getDisplayName = () => "🕳️ Pit";
         pit.getDisplayCharacter = () => "●";
         pit.getSceneArtId = () => "pit";
+        pit.collapseAfterSomethingFallsIn = true;
+        pit.closeAfterTurns = Infinity;
+
         pit.onEnter = function(gameMap, entity) {
             if (entity.leader?.traits.isFlying) {
                 return;
@@ -402,6 +405,10 @@ const MapEntityFeatureFactory = {
 
                 playSFX("floorBreakScreamDie");
                 playerEntity.die(this);
+
+                if (this.collapseAfterSomethingFallsIn) {
+                    this.die(entity);
+                }
             } else if (entity?.type === "bouldingBall") {
                 // Boulding balls and pits cancel each other out
                 entity.die(this);
@@ -436,9 +443,19 @@ const MapEntityFeatureFactory = {
                         setTimeout(() => interfaceClassList.add("rumble"), 700);
                         setTimeout(() => interfaceClassList.remove("rumble"), 1600);
                     }
+
+                    if (this.collapseAfterSomethingFallsIn) {
+                        this.die(entity);
+                    }
                 }
 
                 entity.die(this);
+            }
+        };
+
+        pit.tick = function(gameMap) {
+            if (this.closeAfterTurns-- <= 0) {
+                this.die();
             }
         };
 

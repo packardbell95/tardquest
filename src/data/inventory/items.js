@@ -693,6 +693,7 @@ const ITEMS = Object.freeze({
                         document.getElementById("interface")?.classList
                             .add("rumble");
                         const pit = MapEntityFeatureFactory.pit(x, y);
+                        pit.closeAfterTurns = 3;
                         actorEntity.gameMap.addEntity(pit);
                         actorEntity.gameMap.triggerOnEnterEvent(pit);
                     },
