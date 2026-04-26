@@ -14,7 +14,6 @@ class MapCell {
             displayName: "Unknown",
             mapCharacter: "?",
             isWall: false,
-            canBeRolledOverByBouldingBall: null,
             onEnter: null,
             onTouch: null,
             onExplode: null,
@@ -33,10 +32,6 @@ class MapCell {
         this.isWall = typeof options?.isWall === "boolean"
             ? options.isWall
             : defaults.isWall;
-        this.canBeRolledOverByBouldingBall =
-            typeof options?.canBeRolledOverByBouldingBall === "boolean"
-                ? options.canBeRolledOverByBouldingBall
-                : ! this.isWall;
         this.onEnter = options?.onEnter || defaults.onEnter;
         this.onTouch = options?.onTouch || defaults.onTouch;
         this.onExplode = options?.onExplode || defaults.onExplode;
