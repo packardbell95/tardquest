@@ -1227,91 +1227,6 @@
         });
 
         const playerEntity = (() => {
-            /*
-            const refreshStats = function() {
-                if (! this.$stats instanceof Element) {
-                    const partyMember = this;
-                    console.warn(
-                        "No $stats element is set on the party member",
-                        { partyMember }
-                    );
-                    return;
-                }
-
-                // Exclude Max HP since HP already updates both on its own
-                const coreStats =
-                    Object.keys(this.stats.core).filter(e => e !== "maxHp");
-
-                for (const stat of coreStats) {
-                    this.refreshCoreStat(stat);
-                }
-
-                for (const stat of Object.keys(this.stats.progression)) {
-                    this.refreshProgressionStat(stat);
-                }
-            };
-
-            const refreshCoreStat = function(stat) {
-                const $stat =
-                    this.$stats?.querySelector(`[data-stat-core="${stat}"]`);
-
-                if (! $stat) {
-                    return;
-                }
-
-                if (stat === "hp" || stat === "maxHp") {
-                    $stat.setAttribute("value", this.stats.core.hp);
-                    $stat.setAttribute("max", this.stats.core.maxHp);
-                    return;
-                }
-
-                $stat.textContent =
-                    this.stats.core[stat]?.toLocaleString(undefined);
-            };
-
-            const refreshProgressionStat = function(stat) {
-                if (stat === "level") {
-                    const selector = `[data-stat-progression="level"]`;
-                    const $level = this?.$stats.querySelector(selector);
-                    if (! $level) {
-                        const playerEntity = this;
-                        console.warn(
-                            "Level UI element field not found",
-                            { playerEntity }
-                        );
-                        return;
-                    }
-
-                    $level.textContent =
-                        this.stats.progression.level.toLocaleString(undefined);
-                } else if (stat === "experience") {
-                    const selector = `[data-stat-progression="experience"]`;
-                    const $experience = this?.$stats.querySelector(selector);
-                    if (! $experience) {
-                        const playerEntity = this;
-                        console.warn(
-                            "Experience UI element field not found",
-                            { playerEntity }
-                        );
-                        return;
-                    }
-
-                    $experience.setAttribute(
-                        "value",
-                        this.stats.progression.experience
-                    );
-
-                    // @TODO Replace this with a real level-up calculation
-                    // And make the experience relative since this will
-                    // accumulate and not reset
-                    $experience.setAttribute(
-                        "max",
-                        this.stats.progression.level * 10
-                    );
-                }
-            };
-            */
-
             const playerEntity = MapEntityBuilder("player", 1, 1);
 
             playerEntity.inventory.contents.items = {
@@ -1474,12 +1389,6 @@
                     },
                 },
             };
-
-            /*
-            playerPartyMember.refreshStats = refreshStats;
-            playerPartyMember.refreshCoreStat = refreshCoreStat;
-            playerPartyMember.refreshProgressionStat = refreshProgressionStat;
-            */
 
             playerPartyMember.onDie = function() {
                 gameOver = true;
@@ -1877,13 +1786,6 @@
 
                 GameControl.update();
                 InventorySidebar.enterCombat();
-
-                // Pause boulder movement during combat
-                /*
-                if (boulder.isActiveOnFloor) {
-                    boulder.lastMoveTime = performance.now();
-                }
-                */
             };
 
             playerEntity.leaveCombat = function() {
@@ -1891,17 +1793,10 @@
                 this.inCombat = false;
                 currentEnemy = null;
                 music.resumeTag("exploration");
-                // this.party.purgeDeadMembers();
+
                 GameControl.update();
                 InventorySidebar.leaveCombat();
                 resumeAmbientSfx();
-
-                // Resume boulder movement after combat
-                /*
-                if (boulder.isActiveOnFloor) {
-                    boulder.lastMoveTime = performance.now();
-                }
-                */
             };
 
             playerEntity.purgeDeadPartyMembers = function() {
@@ -2790,9 +2685,6 @@
         let ambientSfxStartTime = null;
         let npcProximityTimers = new Map();
         let npcProximityIntervals = new Map();
-        let boulderProximityTimer = null;
-        let boulderProximityAudio = null;
-        let lastBoulderDistance = null;
         let currentEnemy = null;
         let gameOver = false;
         let persuasionAttempts = 0;
@@ -2801,7 +2693,6 @@
         let animationActive = false;
         let currentBreathing = null;
         let floor = 1;
-        let boulderMovementInterval = null;
         let tromboneIsPlaying = false;
         let sfxEnabled = true;
         let skipTitleScreen = false;
@@ -3032,7 +2923,7 @@
 
         function updateBattleLog(entry) {
             const $battleLog = document.getElementById("battleLog");
-            const line = document.createElement('div');
+            const line = document.createElement("div");
             line.innerHTML = entry;
             $battleLog.prepend(line);
 
@@ -3069,32 +2960,6 @@
             return $message;
         }
 
-        function printTransactionMessage(
-            transactionType,
-            merchandise,
-            priceBtc
-        ) {
-            if (! ["bought", "sold"].includes(transactionType)) {
-                console.error(
-                    "Unknown transaction type",
-                    { transactionType, merchandise, priceBtc }
-                );
-                return;
-            }
-
-            // Add a space if an article is present
-            const article =
-                merchandise?.article ? `${merchandise.article} ` : '';
-
-            const displayPrice = priceBtc.toLocaleString(undefined);
-
-            updateBattleLog(
-                `You ${transactionType} ${article}` +
-                `<span class="friendly">${merchandise.name}</span> for ` +
-                `<span class="BTC">₿ ${displayPrice}</span>.`
-            );
-        };
-
         function playSFX(name, volume = 1.0) {
             if (! sfxEnabled || volume <= 0) {
                 return;
@@ -3120,8 +2985,6 @@
             updateBreathingSFX();
             updateSkyboxPosition();
 
-            let output = SceneRenderer.render(MAP, playerEntity);
-
             if (gameOver) {
                 GameControl.disableControls();
 
@@ -3138,38 +3001,30 @@
                 setTimeout(() => window.location.reload(), 3000);
             }
 
-            document.getElementById("game").innerHTML = output;
+            document.getElementById("game").innerHTML =
+                SceneRenderer.render(MAP, playerEntity);;
             setTorchOverlayVisibility();
         }
 
-        function isEmpty(obj) {
-            for (let i in obj) {
-                return false;
-            }
-            return true;
-        }
+        document.addEventListener("keydown", function (event) {
+            const titleScreenIsVisible =
+                document.getElementById("titleScreen")?.style?.display !== "none";
 
-        const origKeydown = document.onkeydown;
-        document.addEventListener("keydown", function(e) {
-            const $titleScreen = document.getElementById("titleScreen");
+            const enterOrSpacePressed =
+                event.key === "Enter" || event.key === " ";
 
-            // @ugly crap
-            if (
-                window._inputBlocked &&
-                $titleScreen?.style?.display !== "none" &&
-                (e.key === "Enter" || e.key === " ")
-            ) {
+            const ignoreTitleInput =
+                window._inputBlocked && titleScreenIsVisible && enterOrSpacePressed;
+
+            if (ignoreTitleInput) {
                 return;
             }
 
             if (window._inputBlocked) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                return false;
-            }
+                event.preventDefault();
+                event.stopImmediatePropagation();
 
-            if (typeof origKeydown === "function") {
-                origKeydown(e);
+                return;
             }
         }, true);
 
@@ -3221,35 +3076,34 @@
         }
 
         function shakeScreen() {
-            const $children = document.getElementById("viewport").children;
-
             // Randomly pick a small vertical offset: -2, -1, 0, 1, or 2px
             const offset = randomEntry([-2, -1, 0, 1, 2]);
-            for (let $child of $children) {
-                if ($child.classList.contains("ui-header")) continue;
-                const childIsVisible =
-                    !$child.classList.contains("hidden") &&
-                    !$child.classList.contains("offscreen") &&
-                    !$child.classList.contains("fixed");
-
-                if (!childIsVisible) {
+            for (const $child of document.getElementById("viewport").children) {
+                if ($child.classList.contains("ui-header")) {
                     continue;
                 }
 
-                $child.style.transition = "transform 0.08s cubic-bezier(.36,.07,.19,.97)";
+                const childIsVisible =
+                    ! $child.classList.contains("hidden") &&
+                    ! $child.classList.contains("offscreen") &&
+                    ! $child.classList.contains("fixed");
+
+                if (! childIsVisible) {
+                    continue;
+                }
+
+                $child.style.transition =
+                    "transform 0.08s cubic-bezier(.36, .07, .19, .97)";
                 $child.style.transform = `translateY(${offset}px)`;
-                setTimeout(() => {
-                    $child.style.transform = "";
-                }, 80);
+                setTimeout(() => $child.style.transform = "", 80);
             }
         }
 
         function slideScreen(direction) {
             // Slide effect pixel amount (-x is left, x is right)
             const offset = direction === "left" ? -2 : 2;
-            const $children = document.getElementById("viewport").children;
 
-            for (let $child of $children) {
+            for (const $child of document.getElementById("viewport").children) {
                 if ($child.classList.contains("ui-header")) {
                     continue;
                 }
@@ -3266,28 +3120,25 @@
                 $child.style.transition =
                     "transform 0.12s cubic-bezier(.36,.07,.19,.97)";
                 $child.style.transform = `translateX(${offset}px)`;
-                setTimeout(() => {
-                    $child.style.transform = "";
-                }, 120);
+                setTimeout(() => $child.style.transform = "", 120);
             }
         }
 
         function updateSkyboxPosition() {
-            const $viewport = document.getElementById('viewport');
+            const $viewport = document.getElementById("viewport");
             if (! $viewport) {
+                console.error("The viewport disappeared");
                 return;
             }
 
             const sectionWidth = 368;
-            const xOffset = -(playerEntity.direction * sectionWidth);
+            const xOffset = -playerEntity.direction * sectionWidth;
 
             $viewport.style.backgroundPosition = `${xOffset}px 0px`;
         }
 
         function sleepMs(durationMs) {
-            return new Promise((resolve) => {
-                setTimeout(resolve, durationMs);
-            });
+            return new Promise(resolve => setTimeout(resolve, durationMs));
         }
 
         async function endOfPlayerMove() {
@@ -3306,10 +3157,6 @@
 
         // After the player has moved, the NPCs may need to move too
         async function npcMove() {
-            // @TODO Lots of rendering in this function. It will probably
-            // clean up naturally as NPCs and enemies are ported out of it
-            // but check just to be sure
-            // render();
 /*
             // VOCAP: unchanged logic, but do not early-return so pigeon can still act
             if (!vampire.isActiveOnFloor) {
@@ -3344,14 +3191,6 @@
                     result();
                     render();
                 }
-            }
-
-            // Roaming Enemy movement
-            // @TODO Figure out why combat and game over checks are here
-            // These shouldn't be necessary, right?
-            if (! BattleSystem.isActive && ! gameOver) {
-                roamingEnemies.moveEnemies();
-                render();
             }
 */
             MAP.updateEntities();
@@ -3448,7 +3287,6 @@
             playSFX("turn");
             slideScreen("left");
             playerEntity.turnLeft();
-            updateSkyboxPosition();
             GameControl.update();
             render();
         }
@@ -3460,7 +3298,6 @@
             playSFX("turn");
             slideScreen("right");
             playerEntity.turnRight();
-            updateSkyboxPosition();
             GameControl.update();
             render();
         }
@@ -3582,10 +3419,6 @@
 
             GameControl.BattleUi.currentAction = "attack";
             GameControl.showEnemyPartySection(attackTargetCallback, true);
-/*
-            const enemyPartyMember = BattleSystem.enemyEntity.party[0];
-            BattleSystem.attack(activePartyMember, enemyPartyMember);
-*/
         }
 
         function playerMouseLeave() {
@@ -4545,7 +4378,6 @@
             }
         });
 
-        //startBoulderMovement();
         MapEntityRealtimeMovementHandler.canMove = () => ! (
             // @TODO animationActive is only for the gambler's dice roll
             //       This might already be covered by menu.isOpen(). Remove?
