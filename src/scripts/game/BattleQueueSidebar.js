@@ -93,7 +93,7 @@ const BattleQueueSidebar = {
         }
 
         if (partyMember.color) {
-            $partyMember.style.backgroundColor = partyMember.color;
+            $partyMember.style.setProperty("--tint-color", partyMember.color);
         }
 
         $container.append($partyMember);
@@ -297,6 +297,7 @@ const BattleQueueSidebar = {
                 `${target.name}</span>`
             : "";
 
+        // @TODO Fix this hideous code
         const targetHtml = target
             ? (
                 `<div style="width: 28px; height: 28px; image-rendering: pixelated; background-color: #f00; mask-image: url(assets/interface/ui/battle-icons/arrow-square.png); mask-size: contain; mask-position: center; mask-repeat: no-repeat;"></div>

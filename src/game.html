@@ -625,6 +625,7 @@
     <script src="scripts/game/BattleQueueSidebar.js"></script>
     <script src="scripts/game/GameControl.js"></script>
     <script src="scripts/game/TardQuestMenus.js"></script>
+    <script src="scripts/game/UiCursor.js"></script>
     <script>
         const ViewportAnimation = {
             $video: null,
@@ -1650,7 +1651,7 @@
 
                 const $portrait = $stats.querySelector(".portrait");
                 $portrait.classList.add(partyMember.type);
-                $portrait.style.backgroundColor = partyMember.color;
+                $portrait.style.setProperty("--tint-color", partyMember.color);
 
                 const $name = $stats.querySelector(".name");
                 $name.textContent = partyMember.name;
@@ -2068,17 +2069,17 @@
             BattleQueueSidebar.refresh();
             GameControl.showPlayerPartySection();
             GameControl.enableControls();
-            // GameControl.BattleUi.initialize();
         };
 
         BattleSystem.onCommandPhaseEnd = function() {
             GameControl.disableControls();
             GameControl.showPlayerPartySection();
-            GameControl.BattleUi.blur();
+            GameControl.BattleUi.close();
             BattleQueueSidebar.refresh();
         };
 
         BattleSystem.onQueueMove = function(move) {
+            GameControl.BattleUi.close();
             const isPlayerMove = BattleSystem.actorIsPlayer(move.actor);
 
             if (isPlayerMove) {
@@ -2258,7 +2259,7 @@
         ) {
             GameControl.showPlayerPartySection();
             GameControl.clearEnemyPartySection(enemyEntity);
-            GameControl.BattleUi.blur();
+            GameControl.BattleUi.close();
 
             const refreshUi = () => {
                 SceneRenderer.enemyLayerEnabled = false;
@@ -3565,9 +3566,6 @@
                 return;
             }
 
-            document.querySelector(`#battleInput [name="attack"]`)
-                ?.setAttribute("disabled", "true");
-
             InventorySidebar.open("main");
             const index = BattleSystem.playerPartyMemberIndex;
             const activePartyMember = BattleSystem.playerEntity.party[index];
@@ -3578,8 +3576,6 @@
                 );
                 return;
             }
-
-
 
             const attackTargetCallback = (targetPartyMember) =>
                 BattleSystem.attack(activePartyMember, targetPartyMember);
@@ -4363,11 +4359,12 @@
         }
 
         document.addEventListener("keydown", e => {
-            const key = e.key.toLowerCase();
-
             if (gameOver) {
                 return;
             }
+
+            const key = e.key.toLowerCase();
+
             if (Modal.isOpen) {
                 if (key === "escape") {
                     playSFX("uiCancel");
@@ -4402,8 +4399,6 @@
                 if (! animationActive) {
                     menu.handleInput(key);
                 }
-            } else if (key === "escape" && !GameControl.awaitingPersuasionText) {
-                menu.open("gameSettings");
             } else if (key === "i") {
                 playSFX("inventoryOpen");
                 menu.open("inventory");
@@ -4432,6 +4427,9 @@
                         break;
                     case "enter":
                         GameControl.BattleUi.select();
+                        break;
+                    case "escape":
+                        GameControl.BattleUi.back();
                         break;
                 }
             } else {
@@ -4471,6 +4469,11 @@
                     case "t":
                         speakingOutsideCombat = true;
                         tryPersuade(e);
+                        break;
+                    case "escape":
+                        if (! GameControl.awaitingPersuasionText) {
+                            menu.open("gameSettings");
+                        }
                         break;
                 }
             }

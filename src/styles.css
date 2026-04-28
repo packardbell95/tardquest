@@ -80,6 +80,12 @@ button:disabled:hover {
     }
 
     &:not(:disabled) {
+        background-color: #000;
+        &:hover  { border-color: #999 #333 #333 #999; }
+        &:active { border-color: #333 #999 #999 #333; }
+    }
+
+    &.primary:not(:disabled) {
         background-color: #00f;
         &:hover  { border-color: #99f #00c #00c #99f; }
         &:active { border-color: #00c #99f #99f #00c; }
@@ -131,6 +137,26 @@ a:link {
 
 #ui {
     display: flex;
+}
+
+@keyframes tqUiCursor_flicker {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.tq-ui-cursor {
+    width: 84px;
+    height: 57px;
+    background-image: url(assets/interface/ui/cursor.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: absolute;
+    pointer-events: none;
+
+    &.flicker {
+        animation: tqUiCursor_flicker 80ms steps(2, end) infinite;
+    }
 }
 
 @keyframes darken {
@@ -2094,6 +2120,7 @@ a:link {
 .ui-active {
     background-color: orange !important;
     border-color: darkorange !important;
+    color: #000;
 }
 
 #viewport > .layer,
@@ -2313,54 +2340,61 @@ a:link {
 
 .portrait {
     aspect-ratio: 1;
-    mask-position: center;
-    mask-repeat: no-repeat;
-    background-color: #fff;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #000;
     transition: transform 1s ease-in-out;
+    &::after {
+        content: "";
+        display: block;
+        aspect-ratio: 1;
+        background-color: var(--tint-color, #fff);
+        mix-blend-mode: multiply;
+    }
 
-    mask-image: url(assets/portraits/placeholder.png);
+    background-image: url(assets/portraits/placeholder.png);
 
     &.player {
-        mask-image: url(assets/portraits/player.png);
+        background-image: url(assets/portraits/player.png);
     }
     &.snailSentinel {
-        mask-image: url(assets/portraits/snailSentinel.png);
+        background-image: url(assets/portraits/snailSentinel.png);
     }
     &.stupidDog {
-        mask-image: url(assets/portraits/stupidDog.png);
+        background-image: url(assets/portraits/stupidDog.png);
     }
     &.keeperOfTheToiletBowl {
-        mask-image: url(assets/portraits/keeperOfTheToiletBowl.png);
+        background-image: url(assets/portraits/keeperOfTheToiletBowl.png);
     }
     &.mysteriousScooter {
-        mask-image: url(assets/portraits/mysteriousScooter.png);
+        background-image: url(assets/portraits/mysteriousScooter.png);
     }
     &.badassFlamingSkeleton {
-        mask-image: url(assets/portraits/badassFlamingSkeleton.png);
+        background-image: url(assets/portraits/badassFlamingSkeleton.png);
     }
     &.wangRat {
-        mask-image: url(assets/portraits/wangRat.png);
+        background-image: url(assets/portraits/wangRat.png);
     }
     &.fridgeOfForgottenLeftovers {
-        mask-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
+        background-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
     }
     &.lughead {
-        mask-image: url(assets/portraits/lughead.png);
+        background-image: url(assets/portraits/lughead.png);
     }
     &.pissedOffPoultry {
-        mask-image: url(assets/portraits/pissedOffPoultry.png);
+        background-image: url(assets/portraits/pissedOffPoultry.png);
     }
     &.krampusElf {
-        mask-image: url(assets/portraits/krampusElf.png);
+        background-image: url(assets/portraits/krampusElf.png);
     }
     &.mimic {
-        mask-image: url(assets/portraits/mimic.png);
+        background-image: url(assets/portraits/mimic.png);
     }
     &.vampire {
-        mask-image: url(assets/portraits/vampire.png);
+        background-image: url(assets/portraits/vampire.png);
     }
 }
-
+/*
 .portrait-container.clickable:hover {
     & .portrait {
         &.player {
@@ -2404,7 +2438,7 @@ a:link {
         }
     }
 }
-
+*/
 .portrait-container {
     display: flex;
     justify-content: center;

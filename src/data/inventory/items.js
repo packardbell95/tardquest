@@ -1,3 +1,5 @@
+"use strict";
+
 // Definitions for all consumable items in the game
 const ITEMS = Object.freeze({
     canOfHamms: {

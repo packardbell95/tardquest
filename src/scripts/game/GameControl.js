@@ -491,7 +491,7 @@ const GameControl = {
 
             const $portrait = document.createElement("div");
             $portrait.classList.add("portrait", "flipped", partyMember.type);
-            $portrait.style.backgroundColor = partyMember.color;
+            $portrait.style.setProperty("--tint-color", partyMember.color);
             $partyMember.appendChild($portrait);
 
             const $container = document.createElement("div");
@@ -637,22 +637,26 @@ const GameControl = {
     },
 
     showPlayerPartySection: (selectedEntityCallback = null, focus = false) => {
-        GameControl._showPartySection(true, selectedEntityCallback);
-
-        if (focus) {
-            GameControl.BattleUi.initialize("player party");
-        }
+        GameControl._showPartySection(
+            true,
+            selectedEntityCallback,
+            focus ? "player party" : null
+        );
     },
 
     showEnemyPartySection: (selectedEntityCallback = null, focus = false) => {
-        GameControl._showPartySection(false, selectedEntityCallback);
-
-        if (focus) {
-            GameControl.BattleUi.initialize("enemy party");
-        }
+        GameControl._showPartySection(
+            false,
+            selectedEntityCallback,
+            focus ? "enemy party" : null
+        );
     },
 
-    _showPartySection: (showPlayerParty, selectedEntityCallback) => {
+    _showPartySection: (
+        showPlayerParty,
+        selectedEntityCallback,
+        gameControlFocus = null
+    ) => {
         const $playerParty = document.getElementById("playerParty");
         if (! $playerParty) {
             console.error("Player party section not found");
@@ -662,6 +666,7 @@ const GameControl = {
         const $enemyParty = document.getElementById("enemyParty");
         if (! $enemyParty) {
             console.error("Enemy party section not found");
+            return;
         }
 
         const alreadyShowingRequestedSection =
@@ -669,7 +674,20 @@ const GameControl = {
             (! showPlayerParty && $enemyParty.classList.contains("active"));
 
         if (alreadyShowingRequestedSection) {
+            if (gameControlFocus) {
+                GameControl.BattleUi.initialize(gameControlFocus);
+            }
             return;
+        }
+
+        if (gameControlFocus) {
+            const focusCallback = () => {
+                GameControl.BattleUi.initialize(gameControlFocus);
+                $playerParty
+                    .removeEventListener("transitionend", focusCallback);
+            };
+
+            $playerParty.addEventListener("transitionend", focusCallback);
         }
 
         if (showPlayerParty) {
@@ -830,6 +848,13 @@ const GameControl = {
                     break;
             }
         },
+        back: function() {
+            console.log("back() called");
+        },
+        close: function() {
+            UiCursor.remove();
+            this.blur();
+        },
         up: function () {
             this._nav("up");
         },
@@ -847,6 +872,7 @@ const GameControl = {
                 document.querySelector(`.${this.activeClassname}`);
 
             if ($selectedElement) {
+                // UiCursor.flicker();
                 playSFX("uiSelect");
                 $selectedElement.click();
             }
@@ -904,7 +930,7 @@ const GameControl = {
             );
         },
 
-        _activate: function ($element, playSfx = true) {
+        _activate: function ($element, sectionName = "", playSfx = true) {
             if (! $element) {
                 return;
             }
@@ -919,6 +945,10 @@ const GameControl = {
 
             this.blur();
             $element.classList.add(this.activeClassname);
+
+            if (GameControl.enabled) {
+                UiCursor.add($element, sectionName);
+            }
         },
 
         _BattleInput: function($activeElement, direction) {
@@ -927,6 +957,7 @@ const GameControl = {
                 case "enter from top":
                     this._activate(
                         document.querySelector(`#battleInput [name="attack"]`),
+                        "",
                         direction !== "initialize"
                     );
                     break;
@@ -955,6 +986,8 @@ const GameControl = {
                     }
                     break;
                 case "left":
+                    // Do nothing
+                    /*
                     if (this.currentAction === null) {
                         break;
                     }
@@ -966,11 +999,14 @@ const GameControl = {
                     playerPartyIsActive
                         ? this._PlayerParty($activeElement, "enter from right")
                         : this._EnemyParty($activeElement, "enter from right");
+                    */
                     break;
                 case "right":
                     // Do nothing
                     break;
                 case "enter from left":
+                    UiCursor.remove();
+
                     const $attackButton =
                         document.querySelector(`#battleInput [name="attack"]`);
 
@@ -979,16 +1015,22 @@ const GameControl = {
                         break;
                     }
 
-                    this._activate($attackButton);
+                    playSFX("uiCancel");
+                    this._activate($attackButton, "", false);
                     break;
             }
         },
 
         _Player: function($activeElement, direction) {
+            const sectionName = "party member";
+
             switch (direction) {
                 case "initialize":
                 case "enter from right":
-                    this._activate(document.querySelector("#stats .core"));
+                    this._activate(
+                        document.querySelector("#stats .core"),
+                        sectionName
+                    );
                     break;
                 case "right":
                 case "down":
@@ -1002,6 +1044,8 @@ const GameControl = {
         },
 
         _PlayerParty: function($activeElement, direction) {
+            const sectionName = "party member";
+
             const index = $activeElement && Array
                 .from($activeElement.parentElement.children)
                 .indexOf($activeElement);
@@ -1014,17 +1058,23 @@ const GameControl = {
                     );
 
                     $firstPartyMember
-                        ? this._activate($firstPartyMember)
+                        ? this._activate($firstPartyMember, sectionName)
                         : this._Player($activeElement, "initialize");
                     break;
                 case "up":
-                    if ($activeElement.previousElementSibling) {
-                        this._activate($activeElement.previousElementSibling);
-                    }
+                    $activeElement.previousElementSibling
+                        ? this._activate(
+                            $activeElement.previousElementSibling,
+                            sectionName
+                        )
+                        : this._Player($activeElement, "initialize");
                     break;
                 case "down":
                     if ($activeElement.nextElementSibling) {
-                        this._activate($activeElement.nextElementSibling);
+                        this._activate(
+                            $activeElement.nextElementSibling,
+                            sectionName
+                        );
                     }
                     break;
                 case "left":
@@ -1041,7 +1091,7 @@ const GameControl = {
                     );
 
                     if ($next) {
-                        this._activate($next);
+                        this._activate($next, sectionName);
                         break;
                     }
 
@@ -1054,6 +1104,8 @@ const GameControl = {
         },
 
         _EnemyParty: function($activeElement, direction) {
+            const sectionName = "party member";
+
             const index = $activeElement && Array
                 .from($activeElement.parentElement.children)
                 .indexOf($activeElement);
@@ -1062,6 +1114,7 @@ const GameControl = {
                 case "initialize":
                     this._activate(
                         document.querySelector(`#enemyParty .party-member`),
+                        sectionName,
                         false
                     );
                     break;
@@ -1069,7 +1122,8 @@ const GameControl = {
                     if (index > 1) {
                         const nextIndex = Math.max(index - 2, 0);
                         this._activate(
-                            $activeElement.parentElement.children[nextIndex]
+                            $activeElement.parentElement.children[nextIndex],
+                            sectionName
                         );
                     }
                     break;
@@ -1081,7 +1135,8 @@ const GameControl = {
 
                     if (nextIndex >= 0) {
                         this._activate(
-                            $activeElement.parentElement.children[nextIndex]
+                            $activeElement.parentElement.children[nextIndex],
+                            sectionName
                         );
                     }
                     break;
@@ -1089,7 +1144,8 @@ const GameControl = {
                     if (index & 1 === 1) {
                         const nextIndex = index - 1;
                         this._activate(
-                            $activeElement.parentElement.children[nextIndex]
+                            $activeElement.parentElement.children[nextIndex],
+                            sectionName
                         );
                     }
                     break;
@@ -1098,11 +1154,15 @@ const GameControl = {
 
                     if (inLeftColumn) {
                         if ($activeElement.nextElementSibling) {
-                            this._activate($activeElement.nextElementSibling);
+                            this._activate(
+                                $activeElement.nextElementSibling,
+                                sectionName
+                            );
                             break;
                         } else if ($activeElement.previousElementSibling) {
                             this._activate(
-                                $activeElement.previousElementSibling
+                                $activeElement.previousElementSibling,
+                                sectionName
                             );
                             break;
                         }
@@ -1120,9 +1180,12 @@ const GameControl = {
                     }
 
                     if ($enemyParty.children.length > 0) {
-                        this._activate($enemyParty.children[
-                            Math.min(1, $enemyParty.children.length - 1)
-                        ]);
+                        this._activate(
+                            $enemyParty.children[
+                                Math.min(1, $enemyParty.children.length - 1)
+                            ],
+                            sectionName
+                        );
                     }
 
                     break;
@@ -1136,6 +1199,7 @@ const GameControl = {
                 case "enter from bottom":
                     this._activate(
                         document.querySelector(`#inventory .items`),
+                        "",
                         direction !== "initialize"
                     );
                     break;
@@ -1174,7 +1238,8 @@ const GameControl = {
                             `#inventory [name="items"] > button[data-id]` +
                             `:first-child`
                         ) ||
-                        document.getElementById("inventorySidebarCloseButton")
+                            document
+                                .getElementById("inventorySidebarCloseButton")
                     );
                     break;
 
@@ -1190,7 +1255,8 @@ const GameControl = {
                             `#inventory [name="items"] > button[data-id]` +
                             `:last-child`
                         ) ||
-                        document.getElementById("inventorySidebarCloseButton")
+                            document
+                                .getElementById("inventorySidebarCloseButton")
                     );
                     break;
 
@@ -1202,13 +1268,13 @@ const GameControl = {
 
                     if ($activeElement.previousElementSibling) {
                         const $next = $activeElement.previousElementSibling;
-                        this._activate($next);
-
                         $next.scrollIntoView({
-                            behavior: "smooth",
+                            behavior: "instant",
                             block: "nearest",
                             inline: "nearest",
                         });
+
+                        this._activate($next);
                     } else {
                         const $next = document
                             .getElementById("inventorySidebarCloseButton");
@@ -1236,20 +1302,21 @@ const GameControl = {
 
                     if ($activeElement.nextElementSibling) {
                         const $next = $activeElement.nextElementSibling;
-
-                        this._activate($next);
-
                         $next.scrollIntoView({
-                            behavior: "smooth",
+                            behavior: "instant",
                             block: "nearest",
                             inline: "nearest",
                         });
+
+                        this._activate($next);
                     } else {
                         this._BattleInput($activeElement, "enter from top");
                     }
 
                     break;
                 case "left":
+                    // Do nothing
+                    /*
                     const $playerParty = document.getElementById("playerParty");
                     const playerPartyIsActive =
                         $playerParty.classList.contains("active");
@@ -1257,6 +1324,7 @@ const GameControl = {
                     playerPartyIsActive
                         ? this._PlayerParty($activeElement, "enter from right")
                         : this._EnemyParty($activeElement, "enter from right");
+                    */
                     break;
                 case "right":
                     // Do nothing
@@ -1290,7 +1358,7 @@ const GameControl = {
                         return index > finalIndex ? $e : $final;
                     }, null);
 
-                    this._activate($lastElement, false);
+                    this._activate($lastElement, "", false);
                     break;
                 case "up":
                     this._activate(document.querySelector(
