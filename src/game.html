@@ -199,11 +199,59 @@
             <div id="controlsCombat" class="hidden">
                 <div class="ui-header">Combat Controls</div>
                 <div class="control-list">
-                    <div><span data-control="attack" data-keyboard="A" data-gamepad='<img src="assets/gamepad/xinput/a.png" alt="A">/<img src="assets/gamepad/playstation/cross.png" alt="X">'></span>:</div><div>Attack</div>
-                    <div><span data-control="persuade" data-keyboard="P" data-gamepad='<img src="assets/gamepad/xinput/x.png" alt="X">/<img src="assets/gamepad/playstation/square.png" alt="SQ">'></span>:</div><div>Persuade</div>
-                    <div><span data-control="run" data-keyboard="R" data-gamepad='<img src="assets/gamepad/xinput/b.png" alt="B">/<img src="assets/gamepad/playstation/circle.png" alt="O">'></span>:</div><div>Run</div>
-                    <div><span data-control="inventory" data-keyboard="I" data-gamepad='<img src="assets/gamepad/xinput/y.png" alt="Y">/<img src="assets/gamepad/playstation/triangle.png" alt="T">'></span>:</div><div>Inventory</div>
-                    <div><span data-control="menu" data-keyboard="Esc" data-gamepad='<img src="assets/gamepad/xinput/start.png" alt="Menu">/<img src="assets/gamepad/playstation/start.png" alt="MenuPS">'></span>:</div><div>Game Menu</div>
+                    <div>
+                        <span
+                            data-control="menu-up"
+                            data-keyboard="↑/W"
+                            data-gamepad='<img src="assets/gamepad/generic/d-up.png" alt="D-Pad Up">'
+                        ></span>:
+                    </div>
+                    <div>Up</div>
+
+                    <div>
+                        <span
+                            data-control="menu-down"
+                            data-keyboard="↓/S"
+                            data-gamepad='<img src="assets/gamepad/generic/d-down.png" alt="D-Pad Down">'
+                        ></span>:
+                    </div>
+                    <div>Down</div>
+
+                    <div>
+                        <span
+                            data-control="menu-prev"
+                            data-keyboard="←/A"
+                            data-gamepad='<img src="assets/gamepad/generic/d-left.png" alt="D-Pad Left">'
+                        ></span>:
+                    </div>
+                    <div>Left</div>
+
+                    <div>
+                        <span
+                            data-control="menu-next"
+                            data-keyboard="→/D"
+                            data-gamepad='<img src="assets/gamepad/generic/d-right.png" alt="D-Pad Right">'
+                        ></span>:
+                    </div>
+                    <div>Right</div>
+
+                    <div>
+                        <span
+                            data-control="menu-confirm"
+                            data-keyboard="Enter/E/Space"
+                            data-gamepad='<img src="assets/gamepad/xinput/a.png" alt="A">/<img src="assets/gamepad/playstation/cross.png" alt="X">'
+                        ></span>:
+                    </div>
+                    <div>Select</div>
+
+                    <div>
+                        <span
+                            data-control="menu-close"
+                            data-keyboard="Esc/Q"
+                            data-gamepad='<img src="assets/gamepad/xinput/b.png" alt="B">/<img src="assets/gamepad/playstation/circle.png" alt="O">'
+                        ></span>:
+                    </div>
+                    <div>Cancel</div>
                 </div>
             </div>
             <div id="controlsMenu" class="hidden">
@@ -4237,30 +4285,28 @@
                 menu.open("inventory");
             } else if (BattleSystem.isActive) {
                 switch (key) {
-                    case "a":
-                        playerAttack();
-                        break;
-                    case "r":
-                        tryRun();
-                        break;
-                    case "p":
-                        tryPersuade(e);
-                        break;
+                    case "w":
                     case "arrowup":
                         GameControl.BattleUi.up();
                         break;
+                    case "s":
                     case "arrowdown":
                         GameControl.BattleUi.down();
                         break;
+                    case "a":
                     case "arrowleft":
                         GameControl.BattleUi.left();
                         break;
+                    case "d":
                     case "arrowright":
                         GameControl.BattleUi.right();
                         break;
+                    case " ": // Spacebar
+                    case "e":
                     case "enter":
                         GameControl.BattleUi.select();
                         break;
+                    case "q":
                     case "escape":
                         GameControl.BattleUi.back();
                         break;
@@ -4288,10 +4334,12 @@
                         turnRight();
                         break;
                     case "q":
+                    case "pageup":
                         e.preventDefault();
                         move("strafeLeft");
                         break;
                     case "e":
+                    case "pagedown":
                         e.preventDefault();
                         move("strafeRight");
                         break;
