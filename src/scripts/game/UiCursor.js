@@ -47,6 +47,30 @@ const UiCursor = {
         $cursor.classList.remove("hidden");
     },
 
+    count: function() {
+        return this._activeCursors.length;
+    },
+
+    previous: function(callback) {
+        const cursors = this._activeCursors;
+
+        const lastCursor = cursors.pop();
+        if (lastCursor) {
+            lastCursor.$element.remove();
+        }
+
+        const cursor = cursors.length < 1 ? null : cursors[cursors.length - 1];
+        if (cursor) {
+            cursor.$element.classList.remove(this._flickerClass);
+        }
+
+        if (typeof callback !== "function") {
+            return;
+        }
+
+        callback(cursor);
+    },
+
     remove: function(sectionName) {
         const index = sectionName
             ? this._activeCursors.indexOf(e => e.sectionName === sectionName)
@@ -70,6 +94,7 @@ const UiCursor = {
             this._activeCursors?.[this._activeCursors.length - 1];
         if (lastCursor) {
             lastCursor.$element.classList.remove(this._flickerClass);
+            GameControl.BattleUi._activate(lastCursor.$pointingAt);
         }
     },
 

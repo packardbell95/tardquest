@@ -8,7 +8,7 @@ const TardQuestPartyMemberFactory = {
      * PLAYER
      */
     player: function(baseStats = {}) {
-        const partyMember = PartyMemberBuilder("Player");
+        const partyMember = this._buildPartyMember("Player");
         partyMember.type = "player";
         partyMember.color = "#2aff00";
         partyMember.stats = structuredClone(baseStats);
@@ -33,7 +33,7 @@ const TardQuestPartyMemberFactory = {
      * MERCHANT
      */
     merchant: function() {
-        const partyMember = PartyMemberBuilder("Merchant");
+        const partyMember = this._buildPartyMember("Merchant");
         partyMember.type = "merchant";
         partyMember.color = "#f7f";
         partyMember.stats = {
@@ -71,7 +71,7 @@ const TardQuestPartyMemberFactory = {
      * GAMBLER
      */
     gambler: function() {
-        const partyMember = PartyMemberBuilder("Gambler");
+        const partyMember = this._buildPartyMember("Gambler");
         partyMember.type = "gambler";
         partyMember.color = "#ffd700";
         partyMember.stats = {
@@ -109,7 +109,7 @@ const TardQuestPartyMemberFactory = {
      * EROK
      */
     erok: function() {
-        const partyMember = PartyMemberBuilder("Erok");
+        const partyMember = this._buildPartyMember("Erok");
         partyMember.type = "erok";
         partyMember.color = "#ffd68a";
         partyMember.stats = {
@@ -167,7 +167,7 @@ const TardQuestPartyMemberFactory = {
      * SNAIL SENTINEL
      */
     snailSentinel: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Snail Sentinel");
+        const partyMember = this._buildPartyMember("Snail Sentinel");
         partyMember.type = "snailSentinel";
         partyMember.color = "#f78080";
 
@@ -225,7 +225,7 @@ const TardQuestPartyMemberFactory = {
      * STUPID DOG
      */
     stupidDog: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Stupid Dog");
+        const partyMember = this._buildPartyMember("Stupid Dog");
         partyMember.type = "stupidDog";
         partyMember.color = "#f78080";
 
@@ -278,7 +278,7 @@ const TardQuestPartyMemberFactory = {
      * WANG RAT
      */
     wangRat: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Wang Rat");
+        const partyMember = this._buildPartyMember("Wang Rat");
         partyMember.type = "wangRat";
         partyMember.color = "#f78080";
 
@@ -331,7 +331,7 @@ const TardQuestPartyMemberFactory = {
      * KEEPER OF THE TOILET BOWL
      */
     keeperOfTheToiletBowl: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Keeper of the Toilet Bowl");
+        const partyMember = this._buildPartyMember("Keeper of the Toilet Bowl");
         partyMember.type = "keeperOfTheToiletBowl";
         partyMember.color = "#f78080";
 
@@ -391,7 +391,7 @@ const TardQuestPartyMemberFactory = {
      * MYSTERIOUS SCOOTER
      */
     mysteriousScooter: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Mysterious Scooter");
+        const partyMember = this._buildPartyMember("Mysterious Scooter");
         partyMember.type = "mysteriousScooter";
         partyMember.color = "#f78080";
 
@@ -457,7 +457,7 @@ const TardQuestPartyMemberFactory = {
      * BADASS FLAMING SKELETON
      */
     badassFlamingSkeleton: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Badass Flaming Skeleton");
+        const partyMember = this._buildPartyMember("Badass Flaming Skeleton");
         partyMember.type = "badassFlamingSkeleton";
         partyMember.color = "#f78080";
 
@@ -513,7 +513,7 @@ const TardQuestPartyMemberFactory = {
      * FRIDGE of FORGOTTEN LEFTOVERS
      */
     fridgeOfForgottenLeftovers: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Fridge of Forgotten Leftovers");
+        const partyMember = this._buildPartyMember("Fridge of Forgotten Leftovers");
         partyMember.type = "fridgeOfForgottenLeftovers";
         partyMember.color = "#f78080";
 
@@ -569,7 +569,7 @@ const TardQuestPartyMemberFactory = {
      * LUGHEAD
      */
     lughead: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Lughead");
+        const partyMember = this._buildPartyMember("Lughead");
         partyMember.type = "lughead";
         partyMember.color = "#f78080";
 
@@ -626,7 +626,7 @@ const TardQuestPartyMemberFactory = {
      * PISSED-OFF POULTRY
      */
     pissedOffPoultry: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Pissed-Off Poultry");
+        const partyMember = this._buildPartyMember("Pissed-Off Poultry");
         partyMember.type = "pissedOffPoultry";
         partyMember.color = "#f78080";
 
@@ -679,7 +679,7 @@ const TardQuestPartyMemberFactory = {
      * KRAMPUS ELF
      */
     krampusElf: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Krampus Elf");
+        const partyMember = this._buildPartyMember("Krampus Elf");
         partyMember.type = "krampusElf";
         partyMember.color = "#f78080";
 
@@ -723,7 +723,7 @@ const TardQuestPartyMemberFactory = {
      * MIMIC
      */
     mimic: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Mimic");
+        const partyMember = this._buildPartyMember("Mimic");
         partyMember.type = "mimic";
         partyMember.color = "#f78080";
 
@@ -768,7 +768,7 @@ const TardQuestPartyMemberFactory = {
      * VAMPIRE
      */
     vampire: function(level = 1) {
-        const partyMember = PartyMemberBuilder("Gay Cocksucking Vampire");
+        const partyMember = this._buildPartyMember("Gay Cocksucking Vampire");
         partyMember.type = "vampire";
         partyMember.color = "#f0f";
 
@@ -805,6 +805,18 @@ const TardQuestPartyMemberFactory = {
             "Back into the closet I go. Er, I mean, my coffin.",
             "The dancefloor is missing its queen!",
         ];
+
+        return partyMember;
+    },
+
+    _buildPartyMember: function(type) {
+        const partyMember = PartyMemberBuilder(type);
+
+        partyMember.onDie = function() {
+            if (this.$stats instanceof Element) {
+                this.$stats.classList.add("dead");
+            }
+        }
 
         return partyMember;
     },

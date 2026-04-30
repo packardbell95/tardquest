@@ -3028,6 +3028,17 @@ a:link {
         height: 35px;
     }
 
+    &.dead {
+        filter: grayscale(1);
+
+        & > .portrait {
+            background-image: url(assets/portraits/overlays/x.png);
+            &::after {
+                display: none;
+            }
+        }
+    }
+
     & > .container {
         flex-grow: 1;
         gap: 2px;

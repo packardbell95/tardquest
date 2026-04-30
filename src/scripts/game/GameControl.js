@@ -849,7 +849,13 @@ const GameControl = {
             }
         },
         back: function() {
-            console.log("back() called");
+            if (UiCursor.count() <= 1) {
+                return;
+            }
+
+            UiCursor.previous(c =>
+                c && this._activate(c.$pointingAt, c.sectionName)
+            );
         },
         close: function() {
             UiCursor.remove();
@@ -1006,6 +1012,7 @@ const GameControl = {
                     break;
                 case "enter from left":
                     UiCursor.remove();
+                    GameControl.showPlayerPartySection();
 
                     const $attackButton =
                         document.querySelector(`#battleInput [name="attack"]`);
@@ -1054,7 +1061,7 @@ const GameControl = {
                 case "initialize":
                     const $firstPartyMember = document.querySelector(
                         "#playerParty .party-members [data-party-member-id]" +
-                        ":not(.placeholder)"
+                        "not:(.dead):not(.placeholder)"
                     );
 
                     $firstPartyMember
@@ -1113,7 +1120,9 @@ const GameControl = {
             switch (direction) {
                 case "initialize":
                     this._activate(
-                        document.querySelector(`#enemyParty .party-member`),
+                        document.querySelector(
+                            "#enemyParty .party-member:not(.dead)"
+                        ),
                         sectionName,
                         false
                     );
