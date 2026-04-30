@@ -145,8 +145,9 @@ a:link {
 }
 
 .tq-ui-cursor {
-    width: 84px;
-    height: 57px;
+    width: 44px;
+    height: 30px;
+    image-rendering: pixelated;
     background-image: url(assets/interface/ui/cursor.png);
     background-position: center;
     background-repeat: no-repeat;
@@ -156,6 +157,7 @@ a:link {
 
     &.flicker {
         animation: tqUiCursor_flicker 80ms steps(2, end) infinite;
+        filter: brightness(.5);
     }
 }
 

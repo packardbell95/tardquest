@@ -7,7 +7,8 @@
 const UiCursor = {
     _activeCursors: [],
     _flickerClass: "flicker",
-    _cursorWidthPx: 84,
+    _cursorWidthPx: 44,
+    _verticalOffsetPx: 22,
 
     add: function($element, sectionName = "") {
         if (! $element instanceof Element) {
@@ -41,7 +42,7 @@ const UiCursor = {
             $cursor.style.left = `${rightPlacement}px`;
         }
 
-        const relativeY = -(42 - targetRect.height) / 2;
+        const relativeY = -(this._verticalOffsetPx - targetRect.height) / 2;
         $cursor.style.top = `${window.scrollY + targetRect.y + relativeY}px`;
         $cursor.classList.remove("hidden");
     },
