@@ -8,9 +8,9 @@ const UiCursor = {
     _activeCursors: [],
     _flickerClass: "flicker",
     _cursorWidthPx: 44,
-    _verticalOffsetPx: 22,
+    _cursorHeightPx: 30,
 
-    add: function($element, sectionName = "") {
+    add: function($element, sectionName = "", position = null) {
         if (! $element instanceof Element) {
             console.error(
                 "$element must be a DOM element",
@@ -27,24 +27,87 @@ const UiCursor = {
             return;
         }
 
-        const $cursor = this._create(sectionName, $element);
-        const targetRect = $element.getBoundingClientRect();
+        const cursorHorizontal =
+            $element.dataset.cursorhorizontal ?? "left";
 
-        const leftPlacement =
-            window.scrollX + targetRect.x - this._cursorWidthPx;
-        if (leftPlacement >= 0) {
-            $cursor.classList.remove("flipped");
-            $cursor.style.left = `${leftPlacement}px`;
-        } else {
-            const rightPlacement =
-                window.scrollX + targetRect.x + targetRect.width;
-            $cursor.classList.add("flipped");
-            $cursor.style.left = `${rightPlacement}px`;
+        const cursorVertical =
+            $element.dataset.cursorvertical ?? "middle";
+
+        const actualCursorHorizontal =
+            cursorVertical === "middle" && cursorHorizontal === "middle"
+                ? "left"
+                : cursorHorizontal;
+
+        const $cursor = this._create(sectionName, $element);
+        const rect = $element.getBoundingClientRect();
+        const cursorPositionSetSuccessfully =
+            this._horizontal($cursor, rect, actualCursorHorizontal) &&
+            this._vertical($cursor, rect, cursorVertical);
+
+        if (cursorPositionSetSuccessfully) {
+            $cursor.classList
+                .add(`${actualCursorHorizontal}-${cursorVertical}`);
         }
 
-        const relativeY = -(this._verticalOffsetPx - targetRect.height) / 2;
-        $cursor.style.top = `${window.scrollY + targetRect.y + relativeY}px`;
         $cursor.classList.remove("hidden");
+    },
+
+    _horizontal: function($cursor, rect, position) {
+        const horizontalOffsetPx = this._getHorizontalOffsetPx(position, rect);
+
+        if (horizontalOffsetPx === null) {
+            console.error("Unrecognized position", { position, $cursor, rect });
+            return false;
+        }
+
+        $cursor.style.left = `${window.scrollX + horizontalOffsetPx}px`;
+        return true;
+    },
+
+    _vertical: function($cursor, rect, position) {
+        const verticalOffsetPx = this._getVerticalOffsetPx(position, rect);
+
+        if (verticalOffsetPx === null) {
+            console.error("Unrecognized position", { position, $cursor, rect });
+            return false;
+        }
+
+        $cursor.style.top = `${window.scrollY + verticalOffsetPx}px`;
+        return true;
+    },
+
+    _getHorizontalOffsetPx: function(position, rect) {
+        switch (position) {
+            case "left":
+                return rect.x - this._cursorWidthPx;
+            case "start":
+                return rect.x;
+            case "middle":
+                return rect.x + (rect.width / 2) - (this._cursorWidthPx / 2);
+            case "end":
+                return rect.x + rect.width - this._cursorWidthPx;
+            case "right":
+                return rect.x + rect.width;
+            default:
+                return null;
+        }
+    },
+
+    _getVerticalOffsetPx: function(position, rect) {
+        switch (position) {
+            case "top":
+                return rect.y - this._cursorHeightPx;
+            case "start":
+                return rect.y;
+            case "middle":
+                return rect.y + (rect.height / 2) - (this._cursorHeightPx / 2);
+            case "end":
+                return rect.y + rect.height - this._cursorHeightPx;
+            case "bottom":
+                return rect.y + rect.height;
+            default:
+                return null;
+        }
     },
 
     count: function() {
@@ -105,16 +168,19 @@ const UiCursor = {
     },
 
     _create: function(sectionName, $pointingAt) {
+        const className = "tq-ui-cursor hidden";
+
         const $existingCursor = this._activeCursors
             .find(e => e.sectionName === sectionName)
             ?.$element;
 
         if ($existingCursor) {
+            $existingCursor.className = className;
             return $existingCursor;
         }
 
         const $cursor = document.createElement("div");
-        $cursor.classList.add("tq-ui-cursor", "hidden");
+        $cursor.className = className;
 
         this.flicker();
 

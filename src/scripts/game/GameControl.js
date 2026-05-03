@@ -878,7 +878,6 @@ const GameControl = {
                 document.querySelector(`.${this.activeClassname}`);
 
             if ($selectedElement) {
-                // UiCursor.flicker();
                 playSFX("uiSelect");
                 $selectedElement.click();
             }
