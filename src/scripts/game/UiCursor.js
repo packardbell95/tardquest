@@ -10,7 +10,7 @@ const UiCursor = {
     _cursorWidthPx: 44,
     _cursorHeightPx: 30,
 
-    add: function($element, sectionName = "", position = null) {
+    add: function($element, sectionName = "") {
         if (! $element instanceof Element) {
             console.error(
                 "$element must be a DOM element",
@@ -27,29 +27,37 @@ const UiCursor = {
             return;
         }
 
-        const cursorHorizontal =
-            $element.dataset.cursorhorizontal ?? "left";
-
-        const cursorVertical =
-            $element.dataset.cursorvertical ?? "middle";
-
-        const actualCursorHorizontal =
-            cursorVertical === "middle" && cursorHorizontal === "middle"
-                ? "left"
-                : cursorHorizontal;
-
+        const { horizontal, vertical } = this._getPositions($element);
         const $cursor = this._create(sectionName, $element);
         const rect = $element.getBoundingClientRect();
         const cursorPositionSetSuccessfully =
-            this._horizontal($cursor, rect, actualCursorHorizontal) &&
-            this._vertical($cursor, rect, cursorVertical);
+            this._horizontal($cursor, rect, horizontal) &&
+            this._vertical($cursor, rect, vertical);
 
         if (cursorPositionSetSuccessfully) {
-            $cursor.classList
-                .add(`${actualCursorHorizontal}-${cursorVertical}`);
+            $cursor.classList.add(`${horizontal}-${vertical}`);
         }
 
         $cursor.classList.remove("hidden");
+    },
+
+    _getPositions: function($element) {
+        const horizontal = $element.dataset.cursorhorizontal ?? "left";
+        const vertical = $element.dataset.cursorvertical ?? "middle";
+
+        if (horizontal === "middle" && vertical === "middle") {
+            return { horizontal: "left", vertical };
+        }
+
+        if (horizontal === "start" && vertical === "middle") {
+            return { horizontal: "left", vertical };
+        }
+
+        if (horizontal === "end" && vertical === "middle") {
+            return { horizontal: "right", vertical };
+        }
+
+        return { horizontal, vertical };
     },
 
     _horizontal: function($cursor, rect, position) {

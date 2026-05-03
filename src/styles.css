@@ -155,6 +155,45 @@ a:link {
     position: absolute;
     pointer-events: none;
 
+    /** Corners **/
+    &.left-top { transform: rotate(45deg); }
+    &.right-top { transform: rotate(135deg) scaleY(-1) };
+    &.left-bottom { transform: rotate(-45deg); }
+    &.right-bottom { transform: rotate(225deg) scaleY(-1); }
+
+    /** Edges **/
+    &.start-start,
+    &.start-top,
+    &.middle-top,
+    &.middle-start,
+    &.end-top,
+    &.end-start {
+        transform: rotate(90deg);
+    }
+
+    &.start-end,
+    &.start-bottom,
+    &.middle-end,
+    &.middle-bottom,
+    &.end-bottom,
+    &.end-end {
+        transform: rotate(-90deg);
+    }
+
+    &.left-start,
+    &.left-middle,
+    &.left-end,
+    &.start-middle {
+        transform: rotate(0);
+    }
+
+    &.right-start,
+    &.right-middle,
+    &.right-end,
+    &.end-middle {
+        transform: scaleX(-1);
+    }
+
     &.flicker {
         animation: tqUiCursor_flicker 80ms steps(2, end) infinite;
         filter: brightness(.5);

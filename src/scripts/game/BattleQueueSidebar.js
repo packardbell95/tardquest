@@ -269,6 +269,8 @@ const BattleQueueSidebar = {
         );
         $element.setAttribute("data-tooltipPosition", "left");
         $element.setAttribute("data-tooltipGroupId", "battleQueueSidebar");
+        $element.setAttribute("data-cursorHorizontal", "middle");
+        $element.setAttribute("data-cursorVertical", "bottom");
         Tooltip.refresh($element);
     },
 
