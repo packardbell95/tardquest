@@ -154,29 +154,41 @@ a:link {
     background-size: contain;
     position: absolute;
     pointer-events: none;
+    z-index: 50;
 
     /** Corners **/
-    &.left-top { transform: rotate(45deg); }
-    &.right-top { transform: rotate(135deg) scaleY(-1) };
-    &.left-bottom { transform: rotate(-45deg); }
-    &.right-bottom { transform: rotate(225deg) scaleY(-1); }
-
-    /** Edges **/
+    &.left-top,
     &.start-start,
-    &.start-top,
-    &.middle-top,
-    &.middle-start,
+    &.start-top {
+        transform: rotate(45deg);
+    }
+
+    &.right-top,
     &.end-top,
     &.end-start {
+        transform: rotate(135deg) scaleY(-1);
+    }
+
+    &.left-bottom,
+    &.start-end,
+    &.start-bottom {
+        transform: rotate(-45deg);
+    }
+
+    &.right-bottom,
+    &.end-bottom,
+    &.end-end {
+        transform: rotate(225deg) scaleY(-1);
+    }
+
+    /** Edges **/
+    &.middle-top,
+    &.middle-start {
         transform: rotate(90deg);
     }
 
-    &.start-end,
-    &.start-bottom,
     &.middle-end,
-    &.middle-bottom,
-    &.end-bottom,
-    &.end-end {
+    &.middle-bottom {
         transform: rotate(-90deg);
     }
 

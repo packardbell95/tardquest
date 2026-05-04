@@ -1060,7 +1060,7 @@ const GameControl = {
                 case "initialize":
                     const $firstPartyMember = document.querySelector(
                         "#playerParty .party-members [data-party-member-id]" +
-                        "not:(.dead):not(.placeholder)"
+                        ":not(.dead):not(.placeholder)"
                     );
 
                     $firstPartyMember
@@ -1258,14 +1258,23 @@ const GameControl = {
                     break;
 
                 case "enter from bottom":
-                    this._activate(
+                    const $lastItem =
                         document.querySelector(
                             `#inventory [name="items"] > button[data-id]` +
                             `:last-child`
                         ) ||
-                            document
-                                .getElementById("inventorySidebarCloseButton")
-                    );
+                        document.getElementById("inventorySidebarCloseButton");
+
+                    if ($lastItem) {
+                        $lastItem.scrollIntoView({
+                            behavior: "instant",
+                            block: "nearest",
+                            inline: "nearest",
+                        });
+
+                        this._activate($lastItem);
+                    }
+
                     break;
 
                 case "up":

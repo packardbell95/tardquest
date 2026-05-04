@@ -446,6 +446,8 @@ const InventorySidebar = {
         const $button = document.createElement("button");
         $button.className = `${sectionName}-${id}`;
         $button.dataset.id = id;
+        $button.dataset.cursorhorizontal = "start";
+        $button.dataset.cursorvertical = "end";
 
         // Reflect current enabled state on creation
         if (! InventorySidebar.enabled) {
