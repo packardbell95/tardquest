@@ -960,21 +960,42 @@ const GameControl = {
             switch (direction) {
                 case "initialize":
                 case "enter from top":
-                    this._activate(
-                        document.querySelector(`#battleInput [name="attack"]`),
-                        "",
-                        direction !== "initialize"
-                    );
-                    break;
-                case "down":
-                    if ($activeElement.nextElementSibling) {
-                        this._activate($activeElement.nextElementSibling);
+                    const $firstButton = document
+                        .querySelector("#battleInput [name]:not(:disabled)");
+
+                    if ($firstButton) {
+                        const playSfx = direction !== "initialize";
+                        this._activate($firstButton, "", playSfx);
                     }
                     break;
+                case "down":
+                    let $next = $activeElement.nextElementSibling;
+
+                    while ($next) {
+                        if ($next.matches(":not(:disabled)")) {
+                            this._activate($next);
+                            break;
+                        }
+
+                        $next = $next.nextElementSibling;
+                    }
+
+                    break;
                 case "up":
-                    if ($activeElement.previousElementSibling) {
-                        this._activate($activeElement.previousElementSibling);
-                    } else {
+                    let previousSiblingMatched = false;
+                    let $previous = $activeElement.previousElementSibling;
+
+                    while ($previous) {
+                        if ($previous.matches(":not(:disabled)")) {
+                            this._activate($previous);
+                            previousSiblingMatched = true;
+                            break;
+                        }
+
+                        $previous = $previous.previousElementSibling;
+                    }
+
+                    if (! previousSiblingMatched) {
                         const activeInventorySection = document
                             .querySelector(`#inventory [name]:not(.hidden)`)
                             ?.getAttribute("name");
@@ -992,19 +1013,6 @@ const GameControl = {
                     break;
                 case "left":
                     // Do nothing
-                    /*
-                    if (this.currentAction === null) {
-                        break;
-                    }
-
-                    const $playerParty = document.getElementById("playerParty");
-                    const playerPartyIsActive =
-                        $playerParty.classList.contains("active");
-
-                    playerPartyIsActive
-                        ? this._PlayerParty($activeElement, "enter from right")
-                        : this._EnemyParty($activeElement, "enter from right");
-                    */
                     break;
                 case "right":
                     // Do nothing
@@ -1068,20 +1076,43 @@ const GameControl = {
                         : this._Player($activeElement, "initialize");
                     break;
                 case "up":
-                    $activeElement.previousElementSibling
-                        ? this._activate(
-                            $activeElement.previousElementSibling,
-                            sectionName
-                        )
-                        : this._Player($activeElement, "initialize");
+                    let previousSiblingMatched = false;
+                    let $previousSibling = $activeElement.previousElementSibling;
+
+                    while ($previousSibling) {
+                        const siblingFound = $previousSibling
+                            .matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingFound) {
+                            this._activate($previousSibling, sectionName);
+                            previousSiblingMatched = true;
+                            break;
+                        }
+
+                        $previousSibling =
+                            $previousSibling.previousElementSibling;
+                    }
+
+                    if (! previousSiblingMatched) {
+                        this._Player($activeElement, "initialize");
+                    }
+
                     break;
                 case "down":
-                    if ($activeElement.nextElementSibling) {
-                        this._activate(
-                            $activeElement.nextElementSibling,
-                            sectionName
-                        );
+                    let $nextSibling = $activeElement.nextElementSibling;
+
+                    while ($nextSibling) {
+                        const siblingFound = $nextSibling
+                            .matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingFound) {
+                            this._activate($nextSibling, sectionName);
+                            break;
+                        }
+
+                        $nextSibling = $nextSibling.nextElementSibling;
                     }
+
                     break;
                 case "left":
                     this._Player($activeElement, "enter from right");
@@ -1093,7 +1124,7 @@ const GameControl = {
                 case "enter from right":
                     const $next = document.querySelector(
                         "#playerParty .party-members [data-party-member-id]" +
-                        ":not(.placeholder)"
+                        ":not(.dead):not(.placeholder)"
                     );
 
                     if ($next) {
