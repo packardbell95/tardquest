@@ -225,16 +225,14 @@ const GameControl = {
 
         const touchEnabled =
             controlsEnabled &&
-            cellInFrontOfPlayer.entities.some(e =>
-                e.isActive &&
-                typeof e.onTouch === "function"
-            );
+            cellInFrontOfPlayer.entities
+                .some(e => typeof e.onTouch === "function");
 
         // @TODO Replace this with tag check once entity tags are implemented
         const enemyIsInFrontOfPlayer =
             touchEnabled &&
-            cellInFrontOfPlayer.entities.some(e => e.isActive &&
-                (e.type === "vampire" || e.className === "roamingEnemy")
+            cellInFrontOfPlayer.entities.some(
+                e => e.type === "vampire" || e.className === "roamingEnemy"
             );
 
         const moveForwardEnabled =

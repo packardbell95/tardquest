@@ -333,9 +333,7 @@ class GameMap {
 
         cell.onTouch = function(gameMap, actorEntity) {
             for (const entity of this.entities) {
-                const canTouch =
-                    entity.isActive &&
-                    typeof entity.onTouch === "function";
+                const canTouch = typeof entity.onTouch === "function";
 
                 if (canTouch) {
                     entity.onTouch(gameMap, actorEntity);
@@ -345,9 +343,7 @@ class GameMap {
 
         cell.onEnter = function(gameMap, actorEntity) {
             for (const entity of this.entities) {
-                const canEnter =
-                    entity.isActive &&
-                    typeof entity.onEnter === "function";
+                const canEnter = typeof entity.onEnter === "function";
 
                 if (canEnter) {
                     entity.onEnter(gameMap, actorEntity);
@@ -357,9 +353,7 @@ class GameMap {
 
         cell.onExplode = function(gameMap, actorEntity) {
             for (const entity of this.entities) {
-                const canExplode =
-                    entity.isActive &&
-                    typeof entity.onExplode === "function";
+                const canExplode = typeof entity.onExplode === "function";
 
                 if (canExplode) {
                     entity.onExplode(gameMap, actorEntity);
@@ -491,15 +485,6 @@ class GameMap {
         this.onEntityChange?.();
     }
 
-    purgeInactiveEntities() {
-        const lastEntityCount = this.#entities.length;
-        this.#entities = this.#entities.filter(e => e.isActive);
-
-        if (lastEntityCount !== this.#entities.length) {
-            this.onEntityChange?.();
-        }
-    }
-
     sortEntities(entities = []) {
         return entities.sort((a, b) => {
             const aIsPlayer = a.type === "player";
@@ -540,11 +525,7 @@ class GameMap {
     }
 
     getEntitiesAt(x, y) {
-        const out = this.#entities.filter(e =>
-            e.x === x &&
-            e.y === y &&
-            e.isActive
-        );
+        const out = this.entities.filter(e => e.x === x && e.y === y);
 
         if (out.length === 0) {
             return [];
@@ -553,8 +534,16 @@ class GameMap {
         return this.sortEntities(out);
     }
 
+    /**
+     * Getter for entities on the map
+     *
+     * This filters out "deactivated" entities by checking the isActive flag.
+     * This flag is set on entities that should no longer be included within
+     * the game's map and will be purged in the next cycle anyways.
+     * @see clearDeactivatedEntities()
+     */
     get entities() {
-        return this.#entities;
+        return this.#entities.filter(e => e.isActive);
     }
 
     filterEntities(preserveTypes = []) {
@@ -643,9 +632,7 @@ class GameMap {
 
     moveRealtimeEntities() {
         this.clearDeactivatedEntities();
-
-        const entities =
-            this.entities.filter(e => e.isAlive && e.isActive && e.isRealtime);
+        const entities = this.entities.filter(e => e.isAlive && e.isRealtime);
 
         for (const entity of entities) {
             entity.move(this);
@@ -681,8 +668,7 @@ class GameMap {
             return;
         }
 
-        const actorEntities = this.#entities.filter(e =>
-            e.isActive &&
+        const actorEntities = this.entities.filter(e =>
             e.x === entity.x &&
             e.y === entity.y &&
             e.id !== entity.id
@@ -1445,8 +1431,7 @@ class GameMap {
                 return;
             }
 
-            const cellEntities = this.#entities.filter(e =>
-                e.isActive &&
+            const cellEntities = this.entities.filter(e =>
                 e.x === x &&
                 e.y === y
             );
@@ -1518,7 +1503,7 @@ class GameMap {
         const defaultFieldOfView = 90;
         const seen = [];
         const mappedEntities = returnEntities
-            ? Object.entries(this.#entities).map(e => {
+            ? Object.entries(this.entities).map(e => {
                 const o = e[1];
                 // @TODO It should not be necessary to set IDs here
                 return { id: o.id || e[0], x: o.x, y: o.y, type: o.type };

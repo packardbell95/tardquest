@@ -42,11 +42,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         },
 
         setTarget: function(x, y, reason, entityId = null) {
-            console.log(
-                "Setting target",
-                { x, y, reason, oldReason: this.targetReason, entityId }
-            );
-
             this.mode = "chase";
             this.target = { x, y };
             this.targetEntityId = Number.isInteger(entityId) ? entityId : null;
@@ -112,11 +107,9 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             return 10;
         },
         turnLeft: function() {
-            console.log("Turning left");
             this.direction = (this.direction + 3) % 4;
         },
         turnRight: function() {
-            console.log("Turning right");
             this.direction = (this.direction + 1) % 4;
         },
         turnAround: function() {
@@ -410,7 +403,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
 
             if (seenObjectsOfInterest.length > 0) {
                 let shortestLength = Infinity;
-                console.log({ seenObjectsOfInterest });
+
                 for (const seenObjectOfInterest of seenObjectsOfInterest) {
                     const path = gameMap.findPath(
                         [this.x, this.y],
@@ -439,8 +432,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             }
 
             const entity = this;
-            console.log("🤖 I have reached my target!", { entity });
-
             const hasPatrolPoints =
                 Array.isArray(this.patrolPoints) &&
                 Number.isInteger(this.patrolIndex);
@@ -488,11 +479,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
          */
         moveTowards: function(coordinate, gameMap) {
             if (this.movementDisabled) {
-                // @TODO Find out why this is getting called for the player
-                console.log(
-                    "🤖 moveTowards(): Movement is disabled!",
-                    { x: this.x, y: this.y, coordinate }
-                );
                 return;
             }
 
@@ -503,10 +489,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 Math.abs(this.y - coordinate.y);
 
             if (distance > 1) {
-                console.log(
-                    "🤖 moveTowards(): Cell is not adjacent. Not moving!",
-                    { x: this.x, y: this.y, coordinate, distance }
-                );
                 return;
             }
 
@@ -522,14 +504,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
 
             if (this.hasTarget() && this.targetEntityId !== null) {
                 const targetCoordinate = this.getCoordinateInFront();
-
                 const checkingEntity = this;
-                console.log("Checking...", {
-                    checkingEntity,
-                    targetCoordinate,
-                    entity: gameMap.entities.find(e => e.x === targetCoordinate.x && e.y === targetCoordinate.y),
-                });
-
                 const targetEntity = gameMap.entities.find(e =>
                     e.x === targetCoordinate.x &&
                     e.y === targetCoordinate.y &&
@@ -537,16 +512,11 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 );
 
                 if (targetEntity) {
-                    console.log("TARGET LOCKED", { targetEntity });
                     targetEntity?.onTouch(gameMap, this);
                     this.targetCheck(gameMap);
                     return;
                 }
-            } else {
-                console.log("Sanity check", { hasTarget: this.hasTarget(), targetEntityId: this.targetEntityId });
             }
-
-
 
             const alreadyOnTarget =
                 this.hasTarget() &&
@@ -554,10 +524,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 this.y === coordinate.y;
 
             if (alreadyOnTarget) {
-                console.log(
-                    "🤖 Already on target. No moves to make",
-                    { id: this.id, x: this.x, y: this.y, coordinate }
-                );
                 return;
             }
 
@@ -567,12 +533,8 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 targetCoordinate.y
             );
 
-            gameMap.cellIsOccupied(targetCoordinate.x, targetCoordinate.y)
-                ? console.log(
-                    "🤖 moveTowards(): Cell is occupied. Not moving!",
-                    { x: this.x, y: this.y, targetCoordinate }
-                )
-                : this.moveForward(gameMap);
+            ! gameMap.cellIsOccupied(targetCoordinate.x, targetCoordinate.y) &&
+                this.moveForward(gameMap);
 
             this.targetCheck(gameMap);
         },
@@ -751,10 +713,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 }
 
                 if (! ITEMS[id].use(actorMember, targetMember)) {
-                    console.log(
-                        "Legitimately failed to use item!",
-                        { id, actorMember, targetMember }
-                    );
                     return false;
                 }
 
@@ -1067,7 +1025,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         },
 
         die: function(killedByEntity = null) {
-            console.log({ killedByEntity });
             killedByEntity?.killedMonsters?.(this.party.length);
             this.isAlive = false;
             this.onDie?.(killedByEntity);

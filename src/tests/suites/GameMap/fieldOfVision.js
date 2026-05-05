@@ -6,9 +6,9 @@ function GameMap_fieldOfVisionUnobstructed()
     const testMap = new GameMap(50, 40);
     testMap.fill(0, 0, 40, 40, "wall");
     testMap.fill(1, 1, 39, 39, "floor");
-    testMap.addEntity({ id: "foo", x: 20, y: 21 });
-    testMap.addEntity({ id: "bar", x: 28, y: 20 });
-    testMap.addEntity({ id: "baz", x: 30, y: 18 });
+    testMap.addEntity({ id: "foo", isActive: true, x: 20, y: 21 });
+    testMap.addEntity({ id: "bar", isActive: true, x: 28, y: 20 });
+    testMap.addEntity({ id: "baz", isActive: true, x: 30, y: 18 });
 
     // North
     const northData = {

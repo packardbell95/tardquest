@@ -98,7 +98,7 @@ function GameMap_mapEntityManagement()
     const expectedEntities = [ ...mapEntities].filter((e, i) => i !== key);
 
     testMap.entities[key].isActive = false;
-    testMap.purgeInactiveEntities();
+    testMap.clearDeactivatedEntities();
 
     test(
         "Entities can be deactivated and removed",

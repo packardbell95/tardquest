@@ -1656,14 +1656,15 @@
                 };
 
                 partyMember.onRelease = function() {
-                    console.log("onRelease() called");
-                    Array.isArray(this.releaseMessages)
-                        ? this.say(
-                            randomEntry(this.releaseMessages),
-                            true,
-                            playSFX("ran")
-                        )
-                        : playSFX("ran");
+                    if (! this.isDead()) {
+                        Array.isArray(this.releaseMessages)
+                            ? this.say(
+                                randomEntry(this.releaseMessages),
+                                true,
+                                playSFX("ran")
+                            )
+                            : playSFX("ran");
+                    }
 
                     const selector =
                         `#partyMembers [data-party-member-id="${this.id}"]`;
@@ -2872,9 +2873,9 @@
                 TardQuestMapGenerator.generate(MAP, floor);
 
                 const player =
-                    MAP.entities.find(e => e.isActive && e.type === "player");
+                    MAP.entities.find(e => e.type === "player");
                 const exit =
-                    MAP.entities.find(e => e.isActive && e.type === "exit");
+                    MAP.entities.find(e => e.type === "exit");
 
                 if (! player || ! exit) {
                     console.error("Failed to place entities", { player, exit });
@@ -3283,7 +3284,6 @@
             }
 
             const tangibleEntity = MAP.entities.find(e =>
-                e.isActive &&
                 e.isAlive &&
                 e.x === coordinate.x &&
                 e.y === coordinate.y &&
@@ -3308,7 +3308,6 @@
                 playerEntity.stepsTakenOnCurrentFloor++;
 
                 const passableEntity = MAP.entities.find(e =>
-                    e.isActive &&
                     e.x === playerEntity.x &&
                     e.y === playerEntity.y &&
                     e.id !== playerEntity.id &&

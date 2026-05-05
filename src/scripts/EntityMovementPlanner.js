@@ -107,16 +107,6 @@ const EntityMovementPlanner = {
                 y === entity.target.y
             );
 
-            console.log(
-                "🏃 Entity update for " + entity.id, {
-                    entityIsAtDestination,
-                    entityHasTarget: entity.hasTarget(),
-                    entityOnTarget: x === entity.target?.x && y === entity.target?.y,
-                    entity,
-                    claimedSpacesInTime: structuredClone(claimedSpacesInTime),
-                }
-            );
-
             if (entityIsAtDestination) {
                 for (let i = 0; i < this.windowSize; i++) {
                     this.claim(claimedSpacesInTime, i, entity, x, y);
@@ -128,15 +118,9 @@ const EntityMovementPlanner = {
             }
         }
 
-        console.log("❄️ Finished entitiy IDs", { finishedEntityIds });
-
         for (const entityId of orderedEntityIds) {
             // Skip if the current entity has already reached its destination
             if (finishedEntityIds.has(entityId)) {
-                console.log(
-                    "🐯 Already at destination. Skipping",
-                    { entityId }
-                );
                 continue;
             }
 
@@ -164,20 +148,6 @@ const EntityMovementPlanner = {
             );
 
             if (path === null) {
-                console.log(
-                    "EntityMovementPlanner: 🛑 No path; waiting",
-                    {
-                        startingCoordinate,
-                        targetCoordinate,
-                        claimedSpacesInTime: JSON.parse(JSON.stringify(claimedSpacesInTime)),
-                        corridors: this.corridors,
-                        availableCorridorEntrances,
-                        entityId,
-                        x: entity.x,
-                        y: entity.y,
-                    }
-                );
-
                 // No way to get to the target. Wait for the remaining time
                 for (let i = 0; i < this.windowSize; i++) {
                     this.claim(

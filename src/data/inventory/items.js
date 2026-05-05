@@ -279,8 +279,7 @@ const ITEMS = Object.freeze({
             available: false,
         },
         use: (actorMember, targetMember) => {
-            const exit = MAP.entities
-                .find(e =>e.type === "exit" && e.isActive);
+            const exit = MAP.entities.find(e => e.type === "exit");
             if (! exit) {
                 updateBattleLog(`The dowsing rods fail to point anywhere.`);
                 return false;
