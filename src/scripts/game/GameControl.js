@@ -1077,7 +1077,8 @@ const GameControl = {
                     break;
                 case "up":
                     let previousSiblingMatched = false;
-                    let $previousSibling = $activeElement.previousElementSibling;
+                    let $previousSibling =
+                        $activeElement.previousElementSibling;
 
                     while ($previousSibling) {
                         const siblingFound = $previousSibling
@@ -1142,10 +1143,11 @@ const GameControl = {
 
         _EnemyParty: function($activeElement, direction) {
             const sectionName = "party member";
-
             const index = $activeElement && Array
                 .from($activeElement.parentElement.children)
                 .indexOf($activeElement);
+
+            const inLeftColumn = (index & 1) === 0;
 
             switch (direction) {
                 case "initialize":
@@ -1158,73 +1160,178 @@ const GameControl = {
                     );
                     break;
                 case "up":
-                    if (index > 1) {
-                        const nextIndex = Math.max(index - 2, 0);
-                        this._activate(
-                            $activeElement.parentElement.children[nextIndex],
-                            sectionName
-                        );
+                    let previousSiblingMatched = false;
+                    let $previousSibling = $activeElement
+                        ?.previousElementSibling
+                        ?.previousElementSibling;
+
+                    while ($previousSibling) {
+                        const siblingFound = $previousSibling
+                            .matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingFound) {
+                            this._activate($previousSibling, sectionName);
+                            previousSiblingMatched = true;
+                            break;
+                        }
+
+                        $previousSibling = $previousSibling
+                            ?.previousElementSibling
+                            ?.previousElementSibling;
                     }
+
+                    if (! previousSiblingMatched && index > 1) {
+                        let $previous = $activeElement?.previousElementSibling;
+                        if (! inLeftColumn) {
+                            $previous = $previous?.previousElementSibling;
+                        }
+
+                        while ($previous) {
+                            const siblingFound = $previous
+                                .matches(":not(.dead):not(.placeholder)");
+
+                            if (siblingFound) {
+                                this._activate($previous, sectionName);
+                                break;
+                            }
+
+                            $previous = $previous?.previousElementSibling;
+                        }
+                    }
+
                     break;
                 case "down":
-                    const nextIndex = Math.min(
-                        index + 2,
-                        BattleSystem.enemyEntity.party.length - 1
-                    );
+                    let nextSiblingMatched = false;
+                    let $nextSibling = $activeElement
+                        ?.nextElementSibling
+                        ?.nextElementSibling;
 
-                    if (nextIndex >= 0) {
-                        this._activate(
-                            $activeElement.parentElement.children[nextIndex],
-                            sectionName
-                        );
+                    while ($nextSibling) {
+                        const siblingFound = $nextSibling
+                            .matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingFound) {
+                            this._activate($nextSibling, sectionName);
+                            nextSiblingMatched = true;
+                            break;
+                        }
+
+                        $nextSibling = $nextSibling
+                            ?.nextElementSibling
+                            ?.nextElementSibling;
                     }
+
+                    if (! nextSiblingMatched && index < 4) {
+                        let $next = $activeElement?.nextElementSibling;
+                        if (inLeftColumn) {
+                            $next = $next?.nextElementSibling;
+                        }
+
+                        while ($next) {
+                            const siblingFound =
+                                $next.matches(":not(.dead):not(.placeholder)");
+
+                            if (siblingFound) {
+                                this._activate($next, sectionName);
+                                break;
+                            }
+
+                            $next = $next?.nextElementSibling;
+                        }
+                    }
+
                     break;
                 case "left":
-                    if (index & 1 === 1) {
-                        const nextIndex = index - 1;
-                        this._activate(
-                            $activeElement.parentElement.children[nextIndex],
-                            sectionName
-                        );
-                    }
-                    break;
-                case "right":
-                    const inLeftColumn = (index & 1) === 0;
-
                     if (inLeftColumn) {
-                        if ($activeElement.nextElementSibling) {
-                            this._activate(
-                                $activeElement.nextElementSibling,
-                                sectionName
-                            );
-                            break;
-                        } else if ($activeElement.previousElementSibling) {
-                            this._activate(
-                                $activeElement.previousElementSibling,
-                                sectionName
-                            );
+                        break;
+                    }
+
+                    let leftSiblingFound = false;
+
+                    for (let i = index - 1; i >= 0; i -= 2) {
+                        const $sibling =
+                            $activeElement.parentElement.children[i];
+                        const siblingIsAvailable = $sibling
+                            ?.matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingIsAvailable) {
+                            leftSiblingFound = true;
+                            this._activate($sibling, sectionName);
                             break;
                         }
                     }
 
-                    this._BattleInput($activeElement, "enter from left");
-                    break;
-                case "enter from right":
-                    const $enemyParty =
-                        document.querySelector("#enemyParty .party-members");
-
-                    if (! $enemyParty) {
-                        console.error("Enemy party element not found");
+                    if (leftSiblingFound) {
                         break;
                     }
 
-                    if ($enemyParty.children.length > 0) {
-                        this._activate(
-                            $enemyParty.children[
-                                Math.min(1, $enemyParty.children.length - 1)
-                            ],
-                            sectionName
-                        );
+                    for (let i = index + 1; i <= 4; i += 2) {
+                        const $sibling =
+                            $activeElement.parentElement.children[i];
+                        const siblingIsAvailable = $sibling
+                            ?.matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingIsAvailable) {
+                            this._activate($sibling, sectionName);
+                            break;
+                        }
+                    }
+
+                    break;
+                case "right":
+                    if (! inLeftColumn) {
+                        this._BattleInput($activeElement, "enter from left");
+                        break;
+                    }
+
+                    let rightSiblingFound = false;
+
+                    for (let i = index + 1; i >= 0; i -= 2) {
+                        const $sibling =
+                            $activeElement.parentElement.children[i];
+                        const siblingIsAvailable = $sibling
+                            ?.matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingIsAvailable) {
+                            rightSiblingFound = true;
+                            this._activate($sibling, sectionName);
+                            break;
+                        }
+                    }
+
+                    if (rightSiblingFound) {
+                        break;
+                    }
+
+                    for (let i = index + 3; i <= 5; i += 2) {
+                        const $sibling =
+                            $activeElement.parentElement.children[i];
+                        const siblingIsAvailable = $sibling
+                            ?.matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingIsAvailable) {
+                            rightSiblingFound = true;
+                            this._activate($sibling, sectionName);
+                            break;
+                        }
+                    }
+
+                    if (! rightSiblingFound) {
+                        this._BattleInput($activeElement, "enter from left");
+                    }
+
+                    break;
+                case "enter from right":
+                    for (const i of [1, 3, 5, 0, 2, 4]) {
+                        const $sibling =
+                            $activeElement.parentElement.children[i];
+                        const siblingIsAvailable = $sibling
+                            ?.matches(":not(.dead):not(.placeholder)");
+
+                        if (siblingIsAvailable) {
+                            this._activate($sibling, sectionName);
+                            break;
+                        }
                     }
 
                     break;
