@@ -1521,7 +1521,7 @@ class GameMap {
             ? Object.entries(this.#entities).map(e => {
                 const o = e[1];
                 // @TODO It should not be necessary to set IDs here
-                return { id: o.id || e[0], x: o.x, y: o.y };
+                return { id: o.id || e[0], x: o.x, y: o.y, type: o.type };
             })
             : [];
 
