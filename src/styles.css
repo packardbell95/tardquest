@@ -2525,7 +2525,7 @@ a:link {
 
     &.dead {
         & .portrait {
-            filter: contrast(0);
+            filter: grayscale(1);
         }
 
         & .foreground {
