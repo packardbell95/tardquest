@@ -1119,6 +1119,15 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 return;
             }
 
+            if (partyMember.isDead()) {
+                updateBattleLog(
+                    `<span class="friendly">${partyMember.name}</span> isn't ` +
+                    `saying much anymore...`
+                );
+
+                return;
+            }
+
             updateBattleLog(
                 `<span class="player">--you pull out your translator-- </span>`
             );

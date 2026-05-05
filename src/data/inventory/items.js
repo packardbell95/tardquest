@@ -294,7 +294,7 @@ const ITEMS = Object.freeze({
                 return false;
             }
 
-            MAP.revealSpot(location.x, location.y, 1);
+            MAP.revealSpot(exit.x, exit.y, 1);
             updateBattleLog(
                 `<span class="friendly">The exit has been revealed!</span>`
             );
