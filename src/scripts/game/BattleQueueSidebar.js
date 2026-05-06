@@ -76,9 +76,12 @@ const BattleQueueSidebar = {
         $container.classList.add("portrait-container");
         if (! isEnemy) {
             $container.classList.add("clickable");
-            $container.onclick = () => BattleSystem.setPlayerPartyMemberIndex(
-                playerEntity.party.findIndex(e => e.id === partyMember.id)
-            );
+            $container.onclick = () => {
+                BattleSystem.setPlayerPartyMemberIndex(
+                    playerEntity.party.findIndex(e => e.id === partyMember.id)
+                );
+                GameControl.BattleUi.initialize();
+            };
         }
 
         const $background = document.createElement("div");
