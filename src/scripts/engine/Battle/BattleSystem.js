@@ -139,8 +139,6 @@ const BattleSystem = {
              ? entityAdvantage
              : null;
 
-        console.log("Entity advantage", { who: this.entityAdvantage });
-
         this.onEncounter?.(
             this.playerEntity,
             this.enemyEntity,
@@ -490,11 +488,6 @@ const BattleSystem = {
                 const aSpeed = aPartyMemberSpeed + aMoveSpeed;
                 const bSpeed = bPartyMemberSpeed + bMoveSpeed;
 
-                console.log("Speed check", {
-                    a, b, aSpeed, bSpeed, aPartyMemberSpeed, bPartyMemberSpeed,
-                    aMoveSpeed, bMoveSpeed,
-                });
-
                 if (aSpeed < bSpeed) {
                     return 1;
                 }
@@ -517,11 +510,6 @@ const BattleSystem = {
     commit: function() {
         this.onCommandPhaseEnd?.();
         this.orderMoves();
-        console.log(
-            "Battle system is ready to process moves",
-            { moves: this.queueMoves }
-        );
-
         this.onActionPhaseStart?.();
         this.nextMove();
     },
@@ -531,7 +519,6 @@ const BattleSystem = {
     },
 
     nextMove: function() {
-        console.log("nextMove() called", { moves: this.queuedMoves });
         const playerLost = this.playerEntity.leader.isDead() ||
             this.playerEntity.party.filter(e => ! e.isDead()).length === 0;
         const enemyLost =
@@ -579,11 +566,9 @@ const BattleSystem = {
 
         switch (move.type) {
             case "attack":
-                console.log("⚔️ Attack!", { move });
                 this.performAttack(move.actor, move.target);
                 break;
             case "persuade":
-                console.log("💬 Persuade!", { move });
                 this.performPersuade(
                     move.actor,
                     move.target,
@@ -597,13 +582,9 @@ const BattleSystem = {
                 this.performUseItem(move.actor, move.itemId, move.target);
                 break;
             case "equip weapon":
-                console.log("🗡️ Equip Weapon!", { move });
-                break;
             case "equip armor":
-                console.log("🛡️ Equip Armor!", { move });
-                break;
             case "equip ring":
-                console.log("💍 Equip Ring!", { move });
+                console.error("Unsupported move", { move });
                 break;
             default:
                 console.error("Unknown move", { move });
@@ -639,8 +620,6 @@ const BattleSystem = {
                 }
             }
         }
-
-        console.log("🎯 Retargeting", { actor, currentTarget });
 
         return currentTarget;
     },
@@ -702,7 +681,6 @@ const BattleSystem = {
         const persuasionSucceeded = Math.random() < totalChance;
 
         if (persuasionSucceeded) {
-            console.log("Persuasion successful!");
             const targetParty = this.actorIsPlayer(actor)
                 ? "joiningPlayer"
                 : "joiningEnemy";
@@ -719,8 +697,6 @@ const BattleSystem = {
             // Remove member from the party
             target.parent.party =
                 target.parent.party.filter(e => e.id !== target.id);
-        } else {
-            console.log("Persuasion failed!");
         }
 
         this.onPersuadeEnd?.(actor, target, persuasionSucceeded);
