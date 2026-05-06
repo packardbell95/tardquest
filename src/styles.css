@@ -3056,6 +3056,35 @@ a:link {
     opacity: 0.25;
 }
 
+@keyframes tqUi_flyAway {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
+}
+
+.tq-ui-fly {
+    position: absolute;
+    top: 440px;
+    left: 620px;
+    pointer-events: none;
+
+    width: 6px;
+    height: 6px;
+    image-rendering: pixelated;
+    background-image: url(assets/interface/ui/fly.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    offset-path: path(
+        "M 0.20886855,-0.06675415 C 40.456208,-97.118023 -54.251021,-168.98913 \
+        -29.125009,-221.88764 9.1398253,-302.4477 3.0065923,-311.92452 \
+        -12.332906,-358.86617 -26.968823,-403.65474 -25.257239,-544.86478 \
+        55.528491,-642.52549"
+    );
+    offset-rotate: auto;
+    animation: tqUi_flyAway 2s ease-in-out forwards;
+    transform: rotate(45deg) scale(2);
+}
+
 .party-member {
     gap: 1ch;
     display: flex;

@@ -1380,7 +1380,7 @@ const GameControl = {
                     this._activate(
                         document.querySelector(
                             `#inventory [name="items"] > button[data-id]` +
-                            `:first-child`
+                            `:first-child:not(:disabled)`
                         ) ||
                             document
                                 .getElementById("inventorySidebarCloseButton")
@@ -1397,7 +1397,7 @@ const GameControl = {
                     const $lastItem =
                         document.querySelector(
                             `#inventory [name="items"] > button[data-id]` +
-                            `:last-child`
+                            `:last-child:not(:disabled)`
                         ) ||
                         document.getElementById("inventorySidebarCloseButton");
 
@@ -1419,65 +1419,69 @@ const GameControl = {
                         break;
                     }
 
-                    if ($activeElement.previousElementSibling) {
-                        const $next = $activeElement.previousElementSibling;
-                        $next.scrollIntoView({
-                            behavior: "instant",
-                            block: "nearest",
-                            inline: "nearest",
-                        });
+                    let $previous = $activeElement?.previousElementSibling;
+                    let previousMatched = false;
 
-                        this._activate($next);
-                    } else {
-                        const $next = document
+                    while ($previous) {
+                        if ($previous.matches(":not(:disabled)")) {
+                            previousMatched = true;
+                            $previous.scrollIntoView({
+                                behavior: "instant",
+                                block: "nearest",
+                                inline: "nearest",
+                            });
+
+                            this._activate($previous);
+                            break;
+                        }
+
+                        $previous = $previous?.previousElementSibling;
+                    }
+
+                    if (! previousMatched) {
+                        const $closeButton = document
                             .getElementById("inventorySidebarCloseButton");
-
-                        this._activate($next);
+                        this._activate($closeButton);
+                        break;
                     }
 
                     break;
                 case "down":
-                    if ($activeElement.id === "inventorySidebarCloseButton") {
-                        const $next = document.querySelector(
+                    const isOnCloseButton =
+                        $activeElement.id === "inventorySidebarCloseButton";
+
+                    let nextMatched = false;
+                    let $next = isOnCloseButton
+                        ? document.querySelector(
                             `#inventory [name="items"] > button[data-id]` +
-                            `:first-child`
-                        );
+                            `:first-child:not(:disabled)`
+                        )
+                        : $activeElement?.nextElementSibling;
 
-                        $next
-                            ? this._activate($next)
-                            : this._BattleInput(
-                                $activeElement,
-                                "enter from top"
-                            );
+                    while ($next) {
+                        if ($next.matches(":not(:disabled)")) {
+                            nextMatched = true;
+                            $next.scrollIntoView({
+                                behavior: "instant",
+                                block: "nearest",
+                                inline: "nearest",
+                            });
 
-                        break;
+                            this._activate($next);
+                            break;
+                        }
+
+                        $next = $next?.nextElementSibling;
                     }
 
-                    if ($activeElement.nextElementSibling) {
-                        const $next = $activeElement.nextElementSibling;
-                        $next.scrollIntoView({
-                            behavior: "instant",
-                            block: "nearest",
-                            inline: "nearest",
-                        });
-
-                        this._activate($next);
-                    } else {
+                    if (! nextMatched) {
                         this._BattleInput($activeElement, "enter from top");
+                        break;
                     }
 
                     break;
                 case "left":
                     // Do nothing
-                    /*
-                    const $playerParty = document.getElementById("playerParty");
-                    const playerPartyIsActive =
-                        $playerParty.classList.contains("active");
-
-                    playerPartyIsActive
-                        ? this._PlayerParty($activeElement, "enter from right")
-                        : this._EnemyParty($activeElement, "enter from right");
-                    */
                     break;
                 case "right":
                     // Do nothing

@@ -607,14 +607,14 @@ menu.setMenus({
                     "Base Damage": {
                         value: weapon.damage.base,
                         className: menu.getStatClassName(
-                            equippedWeapon.damage.base,
+                            equippedWeapon?.damage.base || 0,
                             weapon.damage.base
                         ),
                     },
                     "Random Multiplier": {
                         value: weapon.damage.randomMultiplier,
                         className: menu.getStatClassName(
-                            equippedWeapon.damage.randomMultiplier,
+                            equippedWeapon?.damage.randomMultiplier || 1,
                             weapon.damage.randomMultiplier
                         ),
                     },
@@ -706,7 +706,7 @@ menu.setMenus({
                     "Defense": {
                         value: armor.coreStatModifiers.defense,
                         className: menu.getStatClassName(
-                            equippedArmor.coreStatModifiers.defense,
+                            equippedArmor?.coreStatModifiers.defense || 0,
                             armor.coreStatModifiers.defense,
                         ),
                     },
@@ -1303,7 +1303,9 @@ menu.setMenus({
             const article = currentWeapon?.article
                 ? `${currentWeapon.article} `
                 : "";
-            const currentWeaponDisplay = article + currentWeapon.name;
+            const currentWeaponDisplay = currentWeapon
+                ? article + currentWeapon?.name
+                : "<em>NOTHING!</em>";
             const wieldingMessage =
                 `You are currently wielding ${currentWeaponDisplay}`;
 
@@ -1322,14 +1324,14 @@ menu.setMenus({
                     "Base Damage": {
                         value: weapon.damage.base,
                         className: menu.getStatClassName(
-                            equippedWeapon.damage.base,
+                            equippedWeapon?.damage.base || 0,
                             weapon.damage.base
                         ),
                     },
                     "Random Multiplier": {
                         value: weapon.damage.randomMultiplier,
                         className: menu.getStatClassName(
-                            equippedWeapon.damage.randomMultiplier,
+                            equippedWeapon?.damage.randomMultiplier || 1,
                             weapon.damage.randomMultiplier
                         ),
                     },
@@ -1448,7 +1450,7 @@ menu.setMenus({
                     "Defense": {
                         value: armor.coreStatModifiers.defense,
                         className: menu.getStatClassName(
-                            equippedArmor.coreStatModifiers.defense,
+                            equippedArmor?.coreStatModifiers.defense || 0,
                             armor.coreStatModifiers.defense,
                         ),
                     },

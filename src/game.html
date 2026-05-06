@@ -1966,6 +1966,8 @@
             GameControl.disableInventorySidebarEquipmentButtons();
             GameControl.initializeEnemyPartySection(enemyEntity);
 
+            InventorySidebar.refresh();
+
             if (entityAdvantage === "player") {
                 playerEntity.leader.say("SURPRISE, MOTHERFUCKER!");
                 updateBattleLog(
@@ -2224,6 +2226,8 @@
                 GameControl.enablePartyButtons();
                 GameControl.enableInventorySidebarEquipmentButtons();
                 GameControl.update();
+
+                InventorySidebar.refresh();
             };
 
             console.log("🥊 ENCOUNTER HAS ENDED", { outcome });
@@ -2728,6 +2732,7 @@
             ran: new Audio("audio/sfx/ran.ogg"),
             runFailed: new Audio("audio/sfx/runFailed.ogg"),
             pitDrop: new Audio("audio/sfx/pitDrop.ogg"),
+            fly: new Audio("audio/sfx/fly.ogg"),
         };
 
         const sfxAmb = {

@@ -265,6 +265,10 @@ const InventorySidebar = {
 
         playSFX(sectionName === "main" ? "uiCancel" : "inventoryOpen");
         $section.classList.remove("hidden");
+
+        if (InventorySidebar.sectionIsEmpty(sectionName)) {
+            InventorySidebar.releaseTheFly(sectionName);
+        }
     },
 
     updateRightSidebar: (sectionName) => {
@@ -298,25 +302,30 @@ const InventorySidebar = {
         switch (sectionName) {
             case "main":
                 // The main section never changes
-                return;
+                break;
             case "items":
                 InventorySidebar.refreshItems();
-                return;
+                break;
             case "weapons":
                 InventorySidebar.refreshWeapons();
-                return;
+                break;
             case "armor":
                 InventorySidebar.refreshArmor();
-                return;
+                break;
             case "rings":
                 InventorySidebar.refreshRings();
+                break;
+            default:
+                console.error(
+                    "Inventory sidebar tried to refresh an unknown section",
+                    { sectionName }
+                );
                 return;
         }
 
-        console.error(
-            "Inventory sidebar tried to refresh an unknown section",
-            { sectionName }
-        );
+        if (! InventorySidebar.sectionIsEmpty(sectionName)) {
+            InventorySidebar.sections[sectionName]._flyReleased = false;
+        }
     },
 
     getStatsHtml: function(definition) {
@@ -556,12 +565,18 @@ const InventorySidebar = {
             return;
         }
 
+        BattleSystem.isActive && ! ITEMS[itemId].battleUsage.available
+            ? $button.setAttribute("disabled", "disabled")
+            : $button.removeAttribute("disabled");
+
         InventorySidebar.updateTooltip(
             $button,
             "items",
             itemId,
             ITEMS[itemId]
         );
+
+        InventorySidebar.sections.items._flyReleased = false;
     },
 
     getItemQuantity: (itemId) => {
@@ -681,6 +696,7 @@ const InventorySidebar = {
                 return;
             }
             $weapons.appendChild($button);
+            InventorySidebar.sections.weapons._flyReleased = false;
         } else if ($button && quantity <= 0) {
             // Remove the button and its tooltip if the player doesn't own the
             // weapon
@@ -829,6 +845,7 @@ const InventorySidebar = {
                 return;
             }
             $armor.appendChild($button);
+            InventorySidebar.sections.armor._flyReleased = false;
         } else if ($button && quantity <= 0) {
             // Remove the button and its tooltip if the player doesn't own the
             // armor
@@ -974,6 +991,7 @@ const InventorySidebar = {
                 return;
             }
             $ring.appendChild($button);
+            InventorySidebar.sections.rings._flyReleased = false;
         } else if ($button && quantity <= 0) {
             // Remove the button and its tooltip if the player doesn't own the
             // ring
@@ -1201,5 +1219,42 @@ const InventorySidebar = {
                 },
             ]
         );
+    },
+
+    sectionIsEmpty: (sectionName) => {
+        switch (sectionName) {
+            case "items":
+                return Object.keys(playerEntity.inventory.contents.items)
+                    .length === 0;
+            case "weapons":
+                return Object.keys(playerEntity.getPartyWeapons()).length === 0;
+            case "armor":
+                return Object.keys(playerEntity.getPartyArmor()).length === 0;
+            case "rings":
+                return Object.keys(playerEntity.getPartyRings()).length === 0;
+            case "main":
+            default:
+                return false;
+        }
+    },
+
+    releaseTheFly: (sectionName) => {
+        const section = InventorySidebar.sections[sectionName];
+        if (section._flyReleased) {
+            return;
+        }
+
+        section._flyReleased = true;
+
+        const $fly = document.createElement("div");
+        $fly.classList.add("tq-ui-fly");
+        $fly.addEventListener("animationend", function (e) {
+            if (e.animationName === "tqUi_flyAway") {
+                e.currentTarget.remove();
+            }
+        });
+
+        document.body.appendChild($fly);
+        playSFX("fly");
     },
 };
