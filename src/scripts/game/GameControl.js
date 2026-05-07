@@ -116,6 +116,7 @@ const GameControl = {
             return;
         }
 
+        const lastMode = GameControl.mode;
         GameControl.mode = GameControl.getMode();
 
         // Update the displayed buttons based on the mode
@@ -170,6 +171,24 @@ const GameControl = {
             $controlsExploration.classList.remove("hidden");
             $controlsCombat.classList.add("hidden");
             $controlsMenu.classList.add("hidden");
+        }
+
+        const leavingCombat =
+            lastMode === "combat" && GameControl.mode !== "combat";
+
+        if (leavingCombat) {
+            const $inventoryItemsButton = document.querySelector(
+                `#inventory [name="main"] > button.items`
+            );
+
+            if (! $inventoryItemsButton) {
+                console.error("Inventory items button disappeared");
+            } else {
+                playerEntity.leader.getEffectiveTrait("canUse")
+                    ? $inventoryItemsButton.removeAttribute("disabled")
+                    : $inventoryItemsButton
+                        .addAttribute("disabled", "disabled");
+            }
         }
     },
 
@@ -441,6 +460,21 @@ const GameControl = {
                     ? $button.removeAttribute("disabled")
                     : $button.setAttribute("disabled", "true");
             });
+
+        const $inventoryItemsButton =
+            document.querySelector(`#inventory [name="main"] > button.items`);
+
+        if (! $inventoryItemsButton) {
+            console.error("Inventory items button disappeared");
+        } else {
+            const disableInventoryItems =
+                ! activePartyMember?.getEffectiveTrait("canUse") ||
+                BattleSystem.battleRestrictions.includes("playerEntityUseItem");
+
+            disableInventoryItems
+                ? $inventoryItemsButton.setAttribute("disabled", "disabled")
+                : $inventoryItemsButton.removeAttribute("disabled");
+        }
     },
 
     initializeEnemyPartySection: (enemyEntity) => {
@@ -996,21 +1030,32 @@ const GameControl = {
                         $previous = $previous.previousElementSibling;
                     }
 
-                    if (! previousSiblingMatched) {
-                        const activeInventorySection = document
-                            .querySelector(`#inventory [name]:not(.hidden)`)
-                            ?.getAttribute("name");
-
-                        activeInventorySection === "items"
-                            ? this._InventoryItems(
-                                $activeElement,
-                                "enter from bottom"
-                            )
-                            : this._Inventory(
-                                $activeElement,
-                                "enter from bottom"
-                            );
+                    if (previousSiblingMatched) {
+                        break;
                     }
+
+                    const inventoryAvailable = Boolean(document.querySelector(
+                        `#inventory [name="main"] > button.items:not(:disabled)`
+                    ));
+
+                    if (! inventoryAvailable) {
+                        this._BattleQueue($activeElement, "enter from bottom");
+                        break;
+                    }
+
+                    const activeInventorySection = document
+                        .querySelector(`#inventory [name]:not(.hidden)`)
+                        ?.getAttribute("name");
+
+                    activeInventorySection === "items"
+                        ? this._InventoryItems(
+                            $activeElement,
+                            "enter from bottom"
+                        )
+                        : this._Inventory(
+                            $activeElement,
+                            "enter from bottom"
+                        );
                     break;
                 case "left":
                     // Do nothing
@@ -1572,19 +1617,15 @@ const GameControl = {
                     if (downMatched) {
                         break;
                     }
-                    /**
-                    const $altNext = document.querySelector(
-                        `#battleQueue > [data-x="${x - 1}"][data-y="${y + 1}"]`
-                    );
 
-                    if ($altNext) {
-                        this._activate($altNext);
+                    const inventoryAvailable = Boolean(document.querySelector(
+                        `#inventory [name="main"] > button.items:not(:disabled)`
+                    ));
+
+                    if (! inventoryAvailable) {
+                        this._BattleInput($activeElement, "enter from top");
                         break;
                     }
-                    **/
-
-                    // @TODO If current party member can't open the inventory,
-                    //       skip this section and move to the battle input
 
                     const activeSection = InventorySidebar
                         ?.getCurrentSectionElement().getAttribute("name");

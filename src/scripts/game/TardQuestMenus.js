@@ -399,11 +399,26 @@ menu.setMenus({
                 ? "You own nothing. Klaus Schwab would be proud"
                 : null;
         },
+        itemsRestricted: () => (
+            BattleSystem.isActive && (
+                ! BattleSystem
+                    .playerEntity
+                    .party[BattleSystem?.playerPartyMemberIndex]
+                    ?.getEffectiveTrait("canUse") ||
+                BattleSystem.battleRestrictions.includes("playerEntityUseItem")
+            ) || (
+                ! BattleSystem.isActive &&
+                ! playerEntity.leader.getEffectiveTrait("canUse")
+            )
+        ),
         getOptions: () => [
             {
                 id: "inventoryItems",
                 displayText: "Items",
                 description: "View your consumable items.",
+                className: menu.getCurrentMenuData()?.itemsRestricted()
+                    ? "tooExpensive"
+                    : undefined,
             },
             {
                 id: "inventoryEquipment",
@@ -420,6 +435,17 @@ menu.setMenus({
             }
         ],
         select: (selectedOptionId) => {
+            const itemsRestricted =
+                selectedOptionId === "inventoryItems" &&
+                menu.getCurrentMenuData()?.itemsRestricted();
+
+            if (itemsRestricted) {
+                updateBattleLog(
+                    `Items are <span class="bad">off limits!</span>`
+                );
+                return;
+            }
+
             // When in battle, disable equipment submenus
             const submenuDisabled =
                 selectedOptionId === "inventoryEquipment" &&
