@@ -7259,28 +7259,28 @@ const sceneArt = {
     exit: {
         positions: {
             p0_0: {
-                artIndex: 0,
-                drawAt: { x: -28, y: 7 },
+                artIndex: 9,
+                drawAt: { x: -19, y: 8 },
             },
             p0_2: {
-                artIndex: 0,
-                drawAt: { x: 45, y: 7 },
+                artIndex: 9,
+                drawAt: { x: 45, y: 8 },
             },
             p1_0: {
-                artIndex: 0,
-                drawAt: { x: -25, y: 4 },
+                artIndex: 9,
+                drawAt: { x: -13, y: 5 },
             },
             p1_1: {
                 artIndex: 0,
                 drawAt: { x: 7, y: 4 },
             },
             p1_2: {
-                artIndex: 0,
-                drawAt: { x: 39, y: 4 },
+                artIndex: 9,
+                drawAt: { x: 39, y: 5 },
             },
             p2_0: {
                 artIndex: 1,
-                drawAt: { x: -7, y: 14 },
+                drawAt: { x: -7, y: 10 },
             },
             p2_1: {
                 artIndex: 1,
@@ -7300,7 +7300,7 @@ const sceneArt = {
             },
             p3_0: {
                 artIndex: 4,
-                drawAt: { x: -9, y: 15 },
+                drawAt: { x: -9, y: 12 },
             },
             p3_1: {
                 artIndex: 4,
@@ -7533,6 +7533,32 @@ const sceneArt = {
                     ↘
                     ╼╾
                 `,
+            },
+            {
+                automaskBlockCharacters: true,
+                transparentCharacter: "%",
+                data: `
+                    %%%%%%%%%▄▄▄▄
+                    %%%%%%%%%%██
+                    ▀██▄%%%%%%██
+                    %%%▀██▄%%%██
+                    %%%%%%▀██▄▄▀
+                    %%%%%%%%%▀██▄
+                    %%%%%%%%%% ▀██▄
+                    %%%%%%%%%%▄ %▀██▄
+                    %%%%%%%%%%██%%%▀██▄%▄█
+                    %%%%%%%%%%██%%%%▄████▀
+                    %%%%%%%%%%██%%%▀▀█████
+                    %%%%%%%%%%██%%%%%%%%▀▀
+                    %%%%%%%%%%██
+                    %%%%%%%%%%██
+                    %%%%%%%%%%██
+                    %%%%%%%%%%▀▀
+                    ▀█▀▀▀▀▀▀▀▀█████████████▀
+                    %%▀██████ ▀▀▀▀▀▀▀▀███▀
+                    %%%%▀██▀▄ █████▀▄ █▀
+                    %%%%%%▀▀▀▀▀▀▀▀▀▀▀▀
+                `
             },
         ],
     },
