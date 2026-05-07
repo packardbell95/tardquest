@@ -53,11 +53,20 @@ const InventorySidebar = {
             document.getElementById("inventorySidebarScrollDown"),
         ].filter(Boolean);
 
-        buttons.forEach(btn => {
-            InventorySidebar.enabled
-                ? btn.removeAttribute("disabled")
-                : btn.setAttribute("disabled", "true");
-        });
+        buttons.forEach($e => InventorySidebar.updateButtonControlState($e));
+    },
+
+    updateButtonControlState: ($button) => {
+        const isItem = InventorySidebar.enabled && document
+            .querySelector(`#inventory [name="items"]`).contains($button);
+
+        ! InventorySidebar.enabled || (
+            BattleSystem.isActive &&
+            isItem &&
+            ! ITEMS[$button.dataset.id]?.battleUsage.available
+        )
+            ? $button.setAttribute("disabled", "disabled")
+            : $button.removeAttribute("disabled");
     },
 
     scrollUp: () => {
@@ -236,6 +245,17 @@ const InventorySidebar = {
                 { sectionName }
             );
             return;
+        }
+
+        const $up = document.getElementById("inventorySidebarScrollUp");
+        const $down = document.getElementById("inventorySidebarScrollDown");
+
+        if ($section.querySelectorAll(`:scope > button`).length < 3) {
+            $up.setAttribute("disabled", "disabled");
+            $down.setAttribute("disabled", "disabled");
+        } else {
+            $up.removeAttribute("disabled");
+            $down.removeAttribute("disabled");
         }
 
         InventorySidebar.updateRightSidebar(sectionName);
@@ -459,6 +479,8 @@ const InventorySidebar = {
         $button.dataset.cursorvertical = "end";
 
         // Reflect current enabled state on creation
+        // @TODO Handle this after the button gets attached to its parent so we
+        // can use updateButtonControlState() to keep the logic consistent
         if (! InventorySidebar.enabled) {
             $button.setAttribute("disabled", "true");
         }
@@ -529,6 +551,13 @@ const InventorySidebar = {
         for (const itemId of Object.keys(ITEMS)) {
             InventorySidebar.refreshItem(itemId);
         }
+
+        InventorySidebar.sectionIsEmpty("items")
+            ? InventorySidebar.setEmptyMessage(
+                $items,
+                `You are <span class="large">POOR!</span>`
+            )
+            : InventorySidebar.removeEmptyMessage($items);
     },
 
     refreshItem: (itemId) => {
@@ -565,10 +594,7 @@ const InventorySidebar = {
             return;
         }
 
-        BattleSystem.isActive && ! ITEMS[itemId].battleUsage.available
-            ? $button.setAttribute("disabled", "disabled")
-            : $button.removeAttribute("disabled");
-
+        InventorySidebar.updateButtonControlState($button);
         InventorySidebar.updateTooltip(
             $button,
             "items",
@@ -626,8 +652,6 @@ const InventorySidebar = {
                 //     return;
                 // }
 
-                GameControl.BattleUi.currentAction = "useItem";
-
                 const index = BattleSystem.playerPartyMemberIndex;
                 const actor = BattleSystem.playerEntity.party?.[index];
 
@@ -638,7 +662,7 @@ const InventorySidebar = {
 
                 const useItemCallback = target => {
                     BattleSystem.useItem(actor, itemId, target);
-                    InventorySidebar.refreshItem(itemId);
+                    // InventorySidebar.refreshItem(itemId);
                 };
 
                 if (item.battleUsage.offensive) {
@@ -681,6 +705,10 @@ const InventorySidebar = {
         for (const weaponId of Object.keys(WEAPONS)) {
             InventorySidebar.refreshWeapon(weaponId);
         }
+
+        InventorySidebar.sectionIsEmpty("weapons")
+            ? InventorySidebar.setEmptyMessage($weapons, "You have no weapons")
+            : InventorySidebar.removeEmptyMessage($weapons);
     },
 
     refreshWeapon: (weaponId) => {
@@ -830,6 +858,13 @@ const InventorySidebar = {
         for (const armorId of Object.keys(ARMOR)) {
             InventorySidebar.refreshArmorPiece(armorId);
         }
+
+        InventorySidebar.sectionIsEmpty("armor")
+            ? InventorySidebar.setEmptyMessage(
+                $armor,
+                "Get some clothes, you pervert"
+            )
+            : InventorySidebar.removeEmptyMessage($armor);
     },
 
     refreshArmorPiece: (armorId) => {
@@ -976,6 +1011,13 @@ const InventorySidebar = {
         for (const ringId of Object.keys(RINGS)) {
             InventorySidebar.refreshRing(ringId);
         }
+
+        InventorySidebar.sectionIsEmpty("rings")
+            ? InventorySidebar.setEmptyMessage(
+                $rings,
+                `You have ${waveText("no bling").outerHTML}`
+            )
+            : InventorySidebar.removeEmptyMessage($rings);
     },
 
     refreshRing: (ringId) => {
@@ -1236,6 +1278,23 @@ const InventorySidebar = {
             default:
                 return false;
         }
+    },
+
+    setEmptyMessage: ($section, messageHtml) => {
+        const $existingMessage = $section.querySelector(".empty-message");
+        if ($existingMessage) {
+            $existingMessage.innerHTML = messageHtml;
+            return;
+        }
+
+        const $message = document.createElement("div");
+        $message.className = "empty-message";
+        $message.innerHTML = messageHtml;
+        $section.appendChild($message);
+    },
+
+    removeEmptyMessage: ($section) => {
+        $section.querySelectorAll(".empty-message").forEach($e => $e.remove());
     },
 
     releaseTheFly: (sectionName) => {

@@ -1371,6 +1371,9 @@
                 TardQuestPartyMemberFactory.player(baseStats);
             playerPartyMember.color = "#bff";
 
+            document.querySelector("#stats .core").dataset.partyMemberId =
+                playerPartyMember.id;
+
             playerPartyMember.$stats =
                 document.querySelector("#stats .progression");
 
@@ -2673,25 +2676,27 @@
             target,
             successful
         ) {
-            if (! successful) {
-                const item = ITEMS[itemId];
-                if (! item) {
-                    updateBattleLog(
-                        `${actor.name} wasted their turn rummaging through ` +
-                        `their pockets unsuccessfully!`
-                    );
-                    return;
-                }
-
-                updateBattleLog(
-                    `${actor.name} failed to use ${item.article} ${item.name}`
-                );
-
-                // Successful item uses already call this, but do it in their
-                // own contexts because the calls may depend on video playback
-                BattleSystem.nextMove();
+            if (successful) {
                 return;
             }
+
+            const item = ITEMS[itemId];
+            if (! item) {
+                updateBattleLog(
+                    `${actor.name} wasted their turn rummaging through ` +
+                    `their pockets unsuccessfully!`
+                );
+                return;
+            }
+
+            updateBattleLog(
+                `${actor.name} failed to use ${item.article} ${item.name}`
+            );
+
+            // Successful item uses already call this, but do it in their
+            // own contexts because the calls may depend on video playback
+            BattleSystem.nextMove();
+            return;
         };
 
         const sfx = {
@@ -3479,7 +3484,6 @@
             const attackTargetCallback = (targetPartyMember) =>
                 BattleSystem.attack(activePartyMember, targetPartyMember);
 
-            GameControl.BattleUi.currentAction = "attack";
             GameControl.showEnemyPartySection(attackTargetCallback, true);
         }
 
@@ -3740,7 +3744,6 @@
 
             // @TODO Implement persuasion input
             InventorySidebar.open("main");
-            GameControl.BattleUi.currentAction = "persuade";
             const enemyPartyMember = BattleSystem.enemyEntity.party[0];
             BattleSystem.persuade(
                 activePartyMember,

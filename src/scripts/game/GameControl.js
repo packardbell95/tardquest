@@ -668,6 +668,7 @@ const GameControl = {
         }
 
         const alreadyShowingRequestedSection =
+            false && // @TODO Refactor this logic and check for relevance
             (showPlayerParty && $playerParty.classList.contains("active")) ||
             (! showPlayerParty && $enemyParty.classList.contains("active"));
 
@@ -699,6 +700,11 @@ const GameControl = {
         const addCallback =
             BattleSystem.isActive &&
             typeof selectedEntityCallback === "function";
+
+        const $playerPartyMember = playerEntity.leader.$stats;
+        $playerPartyMember.onclick = addCallback && showPlayerParty
+            ? () => selectedEntityCallback(BattleSystem.playerEntity.leader)
+            : null;
 
         const playerPartyMemberButtons = $playerParty.querySelectorAll(
             `.party-member[data-party-member-id]:not(.placeholder)`
@@ -797,9 +803,6 @@ const GameControl = {
 
     BattleUi: {
         activeClassname: "ui-active",
-
-        // Battle moves that include "attack", "persuade", "run", and "useItem"
-        currentAction: null,
 
         _getParentSection: function($element) {
             if ($element?.id === "inventorySidebarCloseButton") {
@@ -1354,17 +1357,7 @@ const GameControl = {
                     this._BattleInput($activeElement, "enter from top");
                     break;
                 case "left":
-                    if (this.currentAction === null) {
-                        break;
-                    }
-
-                    const $playerParty = document.getElementById("playerParty");
-                    const playerPartyIsActive =
-                        $playerParty.classList.contains("active");
-
-                    playerPartyIsActive
-                        ? this._PlayerParty($activeElement, "enter from right")
-                        : this._EnemyParty($activeElement, "enter from right");
+                    // Do nothing
                     break;
                 case "right":
                     // Do nothing
@@ -1490,48 +1483,96 @@ const GameControl = {
         },
 
         _BattleQueue: function($activeElement, direction) {
+            const $battleQueue = document.getElementById("battleQueue");
+            const totalPortraits = $battleQueue.children.length;
+            const maxY = totalPortraits + 1 >> 1;
             const index = Number($activeElement.dataset.index);
             const x = Number($activeElement.dataset.x);
             const y = Number($activeElement.dataset.y);
 
             switch (direction) {
                 case "initialize":
-                    this._activate(document.querySelector(
-                        `#battleQueue > [data-index="0"]`
-                    ));
+                    for (let i = 0; i < totalPortraits; i++) {
+                        const $partyMember = $battleQueue
+                            .querySelector(`[data-index="${i}"]:not(.dead)`);
+
+                        if ($partyMember) {
+                            this._activate($partyMember);
+                            break;
+                        }
+                    }
                     break;
                 case "enter from bottom":
-                    const elements = Array.from(
-                        document.querySelectorAll(`#battleQueue > [data-index]`)
-                    );
+                    let bottomYMatched = false;
 
-                    const $lastElement = elements.reduce(($final, $e) => {
-                        const index = Number($e.dataset.index);
-                        if (! $final) {
-                            return $e;
+                    for (let nextY = maxY - 1; nextY >= 0; nextY--) {
+                        for (let nextX = 0; nextX < 2; nextX++) {
+                            const $partyMember = $battleQueue.querySelector(
+                                `[data-x="${nextX}"][data-y="${nextY}"]` +
+                                `:not(.dead)`
+                            );
+
+                            if ($partyMember) {
+                                bottomYMatched = true;
+                                this._activate($partyMember);
+                                break;
+                            }
                         }
 
-                        const finalIndex = Number($final.dataset.index);
-                        return index > finalIndex ? $e : $final;
-                    }, null);
-
-                    this._activate($lastElement, "", false);
+                        if (bottomYMatched) {
+                            break;
+                        }
+                    }
                     break;
                 case "up":
-                    this._activate(document.querySelector(
-                        `#battleQueue > [data-x="${x}"][data-y="${y - 1}"]`
-                    ));
-                    break;
-                case "down":
-                    const $next = document.querySelector(
-                        `#battleQueue > [data-x="${x}"][data-y="${y + 1}"]`
-                    );
+                    let upMatched = false;
 
-                    if ($next) {
-                        this._activate($next);
-                        break;
+                    for (const nextX of [x, Math.abs(x - 1)]) {
+                        for (let nextY = y - 1; nextY >= 0; nextY--) {
+                            const $partyMember = $battleQueue.querySelector(
+                                `[data-x="${nextX}"][data-y="${nextY}"]` +
+                                `:not(.dead)`
+                            );
+
+                            if ($partyMember) {
+                                upMatched = true;
+                                this._activate($partyMember);
+                                break;
+                            }
+                        }
+
+                        if (upMatched) {
+                            break;
+                        }
                     }
 
+                    break;
+                case "down":
+                    let downMatched = false;
+
+                    for (const nextX of [x, Math.abs(x - 1)]) {
+                        for (let nextY = y + 1; nextY < maxY; nextY++) {
+                            const $partyMember = $battleQueue.querySelector(
+                                `[data-x="${nextX}"][data-y="${nextY}"]` +
+                                `:not(.dead)`
+                            );
+
+                            if ($partyMember) {
+                                downMatched = true;
+                                this._activate($partyMember);
+                                break;
+                            }
+                        }
+
+                        if (downMatched) {
+                            break;
+                        }
+                    }
+
+                    if (downMatched) {
+                        break;
+                    }
+                    /**
                     const $altNext = document.querySelector(
                         `#battleQueue > [data-x="${x - 1}"][data-y="${y + 1}"]`
                     );
@@ -1540,6 +1581,7 @@ const GameControl = {
                         this._activate($altNext);
                         break;
                     }
+                    **/
 
                     // @TODO If current party member can't open the inventory,
                     //       skip this section and move to the battle input
@@ -1562,14 +1604,72 @@ const GameControl = {
 
                     break;
                 case "left":
-                    this._activate(document.querySelector(
-                        `#battleQueue > [data-x="${x - 1}"][data-y="${y}"]`
-                    ));
+                    if (x === 0) {
+                        break;
+                    }
+
+                    let leftMatched = false;
+                    for (let nextY = y; nextY >= 0; nextY--) {
+                        const $partyMember = $battleQueue.querySelector(
+                            `[data-x="${x - 1}"][data-y="${nextY}"]:not(.dead)`
+                        );
+
+                        if ($partyMember) {
+                            leftMatched = true;
+                            this._activate($partyMember);
+                            break;
+                        }
+                    }
+
+                    if (leftMatched) {
+                        break;
+                    }
+
+                    for (let nextY = y + 1; nextY < maxY; nextY++) {
+                        const $partyMember = $battleQueue.querySelector(
+                            `[data-x="${x - 1}"][data-y="${nextY}"]:not(.dead)`
+                        );
+
+                        if ($partyMember) {
+                            leftMatched = true;
+                            this._activate($partyMember);
+                            break;
+                        }
+                    }
                     break;
                 case "right":
-                    this._activate(document.querySelector(
-                        `#battleQueue > [data-x="${x + 1}"][data-y="${y}"]`
-                    ));
+                    if (x === 1) {
+                        break;
+                    }
+
+                    let rightMatched = false;
+                    for (let nextY = y; nextY >= 0; nextY--) {
+                        const $partyMember = $battleQueue.querySelector(
+                            `[data-x="${x + 1}"][data-y="${nextY}"]:not(.dead)`
+                        );
+
+                        if ($partyMember) {
+                            rightMatched = true;
+                            this._activate($partyMember);
+                            break;
+                        }
+                    }
+
+                    if (rightMatched) {
+                        break;
+                    }
+
+                    for (let nextY = y + 1; nextY < maxY; nextY++) {
+                        const $partyMember = $battleQueue.querySelector(
+                            `[data-x="${x + 1}"][data-y="${nextY}"]:not(.dead)`
+                        );
+
+                        if ($partyMember) {
+                            rightMatched = true;
+                            this._activate($partyMember);
+                            break;
+                        }
+                    }
                     break;
             }
         },

@@ -3056,6 +3056,23 @@ a:link {
     opacity: 0.25;
 }
 
+#inventory .empty-message {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    color: #aaa;
+    text-wrap: auto;
+    flex-direction: column;
+    text-align: center;
+    font-size: 1.5em;
+    padding: 1ch;
+
+    & .large {
+        font-size: 1.5em;
+    }
+}
+
 @keyframes tqUi_flyAway {
     from { offset-distance: 0%; }
     to { offset-distance: 100%; }
@@ -4008,6 +4025,10 @@ dialog.modal::backdrop {
     --contrastMaxPct: 120%;
 
     animation: wave-text-phase var(--speedSec) linear infinite;
+
+    & > * {
+        min-width: 1ch;
+    }
 }
 
 /* Each letter sits on its own phase offset via --i (we set this in markup) */

@@ -35,7 +35,7 @@ const ITEMS = Object.freeze({
                 message = usedOnSelf
                     ?   `You <span class="action">chug a can,</span> filling ` +
                         `your mouth with `
-                    :   `You <span class="action">force-feed </span> ` +
+                    :   `You <span class="action">force-feed</span> ` +
                         `<span class="friendly">${targetMember.name}</span>, ` +
                         `filling the poor feller's mouth with `;
             } else {
@@ -51,7 +51,7 @@ const ITEMS = Object.freeze({
 
             message += `the flavor of ` +
                 `${waveText("boiled socks.", "END").outerHTML} ` +
-                `<span class="HP">+${healAmount} HP</span>`
+                `<span class="good">+${healAmount} HP</span>`
 
             updateBattleLog(message);
 
@@ -95,7 +95,7 @@ const ITEMS = Object.freeze({
             playSFX("lean");
 
             const usedOnSelf = actorMember.id === targetMember.id;
-            const healHtml = `<span class="HP">+${healAmount} HP</span>`;
+            const healHtml = `<span class="good">+${healAmount} HP</span>`;
             let message = "";
 
             // Trigger the 20-second visual effect if the player is the target
@@ -110,8 +110,8 @@ const ITEMS = Object.freeze({
                 message = usedOnSelf
                     ?   `Your stomach feels nauseous, but your head ` +
                         `feels great! ${healHtml}`
-                    :   `You <span class="action">double dare ` +
-                        `</span> <span class="friendly">` +
+                    :   `You <span class="action">double dare</span> ` +
+                        `<span class="friendly">` +
                         `${targetMember.name}</span> to drink the ` +
                         `styrofoam's syrup, and they actually did it. Damn. ` +
                         `${healHtml}`;
@@ -169,7 +169,7 @@ const ITEMS = Object.freeze({
             }
 
             const usedOnSelf = actorMember.id === targetMember.id;
-            const healHtml = `<span class="HP">+${healAmount} HP</span>`;
+            const healHtml = `<span class="good">+${healAmount} HP</span>`;
             let message = "";
 
             if (playerEntity.leader.id === actorMember.id) {
@@ -231,7 +231,7 @@ const ITEMS = Object.freeze({
             }
 
             const usedOnSelf = actorMember.id === targetMember.id;
-            const healHtml = `<span class="HP">+${healAmount} HP</span>`;
+            const healHtml = `<span class="good">+${healAmount} HP</span>`;
             let message = "";
 
             if (playerEntity.leader.id === actorMember.id) {
@@ -377,7 +377,7 @@ const ITEMS = Object.freeze({
                             actorMember.parent.id === targetMember.parent.id;
 
                         const damageHtml =
-                            `<span class="HP">${damagePoints} HP</span>`;
+                            `<span class="bad">${damagePoints} HP</span>`;
 
                         if (actorIsEnemy) {
                             const message = attackedOwnTeammate
@@ -658,7 +658,7 @@ const ITEMS = Object.freeze({
                     return false;
                 case "pit":
                     updateBattleLog(
-                        `<span class="enemy">There's already a hole </span>` +
+                        `<span class="enemy">There's already a hole</span> ` +
                         `in front of you, <em>genius.</em>`
                     );
                     return false;
