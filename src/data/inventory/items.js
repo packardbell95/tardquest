@@ -439,14 +439,6 @@ const ITEMS = Object.freeze({
 
                     if (targetMember.isDead()) {
                         playSFX("scream");
-                        const nx = playerEntity.x + DX[playerEntity.direction];
-                        const ny = playerEntity.y + DY[playerEntity.direction];
-                        const setBloodyCrater =
-                            ["floor", "rubble1", "rubble2"]
-                                .includes(MAP.getCell(nx, ny)?.type);
-                        if (setBloodyCrater) {
-                            MAP.setCell(nx, ny, "bloodyCrater");
-                        }
                     }
                 }
                 // Brick of C4's normal usage outside of battle
