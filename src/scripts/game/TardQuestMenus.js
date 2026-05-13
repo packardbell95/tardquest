@@ -137,6 +137,7 @@ menu.setMenus({
                 id: "toggleMusic",
                 displayText:
                     `${music.isEnabled() ? "Disable" : "Enable"} music`,
+                // @TODO Toggle the audio level of the trom-BONE
                 description: tromboneIsPlaying
                     ? "Wait for the trom-BONE to stop playing first"
                     : `Turn ${music.isEnabled() ? "off" : "on"} the ` +
@@ -160,7 +161,8 @@ menu.setMenus({
             {
                 id: "toggleSpeech",
                 displayText:
-                    `${SpeechSynthesizer.enabled ? "Disable" : "Enable"} speech`,
+                    `${SpeechSynthesizer.enabled ? "Disable" : "Enable"} ` +
+                    `speech`,
                 description:
                     `${SpeechSynthesizer.enabled ? "Disable" : "Enable"} the ` +
                     `party member and NPC speaking voices`,
@@ -1216,7 +1218,7 @@ menu.setMenus({
             if (id === "carrierPigeon") {
                 // === LIMIT TO 10 PIGEONS LOCALLY, ENFORCED SERVER SIDE ===
                 const pigeonCount =
-                    playerEntity.inventory.contents.items.carrierPigeon;
+                    playerEntity.inventory.contents.items.carrierPigeon || 0;
                 if (pigeonCount >= 10) {
                     merchant.leader.say(
                         "You've run out of space in your Pigeon Pouch!",
@@ -1241,15 +1243,16 @@ menu.setMenus({
                     `${TardAPI.API_BASE}/api/pigeon/purchase`,
                     {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
                         body: JSON.stringify({ session_id: sessionId })
                     }
-                )
-                .then(r =>
+                ).then(r =>
                     r.json().catch(() => ({})).then(
-                        data => ({ ok: r.ok, status: r.status, data }))
-                )
-                .then(({ ok, data }) => {
+                        data => ({ ok: r.ok, status: r.status, data })
+                    )
+                ).then(({ ok, data }) => {
                     if (! ok || ! data?.purchased) {
                         console.warn(
                             "🐦 Pigeon: Purchase rejected",
@@ -2068,11 +2071,11 @@ menu.setMenus({
     pigeon: {
         title: "CARRIER PIGEON",
         onOpen: () => {
-            const pigeon = menu.getMenuData().pigeon;
+            const { pigeon, message } = menu.getMenuData();
             Portrait.show("pigeon", pigeon.leader.color);
             pigeon.leader.say(
                 "Coo coo! " + (
-                    pigeon.checkForMessages()
+                    message
                         ? "You have a message from another adventurer!"
                         : "No adventurers have sent out any messages."
                 ),
@@ -2081,17 +2084,16 @@ menu.setMenus({
         },
         onClose: () => {
             Portrait.hide();
-            pigeon.isActiveOnFloor = false;
-            // @TODO Remove pigeon
+            menu.getMenuData()?.pigeon?.die();
         },
-        landingHtml: () => pigeon.checkForMessages()
+        landingHtml: () => menu.getMenuData().message
             ? "You see a sealed letter below the carrier pigeon's big stinky " +
                 "feet."
             : "You notice a carrier pigeon. It seems lost.",
         getOptions: () => {
             const options = [];
 
-            if (pigeon.checkForMessages()) {
+            if (menu.getMenuData().message) {
                 options.push({
                     id: "readMessages",
                     displayText: "Read the letter",
@@ -2106,24 +2108,39 @@ menu.setMenus({
                 description: "Let the beast roam free",
             });
 
+            options.push({
+                id: "kill",
+                displayText: "KILL",
+                description:
+                    "Go on, you know you want to. It's just a dumb bird, " +
+                    "right? It won't even fight back!",
+            });
+
             return options;
         },
         select: (selectedOptionId) => {
+            const { pigeon, message } = menu.getMenuData();
+
             if (selectedOptionId === "readMessages") {
-                const displayMessage =
-                    typeof PigeonMessaging?.displayDeliveredMessage ===
-                        "function";
-                if (displayMessage) {
-                    // displayDeliveredMessage() will use the pending delivered
-                    // message (if any)
-                    PigeonMessaging.displayDeliveredMessage();
+                if (typeof message === "string") {
+                    const punctuatedMessage = /\p{P}$/u.test(message)
+                        ? message
+                        : `${message}.`;
+                    pigeon.leader.say(
+                        `The message says: '${punctuatedMessage}' ` +
+                        `Message delivered! Coo coo!`
+                    );
                 } else {
                     updateBattleLog(
-                        `<span class="enemy">Pigeon messaging system not ` +
-                        `available.</span>`
+                        "The letter just turned out to be a scrap of toilet " +
+                        "paper. Stupid bird!"
                     );
                 }
+            } else if (selectedOptionId === "kill") {
+                animPigeonKill();
             }
+
+            pigeon?.die(selectedOptionId === "kill" ? playerEntity : null);
             menu.close();
         },
     },

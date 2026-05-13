@@ -164,6 +164,49 @@ const TardQuestPartyMemberFactory = {
     },
 
     /**
+     * (CARRIER) PIGEON
+     */
+    pigeon: function() {
+        const partyMember = this._buildPartyMember("Carrier Pigeon");
+        partyMember.type = "pigeon";
+        partyMember.color = "#4fc292";
+        partyMember.stats = {
+            progression: {
+                level: 1,
+                experience: 0,
+            },
+            core: {
+                hp: 3,
+                maxHp: 3,
+                defense: 1,
+                strength: 2,
+                persuasion: 3,
+                endurance: 8,
+                speed: 22,
+                luck: 17,
+            },
+        };
+        partyMember.traits.sightRange = 6;
+        partyMember.traits.fieldOfView = 120;
+        partyMember.traits.hearingRange = 8;
+        partyMember.traits.isFlying = true;
+        partyMember.voice = {
+            pitch: 89,
+            speed: 70,
+            mouth: 152,
+            throat: 191,
+        };
+
+        partyMember.talkSlots = [
+            [ "Coo", "Roo-coo" ],
+            [ "coo", "coo-coo", "roo-coo-coo" ],
+            [ "coo", "grrroo", "grrrk", "brrrt!" ],
+        ];
+
+        return partyMember;
+    },
+
+    /**
      * SNAIL SENTINEL
      */
     snailSentinel: function(level = 1) {

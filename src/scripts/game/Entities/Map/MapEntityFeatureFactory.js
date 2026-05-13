@@ -657,4 +657,80 @@ const MapEntityFeatureFactory = {
 
         return bouldingBall;
     },
+
+    /**
+     * PIGEON
+     */
+    pigeon: function(x, y) {
+        const pigeon = MapEntityBuilder("pigeon", x, y);
+        pigeon.getDisplayName = () => "🐦️ Pigeon";
+        pigeon.getDisplayCharacter = () => "P";
+        pigeon.getMovementPriority = function() {
+            return 40;
+        };
+        pigeon.addPartyMember(TardQuestPartyMemberFactory.pigeon());
+
+        MapEntityTrait_AttachMovement_Pursue(pigeon);
+        pigeon.objectsOfInterest = ["player"];
+        pigeon.targetEntity(playerEntity.id); // Chase the player
+        pigeon.isHastyMove = () => true;
+
+        pigeon.onDie = function(killedByEntity) {
+            const killedByPlayer = killedByEntity?.id === playerEntity.id;
+
+            if (killedByPlayer) {
+                PigeonMessaging?.reportMurder();
+                updateBattleLog(
+                    `The <span class="pigeon">CARRIER PIGEON</span> has been ` +
+                    `<span class="action">murdered. God is watching.</span>`
+                );
+            }
+
+            // @TODO Could this be handled in die() instead?
+            this.isActive = false;
+        };
+
+        pigeon.onTouch = function (gameMap, entity) {
+            if (entity?.type !== "player") {
+                console.log(
+                    `🏁 Touched by ${entity.id}`,
+                    { gameMap, entity, touched: this }
+                );
+
+                return;
+            }
+
+            updateBattleLog("touched da piggin");
+            menu.open("pigeon", { pigeon: this, message: this.message });
+        };
+
+        return pigeon;
+    },
+
+    /**
+     * GRAVESTONE
+     */
+    gravestone: function(x, y) {
+        const gravestone = MapEntityBuilder("gravestone", x, y);
+
+        gravestone.getDisplayName = () => "🪦 Gravestone";
+        gravestone.getDisplayCharacter = () => "†";
+        gravestone.getSceneArtId = () => "gravestone";
+        gravestone.headstoneMessageHtml = "Rest in peace, nameless tard.";
+
+        gravestone.onTouch = function (gameMap, entity) {
+            if (entity?.type !== "player") {
+                console.log(
+                    `🏁 Touched by ${entity.id}`,
+                    { gameMap, entity, touched: this }
+                );
+
+                return;
+            }
+
+            updateBattleLog(this.headstoneMessageHtml);
+        };
+
+        return gravestone;
+    },
 }

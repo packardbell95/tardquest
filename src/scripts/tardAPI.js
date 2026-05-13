@@ -26,13 +26,16 @@ const TardAPI = (function() {
     const API_BASE = 'https://vocapepper.com:9601';
 
     /** @const {string} Client API version (major.minor must match server) */
-    const CLIENT_API_VERSION = '3.0.251113';
+    const CLIENT_API_VERSION = '3.2.260315';
 
     /** @const {string} LocalStorage key for session ID persistence */
     const LS_SESSION_KEY = 'tardquestSID';
 
     /** @const {string} LocalStorage key for PoW challenge data */
     const LS_CHALLENGE_KEY = 'vocaguardChallengeData';
+
+    /** @const {string} LocalStorage key for API feature toggle */
+    const LS_API_FEATURES_KEY = 'tardquestApiFeaturesEnabled';
 
     // --- Logging Utility ---
 
@@ -59,6 +62,61 @@ const TardAPI = (function() {
 
     /** @type {boolean} Whether an update is currently in flight */
     let updateInFlight = false;
+
+    /** @const {number} Maximum number of session creation attempts */
+    const MAX_SESSION_ATTEMPTS = 3;
+
+    /** @const {number} Milliseconds to wait before giving up on API (30 seconds) */
+    const API_TIMEOUT_MS = 30000;
+
+    /** @type {number} Number of failed session creation attempts */
+    let sessionAttempts = 0;
+
+    /** @type {number} Timestamp of first session attempt */
+    let firstSessionAttemptTime = null;
+
+    /** @type {boolean} Whether API has failed permanently */
+    let apiFailedPermanently = false;
+
+    /** @type {boolean} Global API feature kill switch */
+    let apiFeaturesEnabled = (function() {
+        try {
+            return localStorage.getItem(LS_API_FEATURES_KEY) !== 'false';
+        } catch {
+            return true;
+        }
+    })();
+
+    function getApiDisabledResult() {
+        return { success: false, error: 'API features disabled' };
+    }
+
+    function setApiFeaturesEnabled(enabled) {
+        apiFeaturesEnabled = !!enabled;
+
+        try {
+            localStorage.setItem(
+                LS_API_FEATURES_KEY,
+                apiFeaturesEnabled ? 'true' : 'false'
+            );
+        } catch {
+            // Ignore storage failures (private mode, blocked storage, etc.)
+        }
+
+        if (!apiFeaturesEnabled) {
+            clearSession();
+            apiFailedPermanently = false;
+            sessionAttempts = 0;
+            firstSessionAttemptTime = null;
+            updateInFlight = false;
+            return;
+        }
+
+        // Reset failure/attempt state when re-enabled.
+        apiFailedPermanently = false;
+        sessionAttempts = 0;
+        firstSessionAttemptTime = null;
+    }
 
     // Load challenge data from storage if it exists
     try {
@@ -98,14 +156,77 @@ const TardAPI = (function() {
     }
 
     /**
-     * Computes PoW proof for challenge submission
-     * Formula: SHA256(challenge_secret + session_id)
-     * @param {string} secret - Challenge secret from server
+     * Computes PoW proof by finding a nonce whose hash satisfies
+     * leading-zero difficulty.
+     * Formula: SHA256(`${sid}:${challenge_id}:${challenge_salt}:${nonce}`)
+     * Output format: nonce:hash
+     *
+     * @param {Object} challenge - Challenge object
+     * @param {string} challenge.challenge_id - Challenge identifier
+     * @param {string} challenge.challenge_salt - Challenge salt
+     * @param {number} challenge.challenge_difficulty - Leading-zero hex difficulty
      * @param {string} sid - Session ID
+     * @param {Object} [options] - Mining options
+     * @param {number} [options.maxAttempts=200000] - Attempt ceiling before fallback/fail
+     * @param {number} [options.yieldEvery=250] - Event-loop yield cadence
+     * @returns {Promise<string>} Modern proof in nonce:hash format
+     */
+    async function computeModernPoWProof(challenge, sid, options = {}) {
+        const challengeId = String(challenge?.challenge_id || '');
+        const challengeSalt = String(challenge?.challenge_salt || '');
+        const difficultyRaw = Number(challenge?.challenge_difficulty ?? 4);
+        const difficulty = Math.max(1, Math.min(8, Number.isFinite(difficultyRaw) ? Math.floor(difficultyRaw) : 4));
+
+        if (!challengeId || !challengeSalt || !sid) {
+            throw new Error('Missing PoW challenge fields');
+        }
+
+        const maxAttemptsRaw = Number(options.maxAttempts ?? 200000);
+        const maxAttempts = Math.max(1, Number.isFinite(maxAttemptsRaw) ? Math.floor(maxAttemptsRaw) : 200000);
+        const yieldEveryRaw = Number(options.yieldEvery ?? 250);
+        const yieldEvery = Math.max(1, Number.isFinite(yieldEveryRaw) ? Math.floor(yieldEveryRaw) : 250);
+        const prefix = '0'.repeat(difficulty);
+
+        const nonceSeedArray = new Uint32Array(1);
+        crypto.getRandomValues(nonceSeedArray);
+        const nonceSeed = nonceSeedArray[0];
+
+        for (let i = 0; i < maxAttempts; i++) {
+            const nonce = (nonceSeed + i).toString(36);
+            const payload = `${sid}:${challengeId}:${challengeSalt}:${nonce}`;
+            const hash = await computeSHA256(payload);
+
+            if (hash.startsWith(prefix)) {
+                return `${nonce}:${hash}`;
+            }
+
+            if ((i + 1) % yieldEvery === 0) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+
+        throw new Error('Modern PoW attempt limit exceeded');
+    }
+
+    /**
+     * Computes PoW proof for challenge submission.
+     *
+     * @param {Object} challenge - Challenge object
+     * @param {string} sid - Session ID
+     * @param {Object} [options] - Additional options
      * @returns {Promise<string>} Challenge proof
      */
-    async function computePoWProof(secret, sid) {
-        return computeSHA256(secret + sid);
+    async function computePoWProof(challenge, sid, options = {}) {
+        if (!challenge || !sid) {
+            throw new Error('Missing challenge data or session id for PoW');
+        }
+
+        const hasModernFields = !!(challenge.challenge_id && challenge.challenge_salt);
+        if (!hasModernFields) {
+            throw new Error('Challenge object missing PoW fields');
+        }
+
+        return computeModernPoWProof(challenge, sid, options);
     }
 
     /**
@@ -113,6 +234,10 @@ const TardAPI = (function() {
      * @returns {Promise<boolean>} True if API is accessible
      */
     async function checkApiStatus() {
+        if (!apiFeaturesEnabled) {
+            return false;
+        }
+
         try {
             const res = await fetch(`${API_BASE}/api/status`, { method: 'GET', mode: 'cors' });
             return res.ok;
@@ -126,9 +251,39 @@ const TardAPI = (function() {
     /**
      * Creates a new session with the API server
      * Initiates PoW challenge if enabled on server
+     * Stops retrying after MAX_SESSION_ATTEMPTS or API_TIMEOUT_MS
      * @returns {Promise<Object>} Session creation result with session_id and optionally challenge data
      */
     async function createSession() {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
+        // Prevent endless retry loops if API is unavailable
+        if (apiFailedPermanently) {
+            return { success: false, error: 'API unavailable (giving up after timeout)' };
+        }
+
+        // Check if we've exceeded timeout window
+        if (firstSessionAttemptTime !== null) {
+            const elapsedTime = Date.now() - firstSessionAttemptTime;
+            if (elapsedTime > API_TIMEOUT_MS) {
+                apiFailedPermanently = true;
+                log.error('API timeout exceeded - stopping retry attempts');
+                return { success: false, error: 'API unavailable (timeout)' };
+            }
+        } else {
+            firstSessionAttemptTime = Date.now();
+        }
+
+        // Check if we've exceeded attempt count
+        if (sessionAttempts >= MAX_SESSION_ATTEMPTS) {
+            apiFailedPermanently = true;
+            log.error(`Max session attempts (${MAX_SESSION_ATTEMPTS}) exceeded - stopping`);
+            return { success: false, error: `Failed to create session after ${MAX_SESSION_ATTEMPTS} attempts` };
+        }
+
+        sessionAttempts++;
         // Check if we already have an active session
         if (sessionId) {
             // log.debug('Session already active:', sessionId);
@@ -166,13 +321,25 @@ const TardAPI = (function() {
             log.info('Session created:', sessionId);
 
             // Store PoW challenge if provided
-            if (data.challenge_id && data.challenge_secret) {
+            const challengeSalt = data.challenge_salt || null;
+            const challengeDifficulty = Number.isFinite(Number(data.challenge_difficulty))
+                ? Math.max(1, Math.min(8, Math.floor(Number(data.challenge_difficulty))))
+                : 4;
+
+            if (data.challenge_secret) {
+                // Intentionally ignored: this is from the old PoW system,
+                // which will still be supported by the server for a transitional period.
+                log.warn('Ignoring legacy challenge_secret from /api/start response');
+            }
+
+            if (data.challenge_id && challengeSalt) {
                 challengeData = {
                     challenge_id: data.challenge_id,
-                    challenge_secret: data.challenge_secret
+                    challenge_salt: challengeSalt,
+                    challenge_difficulty: challengeDifficulty
                 };
                 sessionStorage.setItem(LS_CHALLENGE_KEY, JSON.stringify(challengeData));
-                log.info('PoW challenge received');
+                log.info('PoW challenge received (difficulty', challengeDifficulty + ')');
             }
 
             // Reset game state tracking
@@ -201,6 +368,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Validation result with session status
      */
     async function validateSession() {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         if (!sessionId) {
             return { success: false, error: 'No active session' };
         }
@@ -232,6 +403,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Update result
      */
     async function updateProgress() {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         if (updateInFlight) {
             // log.debug('Update already in flight, skipping');
             return { success: false, error: 'Update in flight' };
@@ -256,6 +431,11 @@ const TardAPI = (function() {
                 }
             }
 
+            // Double-check API hasn't failed during createSession
+            if (apiFailedPermanently) {
+                return { success: false, error: 'API unavailable' };
+            }
+
             // Update server
             const res = await fetch(`${API_BASE}/api/update`, {
                 method: 'POST',
@@ -276,9 +456,12 @@ const TardAPI = (function() {
 
             // log.debug('Progress updated: floor', floor, 'level', level);
 
+            // Success - reset attempt counter
+            sessionAttempts = 0;
+            firstSessionAttemptTime = null;
             return { success: true, data };
         } catch (err) {
-            log.error('Progress update failed:', err.message);
+            log.error(`Session creation failed (attempt ${sessionAttempts}/${MAX_SESSION_ATTEMPTS}):`, err.message);
             return { success: false, error: err.message };
         } finally {
             updateInFlight = false;
@@ -293,6 +476,10 @@ const TardAPI = (function() {
      * @returns {Promise<Object>} Submission result
      */
     async function submitScore(name, options = {}) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
         if (!sessionId) {
             return { success: false, error: 'No active session' };
         }
@@ -308,10 +495,7 @@ const TardAPI = (function() {
 
             // Add PoW proof if challenge exists
             if (challengeData) {
-                const proof = await computePoWProof(
-                    challengeData.challenge_secret,
-                    sessionId
-                );
+                const proof = await computePoWProof(challengeData, sessionId);
                 body.challenge_id = challengeData.challenge_id;
                 body.challenge_proof = proof;
             }
@@ -350,29 +534,65 @@ const TardAPI = (function() {
      * Gets the leaderboard from the server
      * @param {Object} options - Query options
      * @param {number} [options.limit] - Number of entries to retrieve
-     * @returns {Promise<Object>} Leaderboard data
+     * @param {boolean} [options.force] - Ignore apiFailedPermanently flag
+     * @returns {Promise<Object>} Leaderboard data { success, leaderboard } or { success:false, error }
      */
     async function getLeaderboard(options = {}) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+
+        const { limit, force = false } = options;
+
+        if (apiFailedPermanently && !force) {
+            log.warn('getLeaderboard: API marked as permanently failed, returning empty');
+            return { success: false, error: 'API unavailable' };
+        }
+
         try {
             const params = new URLSearchParams();
-            if (options.limit) params.append('limit', options.limit);
+            if (limit) params.append('limit', String(limit));
 
             const url = params.toString()
                 ? `${API_BASE}/api/leaderboard?${params.toString()}`
                 : `${API_BASE}/api/leaderboard`;
 
+            log.info('Fetching leaderboard from', url);
             const res = await fetch(url, { method: 'GET', mode: 'cors' });
 
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                return { success: false, error: data.error || `HTTP ${res.status}` };
+            // Read raw text first so we can recover from non-JSON responses gracefully
+            const text = await res.text();
+
+            let data;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (jsonErr) {
+                log.warn('getLeaderboard: Failed to parse JSON, returning error', jsonErr);
+                return { success: false, error: 'Invalid JSON response from leaderboard' };
             }
 
-            const data = await res.json();
-            return { success: true, leaderboard: data.leaderboard || [] };
+            if (!res.ok) {
+                const error = (data && (data.error || data.message)) || `HTTP ${res.status}`;
+                log.warn('getLeaderboard: response not OK', res.status, error);
+                return { success: false, error };
+            }
+
+            // Normalize leaderboard: accept either an array of entries or a single-entry object
+            let leaderboard = [];
+            if (Array.isArray(data)) {
+                leaderboard = data;
+            } else if (data && typeof data === 'object') {
+                // If server returned a single entry like {floor:69, level:69, name:"GAY"} wrap it. Unlikely outside of the development server.
+                if (typeof data.name === 'string' && (typeof data.floor === 'number' || typeof data.level === 'number')) {
+                    leaderboard = [data];
+                }
+            }
+
+            log.info('getLeaderboard: fetched entries', leaderboard.length);
+            return { success: true, leaderboard };
         } catch (err) {
-            log.error('Leaderboard fetch failed:', err.message);
-            return { success: false, error: err.message };
+            log.error('Leaderboard fetch failed:', err.message || err);
+            return { success: false, error: err.message || String(err) };
         }
     }
 
@@ -383,6 +603,10 @@ const TardAPI = (function() {
      * @returns {boolean} True if session was loaded
      */
     function loadSessionFromStorage() {
+        if (!apiFeaturesEnabled) {
+            return false;
+        }
+
         const stored = sessionStorage.getItem(LS_SESSION_KEY);
         if (stored) {
             sessionId = stored;
@@ -411,6 +635,7 @@ const TardAPI = (function() {
         // Configuration
         API_BASE,
         CLIENT_API_VERSION,
+        LS_API_FEATURES_KEY,
 
         // Session management
         createSession,
@@ -420,6 +645,7 @@ const TardAPI = (function() {
         getLeaderboard,
         loadSessionFromStorage,
         clearSession,
+        setApiFeaturesEnabled,
 
         // Utilities
         checkApiStatus,
@@ -429,6 +655,7 @@ const TardAPI = (function() {
 
         // State getters
         get sessionId() { return sessionId; },
+        get apiFeaturesEnabled() { return apiFeaturesEnabled; },
         get hasActiveSession() { return !!sessionId; },
         get hasChallenge() { return !!challengeData; },
         get challenge() { return challengeData; },
@@ -445,4 +672,8 @@ const TardAPI = (function() {
 // Module initialization complete
 if (typeof console !== 'undefined') {
     console.log('🌎 TardAPI: Module loaded!');
+}
+
+if (typeof window !== 'undefined' && typeof window.TardAPI === 'undefined') {
+    window.TardAPI = TardAPI;
 }

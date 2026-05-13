@@ -289,6 +289,8 @@ const TardQuestMapGenerator = {
         // Place NPCs
         const placementPoints = shuffle(gameMap.getMapDissolvePoints());
 
+        this._placeGravestone(gameMap, floor, placementPoints);
+
         // 🧙 Merchant
         const placeMerchant = placementPoints.length > 0 &&
             (floor === 1 || Math.random() < 0.7);
@@ -406,6 +408,153 @@ const TardQuestMapGenerator = {
         }
 
         gameMap.reveal();
+    },
+
+    _cachedLeaderboardEntries: null,
+
+    _placeGravestone: async function(gameMap, floor, placementPoints) {
+        const floorIsValid = Number.isInteger(floor) && floor > 0;
+        if (! floorIsValid) {
+            console.error("Cannot place gravestone: invalid floor", { floor });
+            return;
+        }
+
+        if (placementPoints.length === 0) {
+            console.warn("No place available for a gravestone", { floor });
+            return;
+        }
+
+        const leaderboardIsAvailable =
+            typeof TardAPI?.getLeaderboard === "function";
+
+        if (! leaderboardIsAvailable) {
+            console.warn(
+                "Unable to place gravestone: the leaderboard is not available"
+            );
+            return;
+        }
+
+        if (! this._cachedLeaderboardEntries) {
+            try {
+                const res = await TardAPI.getLeaderboard({ force: false });
+
+                if (! res.success) {
+                    console.warn("Failed to load the leaderboard", { res });
+                    return;
+                }
+
+                const leaderboardHasEntries =
+                    Array.isArray(res.leaderboard) &&
+                    res.leaderboard.length > 0;
+
+                if (! leaderboardHasEntries) {
+                    console.warn("Leaderboard has no entries", { res });
+                    return;
+                }
+
+                this._cachedLeaderboardEntries = res.leaderboard;
+            } catch (error) {
+                console.warn("Failed to fetch leaderboard data", { error });
+                return;
+            }
+        }
+
+        const entries = this._cachedLeaderboardEntries;
+        const leaderboardHasEntries =
+            Array.isArray(entries) &&
+            entries.length > 0;
+
+        if (! leaderboardHasEntries) {
+            console.error("Cached leaderboard is empty", { entries });
+            return;
+        }
+
+        const floorEntries = entries.filter(
+            // @TODO Consolidate floor, floor_reached, and max_floor
+            e => floor === Number(e.floor ?? e.floor_reached ?? e.max_floor)
+        );
+
+        if (floorEntries.length === 0) {
+            console.debug(
+                "No leaderboard entries exist for the current floor",
+                { floor, entries }
+            );
+            return;
+        }
+
+        // Collate top scores per unique name (preserve full entry)
+        const topByName = {};
+        floorEntries.forEach(e => {
+            // @TODO Consolidate name, player, and ID
+            const name = e.name || e.player || `Player ${e.id ?? "Unknown"}`;
+            const floorNum = Number(e.floor ?? NaN);
+            const levelNum = Number(e.level ?? NaN);
+            const existing = topByName[name];
+
+            if (! existing) {
+                topByName[name] = { ...e, name };
+                return;
+            }
+
+            const existingFloor = Number(existing.floor ?? NaN);
+            const existingLevel = Number(existing.level ?? NaN);
+
+            // Prefer higher floor, break ties with higher level
+            const isHigherFloor =
+                floorNum > existingFloor ||
+                (floorNum === existingFloor && levelNum > existingLevel);
+
+            if (isHigherFloor) {
+                topByName[name] = { ...e, name };
+            }
+        });
+
+        const uniqueEntries = Object.values(topByName);
+        if (uniqueEntries.length === 0) {
+            console.warn("No unique entries were found");
+            return;
+        }
+
+        const entry = randomEntry(uniqueEntries);
+
+        const position = placementPoints.shift();
+        const gravestone = MapEntityFeatureFactory.gravestone(
+            position.x,
+            position.y
+        );
+
+        const name = entry.name || "Nameless Tard";
+        const displayScore =
+            `Floor ${floor} - Level ${entry?.level ?? "??"}`;
+
+        const message = entry.gravestoneMessage ?? randomEntry([
+            "Attempted to pillage the TardSpire, but was pillaged in " +
+                "the ass by a refrigerator instead. RIP",
+            "Stayed up all night for this score. Worth it?",
+            "A shining example of refined incompetence.",
+            "You see a trom-BONE lodged sticking out of the ground. " +
+                "Musical genius, or a victim to amusia? No one will " +
+                "know.",
+            "They shit their pants... it was REAL bad.",
+            "They tried.",
+            "Rumors say they bore witness to the Pico's School " +
+                "incident...",
+            "This one was a registered Gex offender, straight up.",
+            "782 hours logged in Bubsy 3D. 'Nuff said.",
+            "Maybe they shouldn't have killed Erok...",
+            "This gravestone has been vandalized by teenagers. Those " +
+                "very delinquents now reside beneath this stone, due " +
+                "to unknown forces.",
+            "They tried to stay ALIVE on OPPOSITE DAY. Poor sucker...",
+        ]);
+
+        gravestone.headstoneMessageHtml =
+            `<span class="friendly">${name}</span> - ` +
+            `<span class="BTC">${displayScore}</span> - ` +
+            `<span class="action">${message}</span>`;
+
+        gameMap.setCell(position.x, position.y);
+        gameMap.addEntity(gravestone);
     },
 
     _placeTreasureChests: function(

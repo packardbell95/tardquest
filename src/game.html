@@ -28,15 +28,19 @@
         <div id="topLeft">
             <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
             <div id="minimapContainer">
-                <div id="minimapHeader" class="ui-header space-around">
-                    <span>
-                        Dungeon Floor <span id="dungeonFloor">--</span>
-                    </span>
+                <div id="minimapHeader" class="ui-header space-between">
+                    <span>Dungeon Floor <span id="dungeonFloor">--</span></span>
+                    <span
+                        id="killCounter"
+                        data-tooltipposition="top"
+                        data-tooltiphtml='
+                            <div class="genericTooltip">
+                                Kills on This Floor
+                            </div>
+                        '
+                    >0</span>
                 </div>
                 <div id="minimap"></div>
-                <div id="minimapFooter" class="minimap-footer">
-                    Monsters Killed: <span id="monstersKilledCounter">0</span>
-                </div>
             </div>
         </div>
         <div id="inputBox">
@@ -618,7 +622,9 @@
                         data-tooltipGroupId="bottomRightIcons"
                         data-tooltipHtml='
                             <div class="genericTooltip">
-                                <span id="controllerTooltipText">TardPad Status</span>
+                                <span id="controllerTooltipText">
+                                    TardPad Status
+                                </span>
                             </div>
                         '
                     ></button>
@@ -628,9 +634,6 @@
 
     <script src="scripts/preloader-v2.js"></script>
     <!-- VOCAP: must be loaded before any other API modules! -->
-    <script src="scripts/tardAPI.js"></script>
-    <script src="scripts/tardboard.js"></script>
-    <script src="scripts/pigeon.js"></script>
     <script src="scripts/no-arrow-key-scroll.js"></script>
     <script src="scripts/progress-bar.js"></script>
     <script src="scripts/CorridorTagger.js"></script>
@@ -684,6 +687,7 @@
     <script src="scripts/game/GameControl.js"></script>
     <script src="scripts/game/TardQuestMenus.js"></script>
     <script src="scripts/game/UiCursor.js"></script>
+    <script src="scripts/partymenu.js"></script>
     <script>
         const ViewportAnimation = {
             $video: null,
@@ -942,6 +946,7 @@
             enabled: true,
             isSpeaking: false,
             queue: [],
+            activeSource: null,
             pronunciationOverrides: {
                 "gauge": "gayge",
                 "ps2": "pee ess too",
@@ -963,7 +968,11 @@
                 );
                 // If already speaking, queue the next request
                 if (SpeechSynthesizer.isSpeaking) {
-                    SpeechSynthesizer.queue.push([sentence, voiceOptions, onEnded]);
+                    SpeechSynthesizer.queue.push([
+                        sentence,
+                        voiceOptions,
+                        onEnded
+                    ]);
                     return;
                 }
                 if (! SpeechSynthesizer.enabled) {
@@ -975,9 +984,12 @@
                     return;
                 }
 
-                let normalizedSentence = SpeechSynthesizer.normalizeNumbers(sentence);
-                normalizedSentence = SpeechSynthesizer.expandAcronyms(normalizedSentence);
-                normalizedSentence = SpeechSynthesizer.applyPronunciationOverrides(normalizedSentence);
+                let normalizedSentence =
+                    SpeechSynthesizer.normalizeNumbers(sentence);
+                normalizedSentence =
+                    SpeechSynthesizer.expandAcronyms(normalizedSentence);
+                normalizedSentence = SpeechSynthesizer
+                    .applyPronunciationOverrides(normalizedSentence);
 
                 SpeechSynthesizer.isSpeaking = true;
                 const options = structuredClone(voiceOptions);
@@ -990,27 +1002,72 @@
                     totalDelays: 5,
                     lowpassFilterCutoffHz: 1760,
                 };
+                options.onSourceCreated = (source) => {
+                    SpeechSynthesizer.activeSource = source;
+                };
                 options.onEnded = () => {
+                    SpeechSynthesizer.activeSource = null;
                     SpeechSynthesizer.isSpeaking = false;
                     onEnded?.();
                     // Play next in queue if present
                     if (SpeechSynthesizer.queue.length > 0) {
-                        const [nextSentence, nextVoiceOptions, nextOnEnded] = SpeechSynthesizer.queue.shift();
-                        SpeechSynthesizer.speak(nextSentence, nextVoiceOptions, nextOnEnded);
+                        const [nextSentence, nextVoiceOptions, nextOnEnded] =
+                            SpeechSynthesizer.queue.shift();
+                        SpeechSynthesizer.speak(
+                            nextSentence,
+                            nextVoiceOptions,
+                            nextOnEnded
+                        );
                     }
                 };
 
                 new SamJs(options).speak(normalizedSentence);
             },
 
+            stop: () => {
+                SpeechSynthesizer.queue = [];
+                if (SpeechSynthesizer.activeSource) {
+                    try {
+                        SpeechSynthesizer.activeSource.stop();
+                    } catch (_) {}; // @TODO Handle the error
+                    SpeechSynthesizer.activeSource = null;
+                }
+                SpeechSynthesizer.isSpeaking = false;
+            },
+
+            skipToLast: () => {
+                if (SpeechSynthesizer.queue.length <= 1) {
+                    return;
+                }
+                const last =
+                    SpeechSynthesizer.queue[SpeechSynthesizer.queue.length - 1];
+                SpeechSynthesizer.queue = [last];
+
+                if (SpeechSynthesizer.activeSource) {
+                    try {
+                        SpeechSynthesizer.activeSource.stop();
+                    } catch (_) {}; // @TODO Handle the error
+                    SpeechSynthesizer.activeSource = null;
+                }
+            },
+
             applyPronunciationOverrides: (text) => {
                 return text.replace(/\b([\w']+)\b/g, (m, w) => {
                     const lower = w.toLowerCase();
-                    if (Object.hasOwn(SpeechSynthesizer.pronunciationOverrides, lower)) {
-                        const repl = SpeechSynthesizer.pronunciationOverrides[lower];
+                    const hasOverride = Object.hasOwn(
+                        SpeechSynthesizer.pronunciationOverrides,
+                        lower
+                    );
+
+                    if (hasOverride) {
+                        const repl =
+                            SpeechSynthesizer.pronunciationOverrides[lower];
                         if (w === w.toUpperCase()) {
-                            return /[\s-]/.test(repl) ? repl : repl.toUpperCase();
+                            return /[\s-]/.test(repl)
+                                ? repl
+                                : repl.toUpperCase();
                         }
+
                         if (w[0] === w[0].toUpperCase()) {
                             return repl.charAt(0).toUpperCase() + repl.slice(1);
                         }
@@ -1021,22 +1078,29 @@
             },
 
             expandAcronyms: (text) => {
-                // VOCAP: use known acronyms to avoid expanding common ones, such as "HAHA" (whoops).
+                // VOCAP: use known acronyms to avoid expanding common ones,
+                // such as "HAHA" (whoops).
                 const knownAcronyms = [
-                    "HP", "EXP", "BTC" // VOCAP: not currently much use for this feature but maybe in the future?
+                    // VOCAP: not currently much use for this feature but maybe
+                    // in the future?
+                    "HP", "EXP", "BTC"
                 ];
                 return text.replace(/\b([A-Z]{2,6})\b/g, (m, w) => {
                     if (! knownAcronyms.includes(w)) {
                         return w;
                     }
                     const lower = w.toLowerCase();
-                    if (Object.hasOwn(SpeechSynthesizer.pronunciationOverrides, lower)) {
+                    const hasOverride = Object.hasOwn(
+                        SpeechSynthesizer.pronunciationOverrides,
+                        lower
+                    );
+                    if (hasOverride) {
                         return w;
                     }
                     if (/'/.test(w)) {
                         return w;
                     }
-                    return w.split('').join(' ');
+                    return w.split("").join(" ");
                 });
             },
 
@@ -1046,14 +1110,20 @@
                     (full, pre, sign, numStr, denStr) => {
                         const num = Number(numStr);
                         const den = Number(denStr);
-                        if (! Number.isSafeInteger(num) || ! Number.isSafeInteger(den) || den === 0) {
+                        const isUnsafeFraction =
+                            ! Number.isSafeInteger(num) ||
+                            ! Number.isSafeInteger(den) ||
+                            den === 0;
+
+                        if (isUnsafeFraction) {
                             return full;
                         }
+
                         if (numStr.length > 15 || denStr.length > 15) {
                             return full;
                         }
                         const words = SpeechSynthesizer.fractionToWords(
-                            sign === '-' ? -1 : (sign === '+' ? 1 : 0),
+                            sign === "-" ? -1 : (sign === "+" ? 1 : 0),
                             num,
                             den
                         );
@@ -1067,14 +1137,32 @@
                         if (cleanInt.length > 15 || fracPart.length > 30) {
                             return full;
                         }
-                        if (! /^\d+$/.test(cleanInt) || !/^\d+$/.test(fracPart)) {
+
+                        const isInvalidDecimal =
+                            ! /^\d+$/.test(cleanInt) ||
+                            !/^\d+$/.test(fracPart);
+
+                        if (isInvalidDecimal) {
                             return full;
                         }
+
                         const intNum = Number(cleanInt);
-                        if (! Number.isSafeInteger(intNum) || intNum > 999_999_999_999) {
+                        const isUnsafeNumber =
+                            ! Number.isSafeInteger(intNum) ||
+                            intNum > 999_999_999_999;
+
+                        if (isUnsafeNumber) {
                             return full;
                         }
-                        return pre + SpeechSynthesizer.decimalToWords(sign, intNum, fracPart);
+
+                        return (
+                            pre +
+                            SpeechSynthesizer.decimalToWords(
+                                sign,
+                                intNum,
+                                fracPart
+                            )
+                        );
                     });
 
                 // Pass 3: signed / unsigned integers
@@ -1087,21 +1175,36 @@
                         if (! /^\d+$/.test(clean)) {
                             return full;
                         }
+
                         const n = Number(clean);
+
                         if (! Number.isSafeInteger(n) || n > 999_999_999_999) {
                             return full;
                         }
-                        return pre + SpeechSynthesizer.signedIntegerToWords(sign, n);
+
+                        return (
+                            pre +
+                            SpeechSynthesizer.signedIntegerToWords(sign, n)
+                        );
                     });
 
                 return out;
             },
 
             signedIntegerToWords: (sign, n) => {
-                if (n === 0) return "zero";
+                if (n === 0) {
+                    return "zero";
+                }
+
                 const core = SpeechSynthesizer.numberToWordsLarge(n);
-                if (sign === '-') return `negative ${core}`;
-                if (sign === '+') return `positive ${core}`;
+                if (sign === '-') {
+                    return `negative ${core}`;
+                }
+
+                if (sign === '+') {
+                    return `positive ${core}`;
+                }
+
                 return core;
             },
 
@@ -1152,76 +1255,111 @@
 
             numberToWordsSmall: (n) => {
                 const ones = [
-                    "zero","one","two","three","four","five","six","seven","eight","nine","ten",
-                    "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"
+                    "zero", "one", "two", "three", "four", "five", "six",
+                    "seven", "eight", "nine", "ten", "eleven", "twelve",
+                    "thirteen", "fourteen", "fifteen", "sixteen", "seventeen",
+                    "eighteen", "nineteen",
                 ];
-                const tens = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
-                if (n < 20) return ones[n];
+
+                const tens = [
+                    "", "", "twenty", "thirty", "forty", "fifty", "sixty",
+                    "seventy", "eighty", "ninety",
+                ];
+
+                if (n < 20) {
+                    return ones[n];
+                }
+
                 if (n < 100) {
                     const t = Math.floor(n / 10);
                     const o = n % 10;
                     return o ? `${tens[t]}-${ones[o]}` : tens[t];
                 }
+
                 const h = Math.floor(n / 100);
                 const r = n % 100;
-                return r ? `${ones[h]} hundred ${SpeechSynthesizer.numberToWordsSmall(r)}` : `${ones[h]} hundred`;
+                return r
+                    ? `${ones[h]} hundred ` +
+                        `${SpeechSynthesizer.numberToWordsSmall(r)}`
+                    : `${ones[h]} hundred`;
             },
 
             numberToWordsLarge: (n) => {
-                if (n === 0) return "zero";
-                const scales = ["", "thousand", "million", "billion", "trillion"];
+                if (n === 0) {
+                    return "zero";
+                }
+
+                const scales = [
+                    "", "thousand", "million", "billion", "trillion"
+                ];
                 const parts = [];
+
                 let scaleIndex = 0;
                 while (n > 0 && scaleIndex < scales.length) {
                     const chunk = n % 1000;
                     if (chunk) {
-                        const words = SpeechSynthesizer.numberToWordsSmall(chunk);
+                        const words =
+                            SpeechSynthesizer.numberToWordsSmall(chunk);
                         const scaleWord = scales[scaleIndex];
-                        parts.unshift(scaleWord ? `${words} ${scaleWord}` : words);
+                        parts.unshift(
+                            scaleWord ? `${words} ${scaleWord}` : words
+                        );
                     }
                     n = Math.floor(n / 1000);
                     scaleIndex++;
                 }
-                return parts.join(' ').replace(/\s+/g, ' ').trim();
+                return parts.join(" ").replace(/\s+/g, " ").trim();
             },
         };
 
         // === UI Hint Swapper ===
-        (function(){
-            const STATE = { last: 'keyboard' };
+        (function() {
+            const STATE = { last: "keyboard" };
 
-            function apply(){
-                document.querySelectorAll('.control-list span[data-control]').forEach(el=>{
+            function apply() {
+                const dataControls = document
+                    .querySelectorAll(".control-list span[data-control]");
+
+                dataControls.forEach(el => {
                     const html = el.dataset[STATE.last];
-                    if (html) el.innerHTML = html;
+                    if (html) {
+                        el.innerHTML = html;
+                    }
                 });
             }
-            function set(device){
-                if (STATE.last === device) return;
+            function set(device) {
+                if (STATE.last === device) {
+                    return;
+                }
                 STATE.last = device;
                 apply();
             }
 
             // Keyboard activity
-            window.addEventListener('keydown', ()=> set('keyboard'), { passive:true });
+            window.addEventListener(
+                "keydown",
+                () => set("keyboard"),
+                { passive: true }
+            );
 
             // Gamepad connection events
-            window.addEventListener('gamepadconnected', ()=> set('gamepad'));
-            window.addEventListener('gamepaddisconnected', ()=>{
+            window.addEventListener("gamepadconnected", () => set("gamepad"));
+            window.addEventListener("gamepaddisconnected", () => {
                 // Fallback
                 const pads = navigator.getGamepads?.() || [];
-                if (! pads.some(p=>p)) {
-                    set('keyboard');
+                if (! pads.some(p => p)) {
+                    set("keyboard");
                 }
             });
 
-            // VOCAP: Expose for gamepad.js hook (called inside its processGamepad loop)
+            // VOCAP: Expose for gamepad.js hook
+            // (called inside its processGamepad loop)
             window.InputDeviceManager = {
-                setLast: d => set(d === 'gamepad' ? 'gamepad' : 'keyboard'),
+                setLast: d => set(d === "gamepad" ? "gamepad" : "keyboard"),
                 getLast: () => STATE.last
             };
 
-            document.addEventListener('DOMContentLoaded', apply);
+            document.addEventListener("DOMContentLoaded", apply);
             apply();
         })();
 
@@ -1358,6 +1496,8 @@
                     `You booted <span class="friendly">${partyMember.name}` +
                     `</span> to the curb. <span class="action">${bye}</span>`
                 );
+
+                this.purgeDeadPartyMembers();
             };
 
             playerEntity.onDie = function(killedByEntity) {
@@ -1380,31 +1520,26 @@
             playerPartyMember.statEventHandlers = {
                 core: {
                     hp: function(effectiveHp) {
-                        console.log("✏️ HP", { effectiveHp });
                         document.querySelector(`#stats [data-stat-core="hp"]`)
                             .setAttribute("value", effectiveHp);
                     },
                     maxHp: function (effectiveMaxHp) {
-                        console.log("✏️ Max HP", { effectiveMaxHp });
                         document.querySelector(`#stats [data-stat-core="hp"]`)
                             .setAttribute("max", effectiveMaxHp);
                     },
                     defense: function (effectiveDefense) {
-                        console.log("✏️ Defense", { effectiveDefense });
                         document
                             .querySelector(`#stats [data-stat-core="defense"]`)
                             .textContent =
                                 effectiveDefense.toLocaleString(undefined);
                     },
                     strength: function (effectiveStrength) {
-                        console.log("✏️ Strength", { effectiveStrength });
                         document
                             .querySelector(`#stats [data-stat-core="strength"]`)
                             .textContent =
                                 effectiveStrength.toLocaleString(undefined);
                     },
                     persuasion: function (effectivePersuasion) {
-                        console.log("✏️ Persuasion", { effectivePersuasion });
                         document
                             .querySelector(
                                 `#stats [data-stat-core="persuasion"]`
@@ -1413,7 +1548,6 @@
                                 effectivePersuasion.toLocaleString(undefined);
                     },
                     endurance: function (effectiveEndurance) {
-                        console.log("✏️ Endurance", { effectiveEndurance });
                         document
                             .querySelector(
                                 `#stats [data-stat-core="endurance"]`
@@ -1422,14 +1556,12 @@
                                 effectiveEndurance.toLocaleString(undefined);
                     },
                     speed: function (effectiveSpeed) {
-                        console.log("✏️ Speed", { effectiveSpeed });
                         document
                             .querySelector(`#stats [data-stat-core="speed"]`)
                             .textContent =
                                 effectiveSpeed.toLocaleString(undefined);
                     },
                     luck: function (effectiveLuck) {
-                        console.log("✏️ Luck", { effectiveLuck });
                         document
                             .querySelector(`#stats [data-stat-core="luck"]`)
                             .textContent =
@@ -1438,7 +1570,6 @@
                 },
                 progression: {
                     experience: function(experience, pointsRequiredForLevelUp) {
-                        console.log("✏️ Experience", { experience, pointsRequiredForLevelUp });
                         const $experience = document.querySelector(
                             `#stats [data-stat-progression="experience"]`
                         );
@@ -1479,11 +1610,6 @@
                 previousWeaponId = null,
                 currentWeaponId = null
             ) {
-                console.log(
-                    `${this.name} changed weapons`,
-                    { previousWeaponId, currentWeaponId }
-                );
-
                 if (previousWeaponId) {
                     InventorySidebar.refreshWeapon(previousWeaponId);
                 }
@@ -1499,11 +1625,6 @@
                 previousArmorId = null,
                 currentArmorId = null
             ) {
-                console.log(
-                    `${this.name} changed armor`,
-                    { previousArmorId, currentArmorId }
-                );
-
                 if (previousArmorId) {
                     InventorySidebar.refreshArmor(previousArmorId);
                 }
@@ -1520,11 +1641,6 @@
                 previousRingId = null,
                 currentRingId = null
             ) {
-                console.log(
-                    `${this.name} changed rings`,
-                    { hand, previousRingId, currentRingId }
-                );
-
                 if (previousRingId) {
                     InventorySidebar.refreshRing(previousRingId);
                 }
@@ -1558,8 +1674,54 @@
             };
             playerEntity.killedMonsters = function(total = 1) {
                 this.monstersKilledOnCurrentFloor += total;
-                document.getElementById("monstersKilledCounter").textContent =
-                    this.monstersKilledOnCurrentFloor.toLocaleString(undefined);
+                const $killCounter = document.getElementById("killCounter");
+                if (! $killCounter) {
+                    console.error("Kill counter has disappeared");
+                    return;
+                }
+
+                const kills = this.monstersKilledOnCurrentFloor;
+                const formattedTotal = kills.toLocaleString(undefined);
+                $killCounter.textContent = formattedTotal;
+
+
+                const message = (function () {
+                    switch (kills) {
+                        case 69:
+                            return "Nice";
+                        case 420:
+                            return "dude weed kills lmao";
+                        case 1337:
+                        case 31337:
+                            return "Literal hacker";
+                        case 5555:
+                            return "You daft punk";
+                        case 6969:
+                            return "Twice as nice";
+                        case 42069:
+                            return "Party time";
+                    }
+
+                    const totalString = kills.toString();
+                    if (totalString.match(/^(\d)\1+$/)) {
+                        switch (totalString.length) {
+                            case 2: return "Nice dubs!";
+                            case 3: return "Sick trips!";
+                            case 4: return "Quality quads!!";
+                            case 5: return "Quixotic quints!!!";
+                            default: return "Check 'em!";
+                        }
+                    }
+
+                    return `Kills on This Floor: ${formattedTotal}`;
+                }());
+
+                $killCounter.setAttribute(
+                    'data-tooltipHtml',
+                    `<div class="genericTooltip">${message}</div>`
+                );
+
+                Tooltip.refresh($killCounter);
             };
 
             playerEntity.inventory.onBitcoinChange = function(value) {
@@ -1601,6 +1763,19 @@
 
                 const $stats = this.getPartyMemberPlaceholder();
                 partyMember.$stats = $stats;
+                partyMember.onRename = function() {
+                    const $name = this.$stats?.querySelector(".name");
+                    if (! $name) {
+                        console.error(
+                            "Party member's name element was not found"
+                        );
+                        return;
+                    }
+
+                    const level =
+                        this.stats.progression.level.toString(undefined);
+                    $name.textContent = `LV.${level} ${this.name}`;
+                };
                 partyMember.statEventHandlers = {
                     core: {
                         hp: (effectiveHp) => {
@@ -1624,13 +1799,19 @@
                 $portrait.style.setProperty("--tint-color", partyMember.color);
 
                 const $name = $stats.querySelector(".name");
-                $name.textContent = partyMember.name;
+                const level = partyMember.stats.progression.level;
+                $name.textContent = `LV.${level} ${partyMember.name}`;
 
                 $partyMembers.append($stats);
 
                 if (partyMember.isDead()) {
                     $name.classList.add("strikethrough");
                     player.party.disableButtons(partyMember.id);
+                } else {
+                    $name.classList.add("clickable");
+                    $name.onclick = function() {
+                        showPartyMemberModal(partyMember.id);
+                    };
                 }
 
                 const $healthBar = $stats.querySelector(".health-bar");
@@ -1654,8 +1835,29 @@
                 const $releaseButton = $stats.querySelector(".release");
                 $releaseButton.disabled = false;
                 $releaseButton.onclick = function() {
-                    this.blur();
-                    partyMember.release();
+                    Modal.open(
+                        `Release ${partyMember.name}?`,
+                        `Are you sure you want to kick ` +
+                            `<span class="friendly">${partyMember.name}` +
+                            `</span> out of your party?`,
+                        [
+                            {
+                                text: "Nah, keep the bastard",
+                                type: "danger",
+                                onclick: () => partyMember.say(randomEntry([
+                                    "Thanks for keeping me, boss.",
+                                    "Oh joy.",
+                                    "Whoopty doo.",
+                                    "Yay. More sewer adventures!",
+                                ])),
+                            },
+                            {
+                                text: "Yes",
+                                type: "primary",
+                                onclick: () => partyMember.release(),
+                            },
+                        ]
+                    );
                 };
 
                 partyMember.onRelease = function() {
@@ -1691,8 +1893,6 @@
             };
 
             playerEntity.onPartyChange = function() {
-                console.log("onPartyChange() called");
-
                 const $playerParty = document.getElementById("playerParty");
                 if (! $playerParty) {
                     console.error("Player party section not found!");
@@ -1822,8 +2022,6 @@
             };
 
             playerEntity.highlightPartyMember = function(partyMemberId = null) {
-                console.log("🔦 highlightPartyMember() called", { partyMemberId });
-
                 for (const partyMember of this.party) {
                     if (partyMember.id === partyMemberId) {
                         partyMember.$stats?.classList.add("highlight");
@@ -1912,6 +2110,13 @@
             playerEntity.onTouch = function(gameMap, entity) {
                 if (BattleSystem.isActive) {
                     console.log("A battle is already underway");
+                    return;
+                }
+
+                // @TODO Set a flag for onTouch() events since not all of them
+                //       start fights
+                if (entity.type === "pigeon") {
+                    entity.onTouch(gameMap, this);
                     return;
                 }
 
@@ -2020,7 +2225,6 @@
                 if (canMove) {
                     Portrait.show(partyMember.type, partyMember.color);
                     this.playerEntity?.highlightPartyMember?.(partyMember.id);
-                    console.log("Selected", { partyMember });
                     break;
                 }
             }
@@ -2169,12 +2373,6 @@
             const joiningPlayer = BattleSystem.persuadedMembers.joiningPlayer;
             const wonByPersuasion = joiningPlayer.length > 0;
 
-            console.log({
-                wonByPersuasion,
-                joiningPlayerLength: joiningPlayer.length,
-                enemyLeader: enemyEntity.leader,
-            });
-
             if (wonByPersuasion) {
                 updateBattleLog("The enemy has been vanquished!");
                 transferPersuadedPartyMembers(
@@ -2233,7 +2431,6 @@
                 InventorySidebar.refresh();
             };
 
-            console.log("🥊 ENCOUNTER HAS ENDED", { outcome });
             playerEntity.highlightPartyMember?.();
             playerEntity.checkForDeath();
             enemyEntity.checkForDeath();
@@ -2259,7 +2456,6 @@
                         animation,
                         {
                             onCurtainClose: () => {
-                                console.log("🎭️ Curtain has closed");
                                 InventorySidebar.close();
                                 playerBattleVictory(
                                     outcome,
@@ -2504,6 +2700,8 @@
 
             const actorIsInPlayerParty =
                 playerEntity.party.some(e => e.id === actor.id);
+            const targetIsInPlayerParty =
+                playerEntity.party.some(e => e.id === target.id);
             const actorClass = actorIsInPlayerParty ? "friendly" : "enemy";
             const targetClass = actorIsInPlayerParty ? "enemy" : "friendly";
 
@@ -2536,12 +2734,39 @@
                 `${actorName} ${attackVerb} ${targetName} for ` +
                 `<span class="enemy">${damagePoints} HP</span>!`;
 
-            if (attackWasFatal) {
+            if (! attackWasFatal) {
+                updateBattleLog(attackMessage);
+                return;
+            }
+
+            if (targetIsInPlayerParty) {
+                const targetIsPlayer = target.id === playerEntity.leader.id;
+                const subject = targetIsPlayer
+                    ? `<span class="friendly">You</span> have been`
+                    : `Your <span class="friendly">${target.name}</span> has ` +
+                        `been`;
+
+                const fate = randomEntry([
+                    "eviscerated!",
+                    "butt-blasted into oblivion!",
+                    "given a fatal atomic wedgie!",
+                    "spanked into the stratosphere!",
+                    "knocked into next Tuesday!",
+                    "given a lesson in pain!",
+                    `told to quit and go home. ` +
+                        `<em>And ${targetIsPlayer ? "you" : "it"} ` +
+                        `listened.</em>`,
+                ]);
+
+                updateBattleLog(
+                    `${subject} <span class="action">${fate}</span>`
+                );
+            } else {
                 const deathMessage =
                     `${attackMessage} ${targetName} <span class="enemy">` +
                     randomEntry([
-                        "runs out of hit points which technically means that " +
-                            "they are <strong>DEAD!</strong></span>",
+                        "runs out of hit points which technically means " +
+                            "that they are <strong>DEAD!</strong></span>",
                         "sees the light at the end of the tunnel!</span>",
                         "fucking dies!</span>",
                         "was beaten to a fucking pulp!</span>",
@@ -2562,10 +2787,7 @@
                     ]);
 
                 updateBattleLog(deathMessage);
-                return;
             }
-
-            updateBattleLog(attackMessage);
         };
 
         BattleSystem.onPersuadeEnd = function(actor, target, successful) {
@@ -2597,7 +2819,7 @@
                 const tryVerb = randomEntry([
                     "tries to recruit",
                     "attempts to sway",
-                    "spits a weak rhyme",
+                    "spits a weak rhyme at",
                     "trauma dumps all over",
                     "flirts aggressively at",
                     "makes hee-haw retard donkey noises at",
@@ -2721,8 +2943,10 @@
             floorCrackSlight: new Audio("audio/sfx/floorCrackSlight.mp3"),
             floorBreakScreamDie: new Audio("audio/sfx/floorBreakScreamDie.mp3"),
             healingTile: new Audio("audio/sfx/healingTile.mp3"),
+            healParty: new Audio("audio/sfx/healParty.mp3"),
             tromBone: new Audio("audio/sfx/tromBONE.mp3"),
             attacked: new Audio("audio/sfx/attacked.mp3"),
+            attackedParty: new Audio("audio/sfx/attackedParty.mp3"),
             battleStart: new Audio("audio/sfx/battleStart.mp3"),
             battleEnd: new Audio("audio/sfx/battleEnd.mp3"),
             ash: new Audio("audio/sfx/ash.mp3"),
@@ -2764,6 +2988,7 @@
         let floor = 1;
         let tromboneIsPlaying = false;
         let sfxEnabled = true;
+        let speechEnabled = true;
         let skipTitleScreen = false;
         let eatRatAnimationEnabled = true;
         let battleTransitionAnimationsEnabled = true;
@@ -3076,14 +3301,16 @@
         }
 
         document.addEventListener("keydown", function (event) {
-            const titleScreenIsVisible =
-                document.getElementById("titleScreen")?.style?.display !== "none";
+            const titleScreenIsVisible = document
+                .getElementById("titleScreen")?.style?.display !== "none";
 
             const enterOrSpacePressed =
                 event.key === "Enter" || event.key === " ";
 
             const ignoreTitleInput =
-                window._inputBlocked && titleScreenIsVisible && enterOrSpacePressed;
+                window._inputBlocked &&
+                titleScreenIsVisible &&
+                enterOrSpacePressed;
 
             if (ignoreTitleInput) {
                 return;
@@ -3099,10 +3326,10 @@
 
         function setTorchOverlayVisibility() {
             // Hide torch in combat, resume after battle
-            const $torch = document.getElementById('animTorch');
+            const $torch = document.getElementById("animTorch");
             playerEntity.isHoldingTorch && ! BattleSystem.isActive
-                ? $torch.classList.add('onscreen')
-                : $torch.classList.remove('onscreen');
+                ? $torch.classList.add("onscreen")
+                : $torch.classList.remove("onscreen");
         }
 
         // Update animTorchStart to always use setTorchOverlayVisibility
@@ -3143,6 +3370,58 @@
                 $strike.classList.remove("onscreen");
             }, 3000);
         }
+
+        function animPigeonKill() {
+            // VOCAP: basically the same logic as animEatRat.
+            // @TODO Handle the animation with ViewportAnimation
+            const $viewport = document.getElementById("viewport");
+            if (! $viewport) {
+                return;
+            }
+
+            GameControl.disableControls();
+
+            let $overlay = document.getElementById("animPigeonKill");
+            if (! $overlay) {
+                $overlay = document.createElement("div");
+                $overlay.id = "animPigeonKill";
+                $viewport.appendChild($overlay);
+            }
+
+            $overlay.innerHTML = "";
+
+            const $video = document.createElement("video");
+            $video.src = "assets/fp-anim/fp-pigeonMurder.webm";
+            $video.autoplay = true;
+            $video.loop = false;
+            $video.playsInline = true;
+            $video.disablePictureInPicture = true;
+
+            let cleaned = false;
+            const cleanup = () => {
+                if (cleaned) {
+                    return;
+                }
+                cleaned = true;
+                $overlay.innerHTML = "";
+                $overlay.style.display = "none";
+                GameControl.enableControls();
+            };
+
+            const fallback = setTimeout(cleanup, 3500);
+            $video.addEventListener("ended", () => {
+                clearTimeout(fallback);
+                cleanup();
+            });
+            $video.addEventListener("error", () => {
+                clearTimeout(fallback);
+                cleanup();
+            });
+
+            $overlay.appendChild($video);
+            $overlay.style.display = "flex";
+        }
+
 
         function shakeScreen() {
             // Randomly pick a small vertical offset: -2, -1, 0, 1, or 2px
@@ -3225,43 +3504,10 @@
         }
 
         // After the player has moved, the NPCs may need to move too
+        // @TODO Step this function so that progress happens gradually
+        //       Currently, enemies can feel like they teleport slightly to
+        //       initiate battles if they move fast and encounter the player
         async function npcMove() {
-/*
-            // VOCAP: unchanged logic, but do not early-return so pigeon can still act
-            if (!vampire.isActiveOnFloor) {
-                vampire.checkForActivation();
-            } else {
-                vampire.prepareMovement();
-
-                const stepsThisTurn = vampire.steps.length;
-                const stepDurationMs = 120;
-                const callables = [];
-
-                for (let i = 0; i < stepsThisTurn; i++) {
-                    await sleepMs(stepDurationMs);
-                    const result = vampire.move();
-                    if (typeof result === "function") {
-                        callables.push(result);
-                    }
-                    render();
-                    if (vampire.isDoneMoving()) break;
-                }
-                for (let i = 0; i < callables.length; i++) {
-                    callables[i]();
-                }
-            }
-
-            // PIGEON HOMING (one step per player move if a message is pending)
-            if (pigeon.isActiveOnFloor && pigeon.checkForMessages()) {
-                pigeon.prepareMovement();
-                const result = pigeon.move();
-                render();
-                if (typeof result === 'function') {
-                    result();
-                    render();
-                }
-            }
-*/
             MAP.updateEntities();
             render();
         }
@@ -3772,6 +4018,7 @@
             const message = $input.value;
 
             // ======== CHEAT COMMANDS ========
+            // @TODO Split these out and fix them. Most don't work yet
             if (message.startsWith("/")) {
                 handleCheatCommand(message);
                 $input.value = "";
@@ -3898,7 +4145,8 @@
                             currentEnemy.id,
                             currentEnemy.name,
                             enemyHp,
-                            maxEnemyHp
+                            maxEnemyHp,
+                            playerMessage
                         );
                         updateBattleLog(
                             `The <span class="friendly">${currentEnemy.name}` +
@@ -4002,6 +4250,27 @@
                 }
                 if (!found) {
                     updateBattleLog('<span class="erok">CHEAT: Erok not spawned. Try a different spot.</span>');
+                }
+                return;
+            }
+
+            if (cmd === "/spawn p") {
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const nx = player.x + DX[i];
+                    const ny = player.y + DY[i];
+                    if (MAP.getCell(nx, ny)?.type === 'floor') {
+                        pigeon.isActiveOnFloor = true;
+                        pigeon.x = nx;
+                        pigeon.y = ny;
+                        pigeon.steps = [];
+                        updateBattleLog('<span class="pigeon">CHEAT: Carrier pigeon spawned</span>');
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    updateBattleLog('<span class="pigeon">CHEAT: Carrier pigeon not spawned. Try a different spot.</span>');
                 }
                 return;
             }
@@ -4454,6 +4723,7 @@
         );
 
         playerEntity.refreshStats();
+
         InventorySidebar.refresh();
         generateMap();
 
@@ -4907,4 +5177,7 @@
         playerEntity.initializePartySection(); // Should this be on player?
         GameControl.update();
     </script>
+    <script src="scripts/tardAPI.js"></script>
+    <script src="scripts/tardboard.js"></script>
+    <script src="scripts/pigeon.js"></script>
 </body></html>

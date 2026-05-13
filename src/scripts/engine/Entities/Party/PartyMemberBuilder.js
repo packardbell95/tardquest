@@ -29,6 +29,35 @@ function PartyMemberBuilder(name, stats = {}) {
             phrase: null,
         },
 
+        rename: function(newName) {
+            if (! typeof newName === "string") {
+                console.log("Party member's name must be a string", { newName });
+                return false;
+            }
+
+            const formattedName = newName.trim();
+            if (formattedName.length === 0) {
+                console.log("Party member's name can't be empty", { newName });
+                return false;
+            }
+
+            if (formattedName === this.name) {
+                console.log(
+                    "Party member's new name is the same as the old one",
+                    { newName }
+                );
+                return false;
+            }
+
+            this.name = newName;
+            this.onRename?.();
+            return true;
+        },
+
+        getExperienceRequiredForLevelUp: function() {
+            return this.stats.progression.level * 10;
+        },
+
         getWeight: function() {
             return (
                 (WEAPONS[this.equipped.weapon]?.weight || 0) +

@@ -760,6 +760,10 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                     return false;
                 }
 
+                if ((this.contents[category]?.[id] || 0) < quantity) {
+                    return false;
+                }
+
                 this.contents[category][id] -= quantity;
 
                 if (this.contents[category][id] < 1) {

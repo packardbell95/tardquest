@@ -592,11 +592,14 @@ const ITEMS = Object.freeze({
                     `during combat.</span>`
                 );
 
-                BattleSystem.nextMove();
                 return false;
             }
 
-            if (typeof PigeonMessaging !== "undefined" && PigeonMessaging.open) {
+            const openPigeonCompositionInterface =
+                typeof PigeonMessaging !== "undefined" &&
+                PigeonMessaging.open;
+
+            if (openPigeonCompositionInterface) {
                 PigeonMessaging.open();
                 // Returning false prevents immediate consumption;
                 // item is removed after successful send (see pigeon.js)
@@ -611,6 +614,67 @@ const ITEMS = Object.freeze({
         chestDrop: false,
         weight: 1,
         price: 10,
+    },
+
+    seedPhial: {
+        article: "a",
+        name: "PHIAL OF SEED",
+        description:
+            "Seed that you can inject into your humble friends! Heals a " +
+            "party member by 40% of their max HP.",
+        battleUsage: {
+            available: true,
+            offensive: false,
+            supportive: true,
+            // @TODO Make sure this can support the player vs player's party
+        },
+        // @TODO Implement functionality, including both the onscreen UI and
+        //       the menu system
+        use: (actorMember, targetMember) => {
+            if (! targetMember) {
+                // @TODO Handle party member selection if the actor is the player
+                return false;
+            }
+
+            if (targetMember.id === playerEntity.leader.id) {
+                updateBattleLog(
+                    `${actorMember.name} tries to feed you a phial of seed, ` +
+                    `but the smell alone makes your stomach churn in disgust.`
+                );
+
+                return false;
+            }
+
+            // % of max HP gained from consuming PHIAL OF SEED
+            const healAmount = Math.ceil(targetMember.stats.core.maxHp * 0.4);
+            targetMember.heal(healAmount);
+            const targetIsAtFullHealth =
+                targetMember.stats.core.hp === targetMember.stats.core.maxHp;
+
+            const actorIsPlayer = actorMember.id === playerEntity.leader.id;
+            const actorPrefix = actorIsPlayer
+                ? `You give`
+                : `${actorMember.name} gives`;
+
+            const healDescriptionHtml = targetIsAtFullHealth
+                ? `${actorIsPlayer ? "bring" : "brings"} them to full health!`
+                : `heal them by +${healAmount} HP!`;
+
+            playSFX("healParty");
+
+            updateBattleLog(
+                `${actorPrefix} ${ITEMS.seedPhial.article} ` +
+                `<span class="friendly">${ITEMS.seedPhial.name}</span> to ` +
+                `<span class="friendly">${targetMember.name}</span> and ` +
+                `<span class="HP">${healDescriptionHtml}</span>`
+            );
+
+            return true;
+        },
+        merchantStockChance: 0.8,
+        chestDrop: true,
+        weight: 0.4,
+        price: 15,
     },
 
     lodeGun: {
