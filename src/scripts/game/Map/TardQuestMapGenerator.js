@@ -425,7 +425,8 @@ const TardQuestMapGenerator = {
         }
 
         const leaderboardIsAvailable =
-            typeof TardAPI?.getLeaderboard === "function";
+            (typeof TardAPI === "object") &&
+            (typeof TardAPI.getLeaderboard === "function");
 
         if (! leaderboardIsAvailable) {
             console.warn(

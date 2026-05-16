@@ -356,7 +356,7 @@ const InventorySidebar = {
                 className: "",
             };
             stats["Random Damage Multiplier"] = {
-                value: definition.damage.multiplier,
+                value: definition.damage.randomMultiplier,
                 className: "",
             };
         }

@@ -60,10 +60,6 @@ const EntityMovementPlanner = {
         );
 
         if (alreadyClaimed) {
-            console.error(
-                "Space is already claimed",
-                { entity, x, y, space: claimedSpacesInTime[interval] }
-            );
             return false;
         }
 

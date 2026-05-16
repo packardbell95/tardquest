@@ -130,10 +130,6 @@ const BattleQueueSidebar = {
         for (const partyMember of partyMembers) {
             const $partyMember = partyMember.$battleQueueSidebarElement;
             if (! $partyMember) {
-                console.error(
-                    "Party member's battle queue sidebar element disappeared",
-                    { partyMember }
-                );
                 continue;
             }
 
@@ -386,10 +382,6 @@ const BattleQueueSidebar = {
         for (const partyMember of this.getPartyMembers()) {
             const $element = partyMember?.$battleQueueSidebarElement;
             if (! $element) {
-                console.error(
-                    "Party member does not have a $battleQueueSidebarElement",
-                    { partyMember }
-                );
                 continue;
             }
 
