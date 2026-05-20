@@ -703,7 +703,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 return true;
             },
 
-            useItem(id, actorMember, targetMember = null) {
+            useItem(id, actorMember, targetMember = null, context = {}) {
                 if (! this.hasItem(id)) {
                     console.error(
                         "Tried to use an item that you don't have!",
@@ -712,11 +712,13 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                     return false;
                 }
 
-                if (! ITEMS[id].use(actorMember, targetMember)) {
+                if (! ITEMS[id].use(actorMember, targetMember, context)) {
                     return false;
                 }
 
-                this.deductItem(id);
+                if (ITEMS[id].usage.consumedAfterUse) {
+                    this.deductItem(id);
+                }
 
                 return true;
             },

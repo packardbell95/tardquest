@@ -165,7 +165,7 @@ const UiCursor = {
             this._activeCursors?.[this._activeCursors.length - 1];
         if (lastCursor) {
             lastCursor.$element.classList.remove(this._flickerClass);
-            GameControl.BattleUi._activate(lastCursor.$pointingAt);
+            GameControl.CursorUi._activate(lastCursor.$pointingAt);
         }
     },
 

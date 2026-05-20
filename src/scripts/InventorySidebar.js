@@ -63,7 +63,7 @@ const InventorySidebar = {
         ! InventorySidebar.enabled || (
             BattleSystem.isActive &&
             isItem &&
-            ! ITEMS[$button.dataset.id]?.battleUsage.available
+            ! ITEMS[$button.dataset.id]?.usage.availability.includes("battle")
         )
             ? $button.setAttribute("disabled", "disabled")
             : $button.removeAttribute("disabled");
@@ -191,12 +191,12 @@ const InventorySidebar = {
                 document.getElementById("battleQueueSection");
             if (! $battleQueueSection) {
                 console.error("Battle queue section disappeared");
-                GameControl.BattleUi.initialize("inventory");
+                GameControl.CursorUi.initialize("inventory");
                 return;
             }
 
             const closeCallback = () => {
-                GameControl.BattleUi.initialize("inventory");
+                GameControl.CursorUi.initialize("inventory");
                 $battleQueueSection
                     .removeEventListener("transitionend", closeCallback);
             };
@@ -269,12 +269,12 @@ const InventorySidebar = {
                 document.getElementById("battleQueueSection");
             if (! $battleQueueSection) {
                 console.error("Battle queue section disappeared");
-                GameControl.BattleUi.initialize(battleUiSectionName);
+                GameControl.CursorUi.initialize(battleUiSectionName);
                 return;
             }
 
             const openCallback = () => {
-                GameControl.BattleUi.initialize(battleUiSectionName);
+                GameControl.CursorUi.initialize(battleUiSectionName);
                 $battleQueueSection
                     .removeEventListener("transitionend", openCallback);
             };
@@ -660,35 +660,11 @@ const InventorySidebar = {
                     return;
                 }
 
-                const useItemCallback = target => {
-                    BattleSystem.useItem(actor, itemId, target);
-                    // InventorySidebar.refreshItem(itemId);
-                };
-
-                if (item.battleUsage.offensive) {
-                    GameControl.BattleUi.initialize("enemy party");
-                    GameControl.showEnemyPartySection(useItemCallback, true);
-                } else {
-                    GameControl.BattleUi.initialize("player party");
-                    GameControl.showPlayerPartySection(useItemCallback, true);
-                }
+                ItemUsageUiRouter.route(itemId, actor);
             } else {
                 // @TODO Fix party selection here
                 // GameControl.showPlayerPartySection();
-
-                if (item.battleUsage.supportive) {
-                    GameControl.BattleUi.initialize("player party");
-                    GameControl.showPlayerPartySection(
-                        () => {
-                            BattleSystem.useItem(actor, itemId, target);
-                            InventorySidebar.refreshItem(itemId);
-                        },
-                        true
-                    );
-                } else {
-                    playerEntity.leader.useItem(itemId, null);
-                    InventorySidebar.refreshItem(itemId);
-                }
+                ItemUsageUiRouter.route(itemId, playerEntity.leader);
             }
         };
 

@@ -7,28 +7,29 @@ const ITEMS = Object.freeze({
         name: "CAN OF HAMM'S",
         description:
             "A warm can of beer. Delicious..?",
-        battleUsage: {
-            available: true,
-            offensive: false,
-            supportive: true,
+        usage: {
+            availability: ["exploration", "battle"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
-            if (! targetMember || targetMember.isDead()) {
+        use: (actorMember, targetMember, context = {}) => {
+            const target = targetMember ?? actorMember;
+            if (! target || target.isDead()) {
                 console.warn("Dead don't drink", { actorMember, targetMember });
                 return false;
             }
 
             const healAmount = 5;
 
-            if (! targetMember.heal(healAmount)) {
+            if (! target.heal(healAmount)) {
                 console.warn(
                     "Failed to heal party member with a delicious beverage",
-                    { actorMember, targetMember }
+                    { actorMember, target }
                 );
                 return false;
             }
 
-            const usedOnSelf = actorMember.id === targetMember.id;
+            const usedOnSelf = actorMember.id === target.id;
             let message = "";
 
             if (playerEntity.leader.id === actorMember.id) {
@@ -36,7 +37,7 @@ const ITEMS = Object.freeze({
                     ?   `You <span class="action">chug a can,</span> filling ` +
                         `your mouth with `
                     :   `You <span class="action">force-feed</span> ` +
-                        `<span class="friendly">${targetMember.name}</span>, ` +
+                        `<span class="friendly">${target.name}</span>, ` +
                         `filling the poor feller's mouth with `;
             } else {
                 message = usedOnSelf
@@ -45,7 +46,7 @@ const ITEMS = Object.freeze({
                     :   `<span class="friendly">${actorMember.name}</span> ` +
                         `pops the tab and slams the can into ` +
                         `<span class="friendly">` +
-                        `${targetMember.name}'s</span> face, its gullet ` +
+                        `${target.name}'s</span> face, its gullet ` +
                         `flooding with `;
             }
 
@@ -71,36 +72,37 @@ const ITEMS = Object.freeze({
         name: "CUP OF LEAN",
         description:
             "A crusty styrofoam cup filled with a strange purple syrup.",
-        battleUsage: {
-            available: true,
-            offensive: false,
-            supportive: true,
+        usage: {
+            availability: ["exploration", "battle"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
-            if (! targetMember || targetMember.isDead()) {
+        use: (actorMember, targetMember, context = {}) => {
+            const target = targetMember ?? actorMember;
+            if (! target || target.isDead()) {
                 console.warn("Dead don't drink", { actorMember, targetMember });
                 return false;
             }
 
             const healAmount = 20;
 
-            if (! targetMember.heal(healAmount)) {
+            if (! target.heal(healAmount)) {
                 console.warn(
                     "Failed to heal party member with a cup of syrup",
-                    { actorMember, targetMember }
+                    { actorMember, target }
                 );
                 return false;
             }
 
             playSFX("lean");
 
-            const usedOnSelf = actorMember.id === targetMember.id;
+            const usedOnSelf = actorMember.id === target.id;
             const healHtml = `<span class="good">+${healAmount} HP</span>`;
             let message = "";
 
             // Trigger the 20-second visual effect if the player is the target
             // @TODO Tie this into a time-based status effect
-            if (targetMember.id === playerEntity.leader.id) {
+            if (target.id === playerEntity.leader.id) {
                 const $game = document.getElementById("game");
                 $game.classList.add("lean-effect");
                 setTimeout(() => $game.classList.remove("lean-effect"), 20000);
@@ -112,7 +114,7 @@ const ITEMS = Object.freeze({
                         `feels great! ${healHtml}`
                     :   `You <span class="action">double dare</span> ` +
                         `<span class="friendly">` +
-                        `${targetMember.name}</span> to drink the ` +
+                        `${target.name}</span> to drink the ` +
                         `styrofoam's syrup, and they actually did it. Damn. ` +
                         `${healHtml}`;
             } else {
@@ -122,7 +124,7 @@ const ITEMS = Object.freeze({
                         `<span class="action">drinks the lean</span> without ` +
                         `a second thought! ${healHtml}`
                     :   `<span class="friendly">${actorMember.name}</span> ` +
-                        `forces <span class="friendly">${targetMember.name}` +
+                        `forces <span class="friendly">${target.name}` +
                         `</span> to sip the sauce! ${healHtml}`;
             }
 
@@ -147,28 +149,29 @@ const ITEMS = Object.freeze({
             "toilet bowl belonging to a Keeper. The glass has a rather " +
             "badass sticker of a skeleton riding a motorcycle neatly " +
             "applied...",
-        battleUsage: {
-            available: true,
-            offensive: false,
-            supportive: true,
+        usage: {
+            availability: ["exploration", "battle"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
-            if (! targetMember || targetMember.isDead()) {
+        use: (actorMember, targetMember, context = {}) => {
+            const target = targetMember ?? actorMember;
+            if (! target || target.isDead()) {
                 console.warn("Dead don't drink", { actorMember, targetMember });
                 return false;
             }
 
             const healAmount = 50;
 
-            if (! targetMember.heal(healAmount)) {
+            if (! target.heal(healAmount)) {
                 console.warn(
                     "Failed to heal party member with a cup of syrup",
-                    { actorMember, targetMember }
+                    { actorMember, target }
                 );
                 return false;
             }
 
-            const usedOnSelf = actorMember.id === targetMember.id;
+            const usedOnSelf = actorMember.id === target.id;
             const healHtml = `<span class="good">+${healAmount} HP</span>`;
             let message = "";
 
@@ -177,7 +180,7 @@ const ITEMS = Object.freeze({
                     ?   `Sickeningly delicious...? You question your current ` +
                         `state of mind for a moment. ${healHtml}`
                     :   `You hand the cup of toilet tonic over to ` +
-                        `<span class="friendly">${targetMember.name}</span> ` +
+                        `<span class="friendly">${target.name}</span> ` +
                         `who drinks it without a second thought. ${healHtml}`;
             } else {
                 message = usedOnSelf
@@ -187,7 +190,7 @@ const ITEMS = Object.freeze({
                     :   `<span class="friendly">${actorMember.name}</span> ` +
                         `<span class="action">throws the cup of toilet water` +
                         `</span> into <span class="friendly">` +
-                        `${targetMember.name}'s</span> slack-jawed mouth! ` +
+                        `${target.name}'s</span> slack-jawed mouth! ` +
                         `${healHtml}`;
             }
 
@@ -209,28 +212,29 @@ const ITEMS = Object.freeze({
         name: "ALASKA RAISINS",
         description:
             "Holy shit! It's the Alaska Raisins!",
-        battleUsage: {
-            available: true,
-            offensive: false,
-            supportive: true,
+        usage: {
+            availability: ["exploration", "battle"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
-            if (! targetMember || targetMember.isDead()) {
+        use: (actorMember, targetMember, context = {}) => {
+            const target = targetMember ?? actorMember;
+            if (! target || target.isDead()) {
                 console.warn("Dead don't drink", { actorMember, targetMember });
                 return false;
             }
 
             const healAmount = 70;
 
-            if (! targetMember.heal(healAmount)) {
+            if (! target.heal(healAmount)) {
                 console.warn(
                     "Failed to heal party member with a box of dried grapes",
-                    { actorMember, targetMember }
+                    { actorMember, target }
                 );
                 return false;
             }
 
-            const usedOnSelf = actorMember.id === targetMember.id;
+            const usedOnSelf = actorMember.id === target.id;
             const healHtml = `<span class="good">+${healAmount} HP</span>`;
             let message = "";
 
@@ -241,7 +245,7 @@ const ITEMS = Object.freeze({
                         `by one. You can still hear them singing in your ` +
                         `stomach... ${healHtml}`
                     :   `You hand the box of raisins over to ` +
-                        `<span class="friendly">${targetMember.name}</span> ` +
+                        `<span class="friendly">${target.name}</span> ` +
                         `who eats them promptly, cardboard and all! ` +
                         `${healHtml}`;
             } else {
@@ -252,7 +256,7 @@ const ITEMS = Object.freeze({
                         `screams... ${healHtml}`
                     :   `<span class="friendly">${actorMember.name}</span> ` +
                         `presents the raisins to <span class="friendly">` +
-                        `${targetMember.name}</span>. The raisins look and ` +
+                        `${target.name}</span>. The raisins look and ` +
                         `taste like clay, but they are consumed anyways. ` +
                         `${healHtml}`;
             }
@@ -275,10 +279,12 @@ const ITEMS = Object.freeze({
         name: "DOWSING ROD",
         description:
             "A Y-shaped stick. Reveals the exit of the current floor.",
-        battleUsage: {
-            available: false,
+        usage: {
+            availability: ["exploration"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
+        use: (actorMember, targetMember, context = {}) => {
             const exit = MAP.entities.find(e => e.type === "exit");
             if (! exit) {
                 updateBattleLog(`The dowsing rods fail to point anywhere.`);
@@ -317,10 +323,12 @@ const ITEMS = Object.freeze({
         description:
             "An unlit torch. Using it will reveal the map of the current " +
             "floor.",
-        battleUsage: {
-            available: false,
+        usage: {
+            availability: ["exploration"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
+        use: (actorMember, targetMember, context = {}) => {
             if (playerEntity.isHoldingTorch) {
                 updateBattleLog(
                     `Uh, do you not <em>SEE</em> the torch that ` +
@@ -354,12 +362,13 @@ const ITEMS = Object.freeze({
         description:
             "An incendiary plastic explosive. Great for turning anything " +
             "into nothing real quick!",
-        battleUsage: {
-            available: true,
-            offensive: true,
-            supportive: false,
+        usage: {
+            availability: ["exploration", "battle"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
+        // @TODO Make this work on all enemies
+        use: (actorMember, targetMember, context = {}) => {
             const onExplode = BattleSystem.isActive
                 // Brick of C4's battle usage
                 ? () => {
@@ -517,10 +526,12 @@ const ITEMS = Object.freeze({
         description:
             "A trom-BONE. It sounds like a trombone, looks like a trombone, " +
             "but is somehow... on the bonier side of things.",
-        battleUsage: {
-            available: false,
+        usage: {
+            availability: ["exploration"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
+        use: (actorMember, targetMember, context = {}) => {
             // @TODO Add this as a game flag
             if (tromboneIsPlaying) {
                 updateBattleLog(
@@ -582,10 +593,18 @@ const ITEMS = Object.freeze({
         description:
             "A pigeon trained to carry messages. Sends a message to the next " +
             "adventurer.",
-        battleUsage: {
-            available: false,
+        usage: {
+            availability: ["exploration"],
+            uiRoute: {
+                path: "inputBox",
+                options: {
+                    placeholder: "Your message to the next adventurer...",
+                    maxLength: 100,
+                },
+            },
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
+        use: async (actorMember, targetMember, context = {}) => {
             if (BattleSystem.isActive) {
                 updateBattleLog(
                     `<span class="enemy">You cannot send a carrier pigeon ` +
@@ -595,20 +614,33 @@ const ITEMS = Object.freeze({
                 return false;
             }
 
-            const openPigeonCompositionInterface =
-                typeof PigeonMessaging !== "undefined" &&
-                PigeonMessaging.open;
-
-            if (openPigeonCompositionInterface) {
-                PigeonMessaging.open();
-                // Returning false prevents immediate consumption;
-                // item is removed after successful send (see pigeon.js)
+            if (! context.message) {
+                updateBattleLog(
+                    `<span class="enemy">You cannot send an empty message!` +
+                    `</span> Try typing something first.`
+                );
                 return false;
             }
+
+            const messageSent = await PigeonMessaging.send(context.message);
+
+            if (! messageSent) {
+                updateBattleLog(
+                    `<span class="enemy">Failed to send the pigeon message!` +
+                    `</span> Your message of <span class="good">&quot;` +
+                    `${context.message}&quot;</span> could not be delivered. ` +
+                    `Try again later.`
+                );
+                return false;
+            }
+
+            // @TODO Add the pigeon voice. Voices require party members
             updateBattleLog(
-                `<span class="enemy">Pigeon messaging module not loaded.</span>`
+                `<span class="good">Your message has been sent!</span> ` +
+                `${waveText("Coo coo!", "friendly").outerHTML}`
             );
-            return false;
+
+            return true;
         },
         merchantStockChance: 1,
         chestDrop: false,
@@ -622,24 +654,35 @@ const ITEMS = Object.freeze({
         description:
             "Seed that you can inject into your humble friends! Heals a " +
             "party member by 40% of their max HP.",
-        battleUsage: {
-            available: true,
-            offensive: false,
-            supportive: true,
-            // @TODO Make sure this can support the player vs player's party
+        usage: {
+            availability: ["exploration"],
+            uiRoute: {
+                path: "playerPartyPicker",
+                options: {
+                    includeLeader: false,
+                    partyMemberFilter: e =>
+                        ! e.isDead() &&
+                        e.stats.core.hp < e.stats.core.maxHp
+                },
+            },
+            consumedAfterUse: true,
         },
         // @TODO Implement functionality, including both the onscreen UI and
         //       the menu system
-        use: (actorMember, targetMember) => {
+        use: (actorMember, targetMember, context = {}) => {
             if (! targetMember) {
                 // @TODO Handle party member selection if the actor is the player
                 return false;
             }
 
             if (targetMember.id === playerEntity.leader.id) {
+                const messagePrefix = actorMember.id === playerEntity.leader.id
+                    ? "You consider chugging the phial,"
+                    : `${actorMember.name} tries to feed you a phial of seed,`;
+
                 updateBattleLog(
-                    `${actorMember.name} tries to feed you a phial of seed, ` +
-                    `but the smell alone makes your stomach churn in disgust.`
+                    `${messagePrefix} but the smell alone makes your stomach ` +
+                    `${waveText("churn in disgust.", "END").outerHTML}`
                 );
 
                 return false;
@@ -684,10 +727,12 @@ const ITEMS = Object.freeze({
             "A single-shot cannon that fires a heavy projectile. With almost "+
             "no range, this is impractical as a weapon. But it is great for " +
             "blasting holes in floors, I guess.",
-        battleUsage: {
-            available: false,
+        usage: {
+            availability: ["exploration"],
+            uiRoute: null,
+            consumedAfterUse: true,
         },
-        use: (actorMember, targetMember) => {
+        use: (actorMember, targetMember, context = {}) => {
             if (BattleSystem.isActive) {
                 updateBattleLog(
                     `You want to use a gun in battle? Don't be ridiculous!`

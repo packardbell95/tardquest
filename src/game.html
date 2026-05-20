@@ -18,6 +18,8 @@
             });
         }
     </script>
+    <script src="scripts/tardAPI.js"></script>
+    <script src="scripts/pigeon.js"></script>
 </head>
 <body>
     <div id="titleScreen" class="hidden"></div>
@@ -46,18 +48,18 @@
         <div id="inputBox">
             <input
                 type="text"
-                id="persuadeInput"
+                id="playerTextInput"
                 placeholder="Say your piece..."
             >
             <button
                 id="confirmInputBox"
                 title="Confirm"
-                onclick="GameControl.handlePersuasionInput()"
+                onclick="GameControl.handlePlayerTextInput()"
             ></button>
             <button
                 id="closeInputBox"
                 title="Close"
-                onclick="GameControl.closePersuasionInputBox()"
+                onclick="GameControl.closePlayerTextInputBox()"
             ></button>
         </div>
         <div id="stats">
@@ -672,6 +674,7 @@
     <script src="data/title-screen.js"></script>
     <script src="scripts/gamepad.js"></script>
     <script src="scripts/InventorySidebar.js"></script>
+    <script src="scripts/ItemUsageUiRouter.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityEnemyFactory.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityFeatureFactory.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityNpcFactory.js"></script>
@@ -2237,12 +2240,12 @@
         BattleSystem.onCommandPhaseEnd = function() {
             GameControl.disableControls();
             GameControl.showPlayerPartySection();
-            GameControl.BattleUi.close();
+            GameControl.CursorUi.close();
             BattleQueueSidebar.refresh();
         };
 
         BattleSystem.onQueueMove = function(move) {
-            GameControl.BattleUi.close();
+            GameControl.CursorUi.close();
             const isPlayerMove = BattleSystem.actorIsPlayer(move.actor);
 
             if (isPlayerMove) {
@@ -2290,7 +2293,7 @@
             BattleQueueSidebar.refresh();
             GameControl.showPlayerPartySection();
             GameControl.update();
-            GameControl.BattleUi.initialize();
+            GameControl.CursorUi.initialize();
         };
 
         BattleSystem.onRequeueMove = function(playerPartyMemberIndex) {
@@ -2416,7 +2419,7 @@
         ) {
             GameControl.showPlayerPartySection();
             GameControl.clearEnemyPartySection(enemyEntity);
-            GameControl.BattleUi.close();
+            GameControl.CursorUi.close();
 
             const refreshUi = () => {
                 SceneRenderer.enemyLayerEnabled = false;
@@ -3708,7 +3711,7 @@
 
         function playerAttack() {
             const attackPrevented =
-                GameControl.awaitingPersuasionText ||
+                GameControl.awaitingPlayerText ||
                 ! BattleSystem.isActive ||
                 window._inputBlocked;
 
@@ -3954,7 +3957,7 @@
         }
 
         async function tryRun() {
-            if (! BattleSystem.isActive || GameControl.awaitingPersuasionText) {
+            if (! BattleSystem.isActive || GameControl.awaitingPlayerText) {
                 return;
             }
 
@@ -3976,7 +3979,7 @@
         function tryPersuade(e) {
             e?.preventDefault();
             // playSFX('persuade');
-            // GameControl.openPersuasionInputBox();
+            // GameControl.openPlayerTextInputBox();
 
             const index = BattleSystem.playerPartyMemberIndex;
             const activePartyMember = BattleSystem.playerEntity.party[index];
@@ -3998,23 +4001,23 @@
             );
         }
 
-        document.getElementById("persuadeInput").addEventListener(
+        document.getElementById("playerTextInput").addEventListener(
             "keydown",
             e => {
                 if (e.key === "Escape") {
-                    GameControl.closePersuasionInputBox();
+                    GameControl.closePlayerTextInputBox();
                     render();
                     return;
                 }
 
                 if (e.key === "Enter") {
-                    GameControl.handlePersuasionInput();
+                    GameControl.handlePlayerTextInput();
                 }
             }
         );
 
         function submitPersuasion() {
-            const $input = document.getElementById("persuadeInput");
+            const $input = document.getElementById("playerTextInput");
             const message = $input.value;
 
             // ======== CHEAT COMMANDS ========
@@ -4022,7 +4025,7 @@
             if (message.startsWith("/")) {
                 handleCheatCommand(message);
                 $input.value = "";
-                GameControl.closePersuasionInputBox();
+                GameControl.closePlayerTextInputBox();
                 render();
                 return;
             }
@@ -4035,7 +4038,7 @@
 
             if (pigeonMessagingIsActive) {
                 $input.value = "";
-                GameControl.closePersuasionInputBox();
+                GameControl.closePlayerTextInputBox();
                 // Only send if not empty
                 if (message.trim().length === 0) {
                     updateBattleLog(
@@ -4050,7 +4053,7 @@
             }
 
             $input.value = "";
-            GameControl.closePersuasionInputBox();
+            GameControl.closePlayerTextInputBox();
 
             // ======== Persuasion During Combat ========
             if (BattleSystem.isActive) {
@@ -4542,12 +4545,12 @@
 
             const talkToParty =
                 key === "t" &&
-                ! GameControl.awaitingPersuasionText &&
+                ! GameControl.awaitingPlayerText &&
                 ! BattleSystem.isActive &&
                 ! menu.isOpen();
 
             if (talkToParty) {
-                GameControl.openPersuasionInputBox(playerInput => {
+                GameControl.openPlayerTextInputBox(playerInput => {
                     GameControl.disableControls();
                     const message = playerInput || "...";
 
@@ -4558,7 +4561,7 @@
                 return;
             }
 
-            if (GameControl.awaitingPersuasionText) {
+            if (GameControl.awaitingPlayerText) {
                 return;
             }
 
@@ -4573,28 +4576,28 @@
                 switch (key) {
                     case "w":
                     case "arrowup":
-                        GameControl.BattleUi.up();
+                        GameControl.CursorUi.up();
                         break;
                     case "s":
                     case "arrowdown":
-                        GameControl.BattleUi.down();
+                        GameControl.CursorUi.down();
                         break;
                     case "a":
                     case "arrowleft":
-                        GameControl.BattleUi.left();
+                        GameControl.CursorUi.left();
                         break;
                     case "d":
                     case "arrowright":
-                        GameControl.BattleUi.right();
+                        GameControl.CursorUi.right();
                         break;
                     case " ": // Spacebar
                     case "e":
                     case "enter":
-                        GameControl.BattleUi.select();
+                        GameControl.CursorUi.select();
                         break;
                     case "q":
                     case "escape":
-                        GameControl.BattleUi.back();
+                        GameControl.CursorUi.back();
                         break;
                 }
             } else {
@@ -4638,7 +4641,7 @@
                         tryPersuade(e);
                         break;
                     case "escape":
-                        if (! GameControl.awaitingPersuasionText) {
+                        if (! GameControl.awaitingPlayerText) {
                             menu.open("gameSettings");
                         }
                         break;
@@ -5177,7 +5180,5 @@
         playerEntity.initializePartySection(); // Should this be on player?
         GameControl.update();
     </script>
-    <script src="scripts/tardAPI.js"></script>
     <script src="scripts/tardboard.js"></script>
-    <script src="scripts/pigeon.js"></script>
 </body></html>

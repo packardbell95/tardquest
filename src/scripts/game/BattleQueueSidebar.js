@@ -80,7 +80,7 @@ const BattleQueueSidebar = {
                 BattleSystem.setPlayerPartyMemberIndex(
                     playerEntity.party.findIndex(e => e.id === partyMember.id)
                 );
-                GameControl.BattleUi.initialize();
+                GameControl.CursorUi.initialize();
             };
         }
 

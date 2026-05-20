@@ -19,7 +19,7 @@
 const GameControl = {
     mode: "title screen",
     enabled: true,
-    awaitingPersuasionText: false,
+    awaitingPlayerText: false,
 
     enableControls: () => {
         window._inputBlocked = false;
@@ -32,8 +32,8 @@ const GameControl = {
     },
 
     disableControls: () => {
-        // Block input only if not awaiting persuasion text
-        if (! GameControl.awaitingPersuasionText) {
+        // Block input only if not awaiting player text
+        if (! GameControl.awaitingPlayerText) {
             window._inputBlocked = true;
         }
         GameControl.enabled = false;
@@ -162,7 +162,7 @@ const GameControl = {
             $controlsExploration.classList.add("hidden");
             $controlsCombat.classList.add("hidden");
         } else if (GameControl.mode === "combat") {
-            if (! GameControl.awaitingPersuasionText) {
+            if (! GameControl.awaitingPlayerText) {
                 $controlsCombat.classList.remove("hidden");
                 $controlsExploration.classList.add("hidden");
                 $controlsMenu.classList.add("hidden");
@@ -708,14 +708,14 @@ const GameControl = {
 
         if (alreadyShowingRequestedSection) {
             if (gameControlFocus) {
-                GameControl.BattleUi.initialize(gameControlFocus);
+                GameControl.CursorUi.initialize(gameControlFocus);
             }
             return;
         }
 
         if (gameControlFocus) {
             const focusCallback = () => {
-                GameControl.BattleUi.initialize(gameControlFocus);
+                GameControl.CursorUi.initialize(gameControlFocus);
                 $playerParty
                     .removeEventListener("transitionend", focusCallback);
             };
@@ -781,47 +781,58 @@ const GameControl = {
     /**
      * PERSUASION / TALK
      */
-    persuasionCancelCallback: () => {},
-    persuasionSubmitCallback: (playerMessage) => {},
+    playerTextCancelCallback: () => {},
+    playerTextSubmitCallback: (playerMessage) => {},
 
-    openPersuasionInputBox: (submitCallback, cancelCallback) => {
-        GameControl.persuasionSubmitCallback =
+    openPlayerTextInputBox: (submitCallback, cancelCallback, options = {}) => {
+        GameControl.playerTextSubmitCallback =
             typeof submitCallback === "function" ? submitCallback : () => {};
-        GameControl.persuasionCancelCallback =
+        GameControl.playerTextCancelCallback =
             typeof cancelCallback === "function" ? cancelCallback : () => {};
 
-        GameControl.awaitingPersuasionText = true;
+        GameControl.awaitingPlayerText = true;
         GameControl.disableControls();
-        document.getElementById("inputBox").style.display = "flex";
 
-        const $input = document.getElementById("persuadeInput");
+        const $input = document.getElementById("playerTextInput");
+        $input.setAttribute(
+            "placeholder",
+            options.placeholder || "Say your piece..."
+        );
+
+        if (Number.isInteger(options.maxLength) && options.maxLength > 0) {
+            $input.setAttribute("maxlength", options.maxLength.toString());
+        } else {
+            $input.removeAttribute("maxlength");
+        }
+
         $input.value = "";
 
+        document.getElementById("inputBox").style.display = "flex";
         // Delay the focus to ensure it's applied after rendering
         setTimeout(() => $input.focus(), 10);
     },
 
-    cancelPersuasionInput: () => {
-        GameControl.closePersuasionInputBox();
-        GameControl.persuasionCancelCallback();
+    cancelPlayerTextInput: () => {
+        GameControl.closePlayerTextInputBox();
+        GameControl.playerTextCancelCallback();
     },
 
-    closePersuasionInputBox: () => {
+    closePlayerTextInputBox: () => {
         const $input = document.getElementById("inputBox");
         $input.style.display = "none";
         $input.value = "";
 
         setTimeout(() => {
-            GameControl.awaitingPersuasionText = false;
+            GameControl.awaitingPlayerText = false;
             GameControl.enableControls();
         }, 200);
     },
 
-    handlePersuasionInput: () => {
+    handlePlayerTextInput: () => {
         const input =
-            (document.getElementById("persuadeInput")?.value || "").trim();
-        GameControl.closePersuasionInputBox();
-        GameControl.persuasionSubmitCallback(input);
+            (document.getElementById("playerTextInput")?.value || "").trim();
+        GameControl.closePlayerTextInputBox();
+        GameControl.playerTextSubmitCallback(input);
     },
 
     getInputDelayMs: () => {
@@ -835,7 +846,7 @@ const GameControl = {
         return Math.max(minDelayMs, baseDelayMs * (1 - speedModifier));
     },
 
-    BattleUi: {
+    CursorUi: {
         activeClassname: "ui-active",
 
         _getParentSection: function($element) {

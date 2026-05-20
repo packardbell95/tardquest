@@ -60,10 +60,6 @@
     /** @const {string} Local storage key for pending delivered messages */
     const LS_PENDING_KEY = "pigeonPendingMessage";
 
-    /** @type {HTMLInputElement|null} Reference to the persuasion input element
-     */
-    const inp = document.getElementById("persuadeInput");
-
     /**
      * Pending delivered message loaded from localStorage
      * Persists across page reloads to ensure messages aren't lost
@@ -146,37 +142,6 @@
     }
 
     /**
-     * Opens the pigeon message composition interface
-     * Checks for required conditions (pigeon item, active session) before
-     * opening
-     */
-    function openPigeonInput() {
-        // log.debug("Opening compose...");
-        if (! haveLocalPigeon()) {
-            updateBattleLog(
-                `<span class="enemy">You have no carrier pigeon.</span>`
-            );
-            log.warn("Blocked compose: no local pigeon item");
-            return;
-        }
-
-        const sid = getSessionId();
-        if (! sid) {
-            updateBattleLog(
-                `<span class="enemy">No active VocaGuard session.</span>`
-            );
-            log.warn("Blocked compose: missing session id");
-            return;
-        }
-        pigeonInputMode = true;
-        GameControl.openPersuasionInputBox();
-        if (inp) {
-            inp.placeholder = PLACEHOLDER_PIGEON;
-        }
-        log.info("Compose opened");
-    }
-
-    /**
      * Sends a message via the carrier pigeon API
      * @param {string} message - The message to send
      * @returns {Promise<boolean>} True if sent successfully
@@ -202,40 +167,18 @@
             });
             const j = await r.json().catch(() => ({}));
             if (r.ok && j.stored) {
-                if (typeof playerEntity?.inventory?.deductItem === "function") {
-                    if (! playerEntity.inventory.deductItem("carrierPigeon")) {
-                        return false;
-                    }
-                }
-
-                if (typeof InventorySidebar?.refreshItem === "function") {
-                    InventorySidebar.refreshItem("carrierPigeon");
-                }
-
-                pigeon.say("Your message has been sent! Coo coo!");
                 log.info(
                     "Sent successfully!",
                     j.id || "Queue:",
                     j.queue_length_pending
                 );
 
-                const canClosePersuasionBox =
-                    typeof GameControl?.closePersuasionInputBox === "function";
-
-                if (canClosePersuasionBox) {
-                    pigeonInputMode = false;
-                    if (inp) {
-                        inp.placeholder = "Say your piece...";
-                    }
-                    GameControl.closePersuasionInputBox();
-                    render();
-                }
                 return true;
             }
 
             updateBattleLog(
-                `<span class="enemy">Pigeon failed: ` +
-                `${j.error || "Unknown error"}</span>`
+                `<span class="enemy">Pigeon failed:</span> ` +
+                `${j.error || `${r.status}: ${r.statusText}`}`
             );
             log.warn("Send failed!", r.status, j);
             return false;
@@ -364,9 +307,6 @@
      * @namespace PigeonMessaging
      */
     window.PigeonMessaging = {
-        /** Opens the message composition interface */
-        open: openPigeonInput,
-
         /** Sends a message via carrier pigeon */
         send: sendPigeon,
 

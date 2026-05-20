@@ -455,12 +455,11 @@ function PartyMemberBuilder(name, stats = {}) {
             return this._statsMeetRequirements(ring.coreStatRequirements);
         },
 
-        useItem(itemId, target) {
-            const item = ITEMS[itemId];
-            if (! item) {
+        async useItem(itemId, target, context) {
+            if (! ITEMS[itemId]) {
                 console.error(
                     "Tried to use an item that doesn't exist",
-                    { itemId }
+                    { itemId, target, context }
                 );
                 return false;
             }
@@ -468,20 +467,29 @@ function PartyMemberBuilder(name, stats = {}) {
             if (! this.parent.inventory.hasItem(itemId)) {
                 console.warn(
                     "Cannot use an item that the map entity doesn't have",
-                    { itemId, target }
+                    { itemId, target, context }
                 );
                 return false;
             }
 
-            if (! ITEMS[itemId].use(this, target)) {
-                console.log("Item could not be used", { itemId, target });
+            const itemUsed = await ITEMS[itemId].use(this, target, context);
+
+            if (! itemUsed) {
+                console.log(
+                    "Item could not be used",
+                    { itemId, target, context }
+                );
                 return false;
             }
 
-            if (! this.parent.inventory.deductItem(itemId)) {
+            const failedToDeductItem =
+                ITEMS[itemId].usage.consumedAfterUse &&
+                ! this.parent.inventory.deductItem(itemId);
+
+            if (failedToDeductItem) {
                 console.error(
                     "Could not deduct the item after using it",
-                    { itemId }
+                    { itemId, target, context }
                 );
             }
 

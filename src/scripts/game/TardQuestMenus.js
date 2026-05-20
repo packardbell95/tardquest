@@ -520,7 +520,7 @@ menu.setMenus({
 
             // @TODO Allow party member selection so items can be used on others
             if (BattleSystem.isActive) {
-                if (! item.battleUsage.available) {
+                if (! item.usage.availability.includes("battle")) {
                     console.warn(
                         "Item is not available for use during battle",
                         { selectedOptionId }
@@ -539,26 +539,21 @@ menu.setMenus({
                 }
 
                 menu.closeAll();
-
-                BattleSystem.useItem(
-                    activePartyMember,
-                    selectedOptionId,
-                    item.battleUsage.offensive
-                        ? BattleSystem.enemyEntity.leader
-                        : activePartyMember
-                );
+                ItemUsageUiRouter.route(selectedOptionId, activePartyMember);
 
                 return;
             }
 
-            const itemUsed = playerEntity.leader.useItem(
+            ItemUsageUiRouter.route(
                 selectedOptionId,
-                playerEntity.leader
+                playerEntity.leader,
+                itemUsed => ! itemUsed
+                    ? console.error(
+                        "Failed to use an item",
+                        { selectedOptionId }
+                    )
+                    : menu.closeAll()
             );
-
-            ! itemUsed
-                ? console.error("Failed to use an item", { selectedOptionId })
-                : menu.closeAll();
         },
     },
 

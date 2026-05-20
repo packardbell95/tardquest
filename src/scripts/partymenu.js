@@ -7,7 +7,7 @@
             return;
         }
 
-        GameControl.awaitingPersuasionText = true;
+        GameControl.awaitingPlayerText = true;
 
         const modal = document.createElement('dialog');
         modal.className = 'modal';
@@ -65,8 +65,13 @@
 
         modal.innerHTML = `
             <div class="header">
-                <div class="title">LV.${member.stats.progression.level} ${member.name}</div>
-                <button class="close" onclick="this.closest('dialog').close()"></button>
+                <div class="title">
+                    LV.${member.stats.progression.level} ${member.name}
+                </div>
+                <button
+                    class="close"
+                    onclick="this.closest('dialog').close()"
+                ></button>
             </div>
             <div class="bodyContainer">
                 <div class="body">
@@ -77,14 +82,24 @@
                             <strong>Name:</strong>
                             <div class="name-section">
                                 <span class="member-name">${member.name}</span>
-                                <button class="edit-name-btn" onclick="editPartyMemberName(${member.id}, this)"></button>
+                                <button
+                                    class="edit-name-btn"
+                                    onclick="editPartyMemberName(
+                                        ${member.id},
+                                        this
+                                    )"
+                                ></button>
                             </div>
 
                             <div>Level:</div>
-                            <span class="LV">${member.stats.progression.level}</span>
+                            <span class="LV">
+                                ${member.stats.progression.level}
+                            </span>
 
                             <div>DEF:</div>
-                            <span class="DEF">${member.stats.core.defense}</span>
+                            <span class="DEF">
+                                ${member.stats.core.defense}
+                            </span>
 
                             <div>HP:</div>
                             <progress-bar
@@ -99,7 +114,9 @@
                             <progress-bar
                                 class="party-member-exp"
                                 value="${member.stats.progression.experience}"
-                                max="${member.getExperienceRequiredForLevelUp()}"
+                                max="${
+                                    member.getExperienceRequiredForLevelUp()
+                                }"
                                 emptyColor="#000"
                                 filledColor="#1900ff"
                             ></progress-bar>
@@ -110,7 +127,9 @@
 
                 </div>
                 <div class="footer">
-                    <button onclick="this.closest('dialog').close()">Close</button>
+                    <button onclick="this.closest('dialog').close()">
+                        Close
+                    </button>
                 </div>
             </div>
         `;
@@ -119,7 +138,7 @@
         modal.showModal();
         modal.addEventListener('close', () => {
             setTimeout(() => {
-                GameControl.awaitingPersuasionText = false;
+                GameControl.awaitingPlayerText = false;
             }, 200);
             modal.remove();
         });
@@ -183,7 +202,9 @@
                     nameSection.closest('.modal').querySelector('.title');
                 modalTitle.textContent = displayedName;
 
-                const partyMemberElement = document.querySelector(`[data-partyMemberId="${member.id}"] .name .clickable-name`);
+                const partyMemberElement = document.querySelector(
+                    `[data-partyMemberId="${member.id}"] .name .clickable-name`
+                );
                 if (partyMemberElement) {
                     partyMemberElement.textContent = displayedName;
                 }
