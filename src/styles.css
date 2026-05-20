@@ -2451,6 +2451,7 @@ a:link {
 .portrait {
     aspect-ratio: 1;
     background-position: center;
+    background-size: contain;
     background-repeat: no-repeat;
     background-color: #000;
     transition: transform 1s ease-in-out;
@@ -2504,51 +2505,7 @@ a:link {
         background-image: url(assets/portraits/vampire.png);
     }
 }
-/*
-.portrait-container.clickable:hover {
-    & .portrait {
-        &.player {
-            background-image: url(assets/portraits/player.png);
-        }
-        &.snailSentinel {
-            background-image: url(assets/portraits/snailSentinel.png);
-        }
-        &.stupidDog {
-            background-image: url(assets/portraits/stupidDog.png);
-        }
-        &.keeperOfTheToiletBowl {
-            background-image: url(assets/portraits/keeperOfTheToiletBowl.png);
-        }
-        &.mysteriousScooter {
-            background-image: url(assets/portraits/mysteriousScooter.png);
-        }
-        &.badassFlamingSkeleton {
-            background-image: url(assets/portraits/badassFlamingSkeleton.png);
-        }
-        &.wangRat {
-            background-image: url(assets/portraits/wangRat.png);
-        }
-        &.fridgeOfForgottenLeftovers {
-            background-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
-        }
-        &.lughead {
-            background-image: url(assets/portraits/lughead.png);
-        }
-        &.pissedOffPoultry {
-            background-image: url(assets/portraits/pissedOffPoultry.png);
-        }
-        &.krampusElf {
-            background-image: url(assets/portraits/krampusElf.png);
-        }
-        &.mimic {
-            background-image: url(assets/portraits/mimic.png);
-        }
-        &.vampire {
-            background-image: url(assets/portraits/vampire.png);
-        }
-    }
-}
-*/
+
 .portrait-container {
     display: flex;
     justify-content: center;

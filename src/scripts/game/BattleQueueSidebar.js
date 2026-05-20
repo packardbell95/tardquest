@@ -201,12 +201,6 @@ const BattleQueueSidebar = {
         const actorIsLeader = actorIsEnemy
             ? partyMember.id === BattleSystem.enemyEntity.leader?.id
             : partyMember.id === BattleSystem.playerEntity.leader?.id;
-        const actorTitle = actorIsLeader
-            ? "Leader"
-            : (actorIsEnemy ? "Lackey" : "Ally");
-        const actorTitleClassname = actorIsLeader
-            ? "gold"
-            : (actorIsEnemy ? "enemy" : "friendly");
         const actorStatus = "Normal"; // @TODO Update once statuses are ready
         const actorLevel =
             partyMember.stats.progression.level.toLocaleString(undefined);
@@ -232,12 +226,6 @@ const BattleQueueSidebar = {
                         class="${actorPortraitClasses}"
                         style="background-color: ${partyMember.color}"
                     ></div>
-                    <div
-                        class="${actorTitleClassname}"
-                        style="text-align: center;"
-                    >
-                        ${actorTitle}
-                    </div>
                 </div>
                 <div class="column right">
                     <div class="actor">
