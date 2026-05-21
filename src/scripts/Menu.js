@@ -13,6 +13,7 @@ class Menu {
     #currentPage = 0;
     #defaultItemsPerPage = 10;
     #isOpen = false;
+    #isFocused = false;
 
     // @TODO Make sure that menuData is passed to each of these
     // It's currently only passed to onOpen(), onClose(), and onCancel()
@@ -119,6 +120,26 @@ class Menu {
         this.#onClose = onClose;
     }
 
+    focus() {
+        if (! this.isOpen()) {
+            return;
+        }
+
+        this.#isFocused = true;
+        this.#elements.$menu.classList.remove("blurred");
+        this.render();
+    }
+
+    blur() {
+        if (! this.isOpen()) {
+            return;
+        }
+
+        this.#isFocused = false;
+        this.#elements.$menu.classList.add("blurred");
+        this.render();
+    }
+
     initializeMenu($menu) {
         this.#elements.$menu = $menu;
         this.#elements.$landing = document.createElement("div");
@@ -165,6 +186,10 @@ class Menu {
         return this.#isOpen;
     }
 
+    isFocused() {
+        return this.isOpen() && this.#isFocused;
+    }
+
     open(menuName, menuData = {}, onClose) {
         if (typeof this.#menus[menuName] === "undefined") {
             console.error("The requested menu does not exist", { menuName });
@@ -196,13 +221,14 @@ class Menu {
 
         this.#onOpen?.(menuData);
         activeMenu.onOpen?.(menuData);
+        this.focus();
         this.render();
     }
 
     close() {
         const menuData = this.getMenuData();
         const previousMenu = this.#breadcrumbs.pop();
-        console.log({ previousMenu });
+
         if (previousMenu) {
             if (typeof previousMenu.onClose === "function") {
                 previousMenu.onClose(menuData);
@@ -324,6 +350,8 @@ class Menu {
         this.#elements.$landing.innerHTML =
             `<div>${activeMenu?.landingHtml?.(menuData) || ""}</div>`;
 
+        // @TODO Have the menu list scroll rather than use pagination
+        //       Pagination can be visually subtle and confusing for players
         const paginationText = totalPages > 1 ? (
             (this.#currentPage > 0 ? "◀ " : "  ") +
             `Page ${this.#currentPage + 1} of ${totalPages}` +
@@ -380,7 +408,8 @@ class Menu {
             $list.appendChild($option);
 
             if (isSelectedLine) {
-                this.#elements.$selectionDescription.innerHTML = option.description;
+                this.#elements.$selectionDescription.innerHTML =
+                    option.description;
             }
         });
 

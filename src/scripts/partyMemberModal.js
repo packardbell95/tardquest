@@ -1,4 +1,5 @@
 "use strict";
+
 (function() {
     function showPartyMemberModal(partyMemberId) {
         const member = playerEntity.party.find(m => m.id === partyMemberId);
@@ -9,30 +10,31 @@
 
         GameControl.awaitingPlayerText = true;
 
-        const modal = document.createElement('dialog');
-        modal.className = 'modal';
+        const modal = document.createElement("dialog");
+        modal.className = "modal";
 
         // Check if player has party healing items
-        const phialCount = playerEntity.inventory.contents.items.phialSeed || 0;
+        const phialCount =
+            playerEntity.inventory.contents.items.phialOfSeed || 0;
         const canHeal =
             phialCount > 0 &&
             ! member.isDead() &&
             member.stats.core.hp < member.stats.core.maxHp;
 
         // Get member ASCII art
-        let asciiArtSection = '';
+        let asciiArtSection = "";
         const indexedArt = window.ENEMY_ART?.[member?.type];
         if (indexedArt) {
             let art = SceneRenderer.formatArt(indexedArt);
             if (indexedArt.offsetX) {
                 art = art
-                    .split('\n')
-                    .map(line => ' '.repeat(indexedArt.offsetX) + line)
-                    .join('\n');
+                    .split("\n")
+                    .map(line => " ".repeat(indexedArt.offsetX) + line)
+                    .join("\n");
             }
 
             if (indexedArt.offsetY) {
-                art = '\n'.repeat(indexedArt.offsetY) + art;
+                art = "\n".repeat(indexedArt.offsetY) + art;
             }
 
             asciiArtSection = `
@@ -44,7 +46,7 @@
                         <button
                             data-feed-button
                             onclick="feedPartyMember(${partyMemberId})"
-                            ${canHeal ? '' : 'disabled'}
+                            ${canHeal ? "" : "disabled"}
                         >
                             x${phialCount}
                         </button>
@@ -53,7 +55,7 @@
             `;
         }
 
-        const persuasionSection = member.persuasionMessage ? `
+        const persuasionSection = member.persuadedBy.persuasionPhrase ? `
             <div class="party-divider"></div>
             <div class="party-member-persuasion">
                 <strong>Words of Recruitment:</strong><br>
@@ -61,7 +63,7 @@
                     "${member.persuadedBy.persuasionPhrase}"
                 </div>
             </div>
-        ` : '';
+        ` : "";
 
         modal.innerHTML = `
             <div class="header">
@@ -136,7 +138,7 @@
 
         document.body.appendChild(modal);
         modal.showModal();
-        modal.addEventListener('close', () => {
+        modal.addEventListener("close", () => {
             setTimeout(() => {
                 GameControl.awaitingPlayerText = false;
             }, 200);
@@ -152,35 +154,35 @@
         }
 
         const nameSection = editButton.parentNode;
-        const nameSpan = nameSection.querySelector('.member-name');
+        const nameSpan = nameSection.querySelector(".member-name");
 
         // Input field
-        const input = document.createElement('input');
-        input.type = 'text';
+        const input = document.createElement("input");
+        input.type = "text";
         input.value = member.name;
-        input.className = 'rename-input';
+        input.className = "rename-input";
         input.maxLength = 50;
 
-        input.addEventListener('keydown', (e) => {
+        input.addEventListener("keydown", (e) => {
             e.stopPropagation();
         });
 
-        input.addEventListener('keypress', (e) => {
+        input.addEventListener("keypress", (e) => {
             e.stopPropagation();
         });
 
         // Save/Cancel buttons
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Save';
-        saveBtn.className = 'save-name-btn';
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Save";
+        saveBtn.className = "save-name-btn";
 
-        const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.className = 'cancel-name-btn';
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.className = "cancel-name-btn";
 
         // Replace displayed name
-        nameSpan.style.display = 'none';
-        editButton.style.display = 'none';
+        nameSpan.style.display = "none";
+        editButton.style.display = "none";
         nameSection.appendChild(input);
         nameSection.appendChild(saveBtn);
         nameSection.appendChild(cancelBtn);
@@ -199,7 +201,7 @@
                     `LV.${member.stats.progression.level} ${newName}`;
 
                 const modalTitle =
-                    nameSection.closest('.modal').querySelector('.title');
+                    nameSection.closest(".modal").querySelector(".title");
                 modalTitle.textContent = displayedName;
 
                 const partyMemberElement = document.querySelector(
@@ -215,26 +217,26 @@
             input.remove();
             saveBtn.remove();
             cancelBtn.remove();
-            nameSpan.style.display = '';
-            editButton.style.display = '';
+            nameSpan.style.display = "";
+            editButton.style.display = "";
         }
 
         function cancelEdit() {
             input.remove();
             saveBtn.remove();
             cancelBtn.remove();
-            nameSpan.style.display = '';
-            editButton.style.display = '';
+            nameSpan.style.display = "";
+            editButton.style.display = "";
         }
 
-        saveBtn.addEventListener('click', saveName);
-        cancelBtn.addEventListener('click', cancelEdit);
-        input.addEventListener('keydown', (e) => {
+        saveBtn.addEventListener("click", saveName);
+        cancelBtn.addEventListener("click", cancelEdit);
+        input.addEventListener("keydown", (e) => {
             e.stopPropagation();
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
                 e.preventDefault();
                 saveName();
-            } else if (e.key === 'Escape') {
+            } else if (e.key === "Escape") {
                 e.preventDefault();
                 cancelEdit();
             }
@@ -248,12 +250,13 @@
             return;
         }
 
-        const phialCount = playerEntity.inventory.contents.items.phialSeed || 0;
+        const phialCount =
+            playerEntity.inventory.contents.items.phialOfSeed || 0;
 
         if (phialCount <= 0) {
             updateBattleLog(
                 `<span class="enemy">You don't own a single ` +
-                `${ITEMS.seedPhial.name}!</span>`
+                `${ITEMS.phialOfSeed.name}!</span>`
             );
             return;
         }
@@ -277,34 +280,23 @@
 
         const previousHp = member.stats.core.hp;
         const phialConsumed = playerEntity.inventory.useItem(
-            "seedPhial",
+            "phialOfSeed",
             playerEntity.leader,
             member
         );
 
         if (! phialConsumed) {
             updateBattleLog(
-                `<span class="enemy">Failed to use ${ITEMS.seedPhial.name}` +
+                `<span class="enemy">Failed to use ${ITEMS.phialOfSeed.name}` +
                 `</span>`
             );
             return;
         }
 
-        updateBattleLog(
-            `You give ${ITEMS.seedPhial.article} <span class="friendly">` +
-            `${ITEMS.seedPhial.name}</span> to ` +
-            `<span class="friendly">${member.name}</span> and ` +
-            `<span class="HP">heal them by +${actualHeal} HP!</span>`
-        );
-
-        const modal = document.querySelector('.modal');
-        if (modal) {
-            modal.close();
-        }
+        document.querySelector(".modal")?.close();
     }
 
     window.showPartyMemberModal = showPartyMemberModal;
     window.editPartyMemberName = editPartyMemberName;
     window.feedPartyMember = feedPartyMember;
-
 })();

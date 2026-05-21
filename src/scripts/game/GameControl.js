@@ -260,10 +260,10 @@ const GameControl = {
             cellInFrontOfPlayer?.isWall === false;
 
         if (moveForwardEnabled || touchEnabled) {
-            $playerInput.querySelector('[name="forward"]')
+            $playerInput.querySelector(`[name="forward"]`)
                 ?.removeAttribute("disabled");
         } else {
-            $playerInput.querySelector('[name="forward"]')
+            $playerInput.querySelector(`[name="forward"]`)
                 ?.setAttribute("disabled", "true");
         }
         const $touch = $mouseControl.querySelector(".touch");
@@ -281,10 +281,10 @@ const GameControl = {
             controlsEnabled &&
             cellLeftOfPlayer?.isWall === false;
         if (strafeLeftEnabled) {
-            $playerInput.querySelector('[name="strafe-left"]')
+            $playerInput.querySelector(`[name="strafe-left"]`)
                 ?.removeAttribute("disabled");
         } else {
-            $playerInput.querySelector('[name="strafe-left"]')
+            $playerInput.querySelector(`[name="strafe-left"]`)
                 ?.setAttribute("disabled", "true");
         }
         $mouseControl.querySelector(".strafe-left")?.classList
@@ -298,10 +298,10 @@ const GameControl = {
             controlsEnabled &&
             cellRightOfPlayer?.isWall === false;
         if (strafeRightEnabled) {
-            $playerInput.querySelector('[name="strafe-right"]')
+            $playerInput.querySelector(`[name="strafe-right"]`)
                 ?.removeAttribute("disabled");
         } else {
-            $playerInput.querySelector('[name="strafe-right"]')
+            $playerInput.querySelector(`[name="strafe-right"]`)
                 ?.setAttribute("disabled", "true");
         }
         $mouseControl.querySelector(".strafe-right")?.classList
@@ -315,10 +315,10 @@ const GameControl = {
             controlsEnabled &&
             cellBehindPlayer?.isWall === false;
         if (moveBackwardEnabled) {
-            $playerInput.querySelector('[name="backward"]')
+            $playerInput.querySelector(`[name="backward"]`)
                 ?.removeAttribute("disabled");
         } else {
-            $playerInput.querySelector('[name="backward"]')
+            $playerInput.querySelector(`[name="backward"]`)
                 ?.setAttribute("disabled", "true");
         }
         $mouseControl.querySelector(".backward")?.classList
@@ -327,7 +327,7 @@ const GameControl = {
         // Turn Left and Right - always enabled, never on SPD cooldown
         const turningEnabled = GameControl.enabled;
         $playerInput
-            .querySelectorAll('[name="turn-left"], [name="turn-right"]')
+            .querySelectorAll(`[name="turn-left"], [name="turn-right"]`)
             .forEach(($button) => turningEnabled
                 ? $button.removeAttribute("disabled")
                 : $button.setAttribute("disabled", "true")
@@ -335,10 +335,10 @@ const GameControl = {
 
         // Wait functionality - always enabled during exploration
         const waitEnabled = controlsEnabled;
-        $playerInput.querySelector('[name="wait"]')
+        $playerInput.querySelector(`[name="wait"]`)
             ?.removeAttribute("disabled");
         if (! waitEnabled) {
-            $playerInput.querySelector('[name="wait"]')
+            $playerInput.querySelector(`[name="wait"]`)
                 ?.setAttribute("disabled", "true");
         }
     },
@@ -347,10 +347,10 @@ const GameControl = {
         const pagination = menu.getPagination();
 
         document
-            .querySelectorAll('#playerInput .section.menu [name]')
+            .querySelectorAll("#playerInput .section.menu [name]")
             .forEach(($button) => {
                 let enabled = true;
-                switch ($button.getAttribute('name')) {
+                switch ($button.getAttribute("name")) {
                     case "up":
                     case "down":
                         enabled = pagination.itemsOnCurrentPage > 1;
@@ -370,8 +370,7 @@ const GameControl = {
     },
 
     updateCombatControls: () => {
-        const index = BattleSystem.playerPartyMemberIndex;
-        const activePartyMember = BattleSystem.playerEntity?.party?.[index];
+        const activePartyMember = BattleSystem.getActivePlayerPartyMember();
 
         document
             .querySelectorAll("#playerInput .section.battle [name]")
@@ -731,14 +730,18 @@ const GameControl = {
             $playerParty.classList.remove("active");
         }
 
-        const addCallback =
-            BattleSystem.isActive &&
-            typeof selectedEntityCallback === "function";
-
+        const addCallback = typeof selectedEntityCallback === "function";
         const $playerPartyMember = playerEntity.leader.$stats;
-        $playerPartyMember.onclick = addCallback && showPlayerParty
-            ? () => selectedEntityCallback(BattleSystem.playerEntity.leader)
-            : null;
+
+        if (addCallback && showPlayerParty) {
+            const actor = BattleSystem.isActive
+                ? BattleSystem.getActivePlayerPartyMember()
+                : playerEntity.leader;
+
+            $playerPartyMember.onclick = () => selectedEntityCallback(actor);
+        } else {
+            $playerPartyMember.onclick = null;
+        }
 
         const playerPartyMemberButtons = $playerParty.querySelectorAll(
             `.party-member[data-party-member-id]:not(.placeholder)`
@@ -847,6 +850,8 @@ const GameControl = {
     },
 
     CursorUi: {
+        isActive: false,
+        restrictToSections: null,
         activeClassname: "ui-active",
 
         _getParentSection: function($element) {
@@ -871,7 +876,44 @@ const GameControl = {
             };
         },
 
-        initialize: function (sectionName) {
+        _restrictToSections: function(sectionNames = null) {
+            if (! Array.isArray(sectionNames)) {
+                GameControl.CursorUi.restrictToSections = null;
+                return;
+            }
+
+            GameControl.CursorUi.restrictToSections = new Set();
+
+            for (const name of sectionNames) {
+                switch (name) {
+                    case "player party":
+                    case "enemy party":
+                    case "inventory":
+                    case "inventory items":
+                    case "battle queue":
+                    case "battle input":
+                        GameControl.CursorUi.restrictToSections.add(name);
+                        break;
+                    default:
+                        console.log("Unrecognized section name", { name });
+                        break;
+                }
+            }
+        },
+
+        _canNavigateTo: function(sectionName) {
+            return (
+                GameControl.CursorUi.restrictToSections === null ||
+                GameControl.CursorUi.restrictToSections.has(sectionName)
+            );
+        },
+
+        initialize: function (sectionName, restrictToSection = false) {
+            GameControl.CursorUi.isActive = true;
+            GameControl.CursorUi._restrictToSections(
+                restrictToSection ? [ sectionName ] : null
+            );
+
             switch (sectionName) {
                 case "player party":
                     this._PlayerParty(null, "initialize");
@@ -896,6 +938,7 @@ const GameControl = {
         },
         back: function() {
             if (UiCursor.count() <= 1) {
+                GameControl.CursorUi.close();
                 return;
             }
 
@@ -904,8 +947,13 @@ const GameControl = {
             );
         },
         close: function() {
+            GameControl.CursorUi.isActive = false;
             UiCursor.remove();
             this.blur();
+
+            if (menu.isOpen()) {
+                menu.focus();
+            }
         },
         up: function () {
             this._nav("up");
@@ -922,6 +970,8 @@ const GameControl = {
         select: function() {
             const $selectedElement =
                 document.querySelector(`.${this.activeClassname}`);
+
+            console.log("select()", { $selectedElement });
 
             if ($selectedElement) {
                 playSFX("uiSelect");
@@ -1003,6 +1053,10 @@ const GameControl = {
         },
 
         _BattleInput: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("battle input")) {
+                return;
+            }
+
             switch (direction) {
                 case "initialize":
                 case "enter from top":
@@ -1093,6 +1147,10 @@ const GameControl = {
         },
 
         _Player: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("player")) {
+                return;
+            }
+
             const sectionName = "party member";
 
             switch (direction) {
@@ -1115,6 +1173,10 @@ const GameControl = {
         },
 
         _PlayerParty: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("player party")) {
+                return;
+            }
+
             const sectionName = "party member";
 
             const index = $activeElement && Array
@@ -1199,6 +1261,10 @@ const GameControl = {
         },
 
         _EnemyParty: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("enemy party")) {
+                return;
+            }
+
             const sectionName = "party member";
             const index = $activeElement && Array
                 .from($activeElement.parentElement.children)
@@ -1396,6 +1462,10 @@ const GameControl = {
         },
 
         _Inventory: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("inventory")) {
+                return;
+            }
+
             switch (direction) {
                 case "initialize":
                 case "enter from top":
@@ -1422,6 +1492,10 @@ const GameControl = {
         },
 
         _InventoryItems: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("inventory items")) {
+                return;
+            }
+
             const activeElementIsItem = Boolean($activeElement?.dataset.id);
 
             switch (direction) {
@@ -1539,6 +1613,10 @@ const GameControl = {
         },
 
         _BattleQueue: function($activeElement, direction) {
+            if (! GameControl.CursorUi._canNavigateTo("battle queue")) {
+                return;
+            }
+
             const $battleQueue = document.getElementById("battleQueue");
             const totalPortraits = $battleQueue.children.length;
             const maxY = totalPortraits + 1 >> 1;

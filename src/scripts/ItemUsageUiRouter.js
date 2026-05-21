@@ -26,7 +26,15 @@ const ItemUsageUiRouter = {
 
             console.log({ itemId, itemUsedSuccessfully });
             onItemUsed?.(itemUsedSuccessfully);
+            GameControl.showPlayerPartySection(); // Reset click handlers
+            GameControl.CursorUi.close();
+            menu.focus();
         };
+
+        console.log(
+            "🎒 Using item",
+            { itemId, actor, path: item.usage.uiRoute?.path || null }
+        );
 
         switch (item.usage.uiRoute?.path) {
             case "inputBox":
@@ -43,6 +51,17 @@ const ItemUsageUiRouter = {
                 break;
 
             case "playerPartyPicker":
+                const canOpenPartyPicker = Boolean(document.querySelector(
+                    "#playerParty .party-members [data-party-member-id]" +
+                    ":not(.dead):not(.placeholder)"
+                ));
+
+                if (! canOpenPartyPicker) {
+                    break;
+                }
+
+                menu.blur();
+                GameControl.CursorUi.initialize("player party", true);
                 GameControl.showPlayerPartySection(selectedTarget =>
                     usageFunction(itemId, actor, selectedTarget, {}),
                     true

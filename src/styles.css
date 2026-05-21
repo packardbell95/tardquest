@@ -1439,7 +1439,7 @@ a:link {
 }
 
 #menu .option.selected {
-    background-color: #003;
+    background-color: #00f;
 }
 
 #menu .option .cursor {
@@ -1465,6 +1465,14 @@ a:link {
     bottom: 0;
     width: 100%;
     text-align: end;
+}
+
+#menu.blurred {
+    color: #ccc;
+
+    & .option.selected {
+        background-color: #006;
+    }
 }
 
 .description {
@@ -2877,7 +2885,7 @@ a:link {
     &.items-carrierPigeon .icon {
         background-image: url(assets/interface/items/carrier-pigeon.png);
     }
-    &.items-seedPhial .icon {
+    &.items-phialOfSeed .icon {
         background-image: url(assets/interface/items/seed.png);
     }
     &.items-lodeGun .icon {
@@ -3137,7 +3145,7 @@ a:link {
         }
     }
 
-    & .name.clickable {
+    &:not(.ui-active) .name.clickable {
         color: #fff;
         cursor: pointer;
         text-decoration: underline;
@@ -3145,6 +3153,10 @@ a:link {
         &:hover {
             background-color: #126d00;
         }
+    }
+
+    &.ui-active .info button {
+        visibility: hidden;
     }
 
     & > .portrait {

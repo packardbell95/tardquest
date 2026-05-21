@@ -690,7 +690,7 @@
     <script src="scripts/game/GameControl.js"></script>
     <script src="scripts/game/TardQuestMenus.js"></script>
     <script src="scripts/game/UiCursor.js"></script>
-    <script src="scripts/partymenu.js"></script>
+    <script src="scripts/partyMemberModal.js"></script>
     <script>
         const ViewportAnimation = {
             $video: null,
@@ -1766,7 +1766,7 @@
 
                 const $stats = this.getPartyMemberPlaceholder();
                 partyMember.$stats = $stats;
-                partyMember.onRename = function() {
+                partyMember.onRename = function(oldName, newName) {
                     const $name = this.$stats?.querySelector(".name");
                     if (! $name) {
                         console.error(
@@ -1778,6 +1778,11 @@
                     const level =
                         this.stats.progression.level.toString(undefined);
                     $name.textContent = `LV.${level} ${this.name}`;
+
+                    updateBattleLog(
+                        `<span class="friendly">${oldName}</span> is now ` +
+                        `known as <span class="good">${newName}</span>.`
+                    );
                 };
                 partyMember.statEventHandlers = {
                     core: {
@@ -1813,6 +1818,12 @@
                 } else {
                     $name.classList.add("clickable");
                     $name.onclick = function() {
+                        // Skip activating the modal if the entire party
+                        // member's section is active
+                        if (this.closest(`.party-member.ui-active`)) {
+                            return;
+                        }
+
                         showPartyMemberModal(partyMember.id);
                     };
                 }
@@ -1831,6 +1842,12 @@
                 const $talkButton = $stats.querySelector(".talk");
                 $talkButton.disabled = false;
                 $talkButton.onclick = function() {
+                    // Skip activating the button if the entire party member's
+                    // section is active
+                    if (this.closest(`.party-member.ui-active`)) {
+                        return;
+                    }
+
                     this.blur();
                     playerEntity.talk(partyMember.id);
                 };
@@ -1838,6 +1855,12 @@
                 const $releaseButton = $stats.querySelector(".release");
                 $releaseButton.disabled = false;
                 $releaseButton.onclick = function() {
+                    // Skip activating the button if the entire party member's
+                    // section is active
+                    if (this.closest(`.party-member.ui-active`)) {
+                        return;
+                    }
+
                     Modal.open(
                         `Release ${partyMember.name}?`,
                         `Are you sure you want to kick ` +
@@ -4565,14 +4588,14 @@
                 return;
             }
 
-            if (menu.isOpen()) {
+            if (menu.isFocused()) {
                 if (! animationActive) {
                     menu.handleInput(key);
                 }
             } else if (key === "i") {
                 playSFX("inventoryOpen");
                 menu.open("inventory");
-            } else if (BattleSystem.isActive) {
+            } else if (GameControl.CursorUi.isActive) {
                 switch (key) {
                     case "w":
                     case "arrowup":

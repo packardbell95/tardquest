@@ -49,8 +49,9 @@ function PartyMemberBuilder(name, stats = {}) {
                 return false;
             }
 
+            const oldName = this.name;
             this.name = newName;
-            this.onRename?.();
+            this.onRename?.(oldName, newName);
             return true;
         },
 

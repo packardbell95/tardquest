@@ -391,6 +391,19 @@ const BattleSystem = {
         this.onRequeueMove?.(index);
     },
 
+    /**
+     * Returns the party member whose turn it is during the command phase
+     *
+     * @return Object|null The player party member
+     */
+    getActivePlayerPartyMember: function() {
+        if (! this.isActive) {
+            return null;
+        }
+
+        return this.playerEntity?.party?.[this.playerPartyMemberIndex] || null;
+    },
+
     getRandomPlayerPartyMember: function() {
         const aliveMembers = this.playerEntity.party.filter(e => ! e.isDead());
         return aliveMembers[Math.floor(Math.random() * aliveMembers.length)];

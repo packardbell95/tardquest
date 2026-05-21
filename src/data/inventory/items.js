@@ -648,14 +648,14 @@ const ITEMS = Object.freeze({
         price: 10,
     },
 
-    seedPhial: {
+    phialOfSeed: {
         article: "a",
         name: "PHIAL OF SEED",
         description:
             "Seed that you can inject into your humble friends! Heals a " +
             "party member by 40% of their max HP.",
         usage: {
-            availability: ["exploration"],
+            availability: ["exploration", "battle"],
             uiRoute: {
                 path: "playerPartyPicker",
                 options: {
@@ -700,16 +700,18 @@ const ITEMS = Object.freeze({
                 : `${actorMember.name} gives`;
 
             const healDescriptionHtml = targetIsAtFullHealth
-                ? `${actorIsPlayer ? "bring" : "brings"} them to full health!`
-                : `heal them by +${healAmount} HP!`;
+                ? `<span class="good">${actorIsPlayer ? "bring" : "brings"} ` +
+                    `them to full health!</span>`
+                : `<span class="HP">heal them</span> by <span class="good">` +
+                    `+${healAmount} HP!</span>`;
 
             playSFX("healParty");
 
             updateBattleLog(
-                `${actorPrefix} ${ITEMS.seedPhial.article} ` +
-                `<span class="friendly">${ITEMS.seedPhial.name}</span> to ` +
+                `${actorPrefix} ${ITEMS.phialOfSeed.article} ` +
+                `<span class="friendly">${ITEMS.phialOfSeed.name}</span> to ` +
                 `<span class="friendly">${targetMember.name}</span> and ` +
-                `<span class="HP">${healDescriptionHtml}</span>`
+                `${healDescriptionHtml}`
             );
 
             return true;
