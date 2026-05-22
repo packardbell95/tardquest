@@ -179,7 +179,7 @@ function PartyMemberBuilder(name, stats = {}) {
             canAttack: true,
             canPersuade: false,
             canRun: true,
-            canUse: true,
+            canUse: false,
             canEquip: true,
             isFlying: false,
         },

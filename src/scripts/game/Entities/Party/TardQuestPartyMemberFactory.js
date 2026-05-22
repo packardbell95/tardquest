@@ -12,6 +12,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.type = "player";
         partyMember.color = "#2aff00";
         partyMember.stats = structuredClone(baseStats);
+        partyMember.traits.canUse = true;
         partyMember.traits.sightRange = 2;
         partyMember.traits.fieldOfView = 90;
         partyMember.traits.hearingRange = 2;

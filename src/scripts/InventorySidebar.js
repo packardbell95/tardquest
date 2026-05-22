@@ -219,7 +219,7 @@ const InventorySidebar = {
     },
 
     // Shows the requested section in the sidebar
-    open: (sectionName) => {
+    open: (sectionName, overrideSection = false) => {
         InventorySidebar.changeTitle(sectionName);
         InventorySidebar.updateCloseButton(sectionName);
         InventorySidebar.updateScrollButtons(sectionName);
@@ -275,7 +275,9 @@ const InventorySidebar = {
             }
 
             const openCallback = () => {
-                GameControl.CursorUi.initialize(battleUiSectionName);
+                GameControl.CursorUi.initialize(
+                    overrideSection ? null : battleUiSectionName
+                );
                 $battleQueueSection
                     .removeEventListener("transitionend", openCallback);
             };
