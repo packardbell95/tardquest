@@ -2452,15 +2452,17 @@ menu.setMenus({
                 if (isLevelUpAllocation) {
                     isLevelUpAllocation = false;
                     updateBattleLog(
-                        "Stats increased! You consume an unsuspecting rat to " +
-                        "restore your health. Poor feller..."
+                        `${waveText("Stats increased!", "gold").outerHTML} ` +
+                        `You consume an unsuspecting rat to ` +
+                        `<span class="good">restore your health.</span> ` +
+                        `Poor feller...`
                     );
                 } else {
                     updateBattleLog(
-                        `Stat allocation complete! You consume an ` +
-                        `unsuspecting rat to ensure you are in good health, ` +
-                        `and <span class="friendly">your adventure begins` +
-                        `...</span>`
+                        `<span class="gold">Stat allocation complete!</span> ` +
+                        `You consume an unsuspecting rat to ensure you are ` +
+                        `<span class="good">in good health</span> and ` +
+                        `<span class="friendly">your adventure begins...</span>`
                     );
                 }
                 menu.close();

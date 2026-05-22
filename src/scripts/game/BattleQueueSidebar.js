@@ -166,6 +166,17 @@ const BattleQueueSidebar = {
         }
     },
 
+    refreshPortraits: function(mapEntity) {
+        if (! Array.isArray(mapEntity.party)) {
+            console.error("mapEntity.party must be an array", { mapEntity });
+            return;
+        }
+
+        for (const partyMember of mapEntity.party) {
+            this.refreshPortrait(partyMember);
+        }
+    },
+
     refreshPortrait: function(partyMember) {
         // @TODO Don't even call this function if there is no party member
         //       Or maybe use this to clean up tooltips

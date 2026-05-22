@@ -1580,26 +1580,31 @@ a:link {
     white-space: pre-wrap;
     overflow-y: scroll;
     text-indent: 2ch hanging;
-}
 
-#battleLog > * {
-    filter: brightness(.5) saturate(.5);
-}
+    & ul {
+        margin: 0;
+        padding-left: 3ch;
+    }
 
-#battleLog > :nth-child(1) {
-    filter: brightness(1) saturate(1);
-}
+    & > * {
+        filter: brightness(.5) saturate(.5);
+    }
 
-#battleLog > :nth-child(2) {
-    filter: brightness(.8) saturate(.8);
-}
+    & > :nth-child(1) {
+        filter: brightness(1) saturate(1);
+    }
 
-#battleLog > :nth-child(3) {
-    filter: brightness(.7) saturate(.7);
-}
+    & > :nth-child(2) {
+        filter: brightness(.8) saturate(.8);
+    }
 
-#battleLog > :nth-child(4) {
-    filter: brightness(.6) saturate(.6);
+    & > :nth-child(3) {
+        filter: brightness(.7) saturate(.7);
+    }
+
+    & > :nth-child(4) {
+        filter: brightness(.6) saturate(.6);
+    }
 }
 
 #minimap,

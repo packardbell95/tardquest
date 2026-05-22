@@ -367,98 +367,65 @@ const ITEMS = Object.freeze({
             uiRoute: null,
             consumedAfterUse: true,
         },
-        // @TODO Make this work on all enemies
+        // @TODO Adjust targeting in the battle system so that targetMember
+        //       can reference the entire party
         use: (actorMember, targetMember, context = {}) => {
             const onExplode = BattleSystem.isActive
                 // Brick of C4's battle usage
                 ? () => {
-                    const damagePoints = Math.max(
-                        20,
-                        Math.round(Math.random() * 10) * 5
+                    const actorIsPlayer =
+                        actorMember.parent.id === BattleSystem.playerEntity.id;
+                    const target = actorIsPlayer
+                        ? BattleSystem.enemyEntity
+                        : BattleSystem.playerEntity;
+
+                    const previousStats = target.getEffectivePartyHp();
+                    target.damageParty(
+                        () => Math.max(
+                            20,
+                            Math.round(Math.random() * 10) * 5
+                        )
+                    );
+                    const currentStats = target.getEffectivePartyHp();
+                    const description = target.describeEffectivePartyHpDiff(
+                        previousStats,
+                        currentStats
                     );
 
-                    const targetWasDamaged = targetMember?.damage(damagePoints);
+                    const className = actorIsPlayer ? "friendly" : "enemy";
+                    const displayName =
+                        `<span class="${className}">${actorMember.name}</span>`;
+                    const item = ITEMS.brickOfC4;
+                    const displayItem = `${item.article} ${item.name}`;
 
-                    if (targetWasDamaged) {
-                        const actorIsEnemy =
-                            actorMember.parent.id !== playerEntity.id;
-                        const attackedOwnTeammate =
-                            actorMember.parent.id === targetMember.parent.id;
+                    updateBattleLog(
+                        `${displayName} <span class="action">detonated ` +
+                        `${displayItem}!</span> ${description}`
+                    );
 
-                        const damageHtml =
-                            `<span class="bad">${damagePoints} HP</span>`;
+                    // Scream if any of the party members have died
+                    for (const id of Object.keys(previousStats)) {
+                        const scream =
+                            previousStats[id].hp > 0 &&
+                            currentStats[id].hp === 0;
 
-                        if (actorIsEnemy) {
-                            const message = attackedOwnTeammate
-                                ?   `Like a déjà vu 9/11, ` +
-                                    `<span class="action">` +
-                                    `${actorMember.name} blows up their own ` +
-                                    `teammate!</span> <span class="enemy">` +
-                                    `${targetMember.name}</span> suffers ` +
-                                    `${damageHtml}!`
-                                :   `${actorMember.name} exploded the shit ` +
-                                    `out of <span class="friendly">` +
-                                    `${targetMember.name}</span> for ` +
-                                    `${damageHtml}!!!`;
-
-                            updateBattleLog(message);
-                        } else {
-                            const actorIsPlayer =
-                                actorMember.id === playerEntity.leader.id;
-
-                            if (actorIsPlayer) {
-                                const message = attackedOwnTeammate
-                                    ?   `Good job, asshole! ` +
-                                        `<span class="action">You blew up ` +
-                                        `your own teammate!</span> ` +
-                                        `<span class="friendly">` +
-                                        `${targetMember.name}</span> suffers ` +
-                                        `${damageHtml}!`
-                                    :   `<span class="friendly">You</span> ` +
-                                        `exploded the shit out of ` +
-                                        `<span class="enemy">` +
-                                        `${targetMember.name}</span> for ` +
-                                        `${damageHtml}!!!`;
-
-                                updateBattleLog(message);
-                            } else {
-                                const message = attackedOwnTeammate
-                                    ?   `<span class="friendly">` +
-                                        `${actorMember.name}</span> blew up ` +
-                                        `<span class="enemy">their own ` +
-                                        `teammate!</span> ` +
-                                        `<span class="friendly">` +
-                                        `${targetMember.name}</span> suffers ` +
-                                        `${damageHtml}!`
-                                    :   `${actorName} exploded the shit out ` +
-                                        `of <span class="enemy">` +
-                                        `${targetMember.name}</span> for ` +
-                                        `${damageHtml}!!!`;
-
-                                updateBattleLog(message);
-                            }
+                        if (scream) {
+                            playSFX("scream");
+                            break;
                         }
-                    } else {
-                        updateBattleLog(
-                            `${actorMember.name} set off a bomb, but managed ` +
-                            `to not affect anything in range. How do you ` +
-                            `even <em>do</em> that?`
-                        );
-                    }
-
-                    if (targetMember.isDead()) {
-                        playSFX("scream");
                     }
                 }
                 // Brick of C4's normal usage outside of battle
                 : () => {
                     const explosionDepth = 3;
-                    let xMin = playerEntity.x;
-                    let xMax = playerEntity.x;
-                    let yMin = playerEntity.y;
-                    let yMax = playerEntity.y;
+                    const mapEntity = actorMember.parent;
+                    const actorIsPlayer = mapEntity.id === playerEntity.id;
+                    let xMin = mapEntity.x;
+                    let xMax = mapEntity.x;
+                    let yMin = mapEntity.y;
+                    let yMax = mapEntity.y;
 
-                    switch (DIRECTIONS[playerEntity.direction]) {
+                    switch (DIRECTIONS[mapEntity.direction]) {
                         case "N":
                             xMin--;
                             xMax++;
@@ -484,17 +451,19 @@ const ITEMS = Object.freeze({
                     for (let y = yMin; y <= yMax; y++) {
                         for (let x = xMin; x <= xMax; x++) {
                             const cell = MAP.getCell(x, y);
-                            cell.onExplode?.(MAP, playerEntity);
+                            cell.onExplode?.(MAP, mapEntity);
                             cell.isExplored = true;
                         }
                     }
 
-                    GameControl.update();
-                    updateBattleLog(
-                        `<span class="action">KABOOM!</span> The dungeon ` +
-                        `walls crumble like charred toast!`
-                    );
-                    render();
+                    if (actorIsPlayer) {
+                        GameControl.update();
+                        updateBattleLog(
+                            `<span class="action">KABOOM!</span> The dungeon ` +
+                            `walls crumble like charred toast!`
+                        );
+                        render();
+                    }
                 };
 
             ViewportAnimation.play(

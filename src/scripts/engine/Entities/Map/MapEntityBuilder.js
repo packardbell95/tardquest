@@ -1005,16 +1005,145 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             this.party = this.party.filter(e => ! e.isDead());
         },
 
+        getEffectivePartyHp: function() {
+            const hpValues = {};
+            for (const p of this.party) {
+                hpValues[p.id] = {
+                    hp: p.getEffectiveCoreStat("hp"),
+                    maxHp: p.getEffectiveCoreStat("maxHp"),
+                };
+            }
+
+            return hpValues;
+        },
+
+        describeEffectivePartyHpDiff: function(
+            previousHpValues,
+            currentHpValues
+        ) {
+            if (typeof previousHpValues !== "object") {
+                console.error(
+                    "previousHpValues must be an object",
+                    { previousHpValues }
+                );
+                return "";
+            }
+
+            if (typeof currentHpValues !== "object") {
+                console.error(
+                    "currentHpValues must be an object",
+                    { currentHpValues }
+                );
+                return "";
+            }
+
+            const diff = [];
+            const className =
+                this.id === playerEntity.id ? "friendly" : "enemy";
+
+            for (const stringId of Object.keys(previousHpValues)) {
+                const id = parseInt(stringId, 10);
+                const previousHp = previousHpValues[id].hp;
+                const previousMaxHp = previousHpValues[id].maxHp;
+                const validPreviousValues =
+                    Number.isInteger(previousHp) &&
+                    Number.isInteger(previousMaxHp);
+
+                if (! validPreviousValues) {
+                    console.error(
+                        "Invalid previous HP values",
+                        { id, values: previousHpValues[id] }
+                    );
+                    continue;
+                }
+
+                const { hp, maxHp } = currentHpValues[id];
+
+                const validValues =
+                    Number.isInteger(hp) &&
+                    Number.isInteger(maxHp);
+
+                if (! validValues) {
+                    console.error(
+                        "Invalid HP values",
+                        { id, values: currentHpValues[id] }
+                    );
+                    continue;
+                }
+
+                if (previousHp === hp && previousMaxHp === maxHp) {
+                    continue;
+                }
+
+                const partyMember = this.party.find(e => e.id === id);
+                if (! partyMember) {
+                    console.error("Party member disappeared", { id });
+                    continue;
+                }
+
+                const displayName =
+                    `<span class="${className}">${partyMember.name}</span>`;
+
+                if (previousHp > hp) {
+                    const displayHp = `-${previousHp - hp} HP`;
+                    const suffix = partyMember.isDead()
+                        ? ` and <span class="bad">fucking died!</span>`
+                        : ".";
+
+                    diff.push(
+                        `${displayName} lost <span class="bad">${displayHp}` +
+                        `</span>${suffix}`
+                    );
+                } else if (previousHp < hp) {
+                    const displayHp = `+${previousHp - hp} HP`;
+                    const suffix = hp === maxHp
+                        ? ` and <span class="good">is back to full health!` +
+                            `</span>`
+                        : ".";
+
+                    diff.push(
+                        `${displayName} recovered <span class="good">` +
+                        `${displayHp}</span>${suffix}`
+                    );
+                }
+            }
+
+            return diff.length === 0
+                ? `Nothing happened.`
+                : `<ul>` + diff.map(e => `<li>${e}</li>`).join("") + `</ul>`;
+        },
+
         healParty: function(hp) {
             for (const partyMember of this?.party || []) {
                 partyMember.heal(hp);
             }
         },
 
+        /**
+         * Damages all party members
+         *
+         * @param hp Number|function Damage or function that determines it
+         * @return bool True if the damage was effective against the party
+         */
         damageParty: function(hp) {
-            for (const partyMember of this?.party || []) {
-                partyMember.damage(hp);
+            const hpIsValid =
+                typeof hp === "function" ||
+                Number.isInteger(hp);
+
+            if (! hpIsValid) {
+                console.error("hp must be an integer or a function", { hp });
+                return false;
             }
+
+            let damageWasEffective = false;
+
+            for (const partyMember of this?.party || []) {
+                const damaged =
+                    partyMember.damage(typeof hp === "function" ? hp() : hp);
+                damageWasEffective ||= damaged;
+            }
+
+            return damageWasEffective;
         },
 
         checkForDeath: function() {
