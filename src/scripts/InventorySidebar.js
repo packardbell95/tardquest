@@ -234,6 +234,7 @@ const InventorySidebar = {
                 return;
             }
 
+            $currentlyOpenedSection.scrollTop = 0;
             $currentlyOpenedSection.classList.add("hidden");
         }
 
@@ -285,6 +286,7 @@ const InventorySidebar = {
 
         playSFX(sectionName === "main" ? "uiCancel" : "inventoryOpen");
         $section.classList.remove("hidden");
+        $section.scrollTop = 0;
 
         if (InventorySidebar.sectionIsEmpty(sectionName)) {
             InventorySidebar.releaseTheFly(sectionName);
