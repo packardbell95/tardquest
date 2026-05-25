@@ -490,11 +490,15 @@ menu.setMenus({
                     continue;
                 }
 
-                const className =
-                    ! BattleSystem.isActive ||
-                    definition.battleUsage.available
-                        ? undefined
-                        : "muted";
+                const itemIsAvailable = (
+                    BattleSystem.isActive &&
+                    definition.usage.availability.includes("battle")
+                ) || (
+                    ! BattleSystem.isActive &&
+                    definition.usage.availability.includes("exploration")
+                );
+
+                const className = itemIsAvailable ? undefined : "muted";
 
                 options.push({
                     id: key,

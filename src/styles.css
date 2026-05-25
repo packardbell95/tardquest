@@ -1439,7 +1439,7 @@ a:link {
 }
 
 #menu .option.selected {
-    background-color: #00f;
+    background-color: #006;
 }
 
 #menu .option .cursor {
@@ -1471,7 +1471,7 @@ a:link {
     color: #ccc;
 
     & .option.selected {
-        background-color: #006;
+        background-color: #224;
     }
 }
 
