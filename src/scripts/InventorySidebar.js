@@ -275,9 +275,12 @@ const InventorySidebar = {
             }
 
             const openCallback = () => {
-                GameControl.CursorUi.initialize(
-                    overrideSection ? null : battleUiSectionName
-                );
+                BattleSystem.isActive
+                    ? GameControl.CursorUi.initialize(
+                        overrideSection ? null : battleUiSectionName
+                    )
+                    : GameControl.CursorUi.close();
+
                 $battleQueueSection
                     .removeEventListener("transitionend", openCallback);
             };

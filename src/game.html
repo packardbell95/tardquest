@@ -2444,13 +2444,13 @@
             Portrait.hide();
             GameControl.showPlayerPartySection();
             GameControl.clearEnemyPartySection(enemyEntity);
-            GameControl.CursorUi.close();
 
             const refreshUi = () => {
                 SceneRenderer.enemyLayerEnabled = false;
                 playerEntity.purgeDeadPartyMembers();
                 enemyEntity.purgeDeadPartyMembers();
 
+                GameControl.CursorUi.close();
                 GameControl.enableControls();
                 GameControl.enablePartyButtons();
                 GameControl.enableInventorySidebarEquipmentButtons();

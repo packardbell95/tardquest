@@ -895,7 +895,7 @@ const GameControl = {
                         GameControl.CursorUi.restrictToSections.add(name);
                         break;
                     default:
-                        console.log("Unrecognized section name", { name });
+                        console.warn("Unrecognized section name", { name });
                         break;
                 }
             }
@@ -970,8 +970,6 @@ const GameControl = {
         select: function() {
             const $selectedElement =
                 document.querySelector(`.${this.activeClassname}`);
-
-            console.log("select()", { $selectedElement });
 
             if ($selectedElement) {
                 playSFX("uiSelect");

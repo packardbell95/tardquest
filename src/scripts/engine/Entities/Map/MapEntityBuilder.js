@@ -1085,7 +1085,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                     `<span class="${className}">${partyMember.name}</span>`;
 
                 if (previousHp > hp) {
-                    const displayHp = `-${previousHp - hp} HP`;
+                    const displayHp = `${previousHp - hp} HP`;
                     const suffix = partyMember.isDead()
                         ? ` and <span class="bad">fucking died!</span>`
                         : ".";
