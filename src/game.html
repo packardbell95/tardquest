@@ -547,7 +547,7 @@
                                 Previous Page
                             </div>
                         '
-                        onclick="menu.previousPage()"
+                        onclick="PlayerInput.left()"
                         disabled="disabled"
                     ></button>
                     <div>
@@ -559,7 +559,7 @@
                                     Previous Option
                                 </div>
                             '
-                            onclick="menu.handleInput('arrowup')"
+                            onclick="PlayerInput.up()"
                         ></button>
                         <button
                             name="confirm"
@@ -569,7 +569,7 @@
                                     Confirm Selection
                                 </div>
                             '
-                            onclick="menu.handleInput('enter')"
+                            onclick="PlayerInput.primary()"
                         ></button>
                         <button
                             name="down"
@@ -579,7 +579,7 @@
                                     Next Option
                                 </div>
                             '
-                            onclick="menu.handleInput('arrowdown')"
+                            onclick="PlayerInput.down()"
                         ></button>
                     </div>
                     <button
@@ -590,7 +590,7 @@
                                 Next Page
                             </div>
                         '
-                        onclick="menu.nextPage()"
+                        onclick="PlayerInput.right()"
                         disabled="disabled"
                     ></button>
                 </div>
@@ -661,6 +661,7 @@
     <script src="scripts/Menu.js"></script>
     <script src="scripts/Modal.js"></script>
     <script src="scripts/Music.js"></script>
+    <script src="scripts/PlayerInput.js"></script>
     <script src="scripts/sam.js"></script>
     <script src="scripts/Tooltip.js"></script>
     <script src="data/inventory/armor.js"></script>
@@ -4549,123 +4550,65 @@
         }
 
         document.addEventListener("keydown", e => {
-            if (gameOver) {
-                return;
-            }
-
+            e.preventDefault();
             const key = e.key.toLowerCase();
 
-            if (Modal.isOpen) {
-                if (key === "escape") {
-                    playSFX("uiCancel");
-                    Modal.close();
-                }
-                return;
-            }
+            switch (key) {
+                case " ": // Spacebar
+                case "enter":
+                    PlayerInput.primary();
+                    break;
 
-            const talkToParty =
-                key === "t" &&
-                ! GameControl.awaitingPlayerText &&
-                ! BattleSystem.isActive &&
-                ! menu.isOpen();
+                case "escape":
+                    PlayerInput.cancel();
+                    break;
 
-            if (talkToParty) {
-                GameControl.openPlayerTextInputBox(playerInput => {
-                    GameControl.disableControls();
-                    const message = playerInput || "...";
+                case "i":
+                    PlayerInput.inventory();
+                    break;
 
-                    playerEntity.leader.say(message, true, () => {
-                        playerEntity.talk(null, playerInput);
-                    });
-                });
-                return;
-            }
+                case "t":
+                    PlayerInput.talk();
+                    break;
 
-            if (GameControl.awaitingPlayerText) {
-                return;
-            }
+                case "w":
+                case "arrowup":
+                    PlayerInput.up();
+                    break;
 
-            if (menu.isFocused()) {
-                if (! animationActive) {
-                    menu.handleInput(key);
-                }
-            } else if (key === "i") {
-                playSFX("inventoryOpen");
-                menu.open("inventory");
-            } else if (GameControl.CursorUi.isActive) {
-                switch (key) {
-                    case "w":
-                    case "arrowup":
-                        GameControl.CursorUi.up();
-                        break;
-                    case "s":
-                    case "arrowdown":
-                        GameControl.CursorUi.down();
-                        break;
-                    case "a":
-                    case "arrowleft":
-                        GameControl.CursorUi.left();
-                        break;
-                    case "d":
-                    case "arrowright":
-                        GameControl.CursorUi.right();
-                        break;
-                    case " ": // Spacebar
-                    case "e":
-                    case "enter":
-                        GameControl.CursorUi.select();
-                        break;
-                    case "q":
-                    case "escape":
-                        GameControl.CursorUi.back();
-                        break;
-                }
-            } else {
-                switch (key) {
-                    case "w":
-                    case "arrowup":
-                        e.preventDefault();
-                        move("forward");
-                        break;
-                    case "s":
-                    case "arrowdown":
-                        e.preventDefault();
-                        move("backward");
-                        break;
-                    case "a":
-                    case "arrowleft":
-                        e.preventDefault();
-                        turnLeft();
-                        break;
-                    case "d":
-                    case "arrowright":
-                        e.preventDefault();
-                        turnRight();
-                        break;
-                    case "q":
-                    case "pageup":
-                        e.preventDefault();
-                        move("strafeLeft");
-                        break;
-                    case "e":
-                    case "pagedown":
-                        e.preventDefault();
-                        move("strafeRight");
-                        break;
-                    case " ": // Spacebar
-                        e.preventDefault();
-                        wait();
-                        break;
-                    case "t":
-                        speakingOutsideCombat = true;
-                        tryPersuade(e);
-                        break;
-                    case "escape":
-                        if (! GameControl.awaitingPlayerText) {
-                            menu.open("gameSettings");
-                        }
-                        break;
-                }
+                case "s":
+                case "arrowdown":
+                    PlayerInput.down();
+                    break;
+
+                case "a":
+                case "arrowleft":
+                    PlayerInput.left();
+                    break;
+
+                case "d":
+                case "arrowright":
+                    PlayerInput.right();
+                    break;
+
+                case "pageup":
+                    PlayerInput.strafeLeft();
+                    break;
+
+                case "pagedown":
+                    PlayerInput.strafeRight();
+                    break;
+
+                case "q":
+                    (menu.isOpen() || BattleSystem.isActive)
+                        ? PlayerInput.cancel()
+                        : PlayerInput.strafeLeft();
+                    break;
+
+                case "e":
+                    (menu.isOpen() || BattleSystem.isActive)
+                        ? PlayerInput.primary()
+                        : PlayerInput.strafeRight();
             }
         });
 

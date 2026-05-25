@@ -491,9 +491,9 @@ class Menu {
         }
     }
 
-    handleInput(key) {
-        switch (key) {
-            case "escape":
+    handleInput(action) {
+        switch (action) {
+            case "cancel":
                 const activeMenu = this.getActiveMenu();
                 const defaultCloseOption =
                     activeMenu?.defaultCloseOption || null;
@@ -521,28 +521,26 @@ class Menu {
 
                 this.goToPreviousMenu();
                 break;
-            case "w":
-            case "arrowup":
+
+            case "up":
                 this.selectPreviousItem();
                 break;
-            case "s":
-            case "arrowdown":
+
+            case "down":
                 this.selectNextItem();
                 break;
-            case "a":
-            case "arrowleft":
+
+            case "left":
                 this.previousPage();
                 break;
-            case "d":
-            case "arrowright":
+
+            case "right":
                 this.nextPage();
                 break;
-            case " ":
-            case "e":
-            case "enter": {
+
+            case "primary":
                 this.select();
                 break;
-            }
         }
     }
 
