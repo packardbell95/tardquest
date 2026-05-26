@@ -134,6 +134,12 @@ menu.setMenus({
                 description: "Continue your quest",
             },
             {
+                id: "remapControllerButtons",
+                displayText: "Remap Gamepad Buttons",
+                description: "Customize your controller's layout",
+                className: TqGamepad.connected ? undefined : "muted",
+            },
+            {
                 id: "toggleMusic",
                 displayText:
                     `${music.isEnabled() ? "Disable" : "Enable"} music`,
@@ -226,6 +232,18 @@ menu.setMenus({
         ],
         select: (selectedOptionId) => {
             switch (selectedOptionId) {
+                case "remapControllerButtons":
+                    if (! TqGamepad.connected) {
+                        updateBattleLog(
+                            `<span class="bad">Buttons cannot be remapped ` +
+                            `until you <span class="action">connect your ` +
+                            `controller.</span>`
+                        );
+                        break;
+                    }
+
+                    menu.open("remapControllerButtons");
+                    break;
                 case "toggleMusic":
                     if (tromboneIsPlaying) {
                         break;
@@ -283,6 +301,83 @@ menu.setMenus({
                     break;
             }
         },
+    },
+
+    remapControllerButtons: {
+        title: "REMAP CONTROLLER BUTTONS",
+        getOptions: () => [
+            {
+                id: "primary",
+                displayText: "Primary Action",
+                description:
+                    "Used for confirmation in menus or waiting during " +
+                    "exploration",
+            },
+            {
+                id: "cancel",
+                displayText: "Cancel",
+                description:
+                    "Used for backing out of menus and closing modals",
+            },
+            {
+                id: "menu",
+                displayText: "Pause / Game Settings Menu",
+                description: "Used for pausing the game and changing settings",
+            },
+            {
+                id: "inventory",
+                displayText: "Inventory",
+                description: "Opens your inventory",
+            },
+            {
+                id: "talk",
+                displayText: "Talk to Party",
+                description: "Talk to your party members",
+            },
+            {
+                id: "strafeLeft",
+                displayText: "Strafe Left",
+                description: "Step one space to the left during exploration",
+            },
+            {
+                id: "strafeRight",
+                displayText: "Strafe Right",
+                description: "Step one space to the right during exploration",
+            },
+            {
+                id: "_back",
+                displayText: "[Back]",
+                description: "Return to game settings",
+            },
+        ],
+        select: action => {
+            const splitName = action.replace(/([A-Z])/g, " $1");
+            const actionDisplayName =
+                splitName.charAt(0).toUpperCase() + splitName.slice(1);
+            const actionDisplayHtml =
+                `<span class="friendly">${actionDisplayName}</span>`;
+
+            updateBattleLog(
+                `Press the controller button that you want to use for ` +
+                `${actionDisplayHtml}`
+            );
+
+            TqGamepad.captureNextButton({
+                action,
+                onCapture: function(input) {
+                    TqGamepad.inputMap.primary = input.index;
+
+                    updateBattleLog(
+                        `${actionDisplayHtml} is now mapped to ` +
+                        `<span class="good">${input.label}</span>`
+                    );
+                },
+                onCancel: function() {
+                    console.log("No button selected.");
+                },
+            });
+        },
+        onClose: () => TqGamepad.cancelCapture(),
     },
 
     musicSettings: {

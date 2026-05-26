@@ -9,6 +9,9 @@
  * themselves
  */
 const PlayerInput = {
+    pause: function() {
+        this._handleInput("pause");
+    },
     menu: function() {
         this._handleInput("menu");
     },
@@ -46,6 +49,13 @@ const PlayerInput = {
     _handleInput(action) {
         if (gameOver) {
             return;
+        }
+
+        const activateTitleScreen = TITLE_SCREEN.isActive &&
+            ["pause", "menu", "primary"].includes(action);
+
+        if (activateTitleScreen) {
+            hideTitleScreen();
         }
 
         if (Modal.isOpen && action === "cancel") {
@@ -143,9 +153,15 @@ const PlayerInput = {
                 tryPersuade(e);
                 break;
             case "cancel":
+                // @TODO Make this escape-key specific (does this do anything else?)
                 if (! GameControl.awaitingPlayerText) {
                     menu.open("gameSettings");
                 }
+                break;
+            case "pause":
+                menu.isOpenInBreadcrumbs("gameSettings")
+                    ? menu.closeThrough("gameSettings")
+                    : menu.open("gameSettings");
                 break;
         }
     }

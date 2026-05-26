@@ -673,9 +673,9 @@
     <script src="data/portraits.js"></script>
     <script src="data/sceneArt.js"></script>
     <script src="data/title-screen.js"></script>
-    <script src="scripts/gamepad.js"></script>
     <script src="scripts/InventorySidebar.js"></script>
     <script src="scripts/ItemUsageUiRouter.js"></script>
+    <script src="scripts/TqGamepad.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityEnemyFactory.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityFeatureFactory.js"></script>
     <script src="scripts/game/Entities/Map/MapEntityNpcFactory.js"></script>
@@ -1317,6 +1317,7 @@
         };
 
         // === UI Hint Swapper ===
+        // @TODO Move input tracking to PlayerInput
         (function() {
             const STATE = { last: "keyboard" };
 
@@ -1346,22 +1347,7 @@
                 { passive: true }
             );
 
-            // Gamepad connection events
-            window.addEventListener("gamepadconnected", () => set("gamepad"));
-            window.addEventListener("gamepaddisconnected", () => {
-                // Fallback
-                const pads = navigator.getGamepads?.() || [];
-                if (! pads.some(p => p)) {
-                    set("keyboard");
-                }
-            });
-
-            // VOCAP: Expose for gamepad.js hook
-            // (called inside its processGamepad loop)
-            window.InputDeviceManager = {
-                setLast: d => set(d === "gamepad" ? "gamepad" : "keyboard"),
-                getLast: () => STATE.last
-            };
+            TqGamepad.start();
 
             document.addEventListener("DOMContentLoaded", apply);
             apply();
@@ -5116,15 +5102,6 @@
                 }
             );
         });
-
-        document.addEventListener("keydown", function titleScreenHandler(e) {
-            if (TITLE_SCREEN.isActive && (e.key === "Enter" || e.key === " ")) {
-                hideTitleScreen();
-                document.removeEventListener("keydown", titleScreenHandler);
-                e.preventDefault();
-                e.stopImmediatePropagation();
-            }
-        }, true);
 
         if (skipTitleScreen) {
             const onGameReady = () => {
