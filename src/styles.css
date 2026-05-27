@@ -3296,6 +3296,9 @@ a:link {
 .run {
     color: #00f;
 }
+.gray {
+    color: #888;
+}
 
 .alignRight {
     text-align: right;

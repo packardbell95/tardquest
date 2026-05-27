@@ -402,9 +402,25 @@ class Menu {
             if (option.className) {
                 $text.classList.add(option.className);
             }
-            $text.textContent = `${option.displayText}${dots}${trailText}`;
-            $option.append($text);
 
+            const $displayText = document.createElement("span");
+            $displayText.textContent = option.displayText;
+            $text.append($displayText);
+
+            if (dots.length > 0) {
+                const $dots = document.createElement("span");
+                $dots.classList.add("gray");
+                $dots.textContent = dots;
+                $text.append($dots);
+            }
+
+            if (trailText.length > 0) {
+                const $trailText = document.createElement("span");
+                $trailText.textContent = trailText;
+                $text.append($trailText);
+            }
+
+            $option.append($text);
             $list.appendChild($option);
 
             if (isSelectedLine) {
