@@ -134,6 +134,8 @@ const TqGamepad = {
             return;
         }
 
+        this.releaseIgnoredCaptureButtons(captureRequest, gamepad);
+
         for (let i = 0; i < gamepad.buttons.length; i++) {
             const isIgnoredButton = captureRequest.ignoredButtons.includes(i);
             if (isIgnoredButton) {
@@ -199,6 +201,28 @@ const TqGamepad = {
         );
     },
 
+    getMappedButtonLabel(action) {
+        if (typeof action !== "string") {
+            console.log("Invalid action", { action });
+            return "(Invalid action)";
+        }
+
+        if (! this.inputMap.hasOwnProperty(action)) {
+            console.log("Unknown action", { action });
+            return "(Unknown action)";
+        }
+
+        if (this.inputMap[action] === null) {
+            return "Unmapped";
+        }
+
+        return this.getButtonLabel(this.inputMap[action]);
+    },
+
+    isMapped: function(action) {
+        return Number.isInteger(this.inputMap?.[action]);
+    },
+
     updateStatus: function(gamepad) {
         const isConnected = Boolean(gamepad);
 
@@ -251,6 +275,21 @@ const TqGamepad = {
             timeoutMs: options.timeoutMs || 10000,
             ignoredButtons: this.getCurrentlyPressedButtonIndexes(),
         };
+    },
+
+    releaseIgnoredCaptureButtons: function(captureRequest, gamepad) {
+        const stillIgnoredButtons = [];
+
+        for (const buttonIndex of captureRequest.ignoredButtons) {
+            if (this.isButtonPressed(gamepad, buttonIndex)) {
+                stillIgnoredButtons.push(buttonIndex);
+                continue;
+            }
+
+            this.buttonStates[buttonIndex] = false;
+        }
+
+        captureRequest.ignoredButtons = stillIgnoredButtons;
     },
 
     cancelCapture: function() {

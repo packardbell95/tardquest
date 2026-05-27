@@ -135,7 +135,7 @@ menu.setMenus({
             },
             {
                 id: "remapControllerButtons",
-                displayText: "Remap Gamepad Buttons",
+                displayText: "Remap gamepad buttons",
                 description: "Customize your controller's layout",
                 className: TqGamepad.connected ? undefined : "muted",
             },
@@ -312,37 +312,58 @@ menu.setMenus({
                 description:
                     "Used for confirmation in menus or waiting during " +
                     "exploration",
+                trailText: TqGamepad.getMappedButtonLabel("primary"),
+                className:
+                    TqGamepad.isMapped("primary") ? undefined : "bad",
             },
             {
                 id: "cancel",
                 displayText: "Cancel",
                 description:
                     "Used for backing out of menus and closing modals",
+                trailText: TqGamepad.getMappedButtonLabel("cancel"),
+                className:
+                    TqGamepad.isMapped("cancel") ? undefined : "bad",
             },
             {
                 id: "menu",
                 displayText: "Pause / Game Settings Menu",
                 description: "Used for pausing the game and changing settings",
+                trailText: TqGamepad.getMappedButtonLabel("menu"),
+                className:
+                    TqGamepad.isMapped("menu") ? undefined : "bad",
             },
             {
                 id: "inventory",
                 displayText: "Inventory",
                 description: "Opens your inventory",
+                trailText: TqGamepad.getMappedButtonLabel("inventory"),
+                className:
+                    TqGamepad.isMapped("inventory") ? undefined : "bad",
             },
             {
                 id: "talk",
                 displayText: "Talk to Party",
                 description: "Talk to your party members",
+                trailText: TqGamepad.getMappedButtonLabel("talk"),
+                className:
+                    TqGamepad.isMapped("talk") ? undefined : "bad",
             },
             {
                 id: "strafeLeft",
                 displayText: "Strafe Left",
                 description: "Step one space to the left during exploration",
+                trailText: TqGamepad.getMappedButtonLabel("strafeLeft"),
+                className:
+                    TqGamepad.isMapped("strafeLeft") ? undefined : "bad",
             },
             {
                 id: "strafeRight",
                 displayText: "Strafe Right",
                 description: "Step one space to the right during exploration",
+                trailText: TqGamepad.getMappedButtonLabel("strafeRight"),
+                className:
+                    TqGamepad.isMapped("strafeRight") ? undefined : "bad",
             },
             {
                 id: "_back",
@@ -365,12 +386,19 @@ menu.setMenus({
             TqGamepad.captureNextButton({
                 action,
                 onCapture: function(input) {
-                    TqGamepad.inputMap.primary = input.index;
+                    for (const key in TqGamepad.inputMap) {
+                        if (TqGamepad.inputMap[key] === input.index) {
+                            TqGamepad.inputMap[key] = null;
+                        }
+                    }
 
+                    TqGamepad.inputMap[action] = input.index;
                     updateBattleLog(
                         `${actionDisplayHtml} is now mapped to ` +
                         `<span class="good">${input.label}</span>`
                     );
+
+                    menu.render();
                 },
                 onCancel: function() {
                     console.log("No button selected.");
