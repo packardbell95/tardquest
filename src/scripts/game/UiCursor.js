@@ -144,7 +144,7 @@ const UiCursor = {
 
     remove: function(sectionName) {
         const index = sectionName
-            ? this._activeCursors.indexOf(e => e.sectionName === sectionName)
+            ? this._activeCursors.findIndex(e => e.sectionName === sectionName)
             : 0;
 
         if (index < 0) {

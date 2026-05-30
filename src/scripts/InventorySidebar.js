@@ -1185,7 +1185,10 @@ const InventorySidebar = {
                     {
                         text: "Yes",
                         type: "primary",
-                        onclick: () => callback(partyMember, hand, null),
+                        onclick: () => {
+                            callback(partyMember, hand, null);
+                            return true;
+                        },
                     },
                 ]
             );
@@ -1236,11 +1239,17 @@ const InventorySidebar = {
             [
                 {
                     text: "Left Hand",
-                    onclick: () => callback(partyMember, "left", ringId),
+                    onclick: () => {
+                        callback(partyMember, "left", ringId);
+                        return true;
+                    },
                 },
                 {
                     text: "Right Hand",
-                    onclick: () => callback(partyMember, "right", ringId),
+                    onclick: () => {
+                        callback(partyMember, "right", ringId);
+                        return true;
+                    },
                 },
             ]
         );

@@ -14,17 +14,26 @@
  * @attribute {number} [height=14] - Height of the bar in pixels
  *
  * Special Attributes
- * @attribute {boolean} [placeholder] - If set, will display the bar as a placeholder instead of showing any values
+ * @attribute {boolean} [placeholder] - If set, will display the bar as a
+ *  placeholder instead of showing any values
  *
  * Thresholds
- * @attribute {number} [cautionAtOrAbovePercentage] - Triggers caution animation if percentage meets or exceeds this value
- * @attribute {number} [cautionAbovePercentage] - Triggers caution animation if percentage exceeds this value
- * @attribute {number} [cautionAtOrBelowPercentage] - Triggers caution animation if percentage meets or is below this value
- * @attribute {number} [cautionBelowPercentage] - Triggers caution animation if percentage is below this value
- * @attribute {number} [dangerAtOrAbovePercentage] - Triggers danger animation if percentage meets or exceeds this value
- * @attribute {number} [dangerAbovePercentage] - Triggers danger animation if percentage exceeds this value
- * @attribute {number} [dangerAtOrBelowPercentage] - Triggers danger animation if percentage meets or is below this value
- * @attribute {number} [dangerBelowPercentage] - Triggers danger animation if percentage is below this value
+ * @attribute {number} [cautionAtOrAbovePercentage] - Triggers caution animation
+ *  if percentage meets or exceeds this value
+ * @attribute {number} [cautionAbovePercentage] - Triggers caution animation if
+ *  percentage exceeds this value
+ * @attribute {number} [cautionAtOrBelowPercentage] - Triggers caution animation
+ *  if percentage meets or is below this value
+ * @attribute {number} [cautionBelowPercentage] - Triggers caution animation if
+ *  percentage is below this value
+ * @attribute {number} [dangerAtOrAbovePercentage] - Triggers danger animation
+ *  if percentage meets or exceeds this value
+ * @attribute {number} [dangerAbovePercentage] - Triggers danger animation if
+ *  percentage exceeds this value
+ * @attribute {number} [dangerAtOrBelowPercentage] - Triggers danger animation
+ *  if percentage meets or is below this value
+ * @attribute {number} [dangerBelowPercentage] - Triggers danger animation if
+ *  percentage is below this value
  *
  * Colors
  * @attribute {string} [emptyColor="#900"] - CSS color for the unfilled portion

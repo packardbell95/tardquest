@@ -135,6 +135,25 @@ a:link {
     color: #fff;
 }
 
+@keyframes loadingSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    border: 16px solid #fff3;
+    border-top: 16px solid #61C9F6;
+    border-radius: 50%;
+    width: 50px;
+    aspect-ratio: 1;
+    animation: loadingSpin .5s linear infinite;
+}
+
 #ui {
     display: flex;
 }
@@ -154,7 +173,7 @@ a:link {
     background-size: contain;
     position: absolute;
     pointer-events: none;
-    z-index: 50;
+    z-index: 1000;
 
     /** Corners **/
     &.left-top,
@@ -309,7 +328,7 @@ a:link {
         scaleX(6%)
         scaleY(40%)
         rotateZ(-43deg);
-    z-index: 9999;
+    z-index: 1000;
 }
 
 #titleScreen .distantLightning {
@@ -1810,6 +1829,15 @@ a:link {
 
 .invisible {
     visibility: hidden !important;
+}
+
+.offscreen {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }
 
 #inputBox {
@@ -3617,12 +3645,38 @@ a:link {
     color: #000;
     background: #fff;
 
+    &.good {
+        background: #090;
+        color: #fff;
+    }
+
+    &.bad {
+        background: #f00;
+        color: #fff;
+    }
+
     &.warning {
         background: #ff0;
     }
 }
 
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 0.5);
+    z-index: 999;
+    pointer-events: auto;
+}
+
 dialog.modal {
+    position: fixed;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+
     user-select: none;
     font-size: 14px;
     min-width: 400px;
@@ -3752,6 +3806,21 @@ dialog.modal {
 dialog.modal::backdrop {
     background-color: #000;
     opacity: 0.8;
+}
+
+dialog.modal .body .tardboard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 1ch;
+
+    & > * {
+        margin: 0 auto;
+
+        &:last-child {
+            margin-bottom: 2ch;
+        }
+    }
 }
 
 @keyframes rumble {

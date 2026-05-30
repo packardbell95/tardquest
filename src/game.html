@@ -351,7 +351,7 @@
                 <button
                     id="inventorySidebarScrollUp"
                     class="hidden"
-                    onClick="InventorySidebar.scrollUp()"
+                    onclick="InventorySidebar.scrollUp()"
                 ></button>
                 <div name="main">
                     <button
@@ -398,7 +398,7 @@
                 <button
                     id="inventorySidebarScrollDown"
                     class="hidden"
-                    onClick="InventorySidebar.scrollDown()"
+                    onclick="InventorySidebar.scrollDown()"
                 ></button>
             </div>
         </div>
@@ -620,15 +620,7 @@
                 <div id="controllerStatusButtonContainer">
                     <button
                         id="controllerStatusButton"
-                        onclick="showControllerStatusModal()"
                         data-tooltipGroupId="bottomRightIcons"
-                        data-tooltipHtml='
-                            <div class="genericTooltip">
-                                <span id="controllerTooltipText">
-                                    TardPad Status
-                                </span>
-                            </div>
-                        '
                     ></button>
                 </div>
             </div>
@@ -637,7 +629,8 @@
     <script src="scripts/preloader-v2.js"></script>
     <!-- VOCAP: must be loaded before any other API modules! -->
     <script src="scripts/no-arrow-key-scroll.js"></script>
-    <script src="scripts/progress-bar.js"></script>
+    <script src="scripts/custom-elements/arcade-text-input.js"></script>
+    <script src="scripts/custom-elements/progress-bar.js"></script>
     <script src="scripts/CorridorTagger.js"></script>
     <script src="scripts/SceneRenderer.js"></script>
     <script src="scripts/engine/Battle/BattleSystem.js"></script>
@@ -1347,6 +1340,50 @@
                 { passive: true }
             );
 
+            TqGamepad.onStatusChange = function(isConnected) {
+                const $button =
+                    document.getElementById("controllerStatusButton");
+
+                if (! $button) {
+                    console.error("The controller status button doesn't exist");
+                    return;
+                }
+
+                $button.className = isConnected ? "connected" : "disconnected";
+
+                const tooltipClass =
+                    "genericTooltip " + (isConnected ? "good" : "bad");
+                const tooltipStatusText =
+                    isConnected ? "Connected" : "Disconnected";
+
+                $button.dataset.tooltiphtml = `
+                    <div class="${tooltipClass}">
+                        TardPad Status: ${tooltipStatusText}
+                    </div>
+                `;
+                Tooltip.refresh($button);
+
+                const gamepads = TqGamepad.getGamepads();
+                const modalBodyHtml = isConnected
+                    ?   `<div>
+                            <h3>🟢 Gamepad Connected</h3>
+                            <p>
+                                <strong>ID:</strong> ${gamepads[0].id}
+                            </p>
+                        </div>`
+                    :   `<div>
+                            <h3>🔴 No Gamepad Connected</h3>
+                            <p>
+                                Please connect a gamepad and press any button to
+                                activate it.
+                            </p>
+                        </div>`;
+
+                $button.onclick = () => {
+                    Modal.open("TardPad Status", modalBodyHtml);
+                };
+            };
+
             TqGamepad.start();
 
             document.addEventListener("DOMContentLoaded", apply);
@@ -1385,10 +1422,14 @@
             },
         };
 
+        const TardPadStatusButton = {
+
+        };
+
         const
             WIDTH = 30,
             HEIGHT = 11;
-        const DIRECTIONS = ['N', 'E', 'S', 'W'];
+        const DIRECTIONS = ["N", "E", "S", "W"];
         const DX = [0, 1, 0, -1];
         const DY = [-1, 0, 1, 0];
         let lastFloorBoostNotice = 0;
@@ -1857,17 +1898,23 @@
                             {
                                 text: "Nah, keep the bastard",
                                 type: "danger",
-                                onclick: () => partyMember.say(randomEntry([
-                                    "Thanks for keeping me, boss.",
-                                    "Oh joy.",
-                                    "Whoopty doo.",
-                                    "Yay. More sewer adventures!",
-                                ])),
+                                onclick: () => {
+                                    partyMember.say(randomEntry([
+                                        "Thanks for keeping me, boss.",
+                                        "Oh joy.",
+                                        "Whoopty doo.",
+                                        "Yay. More sewer adventures!",
+                                    ]));
+                                    return true;
+                                },
                             },
                             {
                                 text: "Yes",
                                 type: "primary",
-                                onclick: () => partyMember.release(),
+                                onclick: () => {
+                                    partyMember.release();
+                                    return true;
+                                },
                             },
                         ]
                     );
@@ -3302,7 +3349,7 @@
                     `<span class="action">floor ${floor}</span>`
                 );
 
-                setTimeout(() => window.location.reload(), 3000);
+                setTimeout(() => TardBoard.openModal(), 3000);
             }
 
             document.getElementById("game").innerHTML =
@@ -4536,8 +4583,20 @@
         }
 
         document.addEventListener("keydown", e => {
-            e.preventDefault();
             const key = e.key.toLowerCase();
+            const activeTag = document.activeElement.tagName;
+            const currentElementReceivesTextInput =
+                ["INPUT", "TEXTAREA", "ARCADE-TEXT-INPUT"].includes(activeTag);
+
+            const allowKeyboardEventsToPassThrough =
+                currentElementReceivesTextInput &&
+                ! ["enter", "escape"].includes(key);
+
+            if (allowKeyboardEventsToPassThrough) {
+                return;
+            }
+
+            e.preventDefault();
 
             switch (key) {
                 case " ": // Spacebar
@@ -5068,8 +5127,6 @@
             TardAPI.createSession();
             PigeonMessaging.ensurePolling();
 
-            // @TODO Refactor this since it's duplicated in gamepad.js
-            // @see https://github.com/packardbell95/tardquest/issues/162
             TITLE_SCREEN.startGame(
                 $titleScreen,
                 () => {
@@ -5122,5 +5179,5 @@
         playerEntity.initializePartySection(); // Should this be on player?
         GameControl.update();
     </script>
-    <script src="scripts/tardboard.js"></script>
+    <script src="scripts/TardBoard.js"></script>
 </body></html>

@@ -47,7 +47,7 @@ const PlayerInput = {
     },
 
     _handleInput(action) {
-        if (gameOver) {
+        if (! GameControl.enabled) {
             return;
         }
 
@@ -58,9 +58,31 @@ const PlayerInput = {
             hideTitleScreen();
         }
 
-        if (Modal.isOpen && action === "cancel") {
-            playSFX("uiCancel");
-            Modal.close();
+        if (Modal.isOpen()) {
+            switch (action) {
+                case "up":
+                    Modal.navigate.up();
+                    break;
+                case "down":
+                    Modal.navigate.down();
+                    break;
+                case "left":
+                    Modal.navigate.left();
+                    break;
+                case "right":
+                    Modal.navigate.right();
+                    break;
+                case "primary":
+                    Modal.navigate.select();
+                    break;
+                case "cancel":
+                    Modal.navigate.back();
+                    break;
+                default:
+                    console.warn("Unknown modal navigation", { action });
+                    break;
+            }
+
             return;
         }
 
@@ -90,14 +112,12 @@ const PlayerInput = {
             if (! animationActive) {
                 menu.handleInput(action);
             }
-
             return;
         }
 
         if (action === "inventory") {
             playSFX("inventoryOpen");
             menu.open("inventory");
-
             return;
         }
 

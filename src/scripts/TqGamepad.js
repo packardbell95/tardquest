@@ -32,6 +32,9 @@ const TqGamepad = {
         right: 15,
     },
 
+    // Fires when the status changes. This is intended to be overridden
+    onStatusChange: (isConnected) => {},
+
     start: function() {
         if (this.animationFrameId !== null) {
             return;
@@ -47,6 +50,7 @@ const TqGamepad = {
             this.handleGamepadDisconnected.bind(this)
         );
 
+        this.onStatusChange?.(false);
         this.tick();
     },
 
@@ -225,27 +229,15 @@ const TqGamepad = {
 
     updateStatus: function(gamepad) {
         const isConnected = Boolean(gamepad);
-
-        if (this.connected !== isConnected) {
-            this.connected = isConnected;
-            this.buttonStates = [];
-            this.directionStates = {};
+        const statusChanged = this.connected !== isConnected;
+        if (! statusChanged) {
+            return;
         }
 
-        const controllerBox = document.getElementById("controller");
-        const controllerStatusButton = document.getElementById(
-            "controllerStatusButton"
-        );
-
-        if (controllerBox) {
-            controllerBox.className = isConnected
-                ? "connected"
-                : "disconnected";
-        }
-
-        if (controllerStatusButton) {
-            controllerStatusButton.classList.toggle("connected", isConnected);
-        }
+        this.connected = isConnected;
+        this.buttonStates = [];
+        this.directionStates = {};
+        this.onStatusChange?.(isConnected);
     },
 
     handleGamepadConnected: function(event) {
@@ -394,7 +386,6 @@ const TqGamepad = {
 
     routeDirectionalInputs: function(gamepad) {
         const directions = this.getDirections(gamepad);
-
         this.routeDirection("up", directions.up);
         this.routeDirection("down", directions.down);
         this.routeDirection("left", directions.left);
@@ -428,7 +419,6 @@ const TqGamepad = {
             };
 
             PlayerInput[action]();
-
             return;
         }
 
