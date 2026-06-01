@@ -409,17 +409,7 @@ const SceneRenderer = {
                 $artContainer.dataset.partyMemberId = partyMember.id;
 
                 if (! partyMember.isDead()) {
-                    const $mask = document.createElement("pre");
-                    $mask.className = "mask";
-                    $mask.textContent =
-                        SceneRenderer.formatArt(indexedArt, true);
-                    $artContainer.append($mask);
-
-                    const $art = document.createElement("pre");
-                    $art.className = "art roamingEnemy";
-                    $art.textContent =
-                        SceneRenderer.formatArt(indexedArt);
-                    $artContainer.append($art);
+                    SceneRenderer.drawSprite($artContainer, indexedArt);
                 }
 
                 $row.append($artContainer);
@@ -429,6 +419,30 @@ const SceneRenderer = {
         }
 
         return $layer.outerHTML;
+    },
+
+    drawSprite: ($container, art) => {
+        if (! ($container instanceof Element)) {
+            console.error("Container must be an element", { $container, art });
+            return;
+        }
+
+        if (! art) {
+            console.error("Art is not set", { $container, art });
+            return;
+        }
+
+        const $mask = document.createElement("pre");
+        $mask.className = "mask";
+        $mask.textContent = SceneRenderer.formatArt(art, true);
+        $container.append($mask);
+
+        const $art = document.createElement("pre");
+        $art.className = "art roamingEnemy";
+        $art.textContent = SceneRenderer.formatArt(art);
+        $container.append($art);
+
+        $container.replaceChildren($mask, $art);
     },
 
     highlightEntities: (entityIds = []) => {

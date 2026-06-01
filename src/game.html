@@ -2612,6 +2612,11 @@
                     `.layer.enemy [data-party-member-id="${id}"]`;
                 const $target = document.querySelector(selector);
                 if ($target) {
+                    SceneRenderer.drawSprite(
+                        $target,
+                        window.ENEMY_ART[target.type]
+                    );
+
                     $target.classList.remove(
                         "poked",
                         "crt-flashed",
@@ -2651,8 +2656,14 @@
                             const id = target.id;
                             const selector =
                                 `.layer.enemy [data-party-member-id="${id}"]`;
-                            document.querySelector(selector)?.classList
-                                .add("damaged");
+
+                            const $target = document.querySelector(selector);
+                            SceneRenderer.drawSprite(
+                                $target,
+                                window.ENEMY_ART[`${target.type}Hurt`]
+                            );
+                            $target.classList.add("damaged");
+
                             target.updateHp();
 
                             if (attackWasFatal) {
@@ -2689,15 +2700,12 @@
                             const id = target.id;
                             const selector =
                                 `.layer.enemy [data-party-member-id="${id}"]`;
-                            const $target = document.querySelector(selector);
-                            if (! $target) {
-                                console.warn(
-                                    "No target element found",
-                                    { target }
-                                );
-                                return;
-                            }
 
+                            const $target = document.querySelector(selector);
+                            SceneRenderer.drawSprite(
+                                $target,
+                                window.ENEMY_ART[`${target.type}Hurt`]
+                            );
                             $target.classList.add("poked");
 
                             target.updateHp();

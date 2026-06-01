@@ -1831,7 +1831,7 @@ a:link {
     visibility: hidden !important;
 }
 
-.offscreen {
+.offscreen-pixel {
     position: absolute;
     left: -9999px;
     top: -9999px;
