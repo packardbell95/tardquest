@@ -3126,6 +3126,10 @@ a:link {
     font-size: 1.5em;
     padding: 1ch;
 
+    & .left-pad {
+        padding-left: 0.5ch;
+    }
+
     & .large {
         font-size: 1.5em;
     }

@@ -289,8 +289,6 @@ const TardQuestMapGenerator = {
         // Place NPCs
         const placementPoints = shuffle(gameMap.getMapDissolvePoints());
 
-        this._placeGravestone(gameMap, floor, placementPoints);
-
         // 🧙 Merchant
         const placeMerchant = placementPoints.length > 0 &&
             (floor === 1 || Math.random() < 0.7);
@@ -346,6 +344,10 @@ const TardQuestMapGenerator = {
             numberBetween(1, 4),
             placementPoints
         );
+
+        // Gravestones depend on the TardAPI and work asynchronously, so place
+        // these last
+        this._placeGravestone(gameMap, floor, placementPoints);
 
         // Update the dungeon floor counter
         document.getElementById("dungeonFloor").textContent =
@@ -519,6 +521,11 @@ const TardQuestMapGenerator = {
         const entry = randomEntry(uniqueEntries);
 
         const position = placementPoints.shift();
+        if (! position) {
+            console.warn("No place available for a gravestone", { floor });
+            return;
+        }
+
         const gravestone = MapEntityFeatureFactory.gravestone(
             position.x,
             position.y
@@ -577,7 +584,7 @@ const TardQuestMapGenerator = {
             );
 
             // 20% chance for mimic
-            const isMimic = true; // Math.random() < 0.2;
+            const isMimic = Math.random() < 0.2;
 
             if (isMimic) {
                 const mimic = TardQuestPartyMemberFactory.mimic();

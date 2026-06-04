@@ -57,8 +57,9 @@ const InventorySidebar = {
     },
 
     updateButtonControlState: ($button) => {
-        const isItem = InventorySidebar.enabled && document
-            .querySelector(`#inventory [name="items"]`).contains($button);
+        const isItem =
+            InventorySidebar.enabled &&
+            InventorySidebar.getSectionElement("items")?.contains($button);
 
         ! InventorySidebar.enabled || (
             BattleSystem.isActive &&
@@ -114,8 +115,8 @@ const InventorySidebar = {
             InventorySidebar.open("main");
         }
 
-        document
-            .querySelectorAll(`#inventory [name="main"] > button`)
+        InventorySidebar.getSectionElement("main")
+            ?.querySelectorAll(`:scope > button`)
             .forEach($button => {
                 const hideButton =
                     $button.classList.contains("weapons") ||
@@ -132,13 +133,9 @@ const InventorySidebar = {
 
     // Reveals all buttons concealed during battle
     leaveCombat: () => {
-        document
-            .querySelectorAll(
-                `#inventory [name="main"] > button.hidden`
-            )
-            .forEach($button => {
-                $button.classList.remove("hidden");
-            });
+        InventorySidebar.getSectionElement("main")
+            ?.querySelectorAll(`:scope > button.hidden`)
+            .forEach($button => $button.classList.remove("hidden"));
 
         playerEntity.movementDisabled = false;
 
@@ -552,23 +549,14 @@ const InventorySidebar = {
      * Items
      */
     refreshItems: () => {
-        const $items = document.querySelector(`#inventory [name="items"]`);
-
         // Create and update item buttons
         for (const itemId of Object.keys(ITEMS)) {
             InventorySidebar.refreshItem(itemId);
         }
-
-        InventorySidebar.sectionIsEmpty("items")
-            ? InventorySidebar.setEmptyMessage(
-                $items,
-                `You are <span class="large">POOR!</span>`
-            )
-            : InventorySidebar.removeEmptyMessage($items);
     },
 
     refreshItem: (itemId) => {
-        const $items = document.querySelector(`#inventory [name="items"]`);
+        const $items = InventorySidebar.getSectionElement("items");
         let $button = $items.querySelector(`[data-id="${itemId}"]`);
 
         const quantity = InventorySidebar.getItemQuantity(itemId);
@@ -593,9 +581,14 @@ const InventorySidebar = {
             if (tooltipId) {
                 document.getElementById(tooltipId)?.remove();
             }
-
-            return;
         }
+
+        InventorySidebar.sectionIsEmpty("items")
+            ? InventorySidebar.setEmptyMessage(
+                $items,
+                `You are <span class="left-pad large">POOR!</span>`
+            )
+            : InventorySidebar.removeEmptyMessage($items);
 
         if (! $button) {
             return;
@@ -682,20 +675,14 @@ const InventorySidebar = {
      * Weapons
      */
     refreshWeapons: () => {
-        const $weapons = document.querySelector(`#inventory [name="weapons"]`);
-
         // Create and update weapon buttons
         for (const weaponId of Object.keys(WEAPONS)) {
             InventorySidebar.refreshWeapon(weaponId);
         }
-
-        InventorySidebar.sectionIsEmpty("weapons")
-            ? InventorySidebar.setEmptyMessage($weapons, "You have no weapons")
-            : InventorySidebar.removeEmptyMessage($weapons);
     },
 
     refreshWeapon: (weaponId) => {
-        const $weapons = document.querySelector(`#inventory [name="weapons"]`);
+        const $weapons = InventorySidebar.getSectionElement("weapons");
         let $button = $weapons.querySelector(`[data-id="${weaponId}"]`);
 
         const quantity = InventorySidebar.getWeaponQuantity(weaponId);
@@ -717,9 +704,11 @@ const InventorySidebar = {
             if (tooltipId) {
                 document.getElementById(tooltipId)?.remove();
             }
-
-            return;
         }
+
+        InventorySidebar.sectionIsEmpty("weapons")
+            ? InventorySidebar.setEmptyMessage($weapons, "You have no weapons")
+            : InventorySidebar.removeEmptyMessage($weapons);
 
         if (! $button) {
             return;
@@ -835,23 +824,14 @@ const InventorySidebar = {
      * Armor
      */
     refreshArmor: () => {
-        const $armor = document.querySelector(`#inventory [name="armor"]`);
-
         // Create and update armor buttons
         for (const armorId of Object.keys(ARMOR)) {
             InventorySidebar.refreshArmorPiece(armorId);
         }
-
-        InventorySidebar.sectionIsEmpty("armor")
-            ? InventorySidebar.setEmptyMessage(
-                $armor,
-                "Get some clothes, you pervert"
-            )
-            : InventorySidebar.removeEmptyMessage($armor);
     },
 
     refreshArmorPiece: (armorId) => {
-        const $armor = document.querySelector(`#inventory [name="armor"]`);
+        const $armor = InventorySidebar.getSectionElement("armor");
         let $button = $armor.querySelector(`[data-id="${armorId}"]`);
 
         const quantity = InventorySidebar.getArmorQuantity(armorId);
@@ -873,9 +853,14 @@ const InventorySidebar = {
             if (tooltipId) {
                 document.getElementById(tooltipId)?.remove();
             }
-
-            return;
         }
+
+        InventorySidebar.sectionIsEmpty("armor")
+            ? InventorySidebar.setEmptyMessage(
+                $armor,
+                "Get some clothes, you pervert"
+            )
+            : InventorySidebar.removeEmptyMessage($armor);
 
         if (! $button) {
             return;
@@ -988,23 +973,14 @@ const InventorySidebar = {
      * Rings
      */
     refreshRings: () => {
-        const $rings = document.querySelector(`#inventory [name="rings"]`);
-
         // Create and update ring buttons
         for (const ringId of Object.keys(RINGS)) {
             InventorySidebar.refreshRing(ringId);
         }
-
-        InventorySidebar.sectionIsEmpty("rings")
-            ? InventorySidebar.setEmptyMessage(
-                $rings,
-                `You have ${waveText("no bling").outerHTML}`
-            )
-            : InventorySidebar.removeEmptyMessage($rings);
     },
 
     refreshRing: (ringId) => {
-        const $ring = document.querySelector(`#inventory [name="rings"]`);
+        const $ring = InventorySidebar.getSectionElement("rings");
         let $button = $ring.querySelector(`[data-id="${ringId}"]`);
 
         const quantity = InventorySidebar.getRingQuantity(ringId);
@@ -1026,9 +1002,14 @@ const InventorySidebar = {
             if (tooltipId) {
                 document.getElementById(tooltipId)?.remove();
             }
-
-            return;
         }
+
+        InventorySidebar.sectionIsEmpty("rings")
+            ? InventorySidebar.setEmptyMessage(
+                $ring,
+                `You have ${waveText("no bling").outerHTML}`
+            )
+            : InventorySidebar.removeEmptyMessage($ring);
 
         if (! $button) {
             return;

@@ -201,7 +201,6 @@ const MapEntityFeatureFactory = {
         // @TODO Handle phrasing for multiple of the same item/weapon/etc
         // Eg: "12 cups of lean"
         treasureChest.plunder = function(entity) {
-            const actorInventory = entity.inventory.contents;
             const treasure = this.getFullInventoryContents();
             const transferredContents = [];
 
@@ -210,6 +209,29 @@ const MapEntityFeatureFactory = {
                     `<span class="BTC">₿ ${treasure.bitcoins}</span>`
                 );
                 entity.inventory.giveBitcoins(treasure.bitcoins);
+            }
+
+            for (const itemId in treasure.items) {
+                const item = ITEMS?.[itemId];
+                if (! item) {
+                    console.error(
+                        "Treasure chest has an unknown item",
+                        { itemId }
+                    );
+                    continue;
+                }
+
+                const quantity = treasure.items[itemId];
+                const displayedQuantity = quantity !== 1
+                    ? ` (x${quantity.toLocaleString(undefined)})`
+                    : "";
+
+                transferredContents.push(
+                    `${item.article} <span class="friendly">${item.name}` +
+                    `${displayedQuantity}</span>`
+                );
+
+                entity.inventory.addItem(itemId, quantity);
             }
 
             for (const weaponId in treasure.weapons) {
@@ -227,9 +249,8 @@ const MapEntityFeatureFactory = {
                     `</span>`
                 );
 
-                actorInventory.weapons[weaponId] =
-                    (actorInventory.weapons[weaponId] || 0) +
-                    treasure.weapons[weaponId];
+                entity.inventory
+                    .addWeapon(weaponId, treasure.weapons[weaponId]);
             }
 
             for (const armorId in treasure.armor) {
@@ -247,9 +268,7 @@ const MapEntityFeatureFactory = {
                     `</span>`
                 );
 
-                actorInventory.armor[armorId] =
-                    (actorInventory.armor[armorId] || 0) +
-                    treasure.armor[armorId];
+                entity.inventory.addArmor(armorId, treasure.armor[armorId]);
             }
 
             for (const ringId in treasure.rings) {
@@ -267,9 +286,7 @@ const MapEntityFeatureFactory = {
                     `</span>`
                 );
 
-                actorInventory.rings[ringId] =
-                    (actorInventory.rings[ringId] || 0) +
-                    treasure.rings[ringId];
+                entity.inventory.addRing(ringId, treasure.rings[ringId]);
             }
 
             if (entity?.type === "player") {
