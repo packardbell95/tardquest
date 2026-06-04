@@ -778,6 +778,26 @@ const GameControl = {
             $partyMember.onclick = addClickHandler
                 ? () => selectedEntityCallback(partyMember)
                 : null;
+
+            $partyMember.onmouseenter = addClickHandler
+                ? () => SceneRenderer.highlightEntities([ partyMemberId ])
+                : null;
+
+            $partyMember.onmouseleave = addClickHandler
+                ? () => {
+                    const $partyMember = UiCursor._activeCursors.find(e =>
+                        e.sectionName === "party member" &&
+                        e.$pointingAt instanceof Element
+                    );
+
+                    const ids = [parseInt(
+                        $partyMember?.$pointingAt.dataset.partyMemberId,
+                        10
+                    )].filter(e => e);
+
+                    SceneRenderer.highlightEntities(ids)
+                }
+                : null;
         }
     },
 

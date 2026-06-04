@@ -10,11 +10,11 @@ const UiCursor = {
     _cursorWidthPx: 44,
     _cursorHeightPx: 30,
 
-    add: function($element, sectionName = "") {
-        if (! $element instanceof Element) {
+    add: function($pointingAt, sectionName = "") {
+        if (! $pointingAt instanceof Element) {
             console.error(
-                "$element must be a DOM element",
-                { sectionName, $element }
+                "$pointingAt must be a DOM element",
+                { sectionName, $pointingAt }
             );
             return;
         }
@@ -22,20 +22,21 @@ const UiCursor = {
         if (! typeof sectionName === "string") {
             console.error(
                 "sectionName must be a string",
-                { sectionName, $element }
+                { sectionName, $pointingAt }
             );
             return;
         }
 
-        const { horizontal, vertical } = this._getPositions($element);
-        const $cursor = this._create(sectionName, $element);
-        const rect = $element.getBoundingClientRect();
+        const { horizontal, vertical } = this._getPositions($pointingAt);
+        const $cursor = this._create(sectionName, $pointingAt);
+        const rect = $pointingAt.getBoundingClientRect();
         const cursorPositionSetSuccessfully =
             this._horizontal($cursor, rect, horizontal) &&
             this._vertical($cursor, rect, vertical);
 
         if (cursorPositionSetSuccessfully) {
             $cursor.classList.add(`${horizontal}-${vertical}`);
+            $pointingAt.onmouseenter?.();
         }
 
         $cursor.classList.remove("hidden");
@@ -127,7 +128,7 @@ const UiCursor = {
 
         const lastCursor = cursors.pop();
         if (lastCursor) {
-            lastCursor.$element.remove();
+            this._removeCursor(lastCursor);
         }
 
         const cursor = cursors.length < 1 ? null : cursors[cursors.length - 1];
@@ -156,7 +157,7 @@ const UiCursor = {
         }
 
         for (let i = this._activeCursors.length - 1; i >= index; i--) {
-            this._activeCursors[i].$element.remove();
+            this._removeCursor(this._activeCursors[i]);
         }
 
         this._activeCursors = this._activeCursors.slice(0, index);
@@ -173,6 +174,11 @@ const UiCursor = {
         for (const cursor of this._activeCursors) {
             cursor.$element.classList.add(this._flickerClass);
         }
+    },
+
+    _removeCursor: function(cursor) {
+        cursor.$pointingAt?.onmouseleave?.();
+        cursor.$element?.remove();
     },
 
     _create: function(sectionName, $pointingAt) {
