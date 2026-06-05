@@ -36,6 +36,7 @@ const TardBoard = {
                     <arcade-text-input
                         maxlength="5"
                         oninput="Modal.togglePrimaryButtons(this.value !== '')"
+                        onblur="Modal.navigate._Footer(null, 'button')"
                     ></arcade-text-input>
                 </div>
             `,
