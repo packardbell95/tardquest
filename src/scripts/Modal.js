@@ -40,6 +40,8 @@ const Modal = {
 
     _navigateBody: null,
     _uiCursorSectionName: "modal",
+    _onclose: null,
+    _onclosebuttonclicked: null,
 
     /**
      * Open a new modal
@@ -50,11 +52,23 @@ const Modal = {
      * @param string bodyHtml The HTML contents of the modal
      * @param array buttons An array of objects that contain the following:
      *  - string text - The display text of the button, eg: "Ok"
-     *  - ?function onclick A function to fire when the button is clicked
      *  - ?string type The button's type. @see _buttonTypes
+     *  - ?boolean disabled True if the button is disabled
+     *  - ?function onclick A function to fire when the button is clicked
+     * @param Object events An object of event handlers to fire
+     * @param {(() => void)|null} [events.onopen] Fires when modal opens
+     * @param {(() => void)|null} [events.onclose] Fires when modal closes
+     * @param {(() => void)|null} [events.onclosebuttonclicked] Fires when the
+     *    player clicks the modal's close button
      * @param ?function navigateBodyFunction Handles body navigation inputs
      */
-    open: function (title, bodyHtml, buttons, navigateBodyFunction = null) {
+    open: function (
+        title,
+        bodyHtml,
+        buttons,
+        events = {},
+        navigateBodyFunction = null
+    ) {
         this.close(); // Close any open modals
 
         const modalTitle = typeof title === "string"
@@ -73,7 +87,7 @@ const Modal = {
             this._navigateBody = navigateBodyFunction;
         }
 
-        this._$backdrop = this._backdrop(false);
+        this._$backdrop = this._backdrop();
         document.body.appendChild(this._$backdrop);
 
         this._$modal = this._create(
@@ -82,7 +96,17 @@ const Modal = {
             modalButtons
         );
 
+        this._onclosebuttonclicked =
+            typeof events.onclosebuttonclicked === "function"
+                ? events.onclosebuttonclicked : null;
+
+        this._onclose = typeof events.onclose === "function"
+            ? events.onclose
+            : null;
+
         this._$modal.show();
+
+        events.onopen?.();
     },
 
     // Returns true if the modal is open
@@ -90,13 +114,9 @@ const Modal = {
         return this._$modal !== null;
     },
 
-    _backdrop: function(closeModalOnClick = false) {
+    _backdrop: function() {
         const $backdrop = document.createElement("div");
         $backdrop.classList.add("modal-backdrop");
-
-        if (closeModalOnClick) {
-            $backdrop.addEventListener("click", () => Modal.close());
-        }
 
         return $backdrop;
     },
@@ -120,7 +140,7 @@ const Modal = {
         $closeButton.title = "Close";
         $closeButton.onclick = () => {
             playSFX("uiCancel");
-            Modal.close();
+            Modal.close(true);
         };
         $header.appendChild($closeButton);
 
@@ -146,6 +166,10 @@ const Modal = {
                 ? button.type
                 : "secondary";
 
+            if (button.disabled) {
+                $button.setAttribute("disabled", "disabled");
+            }
+
             $button.onclick = () => {
                 playSFX("uiSelect");
 
@@ -165,12 +189,23 @@ const Modal = {
     },
 
     // Closes any opened modal
-    close: function () {
+    close: function (closeButtonOrBackdropClicked = false) {
         UiCursor.remove(this._uiCursorSectionName);
         this._navigateBody = null;
         this._$backdrop?.remove();
         this._$modal?.remove();
         this._$modal = null;
+
+        closeButtonOrBackdropClicked && this._onclosebuttonclicked?.();
+        this._onclose?.();
+    },
+
+    togglePrimaryButtons: function(enable) {
+        this._$modal?.querySelectorAll(".footer button.primary").forEach($e =>
+            enable
+                ? $e.removeAttribute("disabled")
+                : $e.setAttribute("disabled", "disabled")
+        );
     },
 
     // Handles modal inputs. Called by PlayerInput
@@ -304,17 +339,29 @@ const Modal = {
             }
         },
 
+        _activateSelector: function(selector, playSfx, flicker) {
+            if (typeof selector !== "string") {
+                console.error(
+                    "Selector must be a string",
+                    { selector, playSfx, flicker }
+                );
+                return;
+            }
+
+            const $e = Modal._$modal.querySelector(selector);
+            if ($e) {
+                this._activate($e, playSfx, flicker);
+            }
+        },
+
         _Header: function($activeElement, direction) {
             switch (direction) {
                 case "initialize":
                 case "enter from bottom":
-                    const $close = Modal._$modal
-                        .querySelector(".header button.close:not(:disabled)");
-
-                    if ($close) {
-                        const playSfx = direction !== "initialize";
-                        this._activate($close, playSfx);
-                    }
+                    this._activateSelector(
+                        ".header button.close:not(:disabled)",
+                        direction !== "initialize"
+                    );
                     break;
                 case "down":
                     this._Body($activeElement, "enter from top");
@@ -378,39 +425,32 @@ const Modal = {
                 .indexOf($activeElement);
 
             if (direction.startsWith("button")) {
+                const buttonType = direction.replace(/^button\s+/i, "");
                 for (const type of Modal._buttonTypes) {
-                    const selector = `.footer button.${type}:not(:disabled)`;
-
-                    const $button = Modal._$modal.querySelector(selector);
-                    if ($button) {
-                        this._activate($button);
+                    if (type !== buttonType) {
+                        continue;
                     }
+
+                    this._activateSelector(
+                        `.footer button.${type}:not(:disabled)`
+                    );
 
                     return;
                 }
 
-                const selector = ".footer button:not(:disabled)";
-                const $button = Modal._$modal.querySelector(selector);
-                if ($button) {
-                    this._activate($button);
-                }
-
+                this._activateSelector(".footer button:not(:disabled)");
                 return;
             }
 
             switch (direction) {
                 case "initialize":
                 case "enter from top":
-                    const $button = Modal._$modal.querySelector(`
+                    this._activateSelector(`
                         .footer button.primary:not(:disabled),
                         .footer button.secondary:not(:disabled),
-                        .footer button:not(.danger):not(:disabled)
+                        .footer button:not(.danger):not(:disabled),
                         .footer button:not(:disabled)
                     `);
-
-                    if ($button) {
-                        this._activate($button);
-                    }
                     break;
 
                 case "up":
@@ -446,6 +486,12 @@ const Modal = {
 
                 case "down":
                     // Do nothing
+                    break;
+
+                case "back":
+                    this._activateSelector(
+                        ".footer button.danger:not(:disabled)"
+                    );
                     break;
             }
         },

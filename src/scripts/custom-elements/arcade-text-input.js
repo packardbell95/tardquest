@@ -334,13 +334,13 @@ class ArcadeTextInput extends HTMLElement {
 
         if (event.key === "Backspace") {
             event.preventDefault();
-            this.#backspace();
+            this.backspace();
             return;
         }
 
         if (event.key === "Delete") {
             event.preventDefault();
-            this.#delete();
+            this.delete();
             return;
         }
 
@@ -410,7 +410,7 @@ class ArcadeTextInput extends HTMLElement {
         return this.#valueCharacters.length;
     }
 
-    #backspace() {
+    backspace() {
         const isAtNextEmptySlot = this.#cursorIndex ===
             this.#valueCharacters.length;
 
@@ -429,7 +429,7 @@ class ArcadeTextInput extends HTMLElement {
         this.#emitInput();
     }
 
-    #delete() {
+    delete() {
         if (this.#valueCharacters[this.#cursorIndex] === undefined) {
             return;
         }

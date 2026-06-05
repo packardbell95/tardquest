@@ -34,8 +34,8 @@ const TardBoard = {
                         Enter your initials
                     </div>
                     <arcade-text-input
-                        value="A"
                         maxlength="5"
+                        oninput="Modal.togglePrimaryButtons(this.value !== '')"
                     ></arcade-text-input>
                 </div>
             `,
@@ -43,6 +43,7 @@ const TardBoard = {
                 {
                     text: "Submit",
                     type: "primary",
+                    disabled: true,
                     onclick: () => {
                         TardBoard.handleSubmitClick(
                             TardBoard.getModalPlayerInitials()
@@ -56,15 +57,14 @@ const TardBoard = {
                     onclick: () => TardBoard.clearSessionAndReload(),
                 },
             ],
-            function($activeElement, direction) {
+            {
+                onopen: () => Modal._navigateBody(),
+                onclosebuttonclicked: () => TardBoard.clearSessionAndReload(),
+            },
+            function($activeElement, direction = "initialize") {
                 const $input = Modal._$modal.querySelector(
                     ".body arcade-text-input"
                 );
-
-                if (direction === "back") {
-                    $input.blur();
-                    return "footer, button danger";
-                }
 
                 if ($activeElement === $input) {
                     switch (direction) {
@@ -83,6 +83,13 @@ const TardBoard = {
                         case "select":
                             $input.blur();
                             return "footer, button primary";
+                        case "back":
+                            if ($input.value === "") {
+                                $input.blur();
+                                return "footer, button danger";
+                            }
+                            $input.backspace();
+                            break;
                     }
                     return;
                 }
@@ -109,6 +116,9 @@ const TardBoard = {
                             $input.focus();
                         }
                         break;
+                    case "back":
+                        $input.blur();
+                        return "footer, button danger";
                 }
             }
         );
@@ -140,6 +150,7 @@ const TardBoard = {
                 </div>
             `,
             [],
+            { onclosebuttonclicked: () => TardBoard.clearSessionAndReload() },
         );
 
         try {
@@ -232,7 +243,8 @@ const TardBoard = {
                     type: "primary",
                     onclick: () => TardBoard.clearSessionAndReload(),
                 },
-            ]
+            ],
+            { onclosebuttonclicked: () => TardBoard.clearSessionAndReload() },
         );
     },
 
@@ -262,6 +274,7 @@ const TardBoard = {
                     onclick: () => TardBoard.clearSessionAndReload(),
                 },
             ],
+            { onclosebuttonclicked: () => TardBoard.clearSessionAndReload() },
         );
     },
 
