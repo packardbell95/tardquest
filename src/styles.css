@@ -3817,6 +3817,7 @@ dialog.modal .body .tardboard {
     flex-direction: column;
     justify-content: space-around;
     gap: 1ch;
+    margin-bottom: 2em;
 
     & > * {
         margin: 0 auto;

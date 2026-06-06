@@ -2,24 +2,8 @@
 
 /**
  * Handles leaderboard API calls for TardQuest high score submissions
- *
- * This module loads the Cloudflare Turnstile when requested and submits high
- * scores through the TardAPI
  */
 const TardBoard = {
-    // Cloudflare Turnstile site key for captcha verification
-    turnstileSiteKey: "0x4AAAAAABzv0mtUXvveSKgW",
-
-    // Cloudflare Turnstile script URL
-    turnstileScriptUrl:
-        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit",
-
-    // Attribute used to identify the injected Turnstile script element
-    turnstileScriptAttribute: "data-tardboard-turnstile-loaded",
-
-    // Cached promise so repeated calls do not inject duplicate scripts
-    turnstileScriptPromise: null,
-
     // Reference of the player's initials that will persist between modal opens
     _playerInitials: null,
 
@@ -137,6 +121,7 @@ const TardBoard = {
         if (! playerInitials) {
             console.error("No initials were captured");
             TardBoard.clearSessionAndReload();
+
             return null;
         }
 
@@ -146,8 +131,10 @@ const TardBoard = {
             `Submitting High Score for ${playerInitials}...`,
             `
                 <div class="tardboard">
-                    <div id="tardboard-turnstile-container"></div>
-                    <div class="loading-spinner">
+                    <div class="loading-spinner"></div>
+                    <div>
+                        Solving proof-of-work challenge...
+                    </div>
                 </div>
             `,
             [],
@@ -155,12 +142,8 @@ const TardBoard = {
         );
 
         try {
-            await TardBoard.ensureTurnstileScript();
-
-            const captchaToken = await TardBoard.createCaptchaToken();
             const result = await TardBoard.submitHighScore({
                 playerInitials,
-                captchaToken,
                 onSuccess: TardBoard.handleSubmissionSuccess,
                 onFailure: TardBoard.handleSubmissionFailure,
             });
@@ -175,10 +158,6 @@ const TardBoard = {
             TardBoard.handleSubmissionFailure(result);
 
             return result;
-        } finally {
-            // @TODO Enable this properly
-            // TardBoard.clearSessionAndReload();
-            console.log("THE END");
         }
     },
 
@@ -186,46 +165,6 @@ const TardBoard = {
         const $input = Modal._$modal.querySelector(".body arcade-text-input");
         return String($input?.value || "").trim();
     },
-
-    createCaptchaToken: () => new Promise((resolve, reject) => {
-        const $container = Modal._$modal.querySelector(
-            "#tardboard-turnstile-container"
-        );
-
-        if (! $container) {
-            reject(new Error("Turnstile container is unavailable"));
-            return;
-        }
-
-        let widgetId = null;
-        const timeoutId = window.setTimeout(() => {
-            reject(new Error("Timed out while verifying Turnstile"));
-        }, 30000);
-
-        try {
-            widgetId = window.turnstile.render($container, {
-                sitekey: TardBoard.turnstileSiteKey,
-                size: "invisible",
-                callback: (captchaToken) => {
-                    window.clearTimeout(timeoutId);
-                    resolve(captchaToken);
-                },
-                "error-callback": () => {
-                    window.clearTimeout(timeoutId);
-                    reject(new Error("Turnstile verification failed"));
-                },
-                "timeout-callback": () => {
-                    window.clearTimeout(timeoutId);
-                    reject(new Error("Turnstile verification timed out"));
-                },
-            });
-
-            window.turnstile.execute(widgetId);
-        } catch (error) {
-            window.clearTimeout(timeoutId);
-            reject(error);
-        }
-    }),
 
     handleSubmissionSuccess: (result) => {
         console.log("TardBoard high score submitted", { result });
@@ -292,65 +231,10 @@ const TardBoard = {
     },
 
     /**
-     * Ensures the Cloudflare Turnstile script has been loaded
-     *
-     * @return Promise<object> Resolves with the global Turnstile object
-     */
-    ensureTurnstileScript: () => {
-        if (TardBoard.isTurnstileReady()) {
-            return Promise.resolve(window.turnstile);
-        }
-
-        if (TardBoard.turnstileScriptPromise) {
-            return TardBoard.turnstileScriptPromise;
-        }
-
-        TardBoard.turnstileScriptPromise = new Promise((resolve, reject) => {
-            const $existingScript = document.querySelector(
-                `script[${TardBoard.turnstileScriptAttribute}]`
-            );
-
-            if ($existingScript) {
-                TardBoard.waitForTurnstile(resolve, reject);
-                return;
-            }
-
-            const $script = document.createElement("script");
-            $script.src = TardBoard.turnstileScriptUrl;
-            $script.async = true;
-            $script.defer = true;
-            $script.setAttribute(TardBoard.turnstileScriptAttribute, "true");
-
-            $script.addEventListener("load", () => {
-                if (TardBoard.isTurnstileReady()) {
-                    resolve(window.turnstile);
-                    return;
-                }
-
-                reject(new Error("Turnstile was loaded but is unavailable"));
-            });
-
-            $script.addEventListener("error", () => {
-                reject(new Error("Unable to load the Turnstile script"));
-            });
-
-            document.head.appendChild($script);
-        }).catch(error => {
-            TardBoard.turnstileScriptPromise = null;
-            console.error("Unable to load the Turnstile script", { error });
-
-            throw error;
-        });
-
-        return TardBoard.turnstileScriptPromise;
-    },
-
-    /**
      * Submits a high score through TardAPI.
      *
      * @param Object options
      * @param string options.playerInitials Initials to submit with the score
-     * @param string [options.captchaToken] Turnstile verification token
      * @param Function [options.onSuccess] Called when submission succeeds
      * @param Function [options.onFailure] Called when submission fails
      * @param Function [options.onComplete] Called after success or failure
@@ -358,7 +242,6 @@ const TardBoard = {
      */
     submitHighScore: async ({
         playerInitials,
-        captchaToken = null,
         onSuccess = null,
         onFailure = null,
         onComplete = null,
@@ -367,8 +250,7 @@ const TardBoard = {
             TardBoard.assertTardApiIsAvailable();
 
             const result = await TardAPI.submitScore(
-                TardBoard.normalizePlayerInitials(playerInitials),
-                TardBoard.createSubmitScorePayload(captchaToken)
+                TardBoard.normalizePlayerInitials(playerInitials)
             );
 
             const callback = result?.success ? onSuccess : onFailure;
@@ -395,30 +277,6 @@ const TardBoard = {
      */
     submitHighscore: (options) => TardBoard.submitHighScore(options),
 
-    isTurnstileReady: () => Boolean(
-        typeof window.turnstile?.render === "function"
-    ),
-
-    waitForTurnstile: (resolve, reject) => {
-        const startedAtMs = Date.now();
-        const timeoutMs = 10000;
-        const intervalMs = 100;
-
-        const intervalId = window.setInterval(() => {
-            if (TardBoard.isTurnstileReady()) {
-                window.clearInterval(intervalId);
-                resolve(window.turnstile);
-                return;
-            }
-
-            const elapsedMs = Date.now() - startedAtMs;
-            if (elapsedMs >= timeoutMs) {
-                window.clearInterval(intervalId);
-                reject(new Error("Timed out while loading Turnstile"));
-            }
-        }, intervalMs);
-    },
-
     assertTardApiIsAvailable: () => {
         const tardApiIsMissing = typeof TardAPI?.submitScore !== "function";
 
@@ -439,10 +297,6 @@ const TardBoard = {
         }
 
         return normalizedInitials.slice(0, 5);
-    },
-
-    createSubmitScorePayload: (captchaToken) => {
-        return captchaToken ? { captcha_token: captchaToken } : {};
     },
 
     createFailureResult: (error) => ({
