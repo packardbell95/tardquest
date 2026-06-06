@@ -418,7 +418,7 @@ const InventorySidebar = {
             const statName = stat.slice(0, 1).toLocaleUpperCase() +
                 stat.slice(1);
             const value = requirements[stat];
-            const playerValue = playerEntity.leader.stats.core[stat];
+            const playerValue = playerEntity.leader?.stats.core[stat] ?? "--";
             const displayValue = value.toLocaleString(undefined);
             const displayPlayerValue = playerValue.toLocaleString(undefined);
             const playerMeetsRequirement = playerValue >= value;
@@ -511,7 +511,10 @@ const InventorySidebar = {
 
     updateTooltip: ($button, sectionName, id, definition) => {
         function getEquippedText(sectionName, id) {
-            const equipped = playerEntity.leader.equipped;
+            const equipped = playerEntity.leader?.equipped;
+            if (! equipped) {
+                return "";
+            }
 
             switch(sectionName) {
                 case "weapons":
@@ -715,13 +718,11 @@ const InventorySidebar = {
         }
 
         const weaponIsEquipped =
-            playerEntity.leader.equipped.weapon === weaponId;
+            playerEntity.leader?.equipped.weapon === weaponId;
 
-        if (weaponIsEquipped) {
-            $button.classList.add("equipped");
-        } else {
-            $button.classList.remove("equipped");
-        }
+        weaponIsEquipped
+            ? $button.classList.add("equipped")
+            : $button.classList.remove("equipped");
 
         InventorySidebar.updateTooltip(
             $button,
@@ -738,7 +739,7 @@ const InventorySidebar = {
 
         return (
             (playerEntity.inventory.contents.weapons[weaponId] || 0) +
-            (playerEntity.leader.equipped.weapon === weaponId ? 1 : 0)
+            (playerEntity.leader?.equipped.weapon === weaponId ? 1 : 0)
         );
     },
 
@@ -766,7 +767,7 @@ const InventorySidebar = {
             quantity
         );
 
-        if (! playerEntity.leader.canEquipWeapon(weaponId)) {
+        if (! playerEntity.leader?.canEquipWeapon(weaponId)) {
             $button.classList.add("unequippable");
         }
 
@@ -791,7 +792,7 @@ const InventorySidebar = {
                 previouslyEquippedWeaponId = activePartyMember.equipped.weapon;
 
                 BattleSystem.equipWeapon(activePartyMember, weaponId);
-            } else if (! playerEntity.leader.canEquipWeapon(weaponId)) {
+            } else if (! playerEntity.leader?.canEquipWeapon(weaponId)) {
                 const article = weapon.article === "" ? "" : "the";
                 updateBattleLog(
                     `You are <span class="action">too wimpy</span> to wield ` +
@@ -799,9 +800,10 @@ const InventorySidebar = {
                 );
                 return;
             } else {
-                previouslyEquippedWeaponId = playerEntity.leader.equipped.weapon;
+                previouslyEquippedWeaponId =
+                    playerEntity.leader?.equipped.weapon;
 
-                if (! playerEntity.leader.equipWeapon(weaponId)) {
+                if (! playerEntity.leader?.equipWeapon(weaponId)) {
                     console.error(
                         "Could not equip the selected weapon",
                         { weaponId }
@@ -866,13 +868,11 @@ const InventorySidebar = {
             return;
         }
 
-        const armorIsEquipped = playerEntity.leader.equipped.armor === armorId;
+        const armorIsEquipped = playerEntity.leader?.equipped.armor === armorId;
 
-        if (armorIsEquipped) {
-            $button.classList.add("equipped");
-        } else {
-            $button.classList.remove("equipped");
-        }
+        armorIsEquipped
+            ? $button.classList.add("equipped")
+            : $button.classList.remove("equipped");
 
         InventorySidebar.updateTooltip(
             $button,
@@ -889,7 +889,7 @@ const InventorySidebar = {
 
         return (
             (playerEntity.inventory.contents.armor[armorId] || 0) +
-            (playerEntity.leader.equipped.armor === armorId ? 1 : 0)
+            (playerEntity.leader?.equipped.armor === armorId ? 1 : 0)
         );
     },
 
@@ -916,7 +916,7 @@ const InventorySidebar = {
             quantity
         );
 
-        if (! playerEntity.leader.canEquipArmor(armorId)) {
+        if (! playerEntity.leader?.canEquipArmor(armorId)) {
             $button.classList.add("unequippable");
         }
 
@@ -941,16 +941,16 @@ const InventorySidebar = {
                 previouslyEquippedArmorId = activePartyMember.equipped.armor;
 
                 BattleSystem.equipArmor(activePartyMember, armorId);
-            } else if (! playerEntity.leader.canEquipArmor(armorId)) {
+            } else if (! playerEntity.leader?.canEquipArmor(armorId)) {
                 updateBattleLog(
                     `You are <span class="action">too basic</span> to wear ` +
                     `the <span class="friendly">${armor.name}</span>.`
                 );
                 return;
             } else {
-                previouslyEquippedArmorId = playerEntity.leader.equipped.armor;
+                previouslyEquippedArmorId = playerEntity.leader?.equipped.armor;
 
-                if (! playerEntity.leader.equipArmor(armorId)) {
+                if (! playerEntity.leader?.equipArmor(armorId)) {
                     console.error(
                         "Could not equip the selected armor",
                         { armorId }
@@ -1016,7 +1016,7 @@ const InventorySidebar = {
         }
 
         const ringIsEquipped =
-            Object.values(playerEntity.leader.equipped.ring).includes(ringId);
+            Object.values(playerEntity.leader?.equipped.ring).includes(ringId);
 
         ringIsEquipped
             ? $button.classList.add("equipped")
@@ -1032,8 +1032,8 @@ const InventorySidebar = {
 
         return (
             (playerEntity.inventory.contents.rings[ringId] || 0) +
-            (playerEntity.leader.equipped.ring.left === ringId ? 1 : 0) +
-            (playerEntity.leader.equipped.ring.right === ringId ? 1 : 0)
+            (playerEntity.leader?.equipped.ring.left === ringId ? 1 : 0) +
+            (playerEntity.leader?.equipped.ring.right === ringId ? 1 : 0)
         );
     },
 
@@ -1061,7 +1061,7 @@ const InventorySidebar = {
             quantity
         );
 
-        if (! playerEntity.leader.canEquipRing(ringId)) {
+        if (! playerEntity.leader?.canEquipRing(ringId)) {
             $button.classList.add("unequippable");
         }
 
@@ -1093,7 +1093,7 @@ const InventorySidebar = {
                 return;
             }
 
-            if (! playerEntity.leader.canEquipRing(ringId)) {
+            if (! playerEntity.leader?.canEquipRing(ringId)) {
                 const article = ring.article === "" ? "" : "the";
                 updateBattleLog(
                     `You are <span class="action">too cheugy</span> to wear ` +
@@ -1131,7 +1131,9 @@ const InventorySidebar = {
             return false;
         }
 
-        const partyMemberIsPlayer = partyMember.id === playerEntity.leader.id;
+        const partyMemberIsPlayer =
+            playerEntity.leader &&
+            partyMember.id === playerEntity.leader?.id;
         const partyMemberHasRingEquipped =
             ringId &&
             Object.values(partyMember.equipped.ring).includes(ringId);

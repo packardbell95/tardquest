@@ -1211,6 +1211,7 @@ menu.setMenus({
         onOpen: (menuData) => {
             Portrait.show("merchant", menuData.merchant.leader.color);
             menuData.merchant.leader.say("Welcome to SlobMart!", false);
+            music.play("merchantTheme");
         },
         onClose: (menuData) => {
             menuData.merchant.leader.say("Thank you. Come again!", false);

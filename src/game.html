@@ -2255,6 +2255,8 @@
                 updateBattleLog(`${enemyEntity.leader.name} wants to rumble!`);
             }
 
+            music.stop();
+
             ViewportAnimation.play(
                 "battle-start-curtain-drop.webm",
                 {
@@ -2263,6 +2265,7 @@
                     },
                     onCurtainClose: () => {
                         console.log("🎭️ Curtain has closed");
+                        enemyEntity.onEncounter?.();
                         SceneRenderer.enemyLayerEnabled = true;
                         render();
                     },
@@ -2514,6 +2517,8 @@
                         ? "level-up-curtain-drop.webm"
                         : "battle-end-curtain-drop.webm";
 
+                    music.stop();
+
                     ViewportAnimation.play(
                         animation,
                         {
@@ -2528,6 +2533,7 @@
                                 render();
                             },
                             onCurtainOpening: () => {
+                                enemyEntity.onEncounterEnd?.();
                                 refreshUi();
                                 BattleQueueSidebar.close();
                             },

@@ -795,6 +795,16 @@ const MapEntityEnemyFactory = {
 
         vampire.getSceneArtId = () => "vampire";
 
+        vampire.onEncounter = function() {
+            music.play("vampireBattleIntro", "battle");
+        };
+
+        vampire.onEncounterEnd = function() {
+            this.explorationMusicId
+                ? music.play(this.explorationMusicId, "exploration")
+                : music.playRandom("exploration");
+        };
+
         vampire.onDie = function() {
             this.getDisplayName =
                 () => "☠️ Gay Cocksucking Vampire, post conversion therapy";
@@ -962,10 +972,22 @@ const MapEntityEnemyFactory = {
             return baseId + directionName;
         };
 
+        entity.onEncounter = MapEntityEnemyFactory._commonFunctions.onEncounter;
+        entity.onEncounterEnd =
+            MapEntityEnemyFactory._commonFunctions.onEncounterEnd;
+
         return entity;
     },
 
     _commonFunctions: {
+        onEncounter: function() {
+            music.playRandom("battle");
+        },
+
+        onEncounterEnd: function() {
+            music.resumeTag("exploration");
+        },
+
         afterExplode: function(gameMap, x, y) {
             const bloodyCrater = MapEntityFeatureFactory.bloodyCrater(x, y);
 
