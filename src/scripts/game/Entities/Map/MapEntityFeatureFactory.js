@@ -174,6 +174,14 @@ const MapEntityFeatureFactory = {
             }
         };
 
+        treasureChest.onEncounter = function() {
+            music.playRandom("battle");
+        };
+
+        treasureChest.onEncounterEnd = function() {
+            music.resumeTag("exploration");
+        };
+
         treasureChest.open = function(entity) {
             if (this.party.length > 0) {
                 if (entity?.type === "player") {
