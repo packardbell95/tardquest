@@ -91,10 +91,19 @@ const TqGamepad = {
             return false;
         }
 
-        const hasButtons = gamepad.buttons && gamepad.buttons.length >= 4;
-        const hasAxes = gamepad.axes && gamepad.axes.length >= 2;
+        const hasButtons =
+            Array.isArray(gamepad.buttons) &&
+            gamepad.buttons.length >= 4;
 
-        return hasButtons || hasAxes;
+        const hasAxes =
+            Array.isArray(gamepad.axes) &&
+            gamepad.axes.length >= 2;
+
+        const isNotAudioDevice =
+            typeof gamepad.id === "string" &&
+            ! /speaker|audio|headset|usb audio/i.test(gamepad.id);
+
+        return hasButtons && hasAxes && isNotAudioDevice;
     },
 
     selectGamepad: function(gamepads) {
