@@ -55,10 +55,6 @@ function PartyMemberBuilder(name, stats = {}) {
             return true;
         },
 
-        getExperienceRequiredForLevelUp: function() {
-            return this.stats.progression.level * 10;
-        },
-
         getWeight: function() {
             return (
                 (WEAPONS[this.equipped.weapon]?.weight || 0) +
@@ -283,11 +279,12 @@ function PartyMemberBuilder(name, stats = {}) {
         },
 
         getExperienceRequiredForLevelUp: function() {
-            return this.stats.progression.level * 10;
+            return this.stats.progression.level * 40;
         },
 
         giveExperience: function(experiencePoints) {
             this.stats.progression.experience += experiencePoints;
+            this.onGiveExperience?.(experiencePoints);
 
             const shouldLevelUp =
                 this.stats.progression.experience >=

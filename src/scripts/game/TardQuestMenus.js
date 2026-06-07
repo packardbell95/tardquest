@@ -2466,7 +2466,7 @@ menu.setMenus({
             function resetStats() {
                 playerEntity.leader.statPoints = PLAYER_STARTING_STAT_POINTS;
                 playerEntity.leader.stats.core = { ...baseStats.core };
-                playerEntity.leader.refreshStats();
+                playerEntity.refreshStats();
                 updateBattleLog("Stat allocation has been reset. Start over!");
             }
 
@@ -2562,7 +2562,7 @@ menu.setMenus({
                     playerEntity.leader.statPoints--;
                 }
 
-                playerEntity.leader.refreshStats();
+                playerEntity.refreshStats();
 
                 updateBattleLog(
                     "Level up points have been randomly allocated. Good luck!"
@@ -2594,94 +2594,86 @@ menu.setMenus({
                     );
                 }
                 menu.close();
-                // render();
-                if (eatRatAnimationEnabled) {
-                    GameControl.disableControls();
 
-                    const gameLayers =
-                        document.querySelectorAll("#viewport .layer");
-                    gameLayers.forEach(layer => {
-                        layer.classList.remove(
-                            "lightening",
-                            "darkening",
-                            "dark"
-                        );
-                        layer.classList.add("dark");
-                    });
+                if (! eatRatAnimationEnabled) {
+                    playerEntity.refreshStats();
+                    return;
+                }
 
-                    ViewportAnimation.play(
-                        "rat-chomp.webm",
-                        {
-                            onChomped: () => {
-                                console.log("🐁 Rat has been consumed");
-                            },
-                            onEnd: () => {
-                                console.info("Playback complete!");
+                GameControl.disableControls();
+
+                const gameLayers =
+                    document.querySelectorAll("#viewport .layer");
+                gameLayers.forEach(layer => {
+                    layer.classList.remove(
+                        "lightening",
+                        "darkening",
+                        "dark"
+                    );
+                    layer.classList.add("dark");
+                });
+
+                ViewportAnimation.play(
+                    "rat-chomp.webm",
+                    {
+                        onChomped: () => {
+                            console.log("🐁 Rat has been consumed");
+                            playerEntity.refreshStats();
+                        },
+                        onEnd: () => {
+                            console.info("Playback complete!");
+                            gameLayers.forEach(layer => {
+                                layer.classList.remove("dark");
+                                layer.classList.add("lightening");
+                            });
+
+                            setTimeout(() => {
                                 gameLayers.forEach(layer => {
-                                    layer.classList.remove("dark");
-                                    layer.classList.add("lightening");
+                                    layer.classList.remove("lightening");
                                 });
 
-                                setTimeout(() => {
-                                    gameLayers.forEach(layer => {
-                                        layer.classList.remove("lightening");
-                                    });
-
-                                    GameControl.enableControls();
-                                    render();
-                                }, 600);
-                            },
-                        }
-                    );
-                }
+                                GameControl.enableControls();
+                                render();
+                            }, 600);
+                        },
+                    }
+                );
             } else if (selectedOptionId === "reset") {
-                if (isLevelUpAllocation) {
-                    const coreStats = levelUpAllocatedStats.base;
-                    playerEntity.leader.stats.core.hp =
-                        playerEntity.leader.stats.core.maxHp =
-                        coreStats.maxHp;
-                    playerEntity.leader.stats.core.defense =
-                        coreStats.defense;
-                    playerEntity.leader.stats.core.strength =
-                        coreStats.strength;
-                    playerEntity.leader.stats.core.persuasion =
-                        coreStats.persuasion;
-                    playerEntity.leader.stats.core.endurance =
-                        coreStats.endurance;
-                    playerEntity.leader.stats.core.speed =
-                        coreStats.speed;
-                    playerEntity.leader.stats.core.luck =
-                        coreStats.luck;
-                    playerEntity.leader.statPoints = 6;
-
-                    // Reset the per-stat allocation tracker
-                    levelUpStatPointsAllocated = {
-                        maxHp: 0,
-                        defense: 0,
-                        strength: 0,
-                        persuasion: 0,
-                        endurance: 0,
-                        speed: 0,
-                        luck: 0,
-                    };
-
-                    playerEntity.leader.refreshStats();
-
-                    updateBattleLog(
-                        "Level up stat allocation has been reset."
-                    );
-                } else {
+                if (! isLevelUpAllocation) {
                     resetStats();
+                    return;
                 }
-                // menu.render();
-                // render();
+
+                const coreStats = levelUpAllocatedStats.base;
+                playerEntity.leader.stats.core.hp =
+                    playerEntity.leader.stats.core.maxHp =
+                    coreStats.maxHp;
+                playerEntity.leader.stats.core.defense = coreStats.defense;
+                playerEntity.leader.stats.core.strength = coreStats.strength;
+                playerEntity.leader.stats.core.persuasion =
+                    coreStats.persuasion;
+                playerEntity.leader.stats.core.endurance = coreStats.endurance;
+                playerEntity.leader.stats.core.speed = coreStats.speed;
+                playerEntity.leader.stats.core.luck = coreStats.luck;
+                playerEntity.leader.statPoints = 6;
+
+                // Reset the per-stat allocation tracker
+                levelUpStatPointsAllocated = {
+                    maxHp: 0,
+                    defense: 0,
+                    strength: 0,
+                    persuasion: 0,
+                    endurance: 0,
+                    speed: 0,
+                    luck: 0,
+                };
+
+                playerEntity.refreshStats();
+                updateBattleLog("Level up stat allocation has been reset.");
             } else if (selectedOptionId === "rollDice") {
                 isLevelUpAllocation
                     ? rollDiceForLevelUp()
                     : rollDiceForStats();
-
-                // menu.render();
-                // render();
             } else if (playerEntity.leader.statPoints > 0) {
                 // Only restrict during level up, not initial allocation
                 if (isLevelUpAllocation) {

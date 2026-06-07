@@ -593,6 +593,13 @@ const MapEntityFeatureFactory = {
                 playSFX("bouldingBallStrike");
                 animBouldingBallStrike();
 
+                document.getElementById("interface")?.classList.add("rumble");
+                setTimeout(
+                    () => document.getElementById("interface")
+                        ?.classList.remove("rumble"),
+                    400
+                );
+
                 const damageValues = entity.damagePartyFractional(1 / 3);
                 const damageMessage =
                     `<span class="action">YEOUCH!</span> A vicious, ` +

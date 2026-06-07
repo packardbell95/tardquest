@@ -859,14 +859,14 @@ const GameControl = {
     },
 
     getInputDelayMs: () => {
-        const minDelayMs = 1;
-        const baseDelayMs = 2000;
-
-        // 5% reduction per speed point
-        const speedModifier =
-            playerEntity.leader.getEffectiveCoreStat("speed") * 0.05;
-
-        return Math.max(minDelayMs, baseDelayMs * (1 - speedModifier));
+        switch (playerEntity.getWeightLevel()) {
+            case "danger":
+                return 800;
+            case "warning":
+                return 400;
+            default:
+                return 100;
+        }
     },
 
     CursorUi: {

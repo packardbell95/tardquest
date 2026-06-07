@@ -606,7 +606,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 );
             }
 
-            return totalExperience;
+            return Math.round(totalExperience);
         },
 
         getWeight: function() {
@@ -641,7 +641,12 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         },
 
         getWeightCapacity: function() {
-            return 9001;
+            const partyEndurance = this.party
+                .filter(e => ! e.isDead())
+                .map(e => e.getEffectiveCoreStat("endurance"))
+                .reduce((total, current) => total + current, 0);
+
+            return 20 + (Math.max(1, Math.round(partyEndurance)) * 3);
         },
 
         inventory: {

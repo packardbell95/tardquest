@@ -57,22 +57,22 @@ const MapEntityEnemyFactory = {
         const snailSentinel =
             this._buildRoamingEnemy("snailSentinel", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(snailSentinel);
-        snailSentinel.inventory.contents.bitcoins = 4;
+        snailSentinel.inventory.contents.bitcoins =
+            Math.floor(4 * (Math.random() * 2 * level));
         snailSentinel.objectsOfInterest = ["player"];
         // Make the snail sentinel move more quickly if it's after an interest
         snailSentinel.isHastyMove = function() {
             return this.targetReason === "interest";
         };
 
-        snailSentinel.addPartyMember(
-            TardQuestPartyMemberFactory.snailSentinel(level)
-        );
-        snailSentinel.addPartyMember(
-            TardQuestPartyMemberFactory.snailSentinel(level)
-        );
-        snailSentinel.addPartyMember(
-            TardQuestPartyMemberFactory.snailSentinel(level)
-        );
+        const maxPartyMembers =
+            Math.max(1, Math.floor(Math.random() * level * 0.5) + 1);
+
+        for (let i = 0; i < maxPartyMembers; i++) {
+            snailSentinel.addPartyMember(
+                TardQuestPartyMemberFactory.snailSentinel(level)
+            );
+        }
 
         /**
          * @TODO Replace these with the leader's name
@@ -126,7 +126,8 @@ const MapEntityEnemyFactory = {
     stupidDog: function(level, x, y, direction) {
         const stupidDog = this._buildRoamingEnemy("stupidDog", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(stupidDog);
-        stupidDog.inventory.contents.bitcoins = 3;
+        stupidDog.inventory.contents.bitcoins =
+            Math.floor(3 * (Math.random() * 2 * level));
         stupidDog.objectsOfInterest = ["player"];
         // Make the stupid dog move more quickly if it's after an interest
         stupidDog.isHastyMove = function() {
@@ -134,7 +135,13 @@ const MapEntityEnemyFactory = {
         };
 
         stupidDog.addPartyMember(TardQuestPartyMemberFactory.stupidDog(level));
-        stupidDog.addPartyMember(TardQuestPartyMemberFactory.wangRat(level));
+
+        if (level > 2 && Math.random() < 0.5) {
+            const partyMember = Math.random() < 0.5
+                ? TardQuestPartyMemberFactory.wangRat(level)
+                : TardQuestPartyMemberFactory.stupidDog(level);
+            stupidDog.addPartyMember(partyMember);
+        }
 
         stupidDog.getDisplayName = function() {
             return "🐩 Stupid Dog";
@@ -184,15 +191,18 @@ const MapEntityEnemyFactory = {
     wangRat: function(level, x, y, direction) {
         const wangRat = this._buildRoamingEnemy("wangRat", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(wangRat);
-        wangRat.inventory.contents.bitcoins = 2;
+        wangRat.inventory.contents.bitcoins =
+            Math.floor(2 * (Math.random() * 2 * level));
         wangRat.objectsOfInterest = ["player"];
         // Make the wang rat move more quickly if it's after an interest
         wangRat.isHastyMove = function() {
             return this.targetReason === "interest";
         };
 
-        const maxPartyMembers = Math.floor(Math.random() * 6) + 1;
-        for (let i = 0; i < maxPartyMembers; i++) {
+        const maxRats =
+            Math.min(6, Math.max(1, Math.floor(level * Math.random())));
+
+        for (let i = 0; i < maxRats; i++) {
             wangRat.addPartyMember(TardQuestPartyMemberFactory.wangRat(level));
         }
 
@@ -245,7 +255,8 @@ const MapEntityEnemyFactory = {
         const keeperOfTheToiletBowl =
             this._buildRoamingEnemy("keeperOfTheToiletBowl", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(keeperOfTheToiletBowl);
-        keeperOfTheToiletBowl.inventory.contents.bitcoins = 5;
+        keeperOfTheToiletBowl.inventory.contents.bitcoins =
+            Math.floor(5 * (Math.random() * 2 * level));
         keeperOfTheToiletBowl.objectsOfInterest = ["player"];
         // Make the keeper move more quickly if it's after an interest
         keeperOfTheToiletBowl.isHastyMove = function() {
@@ -316,7 +327,8 @@ const MapEntityEnemyFactory = {
         const mysteriousScooter =
             this._buildRoamingEnemy("mysteriousScooter", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(mysteriousScooter);
-        mysteriousScooter.inventory.contents.bitcoins = 4;
+        mysteriousScooter.inventory.contents.bitcoins =
+            Math.floor(4 * (Math.random() * 2 * level));
         mysteriousScooter.objectsOfInterest = ["player"];
         // Make the scooter move more quickly if it's after an interest
         mysteriousScooter.isHastyMove = function() {
@@ -378,7 +390,8 @@ const MapEntityEnemyFactory = {
         const badassFlamingSkeleton =
             this._buildRoamingEnemy("badassFlamingSkeleton", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(badassFlamingSkeleton);
-        badassFlamingSkeleton.inventory.contents.bitcoins = 4;
+        badassFlamingSkeleton.inventory.contents.bitcoins =
+            Math.floor(4 * (Math.random() * 2 * level));
         badassFlamingSkeleton.objectsOfInterest = ["player"];
         // Make the skeleton move more quickly if it's after an interest
         badassFlamingSkeleton.isHastyMove = function() {
@@ -448,7 +461,8 @@ const MapEntityEnemyFactory = {
             direction
         );
         MapEntityTrait_AttachMovement_Patrol(fridgeOfForgottenLeftovers);
-        fridgeOfForgottenLeftovers.inventory.contents.bitcoins = 3;
+        fridgeOfForgottenLeftovers.inventory.contents.bitcoins =
+            Math.floor(3 * (Math.random() * 2 * level));
         fridgeOfForgottenLeftovers.objectsOfInterest = ["player"];
 
         fridgeOfForgottenLeftovers.addPartyMember(
@@ -506,7 +520,8 @@ const MapEntityEnemyFactory = {
     lughead: function(level, x, y, direction) {
         const lughead = this._buildRoamingEnemy("lughead", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(lughead);
-        lughead.inventory.contents.bitcoins = 4;
+        lughead.inventory.contents.bitcoins =
+            Math.floor(4 * (Math.random() * 2 * level));
         lughead.objectsOfInterest = ["player"];
         // Make the lughead move more quickly if it's after an interest
         lughead.isHastyMove = function() {
@@ -564,7 +579,8 @@ const MapEntityEnemyFactory = {
         const pissedOffPoultry =
             this._buildRoamingEnemy("pissedOffPoultry", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(pissedOffPoultry);
-        pissedOffPoultry.inventory.contents.bitcoins = 2;
+        pissedOffPoultry.inventory.contents.bitcoins =
+            Math.floor(2 * (Math.random() * 2 * level));
         pissedOffPoultry.objectsOfInterest = ["player"];
         // Make the chicken move more quickly if it's after an interest
         pissedOffPoultry.isHastyMove = function() {
@@ -624,7 +640,8 @@ const MapEntityEnemyFactory = {
         const krampusElf =
             this._buildRoamingEnemy("krampusElf", x, y, direction);
         MapEntityTrait_AttachMovement_Patrol(krampusElf);
-        krampusElf.inventory.contents.bitcoins = 4;
+        krampusElf.inventory.contents.bitcoins =
+            Math.floor(4 * (Math.random() * 2 * level));
         krampusElf.objectsOfInterest = ["player"];
         // Make the elf move more quickly if it's after an interest
         krampusElf.isHastyMove = function() {

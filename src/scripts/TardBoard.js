@@ -116,7 +116,6 @@ const TardBoard = {
      */
     handleSubmitClick: async (playerInitials) => {
         GameControl.disableControls();
-        console.log("handleSubmitClick called", { playerInitials });
 
         if (! playerInitials) {
             console.error("No initials were captured");
@@ -148,8 +147,6 @@ const TardBoard = {
                 onFailure: TardBoard.handleSubmissionFailure,
             });
 
-            console.log({ result });
-
             return result;
         } catch (error) {
             const result = TardBoard.createFailureResult(error);
@@ -167,8 +164,6 @@ const TardBoard = {
     },
 
     handleSubmissionSuccess: (result) => {
-        console.log("TardBoard high score submitted", { result });
-
         Modal.open(
             "High Score Posted!",
             `

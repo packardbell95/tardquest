@@ -1296,7 +1296,7 @@ a:link {
     transform: translate(200px, 100px);
 }
 
-#animBouldingBallHit {
+#animBouldingBallStrike {
     position: absolute;
     background-repeat: no-repeat;
     width: 41px;
@@ -1304,7 +1304,7 @@ a:link {
     image-rendering: pixelated;
     right: 20px;
     top: -200px;
-    background-image: url(assets/interface/ui/boulding-ball-hit.gif);
+    background-image: url(assets/interface/ui/boulding-ball-strike.gif);
     background-size: contain;
     background-position: center;
     transform: translateY(0);
@@ -1313,7 +1313,7 @@ a:link {
     z-index: 1000;
 }
 
-#animBouldingBallHit.onscreen {
+#animBouldingBallStrike.onscreen {
     transform: translateY(220px);
 }
 

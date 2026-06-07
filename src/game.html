@@ -1442,13 +1442,13 @@
                 totalExperience: 0, // Tracked by Vocap's API
             },
             core: {
-                hp: 20 + 9999,
-                maxHp: 20 + 9999,
-                defense: 5 + 99,
-                strength: 1 + 99,
-                persuasion: 15 + 99,
+                hp: 20,
+                maxHp: 20,
+                defense: 5,
+                strength: 1,
+                persuasion: 15,
                 endurance: 0,
-                speed: 12 + 99999,
+                speed: 12,
                 luck: 17,
             },
         });
@@ -1463,8 +1463,6 @@
                 brickOfC4: 2,
                 dowsingRod: 2,
             };
-
-            playerEntity.inventory.giveBitcoins(31337);
 
             // The category includes "items", "weapons", "armor", or "rings"
             playerEntity.inventory.onInventoryContentsChanged = function(
@@ -1579,6 +1577,7 @@
                                 effectivePersuasion.toLocaleString(undefined);
                     },
                     endurance: function (effectiveEndurance) {
+                        playerEntity.refreshLoad?.();
                         document
                             .querySelector(
                                 `#stats [data-stat-core="endurance"]`
@@ -1604,8 +1603,8 @@
                         const $experience = document.querySelector(
                             `#stats [data-stat-progression="experience"]`
                         );
-                        $experience.setAttribute("value", experience);
-                        $experience.setAttribute(
+                        $experience?.setAttribute("value", experience);
+                        $experience?.setAttribute(
                             "max",
                             pointsRequiredForLevelUp
                         );
@@ -1623,6 +1622,13 @@
                 Portrait.show(deathPortrait);
             };
 
+            playerPartyMember.onGiveExperience = function() {
+                this.statEventHandlers.progression.experience(
+                    this.stats.progression.experience,
+                    this.getExperienceRequiredForLevelUp()
+                );
+            };
+
             playerPartyMember.onLevelUp = function() {
                 document.getElementById("playerLevel").innerText =
                     this.stats.progression.level.toLocaleString(undefined);
@@ -1630,6 +1636,7 @@
                 // @TODO Stop this from throwing "too much recursion"
                 // TardAPI.updateProgress();
 
+                this.refreshStats();
                 startLevelUpAllocation();
             };
 
@@ -3260,11 +3267,17 @@
                 JSON.stringify(music.getDisabledTracks())
             );
 
-            localStorage.setItem("eatRatAnimationEnabled", eatRatAnimationEnabled);
+            localStorage.setItem(
+                "eatRatAnimationEnabled",
+                eatRatAnimationEnabled
+            );
             localStorage.setItem("sfxEnabled", sfxEnabled);
             localStorage.setItem("speechEnabled", SpeechSynthesizer.enabled);
             localStorage.setItem("skipTitleScreen", skipTitleScreen);
-            localStorage.setItem("battleTransitionAnimationsEnabled", battleTransitionAnimationsEnabled);
+            localStorage.setItem(
+                "battleTransitionAnimationsEnabled",
+                battleTransitionAnimationsEnabled
+            );
             localStorage.setItem("autoDicerollEnabled", autoDicerollEnabled);
             localStorage.setItem("preloaderEnabled", preloaderEnabled);
         }
@@ -3275,7 +3288,9 @@
             const chestEligibleItems = Object.keys(ITEMS)
                 .filter(itemId => ITEMS[itemId].chestDrop);
 
-            return chestEligibleItems.length > 0 ? randomEntry(chestEligibleItems) : null;
+            return chestEligibleItems.length > 0
+                ? randomEntry(chestEligibleItems)
+                : null;
         }
 
         function updateSeenTiles() {
