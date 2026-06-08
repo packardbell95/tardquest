@@ -6,17 +6,17 @@
 const MapEntityEnemyFactory = {
     randomEnemy: function(level, x, y, direction) {
         const possibleEnemies = [
-            "snailSentinel",
-            "stupidDog",
-            "wangRat",
-            "keeperOfTheToiletBowl",
-            "mysteriousScooter",
-            "badassFlamingSkeleton",
-            "fridgeOfForgottenLeftovers",
-            "lughead",
-            "pissedOffPoultry",
-            "krampusElf",
-        ];
+            { id: "snailSentinel", minimumLevel: 0 },
+            { id: "stupidDog", minimumLevel: 0 },
+            { id: "wangRat", minimumLevel: 0 },
+            { id: "keeperOfTheToiletBowl", minimumLevel: 6 },
+            { id: "mysteriousScooter", minimumLevel: 2 },
+            { id: "badassFlamingSkeleton", minimumLevel: 5 },
+            { id: "fridgeOfForgottenLeftovers", minimumLevel: 4 },
+            { id: "lughead", minimumLevel: 3 },
+            { id: "pissedOffPoultry", minimumLevel: 0 },
+            { id: "krampusElf", minimumLevel: 1 },
+        ].filter(e => e.minimumLevel <= level).map(e => e.id);
 
         const index = Math.floor(Math.random() * possibleEnemies.length);
 

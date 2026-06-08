@@ -59,8 +59,6 @@ const TardQuestMapGenerator = {
             }
         }
 
-        console.log("identifyOppositeRegions()", { regions, bestPair });
-
         return bestPair;
     },
 
@@ -71,7 +69,6 @@ const TardQuestMapGenerator = {
         this.applyLayout(gameMap, floorLayout);
 
         const regions = MapGenerator.regions.identify(floorLayout);
-        console.log("Identified regions", { regions, floorLayout });
 
         // @TODO Handle cases where one region is identified due to the floor
         // being basically one big empty square
@@ -128,8 +125,6 @@ const TardQuestMapGenerator = {
         }
 
         const exitEntity = MapEntityFeatureFactory.exit(exitX, exitY);
-        console.log({ x: exitX, y: exitY, exitEntity });
-
         gameMap.addEntity(exitEntity);
         exitRegion.occupied = true;
 
@@ -169,8 +164,6 @@ const TardQuestMapGenerator = {
                     Math.round(region.end.y - region.start.y);
 
                 this._placeVampireSummoningSigil(gameMap, x, y);
-                console.log("✡️ Sigil placed", { x, y });
-
                 sigilPlaced = true;
             }
         }
@@ -634,10 +627,60 @@ const TardQuestMapGenerator = {
     },
 
     _placeVampireSummoningSigil: function(gameMap, x, y) {
+        // Helper to count the number of times a path's direction changes
+        function countMapDirectionChanges(path) {
+            let lastX = null;
+            let lastY = null;
+            let lastDirectionChangeWasOnXAxis = null;
+            let totalDirectionChanges = 0;
+
+            for (const coordinate of path) {
+                const [ x, y ] = coordinate;
+                const directionChanged = (
+                    lastX === x &&
+                    lastY !== y &&
+                    lastDirectionChangeWasOnXAxis === false
+                ) || (
+                    lastY === y &&
+                    lastX !== x &&
+                    lastDirectionChangeWasOnXAxis === true
+                );
+
+                if (directionChanged) {
+                    totalDirectionChanges++;
+                }
+
+                if (lastX !== null && lastY !== null) {
+                    lastDirectionChangeWasOnXAxis = lastY === y;
+                }
+
+                lastX = x;
+                lastY = y;
+            }
+
+            return totalDirectionChanges;
+        }
+
         const sigil = MapEntityFeatureFactory.sigil(x, y);
+        const fallbackTicksUntilSummoning = 20;
+        sigil.ticksUntilSummoning = fallbackTicksUntilSummoning;
+
+        const player = gameMap.entities.find(e => e.type === "player");
+        const exit = gameMap.entities.find(e => e.type === "exit");
+
+        if (player && exit) {
+            const path = MAP.findPath([player.x, player.y], [exit.x, exit.y]);
+            if (! path) {
+                console.error("End is unreachable", { player, exit, gameMap });
+            } else {
+                sigil.ticksUntilSummoning =
+                    path.length + countMapDirectionChanges(path);
+            }
+        } else {
+            console.error("Could not find required entities", { player, exit });
+        }
 
         sigil.tickCount = 0;
-        sigil.ticksUntilSummoning = 10;
         sigil.totalVampireSummons = 0;
         sigil.vampireEntity = null;
 
