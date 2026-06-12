@@ -1262,7 +1262,6 @@ menu.setMenus({
             },
         ],
         select: (selectedOptionId) => {
-            console.log("SELECTED", { selectedOptionId, data: menu.getMenuData()});
             menu.open(selectedOptionId, menu.getMenuData());
         },
     },
@@ -1322,7 +1321,6 @@ menu.setMenus({
         },
         select: (id) => {
             const item = ITEMS[id];
-            console.log("Buying item", { id, item });
             if (! item) {
                 console.error("Item does not exist", { id });
                 return;
@@ -2696,21 +2694,17 @@ menu.setMenus({
                         return;
                     }
                     if (statKey) {
-                        playerEntity.leader.stats.core[statKey]++;
-
+                        playerEntity.leader.incrementCoreStat(statKey);
                         if (statKey === "maxHp") {
                             // Heal before setting the max to ensure that HP
                             // is adjusted before refreshing UI health bars
-                            playerEntity.leader.stats.core.hp =
-                                playerEntity.leader.stats.core.maxHp + 1;
+                            playerEntity.leader.heal(
+                                playerEntity.leader.stats.core.maxHp
+                            );
                         }
-
-                        playerEntity.leader.incrementCoreStat(statKey);
 
                         levelUpStatPointsAllocated[statKey]++;
                         playerEntity.leader.statPoints--;
-                        // menu.render();
-                        // render();
                         return;
                     }
                 } else {
