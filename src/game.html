@@ -2386,8 +2386,39 @@
         }
 
         function claimPostBattleRewards(actorEntity, targetEntity) {
+            const actorIsPlayer = actorEntity === playerEntity;
+            const actorIsAlone =
+                actorEntity.party.filter(e => ! e.isDead()).length === 1;
+
+            const getActorDisplayName = () => {
+
+                if (! actorIsPlayer) {
+                    const name = actorEntity.leader.name;
+                    const displayName = actorIsAlone ? name : `${name}'s party`;
+                    return `<span class="enemy">${displayName}</span>`;
+                }
+
+                const displayName = actorIsAlone ? "You" : "Your party";
+                return `<span class="friendly">${displayName}</span>`;
+            };
+
+            const claimMessageParts = [];
+
             // Distribute experience points
             const awardedExperiencePoints = targetEntity.getExpReward();
+
+            claimMessageParts.push(
+                getActorDisplayName() + " gained " + (
+                    awardedExperiencePoints > 0
+                        ? (
+                            `<span class="EXP">` +
+                            `+${awardedExperiencePoints} EXP` +
+                            `${actorIsAlone ? "" : " each"}</span>`
+                        )
+                        : `<em class="gray">no experience</em>`
+                )
+            );
+
             for (const partyMember of actorEntity.party) {
                 if (partyMember.isDead()) {
                     continue;
@@ -2400,25 +2431,82 @@
             actorInventory = actorEntity.inventory.contents;
             const targetInventory = targetEntity.getFullInventoryContents();
 
-            actorEntity.inventory.giveBitcoins(targetInventory.bitcoins);
+            const bitcoinsExchanged =
+                actorEntity.inventory.giveBitcoins(targetInventory.bitcoins);
+            if (targetInventory.bitcoins > 0 && bitcoinsExchanged) {
+                const btc = targetInventory.bitcoins.toLocaleString(undefined);
+                claimMessageParts.push(`<span class="BTC">₿ ${btc}</span>`);
+            }
+
+            for (const itemId in targetInventory.items) {
+                actorInventory.items[itemId] =
+                    (actorInventory.items[itemId] || 0) +
+                    targetInventory.items[itemId];
+
+                const quantity = targetInventory.items[itemId]
+                    .toLocaleString(undefined);
+                const name = ITEMS[itemId].name;
+
+                claimMessageParts.push(
+                    `<span class="friendly">${quantity}x ${name}</span>`
+                );
+            }
 
             for (const weaponId in targetInventory.weapons) {
                 actorInventory.weapons[weaponId] =
                     (actorInventory.weapons[weaponId] || 0) +
                     targetInventory.weapons[weaponId];
+
+                const quantity = targetInventory.weapons[weaponId]
+                    .toLocaleString(undefined);
+                const name = WEAPONS[weaponId].name;
+
+                claimMessageParts.push(
+                    `<span class="friendly">${quantity}x ${name}</span>`
+                );
             }
 
             for (const armorId in targetInventory.armor) {
                 actorInventory.armor[armorId] =
                     (actorInventory.armor[armorId] || 0) +
                     targetInventory.armor[armorId];
+
+                const quantity = targetInventory.armor[armorId]
+                    .toLocaleString(undefined);
+                const name = ARMOR[armorId].name;
+
+                claimMessageParts.push(
+                    `<span class="friendly">${quantity}x ${name}</span>`
+                );
             }
 
             for (const ringId in targetInventory.rings) {
                 actorInventory.rings[ringId] =
                     (actorInventory.rings[ringId] || 0) +
                     targetInventory.rings[ringId];
+
+                const quantity = targetInventory.rings[ringId]
+                    .toLocaleString(undefined);
+                const name = RINGS[ringId].name;
+
+                claimMessageParts.push(
+                    `<span class="friendly">${quantity}x ${name}</span>`
+                );
             }
+
+            updateBattleLog(
+                (
+                    claimMessageParts.length === 1
+                        ? claimMessageParts[0]
+                        : (
+                            claimMessageParts.slice(0, -1).join(", ") +
+                            " and " + claimMessageParts.slice(-1)
+                        )
+                ) +
+                "."
+            );
+
+            actorEntity.inventory.onInventoryContentsChanged?.();
         }
 
         playerBattleVictory = function(outcome, playerEntity, enemyEntity) {
