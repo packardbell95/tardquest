@@ -292,9 +292,9 @@ const BattleSystem = {
      * @param string outcome "player won"|"enemy won"|"player ran"|"enemy ran"
      */
     endEncounter: function(outcome) {
-        this.onEncounterEnd?.(outcome, this.playerEntity, this.enemyEntity);
-        this.queuedMoves = [];
         this.isActive = false;
+        this.queuedMoves = [];
+        this.onEncounterEnd?.(outcome, this.playerEntity, this.enemyEntity);
     },
 
     attack: function(actor, target) {
@@ -717,18 +717,12 @@ const BattleSystem = {
     },
 
     performRun: function(actor) {
+        // @TODO Run success should be tied to stats, not a fixed value
         const runSucceeded = ! this.runRestricted(actor) && Math.random() < 0.3;
+
+        // This callback is responsible for continuing the battle
+        // It calls endEncounter() or nextMove() post-animation based on outcome
         this.onRunEnd?.(actor, runSucceeded);
-
-        if (runSucceeded) {
-            this.endEncounter(
-                this.actorIsPlayer(actor)
-                    ? "player ran"
-                    : "enemy ran"
-            );
-        }
-
-        return runSucceeded;
     },
 
     performUseItem: function(actor, itemId, target) {

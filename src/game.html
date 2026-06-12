@@ -2503,12 +2503,20 @@
                 InventorySidebar.refresh();
             };
 
+            const battleCleanup = () => {
+                enemyEntity.onEncounterEnd?.();
+                refreshUi();
+                BattleQueueSidebar.close();
+                render();
+            };
+
             playerEntity.highlightPartyMember?.();
             playerEntity.checkForDeath();
             enemyEntity.checkForDeath();
 
+            // Post-battle cleanup. "player won" handles this post-animation
             if (outcome !== "player won") {
-                refreshUi();
+                battleCleanup();
             }
 
             // @TODO Consolidate party cleanup calls
@@ -2540,9 +2548,7 @@
                                 render();
                             },
                             onCurtainOpening: () => {
-                                enemyEntity.onEncounterEnd?.();
-                                refreshUi();
-                                BattleQueueSidebar.close();
+                                battleCleanup();
                             },
                             onEnd: () => {
                                 console.info("Playback complete!");
@@ -2952,6 +2958,7 @@
                 "smokescreen.webm",
                 {
                     onEnd: () => {
+                        console.log("onEnd() called");
                         if (actorIsInPlayerParty && successful) {
                             BattleSystem.enemyEntity.stun(3);
                         }
@@ -2963,8 +2970,14 @@
                                 : `${actorName} tries to run, but failed!`
                         );
                         Portrait.hide();
-                        render();
-                        BattleSystem.nextMove();
+
+                        successful
+                            ? this.endEncounter(
+                                this.actorIsPlayer(actor)
+                                    ? "player ran"
+                                    : "enemy ran"
+                            )
+                            : BattleSystem.nextMove();
                     },
                 }
             );
@@ -3737,7 +3750,8 @@
 
         function updateBreathingSFX() {
             const pauseBreathingSfx =
-                playerEntity.leader.stats.core.hp <= 0 ||
+                ! playerEntity.leader ||
+                playerEntity.leader?.isDead() ||
                 BattleSystem.isActive;
 
             if (pauseBreathingSfx) {
@@ -3749,7 +3763,7 @@
                 return;
             }
 
-            const weightLevel = "normal"; // player.getWeightLevel();
+            const weightLevel = playerEntity.getWeightLevel();
 
             // Stop all breathing sounds if below 50%
             if (weightLevel === "normal") {
