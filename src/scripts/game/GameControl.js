@@ -108,8 +108,13 @@ const GameControl = {
             ! TITLE_SCREEN.isActive &&
             ( GameControl.mode === "menu" && menu.isOpen()) ||
             ! menu.isOpen() && (
-                ( GameControl.mode === "navigation" && ! BattleSystem.isActive ) ||
-                ( GameControl.mode === "combat" && BattleSystem.isActive )
+                (
+                    GameControl.mode === "navigation" &&
+                    ! BattleSystem.isActive
+                ) || (
+                    GameControl.mode === "combat" &&
+                    BattleSystem.isActive
+                )
             );
 
         if (skipModeUpdate) {
@@ -957,14 +962,18 @@ const GameControl = {
             }
         },
         back: function() {
-            if (UiCursor.count() <= 1) {
-                GameControl.CursorUi.close();
-                return;
-            }
+            UiCursor.count() <= 1
+                ? GameControl.CursorUi.close()
+                : UiCursor.previous(c =>
+                    c && this._activate(c.$pointingAt, c.sectionName)
+                );
 
-            UiCursor.previous(c =>
-                c && this._activate(c.$pointingAt, c.sectionName)
-            );
+            const partyMemberSectionIsOpened = UiCursor._activeCursors
+                .find(e => e.sectionName === "party member");
+
+            if (! partyMemberSectionIsOpened) {
+                GameControl.showPlayerPartySection();
+            }
         },
         close: function() {
             GameControl.CursorUi.isActive = false;
