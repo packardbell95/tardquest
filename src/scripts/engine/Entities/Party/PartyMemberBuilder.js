@@ -590,21 +590,13 @@ function PartyMemberBuilder(name, stats = {}) {
 
             const previousArmorId = this.equipped.armor;
 
-            if (! this.parent.inventory.deductArmor(armorId)) {
-                console.error(
-                    "Failed to take armor from the inventory",
-                    { armorId }
-                );
-                return false;
-            }
-
             if (! this._unequipArmor(true)) {
                 return false;
             }
 
             if (! this.parent.inventory.deductArmor(armorId)) {
                 console.error(
-                    "Armor could not be taken from the inventory",
+                    "Failed to take armor from the inventory",
                     { armorId }
                 );
                 return false;

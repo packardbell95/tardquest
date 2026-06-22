@@ -13,10 +13,10 @@ const SceneRenderer = {
         const { x, y, direction } = mapEntity;
 
         const viewDepth =
-            playerEntity.leader.getEffectiveTrait("sightRange") ?? 2;
+            playerEntity.leader?.getEffectiveTrait("sightRange") ?? 2;
 
         const maxBrightness =
-            playerEntity.leader.getEffectiveTrait("sightSensitivity") ?? 192;
+            playerEntity.leader?.getEffectiveTrait("sightSensitivity") ?? 192;
 
         const maxPlayerVisibilityDepth =
             viewDepth ||

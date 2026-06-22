@@ -643,7 +643,7 @@ const BattleSystem = {
             return false;
         }
 
-        const critChance = actor.getEffectiveCoreStat('luck') * 0.01;
+        const critChance = actor.getEffectiveCoreStat("luck") * 0.01;
         const isCriticalHit = Math.random() < critChance;
         const damageMultiplier = isCriticalHit ? 1.2 : 1;
         const targetStartedWithHp = target.stats.core.hp > 0;
@@ -655,10 +655,17 @@ const BattleSystem = {
         const weaponDamage =
             Math.floor(Math.random() * weapon.randomMultiplier) + weapon.base;
 
-        const damagePoints = Math.ceil((
-            actor.getEffectiveCoreStat("strength") +
-            weaponDamage
-        ) * damageMultiplier);
+        const damagePoints = Math.max(
+            0,
+            Math.ceil(
+                (
+                    actor.getEffectiveCoreStat("strength") +
+                    weaponDamage -
+                    ( target.getEffectiveCoreStat("defense") >> 1 )
+                ) *
+                damageMultiplier
+            )
+        );
 
         target.damage(damagePoints, false);
         const attackKilledTarget = targetStartedWithHp && target.isDead();
