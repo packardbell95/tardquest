@@ -862,7 +862,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 this.inventory.hasRing(ringId) ||
                 this.party.some(e =>
                     e.equipped.ring.left === ringId ||
-                    e.equipped.ring.right
+                    e.equipped.ring.right === ringId
                 )
             );
         },
