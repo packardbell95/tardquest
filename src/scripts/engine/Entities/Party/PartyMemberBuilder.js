@@ -295,8 +295,8 @@ function PartyMemberBuilder(name, stats = {}) {
             }
         },
 
+        // @TODO Fix leveling so rolled over experience can level multiple times
         levelUp: function() {
-            // Unfinished
             const experienceRequired = this.getExperienceRequiredForLevelUp();
             const diff = this.stats.progression.experience - experienceRequired;
             const rolledOverExp = Math.max(0, diff);

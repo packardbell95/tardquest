@@ -1133,7 +1133,8 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         damageParty: function(hp) {
             const hpIsValid =
                 typeof hp === "function" ||
-                Number.isInteger(hp);
+                Number.isInteger(hp) ||
+                hp === Infinity;
 
             if (! hpIsValid) {
                 console.error("hp must be an integer or a function", { hp });

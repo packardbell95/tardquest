@@ -697,6 +697,7 @@ const MapEntityFeatureFactory = {
         const pigeon = MapEntityBuilder("pigeon", x, y);
         pigeon.getDisplayName = () => "🐦️ Pigeon";
         pigeon.getDisplayCharacter = () => "P";
+        pigeon.getSceneArtId = () => "pigeon";
         pigeon.getMovementPriority = function() {
             return 40;
         };

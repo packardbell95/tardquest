@@ -479,6 +479,7 @@ class GameMap {
         return coordinates;
     }
 
+    // @TODO Handle (x, y) position here instead of on the entity itself
     addEntity(entity) {
         entity.gameMap = this;
         this.#entities.push(entity);

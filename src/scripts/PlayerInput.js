@@ -97,9 +97,11 @@ const PlayerInput = {
                 GameControl.disableControls();
                 const message = playerInput || "...";
 
-                playerEntity.leader.say(message, true, () => {
-                    playerEntity.talk(null, playerInput);
-                });
+                Cheat.isCheat(message)
+                    ? Cheat.handle(message)
+                    : playerEntity.leader.say(message, true, () =>
+                        playerEntity.talk(null, playerInput)
+                    );
             });
             return;
         }
