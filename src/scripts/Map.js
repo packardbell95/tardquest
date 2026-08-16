@@ -38,6 +38,14 @@ class MapCell {
         this.isExplored = typeof options?.isExplored === "boolean"
             ? options.isExplored
             : defaults.isExplored;
+
+        this.ceilingTextureId = null;
+        this.floorTextureId = "floor";
+
+        // Default wall texture for all faces
+        this.wallTextureId = "default";
+        // Specific texture IDs, keyed by "north", "east", "south", or "west"
+        this.wallTextureIds = {};
     }
 
     refreshElement(cellEntities = []) {
@@ -328,7 +336,12 @@ class GameMap {
     // Returns a cell at a given coordinate
     // Will return a wall if out of bounds/undefined to simulate blocking
     getCell(x, y) {
-        const cell = this.#cells[y]?.[x] || this.generateCell('wall');
+        return this.#cells[y]?.[x] || this.generateCell("wall");
+    }
+
+    // Returns a cell at a given coordinate with entities and handlers attached
+    getPopulatedCell(x, y) {
+        const cell = this.getCell(x, y);
         cell.entities = this.getEntitiesAt(x, y);
 
         cell.onTouch = function(gameMap, actorEntity) {
@@ -370,6 +383,7 @@ class GameMap {
                 this.mapCharacter = ".";
             }
 
+            this.wallTextureIds = {};
             this.rerender = true;
         };
 
@@ -631,12 +645,58 @@ class GameMap {
         }
     }
 
+    planRealtimeEntityMoves() {
+        this.clearDeactivatedEntities();
+
+        const allEntities = this.entities;
+        const realtimeEntities =
+            allEntities.filter(e => e.isAlive && e.isRealtime);
+
+        /*
+         * These are mutable copies. Planning may change the
+         * virtual direction or location without affecting the
+         * real entity.
+         */
+        const virtualPoses = new Map(allEntities.map(entity => [
+            entity.id,
+            {
+                x: entity.x,
+                y: entity.y,
+                direction: entity.direction,
+            },
+        ]));
+
+        const movementPlans = [];
+
+        for (const entity of realtimeEntities) {
+            if (typeof entity.planRealtimeMove !== "function") {
+                continue;
+            }
+
+            const movementPlan = entity.planRealtimeMove(this, virtualPoses);
+            if (movementPlan) {
+                movementPlans.push(movementPlan);
+            }
+        }
+
+        return movementPlans;
+    }
+
     moveRealtimeEntities() {
         this.clearDeactivatedEntities();
         const entities = this.entities.filter(e => e.isAlive && e.isRealtime);
 
         for (const entity of entities) {
+            const lastX = entity.x;
+            const lastY = entity.y;
+
             entity.move(this);
+
+            const positionChanged = lastX !== entity.x || lastY !== entity.y;
+            if (positionChanged) {
+                this.#cells[lastY][lastX].rerender = true;
+                this.#cells[entity.y][entity.x].rerender = true;
+            }
         }
     }
 
@@ -1403,7 +1463,18 @@ class GameMap {
 
         for (let y = 0; y < this.#cells.length; y++) {
             for (let x = 0; x < this.#cells[y].length; x++) {
-                if (forceFullRefresh || this.#cells[y][x].rerender) {
+                const refreshCell =
+                    forceFullRefresh ||
+                    this.#cells[y][x].isExplored && (
+                        this.#cells[y][x].rerender ||
+                        this.entities.some(e =>
+                            e.x === x &&
+                            e.y === y &&
+                            e.isVisibleOnMinimap
+                        )
+                    );
+
+                if (refreshCell) {
                     coordinates.push({ x, y });
                 }
             }
@@ -1413,14 +1484,16 @@ class GameMap {
     }
 
     // Updates the cells on the minimap
-    // @TODO See if we can set forceFullRefresh back to false
-    refreshMinimap(forceFullRefresh = true) {
+    // @TODO Keep track of entity coords and refresh if the entities disappear
+    refreshMinimap(forceFullRefresh = false) {
         if (! this.#$minimap) {
             console.warn("No minimap defined. Cannot rerender");
             return;
         }
 
-        this.#getRerenderCoordinates(forceFullRefresh).forEach(coordinate => {
+        const coords = this.#getRerenderCoordinates(forceFullRefresh);
+
+        coords.forEach(coordinate => {
             const { x, y } = coordinate;
             const cell = this.#cells[y]?.[x];
 
@@ -1434,7 +1507,8 @@ class GameMap {
 
             const cellEntities = this.entities.filter(e =>
                 e.x === x &&
-                e.y === y
+                e.y === y &&
+                e.isVisibleOnMinimap
             );
 
             cell.refreshElement(cellEntities);
@@ -1487,13 +1561,8 @@ class GameMap {
             for (let r = 1; r <= radius; r++) {
                 const tx = Math.round(x + Math.cos(rad) * r);
                 const ty = Math.round(y + Math.sin(rad) * r);
-                const cell = this.getCell(tx, ty);
-                if (! cell) {
-                    break;
-                }
-
                 this.revealSpot(tx, ty, 0);
-                if (cell.isWall) {
+                if (this.getCell(tx, ty).isWall) {
                     break;
                 }
             }
@@ -1542,10 +1611,9 @@ class GameMap {
 
                 // Prevent rays from moving between touching corners
                 if (deltaX !== 0 && deltaY !== 0) {
-                    const side1 = this.getCell(previousX + deltaX, previousY);
-                    const side2 = this.getCell(previousX, previousY + deltaY);
-
-                    const isBlockedByCorner = side1.isWall && side2.isWall;
+                    const isBlockedByCorner =
+                        this.getCell(previousX + deltaX, previousY) &&
+                        this.getCell(previousX, previousY + deltaY);
                     if (isBlockedByCorner) {
                         break;
                     }
@@ -1949,8 +2017,7 @@ class GameMap {
                     continue;
                 }
 
-                const cell = this.getCell(nextX, nextY);
-                if (cell.isWall) {
+                if (this.getCell(nextX, nextY).isWall) {
                     continue;
                 }
 

@@ -16,9 +16,13 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         className: "generic-entity",
         isActive: true,
         isAlive: true,
+        isVisibleOnMinimap: true,
         x,
         y,
         direction,
+        xOffset: 0,
+        yOffset: 0,
+        angleOffsetDegrees: 0,
         origin: { x, y },
         initialDirection: direction,
         target: null,
@@ -29,6 +33,10 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         stunTurns: 0,
         objectsOfInterest: [],
         stepsTakenOnCurrentFloor: 0,
+        environmentDynamics: [],
+        spriteIds: [ type ],
+        spriteAnimationId: "idle",
+        spriteAnimationStartedAtMs: performance.now(),
 
         getClassName: function() {
             const className = `${this.className} ${this.type}`;
@@ -280,6 +288,10 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
 
         reduceStun: function() {
             this.stunTurns = Math.max(this.stunTurns - 1, 0);
+
+            if (! this.isStunned()) {
+                this.onStunEnd?.();
+            }
         },
 
         stun: function(stunTurns = 1) {
@@ -289,6 +301,10 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             }
 
             this.stunTurns = Math.max(this.stunTurns, stunTurns);
+
+            if (this.isStunned()) {
+                this.onStun?.();
+            }
         },
 
         movementDisabled: false,
@@ -1279,6 +1295,21 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 showPortrait,
                 onTalkEnd
             );
+        },
+
+        applyEnvironmentDynamics: function(id, dynamics = []) {
+            if (! typeof id === "string") {
+                console.error("id must be a string", { id, dynamics });
+                return;
+            }
+
+            this.removeEnvironmentDynamics(id);
+            this.environmentDynamics.push(...dynamics.map(e => ({ id, ...e })));
+        },
+
+        removeEnvironmentDynamics: function(id) {
+            this.environmentDynamics =
+                this.environmentDynamics.filter(e => e.id !== id);
         },
     };
 

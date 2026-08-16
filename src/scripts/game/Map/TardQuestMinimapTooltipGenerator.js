@@ -2,7 +2,7 @@
 
 const TardQuestMinimapTooltipGenerator = {
     setCellDetails: function(cell, entity = null) {
-        if (! cell instanceof MapCell) {
+        if (! (cell instanceof MapCell)) {
             console.warn(
                 "cell must be an instance of MapCell",
                 { cell, entity }

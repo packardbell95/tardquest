@@ -179,7 +179,7 @@ const RINGS = Object.freeze({
         coreStatModifiers: {},
         coreTraitModifiers: {
             sightRange: 3,
-            sightSensitivity: 128,
+            sightSensitivity: 2,
         },
         price: 180,
         merchantStockChance: 0.2,
@@ -199,6 +199,31 @@ const RINGS = Object.freeze({
         merchantStockChance: 0.2,
         chestDrop: false,
         weight: 2,
+        environmentDynamics: [{
+            fog: {
+                red: 196,
+                green: 90,
+                blue: 44,
+                density: 0.5,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.26,
+                pulseSpeed: 0.23,
+                cappedToCeiling: true,
+            },
+        }, {
+            fog: {
+                red: 0,
+                green: 142,
+                blue: 3,
+                density: 0.5,
+                radius: 2,
+                softness: 1,
+                pulseAmount: 0.71,
+                pulseSpeed: 0.05,
+                cappedToCeiling: true,
+            },
+        }],
     },
     ringOfAmplifiedAudio: {
         article: "a",

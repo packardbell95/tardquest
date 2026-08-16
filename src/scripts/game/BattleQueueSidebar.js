@@ -95,8 +95,11 @@ const BattleQueueSidebar = {
             $partyMember.classList.add("flipped");
         }
 
-        if (partyMember.color) {
-            $partyMember.style.setProperty("--tint-color", partyMember.color);
+        if (partyMember.portrait.tint) {
+            $partyMember.style.setProperty(
+                "--tint-color",
+                partyMember.portrait.tint
+            );
         }
 
         $container.append($partyMember);
@@ -226,6 +229,7 @@ const BattleQueueSidebar = {
             partyMember.isDead() ? "dead" : "",
         ].filter(e => e).join(" ");
 
+        const partyMemberColor = partyMember.portrait.tint;
         const nextMoveHtml =
             this._getTooltipNextMoveSection(partyMember, queuedMove);
 
@@ -235,7 +239,7 @@ const BattleQueueSidebar = {
                 <div class="column left">
                     <div
                         class="${actorPortraitClasses}"
-                        style="background-color: ${partyMember.color}"
+                        style="background-color: ${partyMemberColor}"
                     ></div>
                 </div>
                 <div class="column right">
@@ -297,13 +301,15 @@ const BattleQueueSidebar = {
                 `${target.name}</span>`
             : "";
 
+        const targetColor = target?.portrait.tint;
+
         // @TODO Fix this hideous code
         const targetHtml = target
             ? (
                 `<div style="width: 28px; height: 28px; image-rendering: pixelated; background-color: #f00; mask-image: url(assets/interface/ui/battle-icons/arrow-square.png); mask-size: contain; mask-position: center; mask-repeat: no-repeat;"></div>
                 <div
                     class="${targetPortraitClasses}"
-                    style="width: 30px; height: 30px; mask-size: contain; background-color: ${target?.color || "#fff"};"
+                    style="width: 30px; height: 30px; mask-size: contain; background-color: ${targetColor};"
                 ></div>`
             )
             : "";

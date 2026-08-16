@@ -63,6 +63,9 @@ const TardQuestMapGenerator = {
     },
 
     generate: function(gameMap, floor) {
+        SceneRenderer.sightRangeOverride = null;
+        SceneRenderer.setStripSquare(8);
+
         gameMap.filterEntities(["player"]);
 
         const floorLayout = this.generateRandomLayout();
@@ -133,6 +136,16 @@ const TardQuestMapGenerator = {
         // @TODO This sometimes doesn't run which stops enemies from appearing
         for (const region of regions) {
             if (region?.occupied) {
+                continue;
+            }
+
+            if (Math.random() < 0.50) {
+                const x = region.start.x +
+                    Math.round(region.end.x - region.start.x);
+                const y = region.start.y +
+                    Math.round(region.end.y - region.start.y);
+
+                gameMap.addEntity(MapEntityFeatureFactory.crackedFloor(x, y));
                 continue;
             }
 
@@ -264,8 +277,7 @@ const TardQuestMapGenerator = {
         const totalHealingTiles = 1 + Math.floor(Math.random() * 4);
         const availableCoordinates = gameMap
             .getEmptyCellCoordinates()
-            // Make sure we don't spawn anything on the exit
-            .filter(e => e.x !== exitX && e.y !== exitY);
+            .filter(e => ! (typeof e.onEnter === "function"));
         const coordinates = shuffle(availableCoordinates);
 
         for (let i = 0; i < totalHealingTiles && i < coordinates.length; i++) {
@@ -330,7 +342,6 @@ const TardQuestMapGenerator = {
 
         // End of NPC placement
 
-
         this._placeTreasureChests(
             gameMap,
             floor,
@@ -348,6 +359,9 @@ const TardQuestMapGenerator = {
     },
 
     generateHallwayOfDoom: function(gameMap, floor) {
+        SceneRenderer.sightRangeOverride = null;
+        SceneRenderer.setStripSquare(8);
+
         gameMap.filterEntities(["player"]);
 
         const player = gameMap.entities.find(e => e.type === "player");
@@ -400,6 +414,166 @@ const TardQuestMapGenerator = {
             );
             bottomBouldingBall.direction = 0;
             gameMap.addEntity(bottomBouldingBall);
+        }
+
+        gameMap.reveal();
+    },
+
+    generateRandomMossyDungeon: function(gameMap, floor) {
+        this.generate(gameMap, floor);
+
+        for (let y = 0; y < gameMap.height; y++) {
+            for (let x = 0; x < gameMap.width; x++) {
+                const cell = gameMap.getCell(x, y);
+
+                cell.ceilingTextureId = Math.random() < 0.5
+                    ? null
+                    : (Math.random() < 0.5
+                        ? "default"
+                        : (Math.random() < 0.75 ? "stone" : "moss")
+                    );
+
+                cell.floorTextureId = Math.random() < 0.75 ? "moss" : "stone";
+
+                if (cell.isWall) {
+                    if (Math.random() < 0.4) {
+                        cell.wallTextureId =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                    }
+
+                    if (Math.random() < 0.25) {
+                        cell.wallTextureIds.north =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                        cell.wallTextureIds.east =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                        cell.wallTextureIds.south =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                        cell.wallTextureIds.west =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                    }
+                }
+
+                // Ambient effects
+                cell.ambientLight = {
+                    r: 0.05,
+                    g: 0.05,
+                    b: 0.05,
+                };
+                cell.fogDensity = 0.25;
+                cell.fogColor = {
+                    r: 0.45,
+                    g: 0.5,
+                    b: 0.4,
+                };
+                cell.lightSource = {
+                    color: {
+                        r: 1,
+                        g: 0.65,
+                        b: 0.25,
+                    },
+                    intensity: 1,
+                    radius: 5,
+                };
+            }
+        }
+
+        this._placeTorches(gameMap, 20);
+    },
+
+    generateBikiniBottom: function(gameMap, floor) {
+        SceneRenderer.sightRangeOverride = 20;
+        SceneRenderer.setStripSquare(1);
+
+        gameMap.filterEntities(["player"]);
+
+        const player = gameMap.entities.find(e => e.type === "player");
+        if (! player) {
+            console.error(
+                "Player entity not found!",
+                { entities: gameMap.entities }
+            );
+            return;
+        }
+
+        player.x = 1;
+        player.y = 5;
+        player.direction = 1;
+
+        const exitEntity = MapEntityFeatureFactory.exit(27, 5);
+        gameMap.addEntity(exitEntity);
+
+        for (let x = 0; x < gameMap.width; x++) {
+            for (let y = 0; y < gameMap.height; y++) {
+                const placeWall =
+                    x === 0 ||
+                    x === gameMap.width - 1 ||
+                    y === 0 ||
+                    y === gameMap.height - 1 ||
+                    (
+                        (x === 5 || x === gameMap.width - 5 - 1) &&
+                        (y < 5 || y > gameMap.height - 5 - 1)
+                    );
+
+                const type = placeWall ? "wall" : "floor";
+                gameMap.setCell(x, y, type, { isExplored: true });
+
+                const cell = gameMap.getCell(x, y);
+                cell.ceilingTextureId = "demo01ceiling01";
+                cell.floorTextureId = "demo01floor01";
+
+                if (placeWall) {
+                    const textureId = "demo01wall0" +
+                        (Math.floor(Math.random() * 3) + 1);
+                    cell.wallTextureIds.north = textureId;
+                    cell.wallTextureIds.east = textureId;
+                    cell.wallTextureIds.south = textureId;
+                    cell.wallTextureIds.west = textureId;
+                }
+            }
+        }
+
+        gameMap.getCell(24, 3).wallTextureIds.west = "demo01kkext01";
+        gameMap.getCell(24, 4).wallTextureIds.west = "demo01kkext02";
+        gameMap.getCell(24, 5).wallTextureIds.west = "demo01kkextflags";
+        gameMap.getCell(24, 6).wallTextureIds.west = "demo01kkext03";
+        gameMap.getCell(24, 7).wallTextureIds.west = "demo01kkext04";
+
+        const kkFlags = MapEntityBuilder("flags", 24, 5);
+        kkFlags.direction = 3;
+        kkFlags.isVisibleOnMinimap = false;
+        kkFlags.spriteIds = [ "demo01KkFlags" ];
+        gameMap.addEntity(kkFlags);
+        console.log({ kkFlags });
+
+        const env = SceneRenderer.environmentMap;
+        for (let i = 0; i < env.width * env.height; i++) {
+            env.lightR[i] = 1;
+            env.lightG[i] = 1;
+            env.lightB[i] = 1;
+        }
+
+        env.fogG.fill(127 / 255);
+        env.fogG.fill(214 / 255);
+        env.fogB.fill(204 / 255);
+        env.fogDensity.fill(0.02);
+
+        gameMap.addEntity(MapEntityFeatureFactory.demo01Krabs(24, 5));
+        const gravestone = MapEntityFeatureFactory.gravestone(25, 1);
+        gravestone.headstoneMessageHtml =
+            `<span class="DEF">Rest in peace, Gary :'(</span>`;
+        gameMap.addEntity(gravestone);
+
+        const pattyPlacements = [
+            { x:  3, y: 2 }, { x:  3, y: 8 },
+            { x:  8, y: 3 }, { x:  8, y: 7 },
+            { x: 10, y: 5 }, { x: 19, y: 5 },
+            { x: 21, y: 3 }, { x: 21, y: 7 },
+        ];
+
+        for (let i = 0; i < pattyPlacements.length; i++) {
+            const { x, y } = pattyPlacements[i];
+            const patty = MapEntityFeatureFactory.demo01Patty(x, y);
+            gameMap.addEntity(patty);
         }
 
         gameMap.reveal();
@@ -623,6 +797,47 @@ const TardQuestMapGenerator = {
             }
 
             gameMap.addEntity(treasureChest);
+        }
+    },
+
+    _placeTorches: function(gameMap, totalTorches = 1) {
+        const places = [];
+
+        for (let y = 1; y < gameMap.height - 1; y++) {
+            for (let x = 1; x < gameMap.width - 1; x++) {
+                if (! gameMap.cells[y][x].isWall) {
+                    continue;
+                }
+
+                // North
+                if (! gameMap.cells[y - 1][x].isWall) {
+                    places.push({ x, y: y - 1, direction: 3 });
+                }
+
+                // East
+                if (! gameMap.cells[y][x + 1].isWall) {
+                    places.push({ x: x + 1, y, direction: 2 });
+                }
+
+                // South
+                if (! gameMap.cells[y + 1][x].isWall) {
+                    places.push({ x, y: y + 1, direction: 1 });
+                }
+
+                // West
+                if (! gameMap.cells[y][x - 1].isWall) {
+                    places.push({ x: x - 1, y, direction: 0 });
+                }
+            }
+        }
+
+        shuffle(places);
+
+        for (let i = 0; i < totalTorches && i < places.length; i++) {
+            const torch =
+                MapEntityFeatureFactory.torches(places[i].x, places[i].y);
+            torch.direction = places[i].direction;
+            MAP.addEntity(torch);
         }
     },
 

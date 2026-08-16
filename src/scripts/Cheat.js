@@ -38,6 +38,15 @@
  *
  *   SET MAP FLOOR
  *   /setfloor [floor number], eg: /setfloor 13
+ *
+ *   DEMO MAP: HALLWAY of DOOM
+ *   /demomap hod
+ *
+ *   DEMO MAP: MOSS DUNGEON
+ *   /demomap moss
+ *
+ *   DEMO MAP: GO UNDER THE SEA
+ *   /demomap bb
  */
 const Cheat = {
     isCheat: function (input) {
@@ -126,7 +135,7 @@ const Cheat = {
             render();
 
             Cheat._log(
-                `<span class="${entity.getSceneArtId()}">` +
+                `<span class="${entity?.type || ""}">` +
                 `${entity.getDisplayName()}</span> spawned at ` +
                 `<span class="good">(${entity.x}, ${entity.y}).</span>`
             );
@@ -407,6 +416,31 @@ const Cheat = {
             Cheat._log(
                 `Moved to Floor ${floorNumber.toLocaleString(undefined)}.`
             );
+        },
+
+        demomap: function(mapName) {
+            if (mapName === "hod") {
+                Cheat._log("Entering the Hallway of Doom.");
+                TardQuestMapGenerator.generateHallwayOfDoom(MAP, 1);
+                MAP.refreshMinimap(true);
+                return;
+            }
+
+            if (mapName === "moss") {
+                Cheat._log("Entering the mossy crypt.");
+                TardQuestMapGenerator.generateRandomMossyDungeon(MAP, 1);
+                MAP.refreshMinimap(true);
+                return;
+            }
+
+            if (mapName === "bb") {
+                Cheat._log("Entering Bikini Bottom.");
+                TardQuestMapGenerator.generateBikiniBottom(MAP, 1);
+                MAP.refreshMinimap(true);
+                return;
+            }
+
+            Cheat._logError("Try naming a map that actually exists, DUMBASS.");
         },
     },
 };

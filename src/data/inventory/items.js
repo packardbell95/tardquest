@@ -103,9 +103,30 @@ const ITEMS = Object.freeze({
             // Trigger the 20-second visual effect if the player is the target
             // @TODO Tie this into a time-based status effect
             if (target.id === playerEntity.leader.id) {
-                const $game = document.getElementById("game");
-                $game.classList.add("lean-effect");
-                setTimeout(() => $game.classList.remove("lean-effect"), 20000);
+                const fxId = "drunkenness";
+
+                // First gag
+                setTimeout(
+                    () => SceneRenderer.transitionEffect(fxId, 0.1, 1000),
+                    1400
+                );
+
+                // Second gag
+                setTimeout(
+                    () => SceneRenderer.transitionEffect(fxId, 0.25, 1000),
+                    3100
+                );
+
+                // Peak gag
+                setTimeout(() => {
+                    SceneRenderer.transitionEffect(fxId, 1, 1000);
+
+                    // Sober up
+                    setTimeout(
+                        () => SceneRenderer.transitionEffect(fxId, 0, 4000),
+                        20000
+                    );
+                }, 4800);
             }
 
             if (playerEntity.leader.id === actorMember.id) {
@@ -450,7 +471,7 @@ const ITEMS = Object.freeze({
 
                     for (let y = yMin; y <= yMax; y++) {
                         for (let x = xMin; x <= xMax; x++) {
-                            const cell = MAP.getCell(x, y);
+                            const cell = MAP.getPopulatedCell(x, y);
                             cell.onExplode?.(MAP, mapEntity);
                             cell.isExplored = true;
                         }
@@ -714,7 +735,7 @@ const ITEMS = Object.freeze({
 
             const actorEntity = actorMember.parent;
             const { x, y } = actorEntity.getCoordinateInFront();
-            const targetCell = MAP.getCell(x, y);
+            const targetCell = MAP.getPopulatedCell(x, y);
 
             const specialBlockedType = targetCell.entities.find(e =>
                 ["exit", "pit", "sigil"].includes(e.type)

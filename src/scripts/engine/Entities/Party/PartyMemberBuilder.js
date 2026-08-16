@@ -13,6 +13,13 @@ function PartyMemberBuilder(name, stats = {}) {
         name: typeof name === "string" && name.length > 0
             ? name
             : "Anonymous",
+        battleSpriteId: name.split(/[ -]/).map((e, i) =>
+            i === 0
+                ? e.toLowerCase()
+                : e.slice(0, 1).toUpperCase() + e.slice(1)
+        ).join(""),
+        visible: true,
+        portrait: { },
         // statusConditions: {},
         statPoints: 0,
         equipped: {
@@ -167,7 +174,7 @@ function PartyMemberBuilder(name, stats = {}) {
 
         traits: {
             sightRange: 2,
-            sightSensitivity: 255,
+            sightSensitivity: 1,
             fieldOfView: 90,
             hearingRange: 5,
             persuasionAttempts: 0,
@@ -769,8 +776,7 @@ function PartyMemberBuilder(name, stats = {}) {
         say: function(message, showPortrait = true, onComplete = null) {
             if (this.voice) {
                 if (showPortrait) {
-                    const flipped = this.parent.id !== playerEntity.id;
-                    Portrait.show(this.type, this.color, flipped);
+                    Portrait.showPartyMember(this);
                 }
 
                 const callback = () => {
@@ -788,7 +794,11 @@ function PartyMemberBuilder(name, stats = {}) {
                 SpeechSynthesizer.speak(spokenMessage, this.voice, callback);
             }
 
-            const colorHtml = this.color ? ` style="color: ${this.color}"` : "";
+            const portraitTint = this.portrait?.tint;
+
+            const colorHtml = portraitTint
+                ? ` style="color: ${portraitTint}"`
+                : "";
             const nameHtml =
                 `<span class="name"${colorHtml}>&lt;${this.name}&gt;</span>`;
 

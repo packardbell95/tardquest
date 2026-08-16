@@ -10,10 +10,10 @@ const MapEntityFeatureFactory = {
      */
     exit: function(x, y) {
         const exit = MapEntityBuilder("exit", x, y);
+        exit.spriteIds = ["exitArrow", "crater"];
 
         exit.getDisplayName = () => "🏁 Exit";
         exit.getDisplayCharacter = () => "E";
-        exit.getSceneArtId = () => "exit";
         exit.onEnter = function(gameMap, entity) {
             console.log("onEnter()", { entity });
             if (entity?.type === "player") {
@@ -36,7 +36,32 @@ const MapEntityFeatureFactory = {
         const healingTile = MapEntityBuilder("healingTile", x, y);
         healingTile.getDisplayName = () => "🟩 Healing Tile";
         healingTile.getDisplayCharacter = () => "H";
-        healingTile.getSceneArtId = () => "healingTile";
+        healingTile.spriteIds = [ "healingTile" ];
+
+        healingTile.environmentDynamics = [{
+            light: {
+                red: 66,
+                green: 247,
+                blue: 79,
+                intensity: 0.4,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.3,
+                pulseSpeed: 0.2,
+            },
+
+            fog: {
+                red: 107,
+                green: 255,
+                blue: 116,
+                density: 0.15,
+                radius: 0.5,
+                softness: 0,
+                pulseAmount: 0.2,
+                pulseSpeed: 0.2,
+            },
+        }];
+
         healingTile.onEnter = function(gameMap, entity) {
             function performHeal() {
                 const results = {
@@ -78,6 +103,10 @@ const MapEntityFeatureFactory = {
                     "heal.webm",
                     {
                         onFlashed: () => {
+                            this.spriteIds = [];
+                            this.environmentDynamics = [];
+                            render();
+
                             const { leaderHealed, partyHealed } = performHeal();
 
                             if (! leaderHealed && ! partyHealed) {
@@ -133,7 +162,6 @@ const MapEntityFeatureFactory = {
         const crater = MapEntityBuilder("crater", x, y);
         crater.getDisplayName = () => "⚫️ Crater";
         crater.getDisplayCharacter = () => "●";
-        crater.getSceneArtId = () => "crater";
 
         return crater;
     },
@@ -143,12 +171,12 @@ const MapEntityFeatureFactory = {
      */
     bloodyCrater: function(x, y) {
         const bloodyCrater = MapEntityBuilder("bloodyCrater", x, y);
+        bloodyCrater.spriteIds = ["bloodyCrater", "skeleton"];
         bloodyCrater.getDisplayName = () => "🔴 Bloody Crater";
         bloodyCrater.getDisplayCharacter = () => "◌";
-        bloodyCrater.getSceneArtId = () => "bloodyCrater";
 
         bloodyCrater.onExplode = function(gameMap, entity) {
-            this.die(entity);
+            this.spriteIds = ["bloodyCrater"];
         };
 
         return bloodyCrater;
@@ -159,9 +187,9 @@ const MapEntityFeatureFactory = {
      */
     treasureChest: function(x, y) {
         const treasureChest = MapEntityBuilder("treasureChest", x, y);
+        treasureChest.spriteIds = [ "treasureChest", "circularShadow" ];
         treasureChest.getDisplayName = () => "🎁 Treasure Chest";
         treasureChest.getDisplayCharacter = () => "T";
-        treasureChest.getSceneArtId = () => "treasureChest";
         treasureChest.onTouch = function(gameMap, entity) {
             if (entity?.type === "player") {
                 const treasureChest = this;
@@ -375,7 +403,6 @@ const MapEntityFeatureFactory = {
         destroyedTreasureChest.getDisplayName =
             () => "🪹 Destroyed Treasure Chest";
         destroyedTreasureChest.getDisplayCharacter = () => "◌";
-        destroyedTreasureChest.getSceneArtId = () => "destroyedTreasureChest";
 
         destroyedTreasureChest.onExplode = function(gameMap, entity) {
             this.die(entity);
@@ -389,9 +416,34 @@ const MapEntityFeatureFactory = {
      */
     sigil: function(x, y) {
         const sigil = MapEntityBuilder("sigil", x, y);
+        sigil.spriteIds = ["sigil"];
+        sigil.environmentDynamics = [{
+            light: {
+                red: 255,
+                green: 255,
+                blue: 128,
+                intensity: 0.2,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.3,
+                pulseSpeed: 0.2,
+            },
+
+            fog: {
+                red: 96,
+                green: 32,
+                blue: 32,
+                density: 0.4,
+                radius: 0.5,
+                softness: 0,
+                pulseAmount: 0.2,
+                pulseSpeed: 0.2,
+            },
+        }];
+
+
         sigil.getDisplayName = () => "✡️ Sigil";
         sigil.getDisplayCharacter = () => "✡";
-        sigil.getSceneArtId = () => "sigil";
 
         return sigil;
     },
@@ -403,7 +455,6 @@ const MapEntityFeatureFactory = {
         const pit = MapEntityBuilder("pit", x, y);
         pit.getDisplayName = () => "🕳️ Pit";
         pit.getDisplayCharacter = () => "●";
-        pit.getSceneArtId = () => "pit";
         pit.collapseAfterSomethingFallsIn = true;
         pit.closeAfterTurns = Infinity;
 
@@ -416,10 +467,10 @@ const MapEntityFeatureFactory = {
             if (entity?.type === "player") {
                 music.stop();
                 animTorchEnd();
-                Portrait.show("death");
+                Portrait.show("death", { text: "Game Over" });
                 GameControl.disableControls();
 
-                document.getElementById("game").classList
+                document.getElementById("scene").classList
                     .add("descendingIntoFloor");
                 document.getElementById("viewport").classList
                     .add("playerFellIntoAPitAndDied");
@@ -492,6 +543,7 @@ const MapEntityFeatureFactory = {
      */
     crackedFloor: function(x, y) {
         const crackedFloor = MapEntityBuilder("crackedFloor", x, y);
+        crackedFloor.spriteIds = ["crackedFloorSlight"];
 
         crackedFloor.crackedLevel = 1;
         crackedFloor.getDisplayName = function() {
@@ -511,6 +563,7 @@ const MapEntityFeatureFactory = {
             return this.crackedLevel === 3 ? "✖" : "✕";
         };
 
+        // @TODO Move this to onEnter
         crackedFloor.getSceneArtId = function() {
             switch (this.crackedLevel) {
                 case 1:
@@ -529,13 +582,21 @@ const MapEntityFeatureFactory = {
                 return;
             }
 
-            console.log("onEnter()", { entity });
-
             this.crackedLevel += ({
                 normal: 1,
                 warning: 2,
                 danger: 3,
             })[entity.getWeightLevel()] || 0;
+
+            playSFX("floorCrackSlight");
+
+            const spriteId = [
+                "crackedFloorSlight",
+                "crackedFloorModerate",
+                "crackedFloorSevere"
+            ][this.crackedLevel - 1] ?? "crackedFloorSevere";
+
+            this.spriteIds = [ spriteId ];
 
             if (this.crackedLevel > 3) {
                 const pitOfSpikes =
@@ -577,7 +638,30 @@ const MapEntityFeatureFactory = {
         bouldingBall.getDisplayName = () => "🪨 Boulding Ball";
         // Empty character because this is styled by a CSS rule
         bouldingBall.getDisplayCharacter = () => " ";
-        bouldingBall.getSceneArtId = () => "bouldingBall";
+
+        bouldingBall.previewRealtimeTouch = function(
+            gameMap,
+            entity,
+            virtualPoses
+        ) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            if (entity.type !== "bouldingBall") {
+                return;
+            }
+
+            const thisPose = virtualPoses.get(this.id);
+            const entityPose = virtualPoses.get(entity.id);
+
+            if (! thisPose || ! entityPose) {
+                return;
+            }
+
+            thisPose.direction = (thisPose.direction + 2) % 4;
+            entityPose.direction = (entityPose.direction + 2) % 4;
+        };
 
         bouldingBall.onTouch = function(gameMap, entity) {
             if (entity.leader?.traits.isFlying) {
@@ -618,8 +702,8 @@ const MapEntityFeatureFactory = {
                     damageValues.map(e => {
                         const { partyMemberId, damageHp } = e;
 
-                        const partyMember = playerEntity.party
-                            .find(p => e.id === partyMemberId);
+                        const partyMember = playerEntity
+                            .party.find(p => p.id === partyMemberId);
 
                         if (! partyMember) {
                             return "";
@@ -695,9 +779,9 @@ const MapEntityFeatureFactory = {
      */
     pigeon: function(x, y) {
         const pigeon = MapEntityBuilder("pigeon", x, y);
+        pigeon.spriteIds = ["pigeon", "bobbingShadow"];
         pigeon.getDisplayName = () => "🐦️ Pigeon";
         pigeon.getDisplayCharacter = () => "P";
-        pigeon.getSceneArtId = () => "pigeon";
         pigeon.getMovementPriority = function() {
             return 40;
         };
@@ -745,10 +829,9 @@ const MapEntityFeatureFactory = {
      */
     gravestone: function(x, y) {
         const gravestone = MapEntityBuilder("gravestone", x, y);
-
+        gravestone.spriteIds = ["gravestone", "burialPlot"];
         gravestone.getDisplayName = () => "🪦 Gravestone";
         gravestone.getDisplayCharacter = () => "†";
-        gravestone.getSceneArtId = () => "gravestone";
         gravestone.headstoneMessageHtml = "Rest in peace, nameless tard.";
 
         gravestone.onTouch = function (gameMap, entity) {
@@ -765,5 +848,139 @@ const MapEntityFeatureFactory = {
         };
 
         return gravestone;
+    },
+
+    /**
+     * TORCHES (affixed to a wall)
+     */
+    torches: function(x, y) {
+        const torches = MapEntityBuilder("torches", x, y);
+        torches.isVisibleOnMinimap = false;
+        torches.getDisplayName = () => "🔥 Torches";
+        torches.getDisplayCharacter = () => "T";
+
+        torches.environmentDynamics = [
+            {
+                light: {
+                    red: 255,
+                    green: 255,
+                    blue: 142,
+                    intensity: 0.3,
+                    radius: 5,
+                    softness: 2,
+                    pulseAmount: 0.33,
+                    pulseSpeed: 0.21,
+                },
+
+                fog: {
+                    red: 212,
+                    green: 159,
+                    blue: 0,
+                    density: 0.05,
+                    radius: 0.5,
+                    softness: 0,
+                    pulseAmount: 0.26,
+                    pulseSpeed: 0.23,
+                    cappedToCeiling: true,
+                },
+            },
+            {
+                light: {
+                    red: 255,
+                    green: 144,
+                    blue: 102,
+                    intensity: 0.3,
+                    radius: 4,
+                    softness: 1,
+                    pulseAmount: 0.27,
+                    pulseSpeed: 0.19,
+                },
+
+                fog: {
+                    red: 170,
+                    green: 31,
+                    blue: 0,
+                    density: 0.035,
+                    radius: 3,
+                    softness: 2,
+                    pulseAmount: 0.18,
+                    pulseSpeed: 0.11,
+                    cappedToCeiling: true,
+                },
+            },
+        ];
+
+        torches.onExplode = function(gameMap, entity) {
+            this.die(entity);
+        };
+
+        return torches;
+    },
+
+    /**
+     * PATTY
+     */
+    demo01Patty: function(x, y) {
+        const patty = MapEntityBuilder("patty", x, y);
+        patty.getDisplayName = () => "🍔 Patty";
+        patty.getDisplayCharacter = () => "@";
+        patty.spriteIds = [ "demo01Patty", "bobbingShadow" ];
+
+        patty.environmentDynamics = [{
+            light: {
+                red: 247,
+                green: 184,
+                blue: 0,
+                intensity: 0.5,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.7,
+                pulseSpeed: 0.8,
+            },
+        }];
+
+        patty.onEnter = function(gameMap, entity) {
+            playSFX("demo01Pickup");
+            updateBattleLog("PATTY COLLECTED");
+            this.die();
+
+            if (! gameMap.entities.some(e => e.type === "patty")) {
+                gameMap.entities.map(e => e.type === "krabs" ? e.die() : null);
+            }
+        };
+
+        return patty;
+    },
+
+    /**
+     * KRABS
+     */
+    demo01Krabs: function(x, y) {
+        const krabs = MapEntityBuilder("krabs", x, y);
+        krabs.getDisplayName = () => "🦀 Krabs";
+        krabs.getDisplayCharacter = () => "K";
+        krabs.spriteIds = [ "demo01Krabs", "circularShadow" ];
+
+        krabs.environmentDynamics = [{
+            light: {
+                red: 255,
+                green: 225,
+                blue: 255,
+                intensity: 0.2,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0,
+                pulseSpeed: 0,
+            },
+        }];
+
+        krabs.onTouch = () => updateBattleLog("FIND ME PATTIES!");
+        krabs.onDie = function () {
+            updateBattleLog("YE DID IT, ME BOY!");
+            this.isActive = false;
+            MAP.refreshMinimap(true);
+        };
+
+        return krabs;
     },
 }

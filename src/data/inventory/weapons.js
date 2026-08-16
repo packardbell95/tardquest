@@ -134,7 +134,7 @@ const WEAPONS = Object.freeze({
         },
         coreTraitModifiers: {
             sightRange: 1,
-            sightSensitivity: 64,
+            sightSensitivity: 1,
         },
         maxRandomDamageBonus: 35,
         price: 400,

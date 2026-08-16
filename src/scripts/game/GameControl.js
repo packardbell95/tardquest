@@ -242,7 +242,7 @@ const GameControl = {
         // Move Forward
         const frontX = playerEntity.x + DX[playerEntity.direction];
         const frontY = playerEntity.y + DY[playerEntity.direction];
-        const cellInFrontOfPlayer = MAP.getCell(frontX, frontY);
+        const cellInFrontOfPlayer = MAP.getPopulatedCell(frontX, frontY);
         const controlsEnabled =
             GameControl.enabled &&
             ! playerEntity.movementDisabled;
@@ -525,9 +525,10 @@ const GameControl = {
             $partyMember.className = "party-member button";
             $partyMember.dataset.partyMemberId = partyMember.id;
 
+            const partyMemberColor = partyMember.portrait.tint;
             const $portrait = document.createElement("div");
             $portrait.classList.add("portrait", "flipped", partyMember.type);
-            $portrait.style.setProperty("--tint-color", partyMember.color);
+            $portrait.style.setProperty("--tint-color", partyMemberColor);
             $partyMember.appendChild($portrait);
 
             const $container = document.createElement("div");
@@ -870,7 +871,7 @@ const GameControl = {
             case "warning":
                 return 400;
             default:
-                return 100;
+                return 200;
         }
     },
 
