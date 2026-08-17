@@ -1764,6 +1764,10 @@ a:link {
     flex-direction: column;
 }
 
+#topLeft {
+    overflow: hidden;
+}
+
 @keyframes nowPlaying_notes {
     0%   { content: "♬"; }
     25%  { content: "♪"; }
