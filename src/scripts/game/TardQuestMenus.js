@@ -166,12 +166,14 @@ menu.setMenus({
             },
             {
                 id: "toggleSpeech",
-                displayText:
-                    `${SpeechSynthesizer.enabled ? "Disable" : "Enable"} ` +
-                    `speech`,
-                description:
-                    `${SpeechSynthesizer.enabled ? "Disable" : "Enable"} the ` +
-                    `party member and NPC speaking voices`,
+                displayText: "Speech Synthesizer: " + (
+                    SpeechSynthesizer.enabled
+                        ? SpeechSynthesizer.getModeName()
+                        : "Disabled"
+                ),
+                description: SpeechSynthesizer.enabled
+                    ? SpeechSynthesizer.getModeDescription()
+                    : "Party member and NPC speaking voices are disabled",
             },
             {
                 id: "toggleSkipTitleScreen",
@@ -264,8 +266,19 @@ menu.setMenus({
                     menu.render();
                     break;
                 case "toggleSpeech":
-                    SpeechSynthesizer.enabled =
-                        ! SpeechSynthesizer.enabled;
+                    const speechModes =
+                        Object.keys(SpeechSynthesizer.getModes());
+                    if (! SpeechSynthesizer.enabled) {
+                        SpeechSynthesizer.enabled = true;
+                        SpeechSynthesizer.setMode(speechModes[0]);
+                    } else {
+                        const speechMode = SpeechSynthesizer.getMode();
+                        const speechModeIndex = speechModes.indexOf(speechMode);
+                        const nextIndex = speechModeIndex + 1;
+                        nextIndex >= speechModes.length
+                            ? SpeechSynthesizer.enabled = false
+                            : SpeechSynthesizer.setMode(speechModes[nextIndex]);
+                    }
                     saveSettings();
                     menu.render();
                     break;
