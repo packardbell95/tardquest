@@ -4,7 +4,7 @@
  * @TODO: Incorporate the level into stats
  */
 const MapEntityEnemyFactory = {
-    randomEnemy: function(level, x, y, direction) {
+    randomEnemy: function(level) {
         const possibleEnemies = [
             { id: "snailSentinel", minimumLevel: 0 },
             { id: "stupidDog", minimumLevel: 0 },
@@ -22,25 +22,25 @@ const MapEntityEnemyFactory = {
 
         switch (possibleEnemies[index]) {
             case "snailSentinel":
-                return this.snailSentinel(level, x, y, direction);
+                return this.snailSentinel(level);
             case "stupidDog":
-                return this.stupidDog(level, x, y, direction);
+                return this.stupidDog(level);
             case "wangRat":
-                return this.wangRat(level, x, y, direction);
+                return this.wangRat(level);
             case "keeperOfTheToiletBowl":
-                return this.keeperOfTheToiletBowl(level, x, y, direction);
+                return this.keeperOfTheToiletBowl(level);
             case "mysteriousScooter":
-                return this.mysteriousScooter(level, x, y, direction);
+                return this.mysteriousScooter(level);
             case "badassFlamingSkeleton":
-                return this.badassFlamingSkeleton(level, x, y, direction);
+                return this.badassFlamingSkeleton(level);
             case "fridgeOfForgottenLeftovers":
-                return this.fridgeOfForgottenLeftovers(level, x, y, direction);
+                return this.fridgeOfForgottenLeftovers(level);
             case "lughead":
-                return this.lughead(level, x, y, direction);
+                return this.lughead(level);
             case "pissedOffPoultry":
-                return this.pissedOffPoultry(level, x, y, direction);
+                return this.pissedOffPoultry(level);
             case "krampusElf":
-                return this.krampusElf(level, x, y, direction);
+                return this.krampusElf(level);
             default:
                 console.error(
                     "Tried to generate an unknown enemy",
@@ -53,8 +53,8 @@ const MapEntityEnemyFactory = {
     /**
      * SNAIL SENTINEL
      */
-    snailSentinel: function(level, x, y, direction) {
-        const snailSentinel = this._buildRoamingEnemy(x, y, direction);
+    snailSentinel: function(level) {
+        const snailSentinel = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(snailSentinel);
         snailSentinel.inventory.contents.bitcoins =
             Math.floor(4 * (Math.random() * 2 * level));
@@ -122,8 +122,8 @@ const MapEntityEnemyFactory = {
     /**
      * STUPID DOG
      */
-    stupidDog: function(level, x, y, direction) {
-        const stupidDog = this._buildRoamingEnemy(x, y, direction);
+    stupidDog: function(level) {
+        const stupidDog = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(stupidDog);
         stupidDog.inventory.contents.bitcoins =
             Math.floor(3 * (Math.random() * 2 * level));
@@ -187,8 +187,8 @@ const MapEntityEnemyFactory = {
     /**
      * WANG RAT
      */
-    wangRat: function(level, x, y, direction) {
-        const wangRat = this._buildRoamingEnemy(x, y, direction);
+    wangRat: function(level) {
+        const wangRat = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(wangRat);
         wangRat.inventory.contents.bitcoins =
             Math.floor(2 * (Math.random() * 2 * level));
@@ -250,8 +250,8 @@ const MapEntityEnemyFactory = {
     /**
      * KEEPER OF THE TOILET BOWL
      */
-    keeperOfTheToiletBowl: function(level, x, y, direction) {
-        const keeperOfTheToiletBowl = this._buildRoamingEnemy(x, y, direction);
+    keeperOfTheToiletBowl: function(level) {
+        const keeperOfTheToiletBowl = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(keeperOfTheToiletBowl);
         keeperOfTheToiletBowl.inventory.contents.bitcoins =
             Math.floor(5 * (Math.random() * 2 * level));
@@ -321,8 +321,8 @@ const MapEntityEnemyFactory = {
     /**
      * MYSTERIOUS SCOOTER
      */
-    mysteriousScooter: function(level, x, y, direction) {
-        const mysteriousScooter = this._buildRoamingEnemy(x, y, direction);
+    mysteriousScooter: function(level) {
+        const mysteriousScooter = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(mysteriousScooter);
         mysteriousScooter.inventory.contents.bitcoins =
             Math.floor(4 * (Math.random() * 2 * level));
@@ -383,8 +383,8 @@ const MapEntityEnemyFactory = {
     /**
      * BADASS FLAMING SKELETON
      */
-    badassFlamingSkeleton: function(level, x, y, direction) {
-        const badassFlamingSkeleton = this._buildRoamingEnemy(x, y, direction);
+    badassFlamingSkeleton: function(level) {
+        const badassFlamingSkeleton = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(badassFlamingSkeleton);
         badassFlamingSkeleton.inventory.contents.bitcoins =
             Math.floor(4 * (Math.random() * 2 * level));
@@ -449,9 +449,9 @@ const MapEntityEnemyFactory = {
     /**
      * FRIDGE of FORGOTTEN LEFTOVERS
      */
-    fridgeOfForgottenLeftovers: function(level, x, y, direction) {
+    fridgeOfForgottenLeftovers: function(level) {
         const fridgeOfForgottenLeftovers =
-            this._buildRoamingEnemy(x, y, direction);
+            this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(fridgeOfForgottenLeftovers);
         fridgeOfForgottenLeftovers.inventory.contents.bitcoins =
             Math.floor(3 * (Math.random() * 2 * level));
@@ -509,8 +509,8 @@ const MapEntityEnemyFactory = {
     /**
      * LUGHEAD
      */
-    lughead: function(level, x, y, direction) {
-        const lughead = this._buildRoamingEnemy(x, y, direction);
+    lughead: function(level) {
+        const lughead = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(lughead);
         lughead.inventory.contents.bitcoins =
             Math.floor(4 * (Math.random() * 2 * level));
@@ -567,8 +567,8 @@ const MapEntityEnemyFactory = {
     /**
      * PISSED-OFF POULTRY
      */
-    pissedOffPoultry: function(level, x, y, direction) {
-        const pissedOffPoultry = this._buildRoamingEnemy(x, y, direction);
+    pissedOffPoultry: function(level) {
+        const pissedOffPoultry = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(pissedOffPoultry);
         pissedOffPoultry.inventory.contents.bitcoins =
             Math.floor(2 * (Math.random() * 2 * level));
@@ -627,8 +627,8 @@ const MapEntityEnemyFactory = {
     /**
      * KRAMPUS ELF
      */
-    krampusElf: function(level, x, y, direction) {
-        const krampusElf = this._buildRoamingEnemy(x, y, direction);
+    krampusElf: function(level) {
+        const krampusElf = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(krampusElf);
         krampusElf.inventory.contents.bitcoins =
             Math.floor(4 * (Math.random() * 2 * level));
@@ -687,8 +687,8 @@ const MapEntityEnemyFactory = {
     /**
      * MIMIC
      */
-    mimic: function(level, x, y, direction) {
-        const mimic = this._buildRoamingEnemy(x, y, direction);
+    mimic: function(level) {
+        const mimic = this._buildRoamingEnemy();
         MapEntityTrait_AttachMovement_Patrol(mimic);
         mimic.inventory.contents.bitcoins = 100;
         // No objects of interest because the mimic waits for victims
@@ -742,8 +742,8 @@ const MapEntityEnemyFactory = {
     /**
      * VAMPIRE
      */
-    vampire: function(level, x, y, direction) {
-        const vampire = MapEntityBuilder("vampire", x, y, direction);
+    vampire: function(level) {
+        const vampire = MapEntityBuilder("vampire");
         vampire.spriteIds = ["vampireBat", "bobbingShadow"];
 
         MapEntityTrait_AttachMovement_Pursue(vampire);
@@ -945,17 +945,19 @@ const MapEntityEnemyFactory = {
         return vampire;
     },
 
-    _buildRoamingEnemy: function(x, y, direction) {
-        const entity = MapEntityBuilder("roamingEnemy", x, y, direction);
+    _buildRoamingEnemy: function() {
+        const entity = MapEntityBuilder("roamingEnemy");
         this.spriteIds = [ "roamingEnemy", "circularShadow" ];
         entity.className = "roamingEnemy";
 
         entity.onStun = function() {
             this.spriteIds = [ "roamingEnemyStunned", "circularShadow" ];
+            this.gameMap.entityChanged(this);
         };
 
         entity.onStunEnd = function() {
             this.spriteIds = [ "roamingEnemy", "circularShadow" ];
+            this.gameMap.entityChanged(this);
         };
 
         entity.getSceneArtId = function(seenFromX, seenFromY) {
@@ -976,7 +978,7 @@ const MapEntityEnemyFactory = {
                     ? (deltaX > 0 ? 1 : 3)
                     : (deltaY > 0 ? 0 : 2);
 
-            const direction =relativeDirectionTable
+            const direction = relativeDirectionTable
                 [entity.direction][directionToVantagePoint];
 
             const directionName = ["Front", "Right", "Back", "Left"][direction];
@@ -1005,7 +1007,7 @@ const MapEntityEnemyFactory = {
         },
 
         afterExplode: function(gameMap, x, y) {
-            const bloodyCrater = MapEntityFeatureFactory.bloodyCrater(x, y);
+            const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
 
             bloodyCrater.onEnter = function(gameMap, actorEntity) {
                 if (actorEntity.leader) {
@@ -1020,7 +1022,7 @@ const MapEntityEnemyFactory = {
                 this.die(entity);
             };
 
-            gameMap.addEntity(bloodyCrater);
+            gameMap.addEntity(bloodyCrater, x, y);
         },
     },
 }

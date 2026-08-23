@@ -481,7 +481,10 @@ const SceneRenderer = {
     effectTransitions: new Map(),
     effects: {
         drunkenness: 0,
+        ceilingDarkness: 0,
         wallDarkness: 0,
+        floorDarkness: 0,
+        entityDarkness: 0,
     },
 
     initialize: async function(mapEntity) {
@@ -2419,6 +2422,40 @@ const SceneRenderer = {
         this.entityPoseOverrides.delete(entityId);
     },
 
+    clearEntityPoseOverrides: function(entityIds) {
+        for (const entityId of entityIds) {
+            SceneRenderer.clearEntityPoseOverride(entityId);
+        }
+    },
+
+    setEntityMidpointPoseOverrides: function(entities, previousPoses) {
+        const overriddenEntityIds = [];
+
+        for (const entity of entities) {
+            const previousPose = previousPoses.get(entity.id);
+            if (! previousPose) {
+                continue;
+            }
+
+            const entityMoved =
+                entity.x !== previousPose.x ||
+                entity.y !== previousPose.y;
+
+            if (! entityMoved) {
+                continue;
+            }
+
+            this.setEntityPoseOverride(entity.id, {
+                x: previousPose.x + (entity.x - previousPose.x) / 2,
+                y: previousPose.y + (entity.y - previousPose.y) / 2,
+            });
+
+            overriddenEntityIds.push(entity.id);
+        }
+
+        return overriddenEntityIds;
+    },
+
     getOriginOffsets: function(direction) {
         switch (direction) {
             case 0: return { x: 0.5, y: 0.8 }; // North
@@ -2796,12 +2833,36 @@ const SceneRenderer = {
         this.startPresentationLoop();
     },
 
+    setCeilingDarkness: function(value) {
+        this.setEffect("ceilingDarkness", value);
+    },
+
+    fadeCeilingDarkness: function(value, durationMs = 250) {
+        this.transitionEffect("ceilingDarkness", value, durationMs);
+    },
+
     setWallDarkness: function(value) {
         this.setEffect("wallDarkness", value);
     },
 
     fadeWallDarkness: function(value, durationMs = 250) {
         this.transitionEffect("wallDarkness", value, durationMs);
+    },
+
+    setFloorDarkness: function(value) {
+        this.setEffect("floorDarkness", value);
+    },
+
+    fadeFloorDarkness: function(value, durationMs = 250) {
+        this.transitionEffect("floorDarkness", value, durationMs);
+    },
+
+    setEntityDarkness: function(value) {
+        this.setEffect("entityDarkness", value);
+    },
+
+    fadeEntityDarkness: function(value, durationMs = 250) {
+        this.transitionEffect("entityDarkness", value, durationMs);
     },
 
     raycast: function(gameMap, mapEntity, timeMs = performance.now()) {
@@ -4131,9 +4192,10 @@ const SceneRenderer = {
             dynamicLight
         );
 
-        lightRed = spriteLight.red;
-        lightGreen = spriteLight.green;
-        lightBlue = spriteLight.blue;
+        const entityBrightness = 1 - this.effects.entityDarkness;
+        lightRed = spriteLight.red * entityBrightness;
+        lightGreen = spriteLight.green * entityBrightness;
+        lightBlue = spriteLight.blue * entityBrightness;
 
         const visibility = dynamicLight.visibility;
 
@@ -4171,9 +4233,12 @@ const SceneRenderer = {
             const fogTransmittance =
                 (fogProfile?.fogTransmittance[fogSampleIndex] ?? 1) *
                 visibility;
-            const fogRed = fogProfile?.red[fogSampleIndex] ?? 0;
-            const fogGreen = fogProfile?.green[fogSampleIndex] ?? 0;
-            const fogBlue = fogProfile?.blue[fogSampleIndex] ?? 0;
+            const fogRed =
+                (fogProfile?.red[fogSampleIndex] ?? 0) * entityBrightness;
+            const fogGreen =
+                (fogProfile?.green[fogSampleIndex] ?? 0) * entityBrightness;
+            const fogBlue =
+                (fogProfile?.blue[fogSampleIndex] ?? 0) * entityBrightness;
 
             this.drawTexturedRect(
                 spriteImageData,
@@ -4282,6 +4347,20 @@ const SceneRenderer = {
             );
         }
 
+        const surfaceDarkness = plane === "ceiling"
+            ? this.effects.ceilingDarkness
+            : plane === "floor"
+                ? this.effects.floorDarkness
+                : 0;
+
+        const surfaceBrightness = 1 - surfaceDarkness;
+        const surfaceLightRed = shading.lightRed * surfaceBrightness;
+        const surfaceLightGreen = shading.lightGreen * surfaceBrightness;
+        const surfaceLightBlue = shading.lightBlue * surfaceBrightness;
+        const surfaceFogRed = shading.fogRed * surfaceBrightness;
+        const surfaceFogGreen = shading.fogGreen * surfaceBrightness;
+        const surfaceFogBlue = shading.fogBlue * surfaceBrightness;
+
         // Avoid texture RGB reads if no surface color can survive fog/darkness
         if (shading.fogTransmittance <= this.epsilon && sourceAlpha === 255) {
             this.zeroTransmittanceSamples++;
@@ -4289,9 +4368,9 @@ const SceneRenderer = {
                 const destinationIndex =
                     (screenX + screenY * destinationWidth) * 4;
 
-                destinationData[destinationIndex] = shading.fogRed;
-                destinationData[destinationIndex + 1] = shading.fogGreen;
-                destinationData[destinationIndex + 2] = shading.fogBlue;
+                destinationData[destinationIndex] = surfaceFogRed;
+                destinationData[destinationIndex + 1] = surfaceFogGreen;
+                destinationData[destinationIndex + 2] = surfaceFogBlue;
                 destinationData[destinationIndex + 3] = 255;
             }
 
@@ -4334,15 +4413,15 @@ const SceneRenderer = {
             }
         }
 
-        const litRed = Math.min(255, red * shading.lightRed);
-        const litGreen = Math.min(255, green * shading.lightGreen);
-        const litBlue = Math.min(255, blue * shading.lightBlue);
+        const litRed = Math.min(255, red * surfaceLightRed);
+        const litGreen = Math.min(255, green * surfaceLightGreen);
+        const litBlue = Math.min(255, blue * surfaceLightBlue);
         const finalRed =
-            litRed * shading.fogTransmittance + shading.fogRed;
+            litRed * shading.fogTransmittance + surfaceFogRed;
         const finalGreen =
-            litGreen * shading.fogTransmittance + shading.fogGreen;
+            litGreen * shading.fogTransmittance + surfaceFogGreen;
         const finalBlue =
-            litBlue * shading.fogTransmittance + shading.fogBlue;
+            litBlue * shading.fogTransmittance + surfaceFogBlue;
 
         for (let screenX = stripStartX; screenX < stripEndX; screenX++) {
             const destinationIndex = (screenX + screenY * destinationWidth) * 4;

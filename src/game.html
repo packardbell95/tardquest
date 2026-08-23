@@ -1391,7 +1391,7 @@
         });
 
         const playerEntity = (() => {
-            const playerEntity = MapEntityBuilder("player", 1, 1);
+            const playerEntity = MapEntityBuilder("player");
             playerEntity.turningDirection = null;
 
             playerEntity.inventory.contents.items = {
@@ -1469,8 +1469,23 @@
 
             playerEntity.onDie = function(killedByEntity) {
                 gameOver = true;
+                GameControl.disableControls();
+
                 animTorchEnd();
                 Portrait.show("death", { text: "Game Over" });
+
+                const animationName = currentEnemy?.id === "vampire"
+                    ? "deathVampire"
+                    : "death";
+                Portrait.show(animationName, { text: "Game Over" });
+
+                updateBattleLog(
+                    `Good job! <span class="action">You died</span> on ` +
+                    `<span class="action">floor ${floor}</span>`
+                );
+
+                setTimeout(() => TardBoard.openModal(), 3000);
+
                 render();
             };
 
@@ -1647,6 +1662,11 @@
 
             playerEntity.getDisplayName = function() {
                 return `You <span class="player lets-go">ヽ(°٢° )ノ</span>`;
+            };
+
+            playerEntity.setTurningDirection = function(direction) {
+                this.turningDirection = direction;
+                MAP.entityChanged(playerEntity);
             };
 
             playerEntity.getDisplayCharacter = function() {
@@ -2222,7 +2242,9 @@
             }
 
             music.stop();
+            SceneRenderer.fadeCeilingDarkness(1);
             SceneRenderer.fadeWallDarkness(1);
+            SceneRenderer.fadeEntityDarkness(1);
 
             ViewportAnimation.play(
                 "battle-start-curtain-drop.webm",
@@ -2557,7 +2579,9 @@
                 enemyEntity.onEncounterEnd?.();
                 refreshUi();
                 BattleQueueSidebar.close();
+                SceneRenderer.fadeCeilingDarkness(0);
                 SceneRenderer.fadeWallDarkness(0);
+                SceneRenderer.fadeEntityDarkness(0);
                 MAP.refreshMinimap(true);
                 render();
             };
@@ -3135,14 +3159,14 @@
             }
         };
 
-        MAP.addEntity(playerEntity);
+        MAP.addEntity(playerEntity, 1, 1);
         MAP.setMinimap(document.getElementById("minimap"));
 
         const music = new Music(
             TARDQUEST_MUSIC_TRACKS,
             {
                 play: (trackId, info) => {
-                    const $nowPlaying = document.getElementById('nowPlaying');
+                    const $nowPlaying = document.getElementById("nowPlaying");
                     if (! $nowPlaying) {
                         console.error("Now Playing section not found");
                         return;
@@ -3154,7 +3178,7 @@
                 },
 
                 stop: () => {
-                    const $nowPlaying = document.getElementById('nowPlaying');
+                    const $nowPlaying = document.getElementById("nowPlaying");
                     if (! $nowPlaying) {
                         console.error("Now Playing section not found");
                         return;
@@ -3398,7 +3422,7 @@
         }
 
         function updateViewportHeader() {
-            document.querySelector('#viewport .ui-header').textContent =
+            document.querySelector("#viewport .ui-header").textContent =
                 menu.getFullTitle() ?? "Viewport";
         }
 
@@ -3460,23 +3484,6 @@
                 .measure("updateBreathingSFX", () => updateBreathingSFX());
             RenderProfiler
                 .measure("updateSkyboxPosition", () => updateSkyboxPosition());
-
-            if (gameOver) {
-                GameControl.disableControls();
-
-                const animationName = currentEnemy?.id === "vampire"
-                    ? "deathVampire"
-                    : "vampire";
-                Portrait.show(animationName, { text: "Game Over" });
-
-                updateBattleLog(
-                    `Good job! <span class="action">You died</span> on ` +
-                    `<span class="action">floor ${floor}</span>`
-                );
-
-                setTimeout(() => TardBoard.openModal(), 3000);
-            }
-
             RenderProfiler
                 .measure("SceneRenderer", () => SceneRenderer.render(MAP));
             RenderProfiler
@@ -3708,47 +3715,6 @@
             return poses;
         }
 
-        function setNpcMidpointOverrides(previousPoses) {
-            const overriddenEntityIds = [];
-
-            for (const entity of MAP.entities) {
-                if (entity.isRealtime) {
-                    continue;
-                }
-
-                const previousPose = previousPoses.get(entity.id);
-                if (! previousPose) {
-                    continue;
-                }
-
-                const entityMoved =
-                    entity.x !== previousPose.x ||
-                    entity.y !== previousPose.y;
-                if (! entityMoved) {
-                    continue;
-                }
-
-                SceneRenderer.setEntityPoseOverride(
-                    entity.id,
-                    {
-                        x: previousPose.x + (entity.x - previousPose.x) / 2,
-                        y: previousPose.y + (entity.y - previousPose.y) / 2,
-                        direction: entity.direction,
-                    }
-                );
-
-                overriddenEntityIds.push(entity.id);
-            }
-
-            return overriddenEntityIds;
-        }
-
-        function clearEntityPoseOverrides(entityIds) {
-            for (const entityId of entityIds) {
-                SceneRenderer.clearEntityPoseOverride(entityId);
-            }
-        }
-
         async function endOfPlayerMove(completePlayerPose = false) {
             const startMs = performance.now();
 
@@ -3771,7 +3737,10 @@
             MAP.updateEntities();
 
             const overriddenEntityIds =
-                setNpcMidpointOverrides(previousPoses);
+                SceneRenderer.setEntityMidpointPoseOverrides(
+                    MAP.entities.filter(entity => ! entity.isRealtime),
+                    previousPoses
+                );
 
             if (overriddenEntityIds.length > 0) {
                 render();
@@ -3785,7 +3754,7 @@
                 }
             }
 
-            clearEntityPoseOverrides(overriddenEntityIds);
+            SceneRenderer.clearEntityPoseOverrides(overriddenEntityIds);
 
             if (completePlayerPose) {
                 SceneRenderer.clearEntityPoseOverride(playerEntity.id);
@@ -3852,21 +3821,14 @@
                 render();
                 await waitForPaint();
 
-                playerEntity.x = coordinate.x;
-                playerEntity.y = coordinate.y;
-                updateSeenTiles();
-                playerEntity.stepsTakenOnCurrentFloor++;
-
-                const passableEntity = MAP.entities.find(e =>
-                    e.x === playerEntity.x &&
-                    e.y === playerEntity.y &&
-                    e.id !== playerEntity.id &&
-                    typeof e.onEnter === "function"
+                playerEntity.setCoordinate(
+                    playerEntity.gameMap,
+                    {
+                        x: coordinate.x,
+                        y: coordinate.y
+                    }
                 );
-
-                if (passableEntity) {
-                    passableEntity.onEnter(MAP, playerEntity);
-                }
+                updateSeenTiles();
 
                 GameControl.update();
 
@@ -3899,7 +3861,7 @@
             }
 
             playerEntity.movementDisabled = true;
-            playerEntity.turningDirection = "left";
+            playerEntity.setTurningDirection("left");
 
             playSFX("turn");
 
@@ -3940,7 +3902,7 @@
             }
 
             playerEntity.movementDisabled = true;
-            playerEntity.turningDirection = "right";
+            playerEntity.setTurningDirection("right");
 
             playSFX("turn");
 

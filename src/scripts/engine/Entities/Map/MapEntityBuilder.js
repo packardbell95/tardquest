@@ -3,11 +3,9 @@
 /**
  * The MapEntityBuilder creates entities that appear in the game's map
  *
- * @param x The X position of the entity on the map
- * @param y The Y position of the entity on the map
  * @return object A new map entity that can be included in the GameMap
  */
-function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
+function MapEntityBuilder(type) {
     MapEntityBuilder.entityId = MapEntityBuilder.entityId || 1;
 
     const mapEntity = {
@@ -16,15 +14,14 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         className: "generic-entity",
         isActive: true,
         isAlive: true,
+        // @TODO If this ever gets set, add a helper and call entityChanged()
         isVisibleOnMinimap: true,
-        x,
-        y,
-        direction,
+        x: null,
+        y: null,
+        direction: null,
         xOffset: 0,
         yOffset: 0,
         angleOffsetDegrees: 0,
-        origin: { x, y },
-        initialDirection: direction,
         target: null,
         targetReason: null,
         targetEntityId: null,
@@ -72,41 +69,6 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             this.targetReason = reason;
         },
 
-        setOrigin: function(x = null, y = null, direction = null) {
-            const setX = x ?? this.x;
-            const setY = y ?? this.y;
-            const setDirection = direction ?? this.direction;
-
-            const coordinateIsValid =
-                Number.isInteger(setX) &&
-                Number.isInteger(setY);
-
-            if (! coordinateIsValid) {
-                console.error(
-                    "Origin coordinate must consist of integers",
-                    { setX, setY },
-                );
-                return;
-            }
-
-            const originIsValid =
-                Number.isInteger(setDirection) &&
-                setDirection >= 0 &&
-                setDirection < 3;
-
-            if (! originIsValid) {
-                console.error(
-                    "Direction must be an integer between 0 and 3",
-                    { setDirection }
-                );
-                return;
-            }
-
-            this.origin.x = setX;
-            this.origin.y = setY;
-            this.initialDirection = setDirection;
-        },
-
         // @TODO Make this a normal function, not a getter
         get isAutonomous() {
             return this.type !== "player" && typeof this.onTouch === "function";
@@ -116,12 +78,15 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
         },
         turnLeft: function() {
             this.direction = (this.direction + 3) % 4;
+            this.gameMap.entityChanged(this);
         },
         turnRight: function() {
             this.direction = (this.direction + 1) % 4;
+            this.gameMap.entityChanged(this);
         },
         turnAround: function() {
             this.direction = (this.direction + 2) % 4;
+            this.gameMap.entityChanged(this);
         },
 
         _directionMatrix: {
@@ -154,6 +119,21 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             };
         },
 
+        // Moves the entity without incrementing steps or firing events
+        teleportTo: function(x, y, direction = null) {
+            const previousX = this.x;
+            const previousY = this.y;
+
+            this.x = x;
+            this.y = y;
+
+            if (direction !== null) {
+                this.direction = direction;
+            }
+
+            this.gameMap.entityMoved(this, previousX, previousY);
+        },
+
         setCoordinate: function(gameMap, coordinate) {
             const validCoordinate =
                 Number.isInteger(coordinate.x) &&
@@ -172,20 +152,15 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
                 return;
             }
 
+            const previousX = this.x;
+            const previousY = this.y;
+
             this.x = coordinate.x;
             this.y = coordinate.y;
             this.stepsTakenOnCurrentFloor++;
 
-            const enterableEntities = gameMap.entities.filter(e =>
-                e.id !== this.id &&
-                e.x === this.x &&
-                e.y === this.y &&
-                typeof e.onEnter === "function"
-            );
-
-            for (const entity of enterableEntities) {
-                entity.onEnter(gameMap, this);
-            }
+            gameMap.entityMoved(this, previousX, previousY);
+            gameMap.triggerEnterEventsForActor(this);
         },
 
         /**
@@ -309,33 +284,61 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
 
         movementDisabled: false,
 
+        canMoveTo: function(gameMap, coordinate) {
+            return ! gameMap.getCell(coordinate.x, coordinate.y).isWall;
+        },
+
         moveForward: function(gameMap) {
             if (this.movementDisabled) {
-                return;
+                return false;
             }
 
-            this.setCoordinate(gameMap, this.getCoordinateInFront());
+            const destination = this.getCoordinateInFront();
+            if (! this.canMoveTo(gameMap, destination)) {
+                return false;
+            }
+
+            this.setCoordinate(gameMap, destination);
+            return true;
         },
         moveBackward: function(gameMap) {
             if (this.movementDisabled) {
-                return;
+                return false;
             }
 
-            this.setCoordinate(gameMap, this.getCoordinateBehind());
+            const destination = this.getCoordinateBehind();
+            if (! this.canMoveTo(gameMap, destination)) {
+                return false;
+            }
+
+            this.setCoordinate(gameMap, destination);
+            return true;
         },
         strafeLeft: function(gameMap) {
             if (this.movementDisabled) {
-                return;
+                return false;
             }
 
-            this.setCoordinate(gameMap, this.getCoordinateLeft());
+            const destination = this.getCoordinateLeft();
+            if (! this.canMoveTo(gameMap, destination)) {
+                return false;
+            }
+
+            this.setCoordinate(gameMap, destination);
+            return true;
         },
         strafeRight: function(gameMap) {
             if (this.movementDisabled) {
-                return;
+                return false;
             }
 
-            this.setCoordinate(gameMap, this.getCoordinateRight());
+            const destination = this.getCoordinateRight();
+            if (! this.canMoveTo(gameMap, destination)) {
+                return false;
+            }
+
+            this.setCoordinate(gameMap, destination);
+            return true;
         },
 
         /**
@@ -370,6 +373,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             const absoluteDiffX = Math.abs(differenceX);
             const absoluteDiffY = Math.abs(differenceY);
             const sameDistance = absoluteDiffX === absoluteDiffY;
+            const previousDirection = this.direction;
             const turnX =
                 absoluteDiffX > absoluteDiffY ||
                 (sameDistance && this.preferLeftTurnFirst);
@@ -377,6 +381,10 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             this.direction = turnX
                 ? (differenceX > 0 ? 3 : 1)
                 : (differenceY > 0 ? 0 : 2);
+
+            if (this.direction !== previousDirection) {
+                this.gameMap?.entityChanged(this);
+            }
 
             return true;
         },
@@ -1185,6 +1193,7 @@ function MapEntityBuilder(type, x = 1, y = 1, direction = 0) {
             killedByEntity?.killedMonsters?.(this.party.length);
             this.isAlive = false;
             this.onDie?.(killedByEntity);
+            this.gameMap?.entityChanged(this);
         },
 
         // Fires after all party members have died

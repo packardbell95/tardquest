@@ -2694,6 +2694,9 @@ a:link {
     &.items-lodeGun .icon {
         background-image: url(assets/interface/items/lode-gun.png);
     }
+    &.items-ballzooka .icon {
+        background-image: url(assets/interface/items/ballzooka.png);
+    }
 
     /** Weapons Section **/
     &.weapons-fingerNail .icon {

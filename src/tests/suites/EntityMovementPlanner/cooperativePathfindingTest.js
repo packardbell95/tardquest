@@ -11,10 +11,10 @@ function EntityMovementPlanner_cooperativePathfindingTest()
     testMap.line(4, 1, 4, 7, { cellType: "floor" });
     testMap.setCell(3, 4, "floor");
 
-    testMap.addEntity(BuildMapEntityLemming(4, 1, 2));
+    testMap.addEntity(BuildMapEntityLemming(), 4, 1, 2);
     testMap.entities[0].setTarget(4, 6);
 
-    testMap.addEntity(BuildMapEntityLemming(4, 7, 0));
+    testMap.addEntity(BuildMapEntityLemming(), 4, 7, 0);
     testMap.entities[0].setTarget(4, 2);
 
     const movements = [];

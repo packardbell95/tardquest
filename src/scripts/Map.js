@@ -6,7 +6,6 @@ class MapCell {
             $element: null,
             x: null,
             y: null,
-            rerender: true,
             // @TODO Obviously change this
             sceneArtId: type === "floor"
                 ? "void"
@@ -23,9 +22,6 @@ class MapCell {
         this.$element = options?.$element || defaults.$element;
         this.x = Number.isInteger(options?.x) ? options.x : defaults.x;
         this.y = Number.isInteger(options?.y) ? options.y : defaults.y;
-        this.rerender = typeof options?.rerender === "boolean"
-            ? options.rerender
-            : defaults.rerender;
         this.type = type;
         this.displayName = options?.displayName || defaults.displayName;
         this.mapCharacter = options?.mapCharacter || defaults.mapCharacter;
@@ -49,7 +45,6 @@ class MapCell {
     }
 
     refreshElement(cellEntities = []) {
-        this.rerender = false;
         if (! this.$element) {
             console.warn("MapCell has no element to refresh");
             return;
@@ -240,6 +235,30 @@ class GameMap {
 
     // The reference to the game's minimap element, set by setMinimap()
     #$minimap = null;
+    #minimapRerenderCoordinates = new Set();
+
+    #coordinateKey(x, y) {
+        return `${x}_${y}`;
+    }
+
+    #markMinimapCoordinateForRerender(x, y) {
+        if (this.inBounds(x, y)) {
+            this.#minimapRerenderCoordinates.add(this.#coordinateKey(x, y));
+        }
+    }
+
+    coordinateChanged(x, y) {
+        this.#markMinimapCoordinateForRerender(x, y);
+    }
+
+    entityChanged(entity) {
+        this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+    }
+
+    entityMoved(entity, previousX, previousY) {
+        this.#markMinimapCoordinateForRerender(previousX, previousY);
+        this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+    }
 
     constructor(width, height) {
         if (! Number.isInteger(width) || ! Number.isInteger(height)) {
@@ -381,10 +400,10 @@ class GameMap {
                 this.sceneArtId = "floor";
                 this.displayName = "Floor";
                 this.mapCharacter = ".";
+                gameMap.coordinateChanged(this.x, this.y);
             }
 
             this.wallTextureIds = {};
-            this.rerender = true;
         };
 
         return cell;
@@ -404,18 +423,6 @@ class GameMap {
             Number.isInteger(coordinate.y) &&
             Boolean(this.#cells?.[coordinate.y]?.[coordinate.x])
         );
-    }
-
-    // @TODO Remove this debug code
-    rerenderCoordinate(x, y) {
-        this.#rerenderCoordinate(x, y);
-    }
-
-    #rerenderCoordinate(x, y) {
-        const cell = this.#cells?.[y]?.[x];
-        if (cell) {
-            cell.rerender = true;
-        }
     }
 
     // Sets a cell on the map at a given coordinate
@@ -441,7 +448,7 @@ class GameMap {
         });
 
         this.#revision++;
-        this.#rerenderCoordinate(x, y);
+        this.#markMinimapCoordinateForRerender(x, y);
     }
 
     // Helper function to set up MapCell objects based on defined cell types
@@ -494,9 +501,29 @@ class GameMap {
     }
 
     // @TODO Handle (x, y) position here instead of on the entity itself
-    addEntity(entity) {
+    addEntity(entity, x = null, y = null, direction = 0) {
+        if (typeof entity !== "object") {
+            console.error(
+                "Entity must be an object",
+                { entity, x, y, direction }
+            );
+            return;
+        }
+
+        if (! Number.isInteger(x) || ! Number.isInteger(y)) {
+            console.error(
+                "Coordinates must be finite numbers",
+                { x, y, entity }
+            );
+            return;
+        }
+
         entity.gameMap = this;
+        entity.x = x;
+        entity.y = y;
+        entity.direction = direction;
         this.#entities.push(entity);
+        this.#markMinimapCoordinateForRerender(x, y);
         this.onEntityChange?.();
     }
 
@@ -567,12 +594,17 @@ class GameMap {
             return;
         }
 
-        const lastEntityCount = this.#entities.length;
+        const removedEntities =
+            this.#entities.filter(e => ! preserveTypes.includes(e.type));
+
+        for (const entity of removedEntities) {
+            this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+        }
 
         this.#entities =
             this.#entities.filter(e => preserveTypes.includes(e.type));
 
-        if (this.#entities.length !== lastEntityCount) {
+        if (removedEntities.length > 0) {
             this.onEntityChange?.();
         }
     }
@@ -625,14 +657,8 @@ class GameMap {
                     return;
                 }
 
-                this.#rerenderCoordinate(entity.x, entity.y);
+                this.#markMinimapCoordinateForRerender(entity.x, entity.y);
                 entity.moveTowards(move, this);
-
-                // If the entity actually moved instead of just turned, make
-                // sure that the coordinate is also rerendered
-                if (move.x !== entity.x || move.y !== entity.y) {
-                    this.#rerenderCoordinate(entity.x, entity.y);
-                }
             }
         }
 
@@ -687,24 +713,31 @@ class GameMap {
         const entities = this.entities.filter(e => e.isAlive && e.isRealtime);
 
         for (const entity of entities) {
-            const lastX = entity.x;
-            const lastY = entity.y;
+            const previousX = entity.x;
+            const previousY = entity.y;
 
             entity.move(this);
 
-            const positionChanged = lastX !== entity.x || lastY !== entity.y;
-            if (positionChanged) {
-                this.#cells[lastY][lastX].rerender = true;
-                this.#cells[entity.y][entity.x].rerender = true;
+            const moved =
+                previousX !== entity.x ||
+                previousY !== entity.y;
+
+            if (moved) {
+                this.#markMinimapCoordinateForRerender(previousX, previousY);
+                this.#markMinimapCoordinateForRerender(entity.x, entity.y);
             }
         }
     }
 
     clearDeactivatedEntities() {
-        const lastEntityCount = this.#entities.length;
+        const deactivatedEntities = this.#entities.filter(e => ! e.isActive);
+        for (const entity of deactivatedEntities) {
+            this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+        }
+
         this.#entities = this.#entities.filter(e => e.isActive);
 
-        if (lastEntityCount !== this.#entities.length) {
+        if (deactivatedEntities.length > 0) {
             this.onEntityChange?.();
         }
     }
@@ -736,6 +769,19 @@ class GameMap {
         );
 
         for (const actorEntity of actorEntities) {
+            entity.onEnter(this, actorEntity);
+        }
+    }
+
+    triggerEnterEventsForActor(actorEntity) {
+        const enterableEntities = this.entities.filter(entity =>
+            entity.id !== actorEntity.id &&
+            entity.x === actorEntity.x &&
+            entity.y === actorEntity.y &&
+            typeof entity.onEnter === "function"
+        );
+
+        for (const entity of enterableEntities) {
             entity.onEnter(this, actorEntity);
         }
     }
@@ -1451,40 +1497,33 @@ class GameMap {
                 this.#cells[y][x].$element = $cell;
 
                 // Make sure we render the cell
-                this.#rerenderCoordinate(x, y);
+                this.#markMinimapCoordinateForRerender(x, y);
             }
 
             this.#$minimap.append(document.createElement("br"));
         }
     }
 
-    #getRerenderCoordinates(forceFullRefresh = true) {
-        const coordinates = [];
+    #getRerenderCoordinates(forceFullRefresh = false) {
+        if (forceFullRefresh) {
+            const coordinates = [];
 
-        for (let y = 0; y < this.#cells.length; y++) {
-            for (let x = 0; x < this.#cells[y].length; x++) {
-                const refreshCell =
-                    forceFullRefresh ||
-                    this.#cells[y][x].isExplored && (
-                        this.#cells[y][x].rerender ||
-                        this.entities.some(e =>
-                            e.x === x &&
-                            e.y === y &&
-                            e.isVisibleOnMinimap
-                        )
-                    );
-
-                if (refreshCell) {
+            for (let y = 0; y < this.height; y++) {
+                for (let x = 0; x < this.width; x++) {
                     coordinates.push({ x, y });
                 }
             }
+
+            return coordinates;
         }
 
-        return coordinates;
+        return [...this.#minimapRerenderCoordinates].map(key => {
+            const [x, y] = key.split("_").map(Number);
+            return { x, y };
+        });
     }
 
     // Updates the cells on the minimap
-    // @TODO Keep track of entity coords and refresh if the entities disappear
     refreshMinimap(forceFullRefresh = false) {
         if (! this.#$minimap) {
             console.warn("No minimap defined. Cannot rerender");
@@ -1492,6 +1531,7 @@ class GameMap {
         }
 
         const coords = this.#getRerenderCoordinates(forceFullRefresh);
+        this.#minimapRerenderCoordinates.clear();
 
         coords.forEach(coordinate => {
             const { x, y } = coordinate;
@@ -1525,7 +1565,7 @@ class GameMap {
             for (let x = spotX - radius; x <= spotX + radius; x++) {
                 if (typeof this.#cells[y]?.[x] !== "undefined") {
                     this.#cells[y][x].isExplored = true;
-                    this.#rerenderCoordinate(x, y);
+                    this.#markMinimapCoordinateForRerender(x, y);
                 }
             }
         }
@@ -1545,7 +1585,7 @@ class GameMap {
         for (let y = 0; y < this.#cells.length; y++) {
             for (let x = 0; x < this.#cells[y].length; x++) {
                 this.#cells[y][x].isExplored = isExplored;
-                this.#rerenderCoordinate(x, y);
+                this.#markMinimapCoordinateForRerender(x, y);
             }
         }
     }
@@ -1589,7 +1629,7 @@ class GameMap {
         const halfFov = fov / 2;
 
         // The direction is an integer from 0-3 starting north, moving clockwise
-        // 0 => N, 1 => E, 2 => S, W => 4
+        // 0 => N, 1 => E, 2 => S, W => 3
         const startingDirection = -90 + (90 * (direction % 4));
         const angleStart = startingDirection - halfFov;
         const angleEnd = startingDirection + halfFov;
@@ -1612,8 +1652,8 @@ class GameMap {
                 // Prevent rays from moving between touching corners
                 if (deltaX !== 0 && deltaY !== 0) {
                     const isBlockedByCorner =
-                        this.getCell(previousX + deltaX, previousY) &&
-                        this.getCell(previousX, previousY + deltaY);
+                        this.getCell(previousX + deltaX, previousY).isWall &&
+                        this.getCell(previousX, previousY + deltaY).isWall;
                     if (isBlockedByCorner) {
                         break;
                     }
@@ -1649,25 +1689,13 @@ class GameMap {
     }
 
     seeFrom(x, y, direction, visionDistance, fieldOfView) {
-        return this.#seeFrom(
-            x,
-            y,
-            direction,
-            visionDistance,
-            fieldOfView,
-            false
-        );
+        return this
+            .#seeFrom(x, y, direction, visionDistance, fieldOfView, false);
     }
 
     seeEntitiesFrom(x, y, direction, visionDistance, fieldOfView) {
-        return this.#seeFrom(
-            x,
-            y,
-            direction,
-            visionDistance,
-            fieldOfView,
-            true
-        );
+        return this
+            .#seeFrom(x, y, direction, visionDistance, fieldOfView, true);
     }
 
     /**

@@ -118,11 +118,11 @@
             return;
         }
 
-        const pigeon = MapEntityFeatureFactory.pigeon(exit.x, exit.y);
+        const pigeon = MapEntityFeatureFactory.pigeon();
         pigeon.message = pendingDeliveredMessage;
         pendingDeliveredMessage = null;
 
-        MAP.addEntity(pigeon);
+        MAP.addEntity(pigeon, exit.x, exit.y);
     }
 
     /**

@@ -2,7 +2,9 @@
 
 const MapEntityRealtimeMovementHandler = {
     _intervalId: null,
+    _midpointTimeoutId: null,
     _gameMap: null,
+    _overriddenEntityIds: new Set(),
     movementIntervalMs: 500,
 
     /**
@@ -64,6 +66,21 @@ const MapEntityRealtimeMovementHandler = {
             clearInterval(this._intervalId);
             this._intervalId = null;
         }
+
+        if (this._midpointTimeoutId) {
+            clearTimeout(this._midpointTimeoutId);
+            this._midpointTimeoutId = null;
+        }
+
+        this._clearPoseOverrides();
+    },
+
+    _clearPoseOverrides: function() {
+        for (const entityId of this._overriddenEntityIds) {
+            SceneRenderer.clearEntityPoseOverride(entityId);
+        }
+
+        this._overriddenEntityIds.clear();
     },
 
     /**
@@ -79,7 +96,58 @@ const MapEntityRealtimeMovementHandler = {
             return;
         }
 
+        // Normally the previous midpoint timeout will already have completed
+        // Clear anything left over in case the event loop was delayed
+        if (this._midpointTimeoutId) {
+            clearTimeout(this._midpointTimeoutId);
+            this._midpointTimeoutId = null;
+        }
+
+        this._clearPoseOverrides();
+
+        const realtimeEntities =
+            this._gameMap.entities.filter(e => e.isAlive && e.isRealtime);
+
+        const previousPoses =
+            new Map(realtimeEntities.map(e => [ e.id, { x: e.x, y: e.y } ]));
+
+        // Perform actual grid movement first
         this._gameMap.moveRealtimeEntities();
+
+        // Draw moving entities halfway between their previous and current cells
+        for (const entity of realtimeEntities) {
+            const previousPose = previousPoses.get(entity.id);
+
+            if (! previousPose || ! entity.isActive || ! entity.isAlive) {
+                continue;
+            }
+
+            const moved =
+                entity.x !== previousPose.x ||
+                entity.y !== previousPose.y;
+
+            if (! moved) {
+                continue;
+            }
+
+            SceneRenderer.setEntityPoseOverride(entity.id, {
+                x: previousPose.x + (entity.x - previousPose.x) / 2,
+                y: previousPose.y + (entity.y - previousPose.y) / 2,
+            });
+
+            this._overriddenEntityIds.add(entity.id);
+        }
+
         render();
+
+        if (this._overriddenEntityIds.size === 0) {
+            return;
+        }
+
+        this._midpointTimeoutId = setTimeout(() => {
+            this._midpointTimeoutId = null;
+            this._clearPoseOverrides();
+            render();
+        }, this.movementIntervalMs / 2);
     },
 };

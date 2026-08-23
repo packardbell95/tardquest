@@ -8,8 +8,8 @@ const MapEntityFeatureFactory = {
     /**
      * EXIT
      */
-    exit: function(x, y) {
-        const exit = MapEntityBuilder("exit", x, y);
+    exit: function() {
+        const exit = MapEntityBuilder("exit");
         exit.spriteIds = ["exitArrow", "crater"];
 
         exit.getDisplayName = () => "🏁 Exit";
@@ -32,8 +32,8 @@ const MapEntityFeatureFactory = {
     /**
      * HEALING TILE
      */
-    healingTile: function(x, y) {
-        const healingTile = MapEntityBuilder("healingTile", x, y);
+    healingTile: function() {
+        const healingTile = MapEntityBuilder("healingTile");
         healingTile.getDisplayName = () => "🟩 Healing Tile";
         healingTile.getDisplayCharacter = () => "H";
         healingTile.spriteIds = [ "healingTile" ];
@@ -158,8 +158,9 @@ const MapEntityFeatureFactory = {
     /**
      * CRATER
      */
-    crater: function(x, y) {
-        const crater = MapEntityBuilder("crater", x, y);
+    crater: function() {
+        const crater = MapEntityBuilder("crater");
+        crater.spriteIds = ["crater"];
         crater.getDisplayName = () => "⚫️ Crater";
         crater.getDisplayCharacter = () => "●";
 
@@ -169,8 +170,8 @@ const MapEntityFeatureFactory = {
     /**
      * BLOODY CRATER
      */
-    bloodyCrater: function(x, y) {
-        const bloodyCrater = MapEntityBuilder("bloodyCrater", x, y);
+    bloodyCrater: function() {
+        const bloodyCrater = MapEntityBuilder("bloodyCrater");
         bloodyCrater.spriteIds = ["bloodyCrater", "skeleton"];
         bloodyCrater.getDisplayName = () => "🔴 Bloody Crater";
         bloodyCrater.getDisplayCharacter = () => "◌";
@@ -185,8 +186,8 @@ const MapEntityFeatureFactory = {
     /**
      * TREASURE CHEST
      */
-    treasureChest: function(x, y) {
-        const treasureChest = MapEntityBuilder("treasureChest", x, y);
+    treasureChest: function() {
+        const treasureChest = MapEntityBuilder("treasureChest");
         treasureChest.spriteIds = [ "treasureChest", "circularShadow" ];
         treasureChest.getDisplayName = () => "🎁 Treasure Chest";
         treasureChest.getDisplayCharacter = () => "T";
@@ -372,9 +373,8 @@ const MapEntityFeatureFactory = {
 
                 entity.inventory.giveBitcoins(treasure.bitcoins);
 
-                const bloodyCrater =
-                    MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
-                gameMap.addEntity(bloodyCrater);
+                const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
+                gameMap.addEntity(bloodyCrater, this.x, this.y);
             } else {
                 if (killedByPlayer) {
                     updateBattleLog(
@@ -384,8 +384,8 @@ const MapEntityFeatureFactory = {
                     );
                 }
 
-                const crater = MapEntityFeatureFactory.crater(this.x, this.y);
-                gameMap.addEntity(crater);
+                const crater = MapEntityFeatureFactory.crater();
+                gameMap.addEntity(crater, this.x, this.y);
             }
 
             this.die(entity);
@@ -397,9 +397,9 @@ const MapEntityFeatureFactory = {
     /**
      * DESTROYED TREASURE CHEST
      */
-    destroyedTreasureChest: function(x, y) {
+    destroyedTreasureChest: function() {
         const destroyedTreasureChest =
-            MapEntityBuilder("destroyedTreasureChest", x, y);
+            MapEntityBuilder("destroyedTreasureChest");
         destroyedTreasureChest.getDisplayName =
             () => "🪹 Destroyed Treasure Chest";
         destroyedTreasureChest.getDisplayCharacter = () => "◌";
@@ -414,8 +414,8 @@ const MapEntityFeatureFactory = {
     /**
      * SIGIL
      */
-    sigil: function(x, y) {
-        const sigil = MapEntityBuilder("sigil", x, y);
+    sigil: function() {
+        const sigil = MapEntityBuilder("sigil");
         sigil.spriteIds = ["sigil"];
         sigil.environmentDynamics = [{
             light: {
@@ -451,10 +451,11 @@ const MapEntityFeatureFactory = {
     /**
      * PIT
      */
-    pit: function(x, y) {
-        const pit = MapEntityBuilder("pit", x, y);
+    pit: function() {
+        const pit = MapEntityBuilder("pit");
         pit.getDisplayName = () => "🕳️ Pit";
         pit.getDisplayCharacter = () => "●";
+        pit.spriteIds = ["crater"];
         pit.collapseAfterSomethingFallsIn = true;
         pit.closeAfterTurns = Infinity;
 
@@ -485,14 +486,6 @@ const MapEntityFeatureFactory = {
                 if (this.collapseAfterSomethingFallsIn) {
                     this.die(entity);
                 }
-            } else if (entity?.type === "bouldingBall") {
-                // Boulding balls and pits cancel each other out
-                entity.die(this);
-                this.die(entity);
-
-                const crater = MapEntityFeatureFactory.crater(this.x, this.y);
-                crater.getDisplayName = () => "⚫️ Filled Pit";
-                this.gameMap.addEntity(crater);
             } else {
                 // @TODO Replace with tag check once that has been implemented
                 const shouldFallIntoPit = ! (
@@ -541,8 +534,8 @@ const MapEntityFeatureFactory = {
     /**
      * CRACKED FLOOR
      */
-    crackedFloor: function(x, y) {
-        const crackedFloor = MapEntityBuilder("crackedFloor", x, y);
+    crackedFloor: function() {
+        const crackedFloor = MapEntityBuilder("crackedFloor");
         crackedFloor.spriteIds = ["crackedFloorSlight"];
 
         crackedFloor.crackedLevel = 1;
@@ -597,10 +590,10 @@ const MapEntityFeatureFactory = {
             ][this.crackedLevel - 1] ?? "crackedFloorSevere";
 
             this.spriteIds = [ spriteId ];
+            gameMap.entityChanged(this);
 
             if (this.crackedLevel > 3) {
-                const pitOfSpikes =
-                    MapEntityFeatureFactory.pit(this.x, this.y);
+                const pitOfSpikes = MapEntityFeatureFactory.pit();
                 pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
 
                 if (entity?.type === "player") {
@@ -609,7 +602,7 @@ const MapEntityFeatureFactory = {
                     );
                 }
 
-                gameMap.addEntity(pitOfSpikes);
+                gameMap.addEntity(pitOfSpikes, this.x, this.y);
                 this.die(entity);
 
                 gameMap.triggerOnEnterEvent(pitOfSpikes);
@@ -631,8 +624,8 @@ const MapEntityFeatureFactory = {
     /**
      * BOULDING BALL
      */
-    bouldingBall: function(x, y) {
-        const bouldingBall = MapEntityBuilder("bouldingBall", x, y);
+    bouldingBall: function() {
+        const bouldingBall = MapEntityBuilder("bouldingBall");
         MapEntityTrait_AttachRealtimeMovement_BackAndForth(bouldingBall);
 
         bouldingBall.getDisplayName = () => "🪨 Boulding Ball";
@@ -743,24 +736,23 @@ const MapEntityFeatureFactory = {
 
                 entity.die(this);
 
-                const bloodyCrater =
-                    MapEntityFeatureFactory.bloodyCrater(entity.x, entity.y);
+                const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
 
                 bloodyCrater.getDisplayName = () =>
                     `🔴 Former ${entity.leader.name}`;
 
-                entity.gameMap.addEntity(bloodyCrater);
+                entity.gameMap.addEntity(bloodyCrater, entity.x, entity.y);
             } else if (entity.type === "treasureChest") {
-                const destroyedTreasureChest = MapEntityFeatureFactory
-                    .destroyedTreasureChest(entity.x, entity.y);
-                entity.gameMap.addEntity(destroyedTreasureChest);
+                const destroyedTreasureChest =
+                    MapEntityFeatureFactory.destroyedTreasureChest();
+                entity.gameMap
+                    .addEntity(destroyedTreasureChest, entity.x, entity.y);
                 entity.die(this);
             }
         };
 
         bouldingBall.onExplode = function(gameMap, entity) {
             const killedByPlayer = entity.id === playerEntity.id;
-
             if (killedByPlayer) {
                 updateBattleLog(
                     `You reduced the boulding ball into ` +
@@ -777,8 +769,8 @@ const MapEntityFeatureFactory = {
     /**
      * PIGEON
      */
-    pigeon: function(x, y) {
-        const pigeon = MapEntityBuilder("pigeon", x, y);
+    pigeon: function() {
+        const pigeon = MapEntityBuilder("pigeon");
         pigeon.spriteIds = ["pigeon", "bobbingShadow"];
         pigeon.getDisplayName = () => "🐦️ Pigeon";
         pigeon.getDisplayCharacter = () => "P";
@@ -827,8 +819,8 @@ const MapEntityFeatureFactory = {
     /**
      * GRAVESTONE
      */
-    gravestone: function(x, y) {
-        const gravestone = MapEntityBuilder("gravestone", x, y);
+    gravestone: function() {
+        const gravestone = MapEntityBuilder("gravestone");
         gravestone.spriteIds = ["gravestone", "burialPlot"];
         gravestone.getDisplayName = () => "🪦 Gravestone";
         gravestone.getDisplayCharacter = () => "†";
@@ -853,8 +845,8 @@ const MapEntityFeatureFactory = {
     /**
      * TORCHES (affixed to a wall)
      */
-    torches: function(x, y) {
-        const torches = MapEntityBuilder("torches", x, y);
+    torches: function() {
+        const torches = MapEntityBuilder("torches");
         torches.isVisibleOnMinimap = false;
         torches.getDisplayName = () => "🔥 Torches";
         torches.getDisplayCharacter = () => "T";
@@ -920,8 +912,8 @@ const MapEntityFeatureFactory = {
     /**
      * PATTY
      */
-    demo01Patty: function(x, y) {
-        const patty = MapEntityBuilder("patty", x, y);
+    demo01Patty: function() {
+        const patty = MapEntityBuilder("patty");
         patty.getDisplayName = () => "🍔 Patty";
         patty.getDisplayCharacter = () => "@";
         patty.spriteIds = [ "demo01Patty", "bobbingShadow" ];
@@ -955,8 +947,8 @@ const MapEntityFeatureFactory = {
     /**
      * KRABS
      */
-    demo01Krabs: function(x, y) {
-        const krabs = MapEntityBuilder("krabs", x, y);
+    demo01Krabs: function() {
+        const krabs = MapEntityBuilder("krabs");
         krabs.getDisplayName = () => "🦀 Krabs";
         krabs.getDisplayCharacter = () => "K";
         krabs.spriteIds = [ "demo01Krabs", "circularShadow" ];

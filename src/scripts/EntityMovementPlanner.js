@@ -427,11 +427,13 @@ const EntityMovementPlanner = {
                 continue;
             }
 
-            gameMap.rerenderCoordinate(entity.x, entity.y);
-            gameMap.rerenderCoordinate(move.x, move.y);
-
-            entity.x = move.x;
-            entity.y = move.y;
+            entity.setCoordinate(
+                entity.gameMap,
+                {
+                    x: move.x,
+                    y: move.y
+                }
+            );
         }
     },
 

@@ -2,6 +2,71 @@
 
 // Definitions for all consumable items in the game
 const ITEMS = Object.freeze({
+    ballzooka: {
+        article: "a",
+        name: "BALLZOOKA",
+        description:
+            "A bazooka that fires a boulding ball. Beware of ricochets!",
+        usage: {
+            availability: ["exploration"],
+            uiRoute: null,
+            consumedAfterUse: true,
+        },
+        use: (actorMember, targetMember, context = {}) => {
+            if (BattleSystem.isActive) {
+                updateBattleLog(
+                    `The bazooka is too heavy to be used in battle!`
+                );
+
+                return false;
+            }
+
+            const actorEntity = actorMember.parent;
+            const { x, y } = actorEntity.getCoordinateInFront();
+            const targetCell = MAP.getPopulatedCell(x, y);
+
+            const canFireBallzooka =
+                ! targetCell.isWall &&
+                ! targetCell.entities.some(e =>
+                    e.type !== "bouldingBall" &&
+                    (
+                        typeof e.onTouch === "function" &&
+                        e.type !== "roamingEnemy"
+                    )
+                );
+
+            if (! canFireBallzooka) {
+                updateBattleLog(
+                    `There <span class="action">isn't enough clearance</span>` +
+                    `to use the <span class="friendly">Ballzooka!</span>`
+                );
+
+                return false;
+            }
+
+            GameControl.disableControls();
+
+            ViewportAnimation.play(
+                "ballzooka.webm",
+                {
+                    onBouldingBallSpawned: () => {
+                        const { x, y } = actorEntity.getCoordinateInFront();
+                        const ball = MapEntityFeatureFactory.bouldingBall();
+                        const direction = actorEntity.direction;
+                        actorEntity.gameMap.addEntity(ball, x, y, direction);
+                        GameControl.enableControls();
+                    },
+                }
+            );
+
+            return true;
+        },
+        merchantStockChance: 1.0,
+        chestDrop: true,
+        weight: 5,
+        price: 20,
+    },
+
     canOfHamms: {
         article: "a",
         name: "CAN OF HAMM'S",
@@ -425,13 +490,29 @@ const ITEMS = Object.freeze({
                     );
 
                     // Scream if any of the party members have died
+                    // and leave behind a corpse
                     for (const id of Object.keys(previousStats)) {
-                        const scream =
+                        const partyMemberDied =
                             previousStats[id].hp > 0 &&
                             currentStats[id].hp === 0;
 
-                        if (scream) {
+                        if (partyMemberDied) {
                             playSFX("scream");
+
+                            const x = target.x;
+                            const y = target.y;
+                            const bloodyCraterExists = target.gameMap
+                                .getEntitiesAt(x, y)
+                                .some(e => e.type === "bloodyCrater");
+
+                            if (! bloodyCraterExists) {
+                                target.gameMap.addEntity(
+                                    MapEntityFeatureFactory.bloodyCrater(),
+                                    target.x,
+                                    target.y
+                                );
+                            }
+
                             break;
                         }
                     }
@@ -780,18 +861,21 @@ const ITEMS = Object.freeze({
                 return false;
             }
 
+            GameControl.disableControls();
+
             ViewportAnimation.play(
                 "lode-gun.webm",
                 {
                     onGroundImpact: () => {
                         document.getElementById("interface")?.classList
                             .add("rumble");
-                        const pit = MapEntityFeatureFactory.pit(x, y);
+                        const pit = MapEntityFeatureFactory.pit();
                         pit.closeAfterTurns = 3;
-                        actorEntity.gameMap.addEntity(pit);
+                        actorEntity.gameMap.addEntity(pit, x, y);
                         actorEntity.gameMap.triggerOnEnterEvent(pit);
                     },
                     onHoleFormed: () => {
+                        GameControl.enableControls();
                         render();
                     },
                     onEnd: () => {

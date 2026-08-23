@@ -18,7 +18,7 @@ function EntityMovementPlanner_pursuitMovementTest()
     };
 
     const prisoner = {
-        ...MapEntityBuilder("prisoner", 15, 3, 0),
+        ...MapEntityBuilder("prisoner"),
         id: 3,
         preferLeftTurnFirst: true,
     };
@@ -42,10 +42,10 @@ function EntityMovementPlanner_pursuitMovementTest()
         },
     });
     prisoner.addPartyMember(prisonerPartyMember);
-    gameMap.addEntity(prisoner);
+    gameMap.addEntity(prisoner, 15, 3, 0);
 
     const fanatic = {
-        ...MapEntityBuilder("fanatic", 2, 13, 2),
+        ...MapEntityBuilder("fanatic"),
         id: 1,
         preferLeftTurnFirst: true,
     };
@@ -69,7 +69,7 @@ function EntityMovementPlanner_pursuitMovementTest()
         },
     });
     fanatic.addPartyMember(fanaticPartyMember);
-    gameMap.addEntity(fanatic);
+    gameMap.addEntity(fanatic, 2, 13, 2);
 
     const movements = [];
     movements.push(gameMap.entities.map(e => ({
@@ -82,7 +82,7 @@ function EntityMovementPlanner_pursuitMovementTest()
 
 
     const runner = {
-        ...MapEntityBuilder("runner", 2, 1, 2),
+        ...MapEntityBuilder("runner"),
         id: 2,
         output: [],
         preferLeftTurnFirst: true,
@@ -130,7 +130,7 @@ function EntityMovementPlanner_pursuitMovementTest()
             );
         }
     };
-    gameMap.addEntity(runner);
+    gameMap.addEntity(runner, 2, 1, 2);
 
     for (let i = 0; i < 42; i++) {
         if (i === 24) {
