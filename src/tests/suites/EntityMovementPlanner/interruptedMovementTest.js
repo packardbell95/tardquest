@@ -14,7 +14,7 @@ function EntityMovementPlanner_interruptedMovementTest()
     const width = gameMap.width;
     const height = gameMap.height;
 
-    gameMap.addEntity(BuildMapEntityLemming(10, 10, 1));
+    gameMap.addEntity(BuildMapEntityLemming(), 10, 10, 1);
     gameMap.entities[0].setPatrolPoints(
         gameMap,
         [
@@ -23,7 +23,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(width - 11, 10, 2));
+    gameMap.addEntity(BuildMapEntityLemming(), width - 11, 10, 2);
     gameMap.entities[1].setPatrolPoints(
         gameMap,
         [
@@ -32,7 +32,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(width - 11, height - 11, 3));
+    gameMap.addEntity(BuildMapEntityLemming(), width - 11, height - 11, 3);
     gameMap.entities[2].setPatrolPoints(
         gameMap,
         [
@@ -41,7 +41,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(10, height - 11, 0));
+    gameMap.addEntity(BuildMapEntityLemming(), 10, height - 11, 0);
     gameMap.entities[3].setPatrolPoints(
         gameMap,
         [
@@ -50,7 +50,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(8, 6, 1));
+    gameMap.addEntity(BuildMapEntityLemming(), 8, 6, 1);
     gameMap.entities[4].setPatrolPoints(
         gameMap,
         [
@@ -59,7 +59,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(12, 8, 3));
+    gameMap.addEntity(BuildMapEntityLemming(), 12, 8, 3);
     gameMap.entities[5].setPatrolPoints(
         gameMap,
         [
@@ -68,7 +68,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(11, 15, 1));
+    gameMap.addEntity(BuildMapEntityLemming(), 11, 15, 1);
     gameMap.entities[6].setPatrolPoints(
         gameMap,
         [
@@ -77,7 +77,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(15, 17, 3));
+    gameMap.addEntity(BuildMapEntityLemming(), 15, 17, 3);
     gameMap.entities[7].setPatrolPoints(
         gameMap,
         [
@@ -86,7 +86,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(10, 4, 2));
+    gameMap.addEntity(BuildMapEntityLemming(), 10, 4, 2);
     gameMap.entities[8].setPatrolPoints(
         gameMap,
         [
@@ -95,7 +95,7 @@ function EntityMovementPlanner_interruptedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(13, 19, 0));
+    gameMap.addEntity(BuildMapEntityLemming(), 13, 19, 0);
     gameMap.entities[9].setPatrolPoints(
         gameMap,
         [

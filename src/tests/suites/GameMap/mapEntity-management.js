@@ -1,11 +1,17 @@
 // Tests MapEntity management within a GameMap
+// @TODO See if this test is even functional anymore. Party members aren't used
 function GameMap_mapEntityManagement()
 {
     const testMap = new GameMap(50, 40);
     testMap.fill(0, 0, 22, 12, "wall");
     testMap.fill(1, 1, 21, 11, "floor");
 
-    const mapEntities = [];
+    test(
+        "No entities have been set",
+        () => Assert.deepEquals([], testMap.entities),
+        renderGameMapPoints(testMap)
+    );
+
     const wanderingKoboldParty = [];
 
     wanderingKoboldParty.push(
@@ -52,8 +58,8 @@ function GameMap_mapEntityManagement()
             .build()
     );
 
-    mapEntities.push(MapEntityBuilder("wanderingKobold", 1, 1));
-    mapEntities.push(MapEntityBuilder("treasureChest", 14, 7));
+    testMap.addEntity(MapEntityBuilder("wanderingKobold"), 1, 1);
+    testMap.addEntity(MapEntityBuilder("treasureChest"), 14, 7);
 
     const wanderingBeholderParty = [];
 
@@ -78,19 +84,11 @@ function GameMap_mapEntityManagement()
             .build()
     );
 
-    mapEntities.push(MapEntityBuilder("wanderingBeholder", 19, 9));
-
-    test(
-        "No entities have been set",
-        () => Assert.deepEquals([], testMap.entities),
-        renderGameMapPoints(testMap)
-    );
-
-    testMap.setEntities(mapEntities);
+    testMap.addEntity(MapEntityBuilder("wanderingBeholder"), 19, 9);
 
     test(
         "Entities have been set",
-        () => Assert.deepEquals(mapEntities, testMap.entities),
+        () => Assert.equals(3, testMap.entities.length),
         renderGameMapPoints(testMap)
     );
 

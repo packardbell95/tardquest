@@ -63,6 +63,9 @@ const TardQuestMapGenerator = {
     },
 
     generate: function(gameMap, floor) {
+        SceneRenderer.sightRangeOverride = null;
+        SceneRenderer.setStripSquare(8);
+
         gameMap.filterEntities(["player"]);
 
         const floorLayout = this.generateRandomLayout();
@@ -93,12 +96,14 @@ const TardQuestMapGenerator = {
         const playerRegion = oppositeRegions[0];
         const exitRegion = oppositeRegions[1];
 
-        player.x = playerRegion.start.x + Math.floor(
+        const playerX = playerRegion.start.x + Math.floor(
             Math.random() * (playerRegion.end.x - playerRegion.start.x)
         );
-        player.y = playerRegion.start.y + Math.floor(
+        const playerY = playerRegion.start.y + Math.floor(
             Math.random() * (playerRegion.end.y - playerRegion.start.y)
         );
+        player.teleportTo(playerX, playerY);
+
         playerRegion.occupied = true;
 
         gameMap.revealFieldOfView(
@@ -124,8 +129,8 @@ const TardQuestMapGenerator = {
             }
         }
 
-        const exitEntity = MapEntityFeatureFactory.exit(exitX, exitY);
-        gameMap.addEntity(exitEntity);
+        const exitEntity = MapEntityFeatureFactory.exit();
+        gameMap.addEntity(exitEntity, exitX, exitY);
         exitRegion.occupied = true;
 
         let sigilPlaced = false;
@@ -136,26 +141,34 @@ const TardQuestMapGenerator = {
                 continue;
             }
 
+            if (Math.random() < 0.50) {
+                const x = region.start.x +
+                    Math.round(region.end.x - region.start.x);
+                const y = region.start.y +
+                    Math.round(region.end.y - region.start.y);
+
+                gameMap.addEntity(MapEntityFeatureFactory.crackedFloor(), x, y);
+                continue;
+            }
+
             // @TODO Update this later since all enemies patrol for now
-            const regionEnemyA = MapEntityEnemyFactory
-                .randomEnemy(floor, region.start.x, region.start.y, 1);
+            const regionEnemyA = MapEntityEnemyFactory.randomEnemy(floor);
             regionEnemyA.setPatrolPoints(gameMap, [
                 { x: region.start.x, y: region.start.y },
                 { x: region.end.x, y: region.start.y },
                 { x: region.end.x, y: region.end.y },
                 { x: region.start.x, y: region.end.y },
             ]);
-            gameMap.addEntity(regionEnemyA);
+            gameMap.addEntity(regionEnemyA, region.start.x, region.start.y, 1);
 
-            const regionEnemyB = MapEntityEnemyFactory
-                .randomEnemy(floor, region.end.x, region.end.y, 2);
+            const regionEnemyB = MapEntityEnemyFactory.randomEnemy(floor);
             regionEnemyB.setPatrolPoints(gameMap, [
                 { x: region.end.x, y: region.end.y },
                 { x: region.start.x, y: region.end.y },
                 { x: region.start.x, y: region.start.y },
                 { x: region.end.x, y: region.start.y },
             ]);
-            gameMap.addEntity(regionEnemyB);
+            gameMap.addEntity(regionEnemyB, region.end.x, region.end.y, 2);
 
             if (! sigilPlaced && Math.random() < 0.5) {
                 const x = region.start.x +
@@ -168,114 +181,17 @@ const TardQuestMapGenerator = {
             }
         }
 
-        /**
-            if (pigeon.checkForMessages()) {
-                pigeon.isActiveOnFloor = true;
-                pigeon.set();
-            } else {
-                pigeon.isActiveOnFloor = false;
-                pigeon.x = pigeon.y = null;
-            }
-
-            if (floor === 1) {
-                placeWelcomeBanner();
-            }
-
-            if (merchant.isAlive) {
-                // Always spawn on the first floor, or after 3 floors of absence
-                if (floor === 1 || merchant.consecutiveFloorsAbsent >= 3) {
-                    merchant.isActiveOnFloor = true;
-                    merchant.consecutiveFloorsAbsent = 0;
-                } else {
-                    merchant.isActiveOnFloor = Math.random() < 0.35;
-                    merchant.consecutiveFloorsAbsent +=
-                        ! merchant.isActiveOnFloor;
-                }
-
-                if (merchant.isActiveOnFloor) {
-                    merchant.set();
-                }
-            } else {
-                merchant.isActiveOnFloor = false;
-            }
-
-            if (floor === 40) {
-                placeNoboWall();
-            }
-
-            gambler.isActiveOnFloor = gambler.isAlive && Math.random() < 0.35;
-            if (gambler.isActiveOnFloor) {
-                gambler.set();
-            }
-
-            erok.isActiveOnFloor = erok.isAlive; // Spawns on every floor because he is a good boy
-            if (erok.isActiveOnFloor) {
-                erok.set();
-            }
-
-            spawnTreasureChests();
-            spawnHealingTiles();
-            spawnCrackedFloors();
-
-            // @TODO Update, of course
-            if (false && Math.random() < 0.6) { // % chance to spawn boulder
-                boulder.spawn();
-            } else {
-                boulder.isActiveOnFloor = false;
-            }
-
-            const availableCoordinates = shuffle(MAP.getEmptyCellCoordinates());
-
-            // Initialize roaming enemies after all other map elements are placed
-            // roamingEnemies.initialize();
-            for (let i = 0; i < 6 && i < availableCoordinates.length; i++) {
-                const coordinate = availableCoordinates.pop();
-                const enemy = MapEntityEnemyFactory.randomEnemy(
-                    1,
-                    coordinate.x,
-                    coordinate.y,
-                    numberBetween(0, 3)
-                );
-
-                const patrolPoints = [{ x: coordinate.x, y: coordinate.y }];
-                for (const offset of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
-                    const cx = coordinate.x + offset[0];
-                    const cy = coordinate.y + offset[1];
-                    const cellIsOpen = ! MAP.cellIsOccupied(cx, cy);
-
-                    if (cellIsOpen) {
-                        patrolPoints.push({ x: cx, y: cy });
-                    }
-                }
-
-                enemy.setPatrolPoints(MAP, patrolPoints);
-                MAP.addEntity(enemy);
-            }
-
-            updateMinimapFooter();
-            // vampire.initialize();
-
-            // @TODO Remove this debug code, obviously
-            // MAP.fill(1, 1, MAP.width - 2, MAP.height - 2, "floor");
-            MAP.reveal();
-        }*/
-
         // Place healing tiles
         const totalHealingTiles = 1 + Math.floor(Math.random() * 4);
         const availableCoordinates = gameMap
             .getEmptyCellCoordinates()
-            // Make sure we don't spawn anything on the exit
-            .filter(e => e.x !== exitX && e.y !== exitY);
+            .filter(e => ! (typeof e.onEnter === "function"));
         const coordinates = shuffle(availableCoordinates);
 
         for (let i = 0; i < totalHealingTiles && i < coordinates.length; i++) {
             const coordinate = coordinates[i];
-            const healingTileEntity = MapEntityFeatureFactory.healingTile(
-                coordinate.x,
-                coordinate.y
-            );
-
-            gameMap.addEntity(healingTileEntity);
+            const healingTileEntity = MapEntityFeatureFactory.healingTile();
+            gameMap.addEntity(healingTileEntity, coordinate.x, coordinate.y);
         }
         // End of heal tile placement
 
@@ -289,12 +205,8 @@ const TardQuestMapGenerator = {
             const merchantPosition = placementPoints.shift();
             gameMap.setCell(merchantPosition.x, merchantPosition.y);
 
-            const merchant = MapEntityNpcFactory.merchant(
-                merchantPosition.x,
-                merchantPosition.y
-            );
-
-            gameMap.addEntity(merchant);
+            const merchant = MapEntityNpcFactory.merchant();
+            gameMap.addEntity(merchant, merchantPosition.x, merchantPosition.y);
         }
 
         // 🐀 Gambler
@@ -305,12 +217,8 @@ const TardQuestMapGenerator = {
         if (placeGambler) {
             const gamblerPosition = placementPoints.shift();
             gameMap.setCell(gamblerPosition.x, gamblerPosition.y);
-            const gambler = MapEntityNpcFactory.gambler(
-                gamblerPosition.x,
-                gamblerPosition.y
-            );
-
-            gameMap.addEntity(gambler);
+            const gambler = MapEntityNpcFactory.gambler();
+            gameMap.addEntity(gambler, gamblerPosition.x, gamblerPosition.y);
         }
 
         // 🐕️ Erok
@@ -320,16 +228,11 @@ const TardQuestMapGenerator = {
         if (placeErok) {
             const erokPosition = placementPoints.shift();
             gameMap.setCell(erokPosition.x, erokPosition.y);
-            const erok = MapEntityNpcFactory.erok(
-                erokPosition.x,
-                erokPosition.y
-            );
-
-            gameMap.addEntity(erok);
+            const erok = MapEntityNpcFactory.erok();
+            gameMap.addEntity(erok, erokPosition.x, erokPosition.y);
         }
 
         // End of NPC placement
-
 
         this._placeTreasureChests(
             gameMap,
@@ -348,6 +251,9 @@ const TardQuestMapGenerator = {
     },
 
     generateHallwayOfDoom: function(gameMap, floor) {
+        SceneRenderer.sightRangeOverride = null;
+        SceneRenderer.setStripSquare(8);
+
         gameMap.filterEntities(["player"]);
 
         const player = gameMap.entities.find(e => e.type === "player");
@@ -359,12 +265,10 @@ const TardQuestMapGenerator = {
             return;
         }
 
-        player.x = 1;
-        player.y = 5;
-        player.direction = 1;
+        player.teleportTo(1, 5, 1);
 
-        const exitEntity = MapEntityFeatureFactory.exit(27, 5);
-        gameMap.addEntity(exitEntity);
+        const exitEntity = MapEntityFeatureFactory.exit();
+        gameMap.addEntity(exitEntity, 27, 5);
 
         for (let x = 0; x < gameMap.width; x++) {
             for (let y = 0; y < gameMap.height; y++) {
@@ -387,19 +291,174 @@ const TardQuestMapGenerator = {
             const yOffset =
                 Math.floor((Math.sin(i / 9 * Math.PI * 2) + 1) * 2);
 
-            const topBouldingBall = MapEntityFeatureFactory.bouldingBall(
-                6 + i,
-                1 + yOffset,
-            );
-            topBouldingBall.direction = 2;
-            gameMap.addEntity(topBouldingBall);
+            const topBouldingBall = MapEntityFeatureFactory.bouldingBall();
+            gameMap.addEntity(topBouldingBall, 6 + i, 1 + yOffset, 2);
 
-            const bottomBouldingBall = MapEntityFeatureFactory.bouldingBall(
+            const bottomBouldingBall = MapEntityFeatureFactory.bouldingBall();
+            gameMap.addEntity(
+                bottomBouldingBall,
                 6 + i,
                 gameMap.height - 1 - yOffset,
+                0
             );
-            bottomBouldingBall.direction = 0;
-            gameMap.addEntity(bottomBouldingBall);
+        }
+
+        gameMap.reveal();
+    },
+
+    generateRandomMossyDungeon: function(gameMap, floor) {
+        this.generate(gameMap, floor);
+
+        for (let y = 0; y < gameMap.height; y++) {
+            for (let x = 0; x < gameMap.width; x++) {
+                const cell = gameMap.getCell(x, y);
+
+                cell.ceilingTextureId = Math.random() < 0.5
+                    ? null
+                    : (Math.random() < 0.5
+                        ? "default"
+                        : (Math.random() < 0.75 ? "stone" : "moss")
+                    );
+
+                cell.floorTextureId = Math.random() < 0.75 ? "moss" : "stone";
+
+                if (cell.isWall) {
+                    if (Math.random() < 0.4) {
+                        cell.wallTextureId =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                    }
+
+                    if (Math.random() < 0.25) {
+                        cell.wallTextureIds.north =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                        cell.wallTextureIds.east =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                        cell.wallTextureIds.south =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                        cell.wallTextureIds.west =
+                            Math.random() < 0.5 ? "stone" : "moss";
+                    }
+                }
+
+                // Ambient effects
+                cell.ambientLight = {
+                    r: 0.05,
+                    g: 0.05,
+                    b: 0.05,
+                };
+                cell.fogDensity = 0.25;
+                cell.fogColor = {
+                    r: 0.45,
+                    g: 0.5,
+                    b: 0.4,
+                };
+                cell.lightSource = {
+                    color: {
+                        r: 1,
+                        g: 0.65,
+                        b: 0.25,
+                    },
+                    intensity: 1,
+                    radius: 5,
+                };
+            }
+        }
+
+        this._placeTorches(gameMap, 20);
+    },
+
+    generateBikiniBottom: function(gameMap, floor) {
+        SceneRenderer.sightRangeOverride = 20;
+        SceneRenderer.setStripSquare(1);
+
+        gameMap.filterEntities(["player"]);
+
+        const player = gameMap.entities.find(e => e.type === "player");
+        if (! player) {
+            console.error(
+                "Player entity not found!",
+                { entities: gameMap.entities }
+            );
+            return;
+        }
+
+        player.teleportTo(1, 5, 1);
+
+        const exitEntity = MapEntityFeatureFactory.exit();
+        gameMap.addEntity(exitEntity, 27, 5);
+
+        for (let x = 0; x < gameMap.width; x++) {
+            for (let y = 0; y < gameMap.height; y++) {
+                const placeWall =
+                    x === 0 ||
+                    x === gameMap.width - 1 ||
+                    y === 0 ||
+                    y === gameMap.height - 1 ||
+                    (
+                        (x === 5 || x === gameMap.width - 5 - 1) &&
+                        (y < 5 || y > gameMap.height - 5 - 1)
+                    );
+
+                const type = placeWall ? "wall" : "floor";
+                gameMap.setCell(x, y, type, { isExplored: true });
+
+                const cell = gameMap.getCell(x, y);
+                cell.ceilingTextureId = "demo01ceiling01";
+                cell.floorTextureId = "demo01floor01";
+
+                if (placeWall) {
+                    const textureId = "demo01wall0" +
+                        (Math.floor(Math.random() * 3) + 1);
+                    cell.wallTextureIds.north = textureId;
+                    cell.wallTextureIds.east = textureId;
+                    cell.wallTextureIds.south = textureId;
+                    cell.wallTextureIds.west = textureId;
+                }
+            }
+        }
+
+        gameMap.getCell(24, 3).wallTextureIds.west = "demo01kkext01";
+        gameMap.getCell(24, 4).wallTextureIds.west = "demo01kkext02";
+        gameMap.getCell(24, 5).wallTextureIds.west = "demo01kkextflags";
+        gameMap.getCell(24, 6).wallTextureIds.west = "demo01kkext03";
+        gameMap.getCell(24, 7).wallTextureIds.west = "demo01kkext04";
+
+        const kkFlags = MapEntityBuilder("flags");
+        kkFlags.direction = 3;
+        kkFlags.isVisibleOnMinimap = false;
+        kkFlags.spriteIds = [ "demo01KkFlags" ];
+        gameMap.addEntity(kkFlags, 24, 5);
+        console.log({ kkFlags });
+
+        const env = SceneRenderer.environmentMap;
+        for (let i = 0; i < env.width * env.height; i++) {
+            env.lightR[i] = 1;
+            env.lightG[i] = 1;
+            env.lightB[i] = 1;
+        }
+
+        env.fogG.fill(127 / 255);
+        env.fogG.fill(214 / 255);
+        env.fogB.fill(204 / 255);
+        env.fogDensity.fill(0.02);
+
+        gameMap.addEntity(MapEntityFeatureFactory.demo01Krabs(), 24, 5);
+        const gravestone = MapEntityFeatureFactory.gravestone();
+        gravestone.headstoneMessageHtml =
+            `<span class="DEF">Rest in peace, Gary :'(</span>`;
+        gameMap.addEntity(gravestone, 25, 1);
+
+        const pattyPlacements = [
+            { x:  3, y: 2 }, { x:  3, y: 8 },
+            { x:  8, y: 3 }, { x:  8, y: 7 },
+            { x: 10, y: 5 }, { x: 19, y: 5 },
+            { x: 21, y: 3 }, { x: 21, y: 7 },
+        ];
+
+        for (let i = 0; i < pattyPlacements.length; i++) {
+            const { x, y } = pattyPlacements[i];
+            const patty = MapEntityFeatureFactory.demo01Patty();
+            gameMap.addEntity(patty, x, y);
         }
 
         gameMap.reveal();
@@ -519,10 +578,7 @@ const TardQuestMapGenerator = {
             return;
         }
 
-        const gravestone = MapEntityFeatureFactory.gravestone(
-            position.x,
-            position.y
-        );
+        const gravestone = MapEntityFeatureFactory.gravestone();
 
         const name = entry.name || "Nameless Tard";
         const displayScore =
@@ -555,7 +611,7 @@ const TardQuestMapGenerator = {
             `<span class="action">${message}</span>`;
 
         gameMap.setCell(position.x, position.y);
-        gameMap.addEntity(gravestone);
+        gameMap.addEntity(gravestone, position.x, position.y);
     },
 
     _placeTreasureChests: function(
@@ -571,10 +627,7 @@ const TardQuestMapGenerator = {
         for (let i = 0; i < totalChests && placementPoints.length > 0; i++) {
             const position = placementPoints.shift();
             gameMap.setCell(position.x, position.y);
-            const treasureChest = MapEntityFeatureFactory.treasureChest(
-                position.x,
-                position.y
-            );
+            const treasureChest = MapEntityFeatureFactory.treasureChest();
 
             // 20% chance for mimic
             const isMimic = Math.random() < 0.2;
@@ -622,7 +675,46 @@ const TardQuestMapGenerator = {
                 }
             }
 
-            gameMap.addEntity(treasureChest);
+            gameMap.addEntity(treasureChest, position.x, position.y);
+        }
+    },
+
+    _placeTorches: function(gameMap, totalTorches = 1) {
+        const places = [];
+
+        for (let y = 1; y < gameMap.height - 1; y++) {
+            for (let x = 1; x < gameMap.width - 1; x++) {
+                if (! gameMap.cells[y][x].isWall) {
+                    continue;
+                }
+
+                // North
+                if (! gameMap.cells[y - 1][x].isWall) {
+                    places.push({ x, y: y - 1, direction: 3 });
+                }
+
+                // East
+                if (! gameMap.cells[y][x + 1].isWall) {
+                    places.push({ x: x + 1, y, direction: 2 });
+                }
+
+                // South
+                if (! gameMap.cells[y + 1][x].isWall) {
+                    places.push({ x, y: y + 1, direction: 1 });
+                }
+
+                // West
+                if (! gameMap.cells[y][x - 1].isWall) {
+                    places.push({ x: x - 1, y, direction: 0 });
+                }
+            }
+        }
+
+        shuffle(places);
+
+        for (let i = 0; i < totalTorches && i < places.length; i++) {
+            const torch = MapEntityFeatureFactory.torches();
+            MAP.addEntity(torch, places[i].x, places[i].y, places[i].direction);
         }
     },
 
@@ -661,7 +753,7 @@ const TardQuestMapGenerator = {
             return totalDirectionChanges;
         }
 
-        const sigil = MapEntityFeatureFactory.sigil(x, y);
+        const sigil = MapEntityFeatureFactory.sigil();
         const fallbackTicksUntilSummoning = 20;
         sigil.ticksUntilSummoning = fallbackTicksUntilSummoning;
 
@@ -705,12 +797,7 @@ const TardQuestMapGenerator = {
                 return;
             }
 
-            this.vampireEntity = MapEntityEnemyFactory.vampire(
-                1,
-                this.x,
-                this.y,
-                Math.floor(Math.random() * 4)
-            );
+            this.vampireEntity = MapEntityEnemyFactory.vampire(1);
 
             // Vampires get faster after each respawn
             this.vampireEntity.movesPerTurn = Math.min(
@@ -718,7 +805,12 @@ const TardQuestMapGenerator = {
                 EntityMovementPlanner.windowSize
             );
 
-            gameMap.addEntity(this.vampireEntity);
+            gameMap.addEntity(
+                this.vampireEntity,
+                this.x,
+                this.y,
+                Math.floor(Math.random() * 4)
+            );
             this.vampireEntity.showFocalPoint(gameMap);
 
             // @TODO Use to make the vampire more aggressive each time
@@ -726,6 +818,6 @@ const TardQuestMapGenerator = {
             this.tickCount = 0;
         };
 
-        gameMap.addEntity(sigil);
+        gameMap.addEntity(sigil, x, y);
     },
 };

@@ -1,7 +1,7 @@
 "use strict";
 
-function BuildMapEntityLemming(x, y, direction) {
-    const lemming = MapEntityBuilder("lemming", x, y, direction);
+function BuildMapEntityLemming() {
+    const lemming = MapEntityBuilder("lemming");
     MapEntityTrait_AttachMovement_Patrol(lemming);
 
     const lemmingPartyMember = PartyMemberBuilder("King Lemming", {

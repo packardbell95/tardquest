@@ -7,7 +7,8 @@ function MapEntity_movementBasic()
     testMap.line(8, 11, 16, 11);
     testMap.line(16, 11, 16, 16);
 
-    const entity = new MapEntity(10, 12, 0);
+    const entity = new MapEntity();
+    entity.setPosition(10, 12, 0);
 
     test(
         "Attempting to move with no target",
@@ -32,7 +33,6 @@ function MapEntity_movementBasic()
 
 
     const movementPointsCasual = [];
-    entity.setPosition(10, 12, 0);
     entity.setTarget(8, 10);
     let stepsTakenCasual = 0;
     do {
@@ -111,18 +111,15 @@ function MapEntity_movementBasic()
 
 
     const movementPointsTowardsPlayer = [];
-    const playerEntity = new MapEntity(6, 11, 0);
+    const playerEntity = new MapEntity();
     playerEntity.id = "player";
-    const entities = {
-        player: playerEntity,
-    };
     movementPointsTowardsPlayer.push({
-        x: entities.player.x,
-        y: entities.player.y,
+        x: 6,
+        y: 11,
         character: "🏃‍♂️",
         titleSuffix: "Player Start",
     });
-    testMap.setEntities(entities);
+    testMap.addEntity(playerEntity, 6, 11, 0);
     entity.setPosition(10, 12, 3);
     let stepsTakenTowardsPlayer = 0;
 

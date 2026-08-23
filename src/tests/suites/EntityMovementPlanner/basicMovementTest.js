@@ -33,69 +33,77 @@ function EntityMovementPlanner_basicMovementTest()
     );
     circuitMap.line(1, circuitMap.height - 2, 1, 1, { cellType: "floor" });
 
-    circuitMap.addEntity({
-        id: 1,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: 1,
-        y: 1,
-        target: {
-            x: circuitMap.width - 2,
-            y: circuitMap.height - 2
+    circuitMap.addEntity(
+        {
+            id: 1,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: circuitMap.width - 2,
+                y: circuitMap.height - 2
+            },
+            getMovementPriority: () => 10,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 10,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        1,
+        1
+    );
 
-    circuitMap.addEntity({
-        id: 2,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: circuitMap.width - 2,
-        y: 1,
-        target: {
-            x: 1,
-            y: circuitMap.height - 2
+    circuitMap.addEntity(
+        {
+            id: 2,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: 1,
+                y: circuitMap.height - 2
+            },
+            getMovementPriority: () => 8,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 8,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        circuitMap.width - 2,
+        1
+    );
 
-    circuitMap.addEntity({
-        id: 3,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: circuitMap.width - 2,
-        y: circuitMap.height - 2,
-        target: {
-            x: 1,
-            y: 1
+    circuitMap.addEntity(
+        {
+            id: 3,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: 1,
+                y: 1
+            },
+            getMovementPriority: () => 9,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 9,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        circuitMap.width - 2,
+        circuitMap.height - 2
+    );
 
-    circuitMap.addEntity({
-        id: 4,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: 1,
-        y: circuitMap.height - 2,
-        target: {
-            x: circuitMap.width - 2,
-            y: 1
+    circuitMap.addEntity(
+        {
+            id: 4,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: circuitMap.width - 2,
+                y: 1
+            },
+            getMovementPriority: () => 7,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 7,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        1,
+        circuitMap.height - 2
+    );
 
     const circuitMovements = [
         circuitMap.entities.map(e => ({ id: e.id, x: e.x, y: e.y })),

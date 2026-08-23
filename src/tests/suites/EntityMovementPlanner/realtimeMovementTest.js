@@ -26,13 +26,7 @@ function EntityMovementPlanner_realtimeMovementTest()
     for (let i = 0; i < bouldingBallSettings.length; i++) {
         const settings = bouldingBallSettings[i];
 
-        const bouldingBall = MapEntityBuilder(
-            "bouldingBall",
-            settings.x,
-            settings.y,
-            settings.direction
-        );
-
+        const bouldingBall = MapEntityBuilder("bouldingBall");
         bouldingBall.testId = entityId++;
         MapEntityTrait_AttachRealtimeMovement_BackAndForth(bouldingBall);
         bouldingBall.onTouch = function(gameMap, entity) {
@@ -46,7 +40,12 @@ function EntityMovementPlanner_realtimeMovementTest()
             bouldingBall.isHastyMove = () => true;
         }
 
-        gameMap.addEntity(bouldingBall);
+        gameMap.addEntity(
+            bouldingBall,
+            settings.x,
+            settings.y,
+            settings.direction
+        );
     }
 
     const maxBouldingBallId = entityId;
@@ -56,12 +55,11 @@ function EntityMovementPlanner_realtimeMovementTest()
         const x = 20 + (i * 2);
         const y = 4;
         const direction = i % 2 === 0 ? 0 : 2;
-        const lemming = BuildMapEntityLemming(x, y, direction);
+        const lemming = BuildMapEntityLemming();
         lemming.testId = entityId++;
-        lemming.onTrample = function(gameMap, entity) {
+        lemming.onEnter = function(gameMap, entity) {
             if (entity.type === "bouldingBall") {
-                this.message =
-                    `${this.testId} was crushed by ${entity.testId}`;
+                this.message = `${this.testId} was crushed by ${entity.testId}`;
                 this.isAlive = false;
                 this.isActive = false;
             }
@@ -78,7 +76,7 @@ function EntityMovementPlanner_realtimeMovementTest()
             true
         );
 
-        gameMap.addEntity(lemming);
+        gameMap.addEntity(lemming, x, y, direction);
     }
 
     const movements = [];
@@ -143,7 +141,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  4 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  4 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  3 },
@@ -159,7 +157,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  4 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  4 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  2 },
@@ -175,7 +173,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  4 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  4 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  1 },
@@ -191,7 +189,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  5 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  5 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  1 },
@@ -207,7 +205,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  5 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  5 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  2 },
@@ -223,7 +221,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  5 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  5 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  3 },
@@ -239,7 +237,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 11, x: 22, y:  6 },
                     { id: 12, x: 24, y:  4 },
                     { id: 13, x: 26, y:  6 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  4 },
@@ -254,8 +252,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id: 10, x: 20, y:  4 },
                     { id: 11, x: 22, y:  6 },
                     { id: 12, x: 24, y:  4 },
-                    { id: 13, x: 26, y:  6, message: "13 was crushed by 6" },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  5 },
@@ -268,9 +265,8 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  8, x: 29, y:  2 },
                     { id:  9, x: 15, y:  2 },
                     { id: 10, x: 20, y:  4 },
-                    { id: 11, x: 22, y:  6, message: "11 was crushed by 7" },
                     { id: 12, x: 24, y:  4 },
-                    { id: 14, x: 28, y:  4 },
+                    { id: 14, x: 28, y:  4 }
                 ],
                 [
                     { id:  1, x:  5, y:  6 },
@@ -284,7 +280,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  9, x: 16, y:  2 },
                     { id: 10, x: 20, y:  5 },
                     { id: 12, x: 24, y:  5 },
-                    { id: 14, x: 28, y:  5 },
+                    { id: 14, x: 28, y:  5 }
                 ],
                 [
                     { id:  1, x:  5, y:  7 },
@@ -298,7 +294,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  9, x: 17, y:  2 },
                     { id: 10, x: 20, y:  5 },
                     { id: 12, x: 24, y:  5 },
-                    { id: 14, x: 28, y:  5 },
+                    { id: 14, x: 28, y:  5 }
                 ],
                 [
                     { id:  1, x:  5, y:  8 },
@@ -312,7 +308,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  9, x: 18, y:  2 },
                     { id: 10, x: 20, y:  5 },
                     { id: 12, x: 24, y:  5 },
-                    { id: 14, x: 28, y:  5 },
+                    { id: 14, x: 28, y:  5 }
                 ],
                 [
                     { id:  1, x:  5, y:  9 },
@@ -324,9 +320,8 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 20, y:  6 },
                     { id:  8, x: 26, y:  2 },
                     { id:  9, x: 19, y:  2 },
-                    { id: 10, x: 20, y:  6, message: "10 was crushed by 7" },
                     { id: 12, x: 24, y:  6 },
-                    { id: 14, x: 28, y:  6 },
+                    { id: 14, x: 28, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 10 },
@@ -338,8 +333,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 19, y:  6 },
                     { id:  8, x: 25, y:  2 },
                     { id:  9, x: 20, y:  2 },
-                    { id: 12, x: 24, y:  6 },
-                    { id: 14, x: 28, y:  6, message: "14 was crushed by 6" },
+                    { id: 12, x: 24, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 11 },
@@ -351,7 +345,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 19, y:  6 },
                     { id:  8, x: 24, y:  2 },
                     { id:  9, x: 21, y:  2 },
-                    { id: 12, x: 24, y:  6 },
+                    { id: 12, x: 24, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 12 },
@@ -363,7 +357,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 20, y:  6 },
                     { id:  8, x: 23, y:  2 },
                     { id:  9, x: 22, y:  2 },
-                    { id: 12, x: 24, y:  6 },
+                    { id: 12, x: 24, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 13 },
@@ -375,7 +369,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 21, y:  6 },
                     { id:  8, x: 24, y:  2 },
                     { id:  9, x: 21, y:  2 },
-                    { id: 12, x: 24, y:  6 },
+                    { id: 12, x: 24, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 14 },
@@ -387,7 +381,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 22, y:  6 },
                     { id:  8, x: 25, y:  2 },
                     { id:  9, x: 20, y:  2 },
-                    { id: 12, x: 24, y:  6 },
+                    { id: 12, x: 24, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 14 },
@@ -399,7 +393,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  7, x: 23, y:  6 },
                     { id:  8, x: 26, y:  2 },
                     { id:  9, x: 19, y:  2 },
-                    { id: 12, x: 25, y:  6 },
+                    { id: 12, x: 25, y:  6 }
                 ],
                 [
                     { id:  1, x:  5, y: 13 },
@@ -410,8 +404,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 25, y:  6 },
                     { id:  7, x: 24, y:  6 },
                     { id:  8, x: 27, y:  2 },
-                    { id:  9, x: 18, y:  2 },
-                    { id: 12, x: 25, y:  6, message: "12 was crushed by 6" },
+                    { id:  9, x: 18, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y: 12 },
@@ -422,7 +415,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 26, y:  6 },
                     { id:  7, x: 23, y:  6 },
                     { id:  8, x: 28, y:  2 },
-                    { id:  9, x: 17, y:  2 },
+                    { id:  9, x: 17, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y: 11 },
@@ -433,7 +426,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 27, y:  6 },
                     { id:  7, x: 22, y:  6 },
                     { id:  8, x: 29, y:  2 },
-                    { id:  9, x: 16, y:  2 },
+                    { id:  9, x: 16, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y: 10 },
@@ -444,7 +437,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 28, y:  6 },
                     { id:  7, x: 21, y:  6 },
                     { id:  8, x: 29, y:  2 },
-                    { id:  9, x: 15, y:  2 },
+                    { id:  9, x: 15, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y:  9 },
@@ -455,7 +448,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 29, y:  6 },
                     { id:  7, x: 20, y:  6 },
                     { id:  8, x: 28, y:  2 },
-                    { id:  9, x: 14, y:  2 },
+                    { id:  9, x: 14, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y:  8 },
@@ -466,7 +459,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 29, y:  6 },
                     { id:  7, x: 19, y:  6 },
                     { id:  8, x: 27, y:  2 },
-                    { id:  9, x: 13, y:  2 },
+                    { id:  9, x: 13, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y:  7 },
@@ -477,7 +470,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 28, y:  6 },
                     { id:  7, x: 19, y:  6 },
                     { id:  8, x: 26, y:  2 },
-                    { id:  9, x: 13, y:  2 },
+                    { id:  9, x: 13, y:  2 }
                 ],
                 [
                     { id:  1, x:  5, y:  6 },
@@ -488,7 +481,7 @@ function EntityMovementPlanner_realtimeMovementTest()
                     { id:  6, x: 27, y:  6 },
                     { id:  7, x: 20, y:  6 },
                     { id:  8, x: 25, y:  2 },
-                    { id:  9, x: 14, y:  2 },
+                    { id:  9, x: 14, y:  2 }
                 ]
             ];
 

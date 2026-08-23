@@ -25,69 +25,77 @@ function EntityMovementPlanner_groupMovementLargeWindowTest()
     gameMap.line(4, 2, 4, 4, { cellType: "floor" });
     gameMap.line(5, 4, 5, 7, { cellType: "floor" });
 
-    gameMap.addEntity({
-        id: 1,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: 1,
-        y: 1,
-        target: {
-            x: gameMap.width - 2,
-            y: gameMap.height - 2
+    gameMap.addEntity(
+        {
+            id: 1,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: gameMap.width - 2,
+                y: gameMap.height - 2
+            },
+            getMovementPriority: () => 10,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 10,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        1,
+        1
+    );
 
-    gameMap.addEntity({
-        id: 2,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: gameMap.width - 2,
-        y: 1,
-        target: {
-            x: 1,
-            y: gameMap.height - 2
+    gameMap.addEntity(
+        {
+            id: 2,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: 1,
+                y: gameMap.height - 2
+            },
+            getMovementPriority: () => 8,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 8,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        gameMap.width - 2,
+        1
+    );
 
-    gameMap.addEntity({
-        id: 3,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: gameMap.width - 2,
-        y: gameMap.height - 2,
-        target: {
-            x: 1,
-            y: 1
+    gameMap.addEntity(
+        {
+            id: 3,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: 1,
+                y: 1
+            },
+            getMovementPriority: () => 9,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 9,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        gameMap.width - 2,
+        gameMap.height - 2
+    );
 
-    gameMap.addEntity({
-        id: 4,
-        isAutonomous: true,
-        hasTarget: () => true,
-        x: 1,
-        y: gameMap.height - 2,
-        target: {
-            x: gameMap.width - 2,
-            y: 1
+    gameMap.addEntity(
+        {
+            id: 4,
+            isAutonomous: true,
+            hasTarget: () => true,
+            target: {
+                x: gameMap.width - 2,
+                y: 1
+            },
+            getMovementPriority: () => 7,
+            reachedDestination: function() {
+                return this.x === this.target.x && this.y === this.target.y;
+            },
         },
-        getMovementPriority: () => 7,
-        reachedDestination: function() {
-            return this.x === this.target.x && this.y === this.target.y;
-        },
-    });
+        1,
+        gameMap.height - 2
+    );
 
     const movements = [
         gameMap.entities.map(e => ({ id: e.id, x: e.x, y: e.y })),

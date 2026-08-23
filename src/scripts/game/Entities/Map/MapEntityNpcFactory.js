@@ -8,15 +8,14 @@ const MapEntityNpcFactory = {
     /**
      * MERCHANT
      */
-    merchant: function(x, y) {
-        const merchant = MapEntityBuilder("merchant", x, y);
+    merchant: function() {
+        const merchant = MapEntityBuilder("merchant");
 
         merchant.getDisplayName = function() {
             return "🧙 Merchant";
         };
 
         merchant.getDisplayCharacter = () => "M";
-        merchant.getSceneArtId = () => "merchant";
         merchant.addPartyMember(TardQuestPartyMemberFactory.merchant());
 
         // Wares are not the same as the merchant's personal inventory
@@ -139,11 +138,10 @@ const MapEntityNpcFactory = {
                 );
             }
 
-            const bloodyCrater =
-                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+            const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
             bloodyCrater.getDisplayName = () =>
                 "🔴 <em>Cleanup on aisle three...</em>";
-            gameMap.addEntity(bloodyCrater);
+            gameMap.addEntity(bloodyCrater, this.x, this.y);
 
             this.die(entity);
         };
@@ -154,15 +152,14 @@ const MapEntityNpcFactory = {
     /**
      * GAMBLER
      */
-    gambler: function(x, y) {
-        const gambler = MapEntityBuilder("gambler", x, y);
+    gambler: function() {
+        const gambler = MapEntityBuilder("gambler");
 
         gambler.getDisplayName = function() {
             return "🐀 Gambler";
         };
 
         gambler.getDisplayCharacter = () => "G";
-        gambler.getSceneArtId = () => "gambler";
         gambler.addPartyMember(TardQuestPartyMemberFactory.gambler());
 
         gambler.onTouch = function(gameMap, entity) {
@@ -359,9 +356,9 @@ const MapEntityNpcFactory = {
             }
 
             const bloodyCrater =
-                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
+                MapEntityFeatureFactory.bloodyCrater();
             bloodyCrater.getDisplayName = () => "🔴 Post-Explodent Rodent";
-            gameMap.addEntity(bloodyCrater);
+            gameMap.addEntity(bloodyCrater, this.x, this.y);
 
             this.die(entity);
         };
@@ -372,15 +369,14 @@ const MapEntityNpcFactory = {
     /**
      * EROK
      */
-    erok: function(x, y) {
-        const erok = MapEntityBuilder("erok", x, y);
+    erok: function() {
+        const erok = MapEntityBuilder("erok");
 
         erok.getDisplayName = function() {
             return "🐕️ Erok";
         };
 
         erok.getDisplayCharacter = () => "E";
-        erok.getSceneArtId = () => "erok";
         erok.addPartyMember(TardQuestPartyMemberFactory.erok());
 
         erok.onTouch = function(gameMap, entity) {
@@ -415,9 +411,8 @@ const MapEntityNpcFactory = {
                 );
             }
 
-            const bloodyCrater =
-                MapEntityFeatureFactory.bloodyCrater(this.x, this.y);
-            gameMap.addEntity(bloodyCrater);
+            const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
+            gameMap.addEntity(bloodyCrater, this.x, this.y);
 
             this.die(entity);
         };

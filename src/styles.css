@@ -978,7 +978,7 @@ a:link {
 
 /** END OF TITLE SCREEN STYLES **/
 
-#game {
+#scene {
     width: 100%;
     height: 100%;
     white-space: pre;
@@ -1022,7 +1022,7 @@ a:link {
     }
 }
 
-#game.descendingIntoFloor {
+#scene.descendingIntoFloor {
     animation: descendIntoFloor 1.2s forwards linear;
 }
 
@@ -1039,20 +1039,10 @@ a:link {
 }
 
 
-#game.descendingToNextFloor {
+#scene.descendingToNextFloor {
     animation:
         descendIntoFloor 1.2s linear,
         descendFromCeiling 1.2s linear 1.21s;
-}
-
-#game.terrain_iceCavern {
-    background: linear-gradient(
-        180deg,
-        rgb(100, 113, 182) 0%,
-        rgb(0, 0, 0) 30%,
-        rgb(0, 0, 0) 70%,
-        rgb(49, 41, 106) 100%
-    );
 }
 
 @keyframes torchFlicker {
@@ -1074,7 +1064,7 @@ a:link {
     }
 }
 
-#game.torch::after {
+#scene.torch::after {
     content: "";
     position: absolute;
     top: 0;
@@ -1085,179 +1075,6 @@ a:link {
     background: radial-gradient(circle, #fff0 30%, #f2bb20cc 80%);
     mix-blend-mode: screen;
     animation: torchFlicker 3s infinite ease-in-out;
-}
-
-#game:not(.sightliness) {
-    filter: saturate(0.6);
-}
-
-#game > .layer {
-    position: absolute;
-    margin-left: 3.5px;
-    top: 0;
-    left: 0;
-}
-
-#game > .layer.dark {
-    filter: brightness(0);
-}
-
-#game:not(.lean-effect) > .layer.darkening {
-    animation-name: darken;
-    animation-duration: .5s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-}
-
-#game.lean-effect > .layer.darkening {
-    animation-name: darken, leanWaveContent;
-    animation-duration: .5s, 3s;
-    animation-fill-mode: forwards, none;
-    animation-timing-function: linear, ease-in-out;
-    animation-iteration-count: 1, infinite;
-}
-
-#game:not(.lean-effect) > .layer.lightening {
-    animation-name: lighten;
-    animation-duration: .5s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-}
-
-#game.lean-effect > .layer.lightening {
-    animation-name: lighten, leanWaveContent;
-    animation-duration: .5s, 3s;
-    animation-fill-mode: forwards, none;
-    animation-timing-function: linear, ease-in-out;
-    animation-iteration-count: 1, infinite;
-}
-
-#game > .layer.enemy > span {
-    color: #fff;
-}
-
-.layer.enemy {
-    position: absolute !important;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 10;
-}
-.layer.enemy .row {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    width: 736px;
-    justify-content: center;
-    margin: 0;
-    line-height: 1;
-
-    &.back {
-        transform: translateY(-14px);
-        font-size: 2px;
-    }
-
-    &.middle {
-        transform: translateY(-44px);
-        font-size: 3px;
-    }
-
-    &.front {
-        transform: translateY(-104px);
-        font-size: 5px;
-    }
-
-    & .art-container {
-        position: relative;
-        width: 82ch;
-
-        opacity: 1;
-        transition: opacity .2s;
-        &.obscured {
-            opacity: .2;
-        }
-
-        & .art,
-        & .mask {
-            position: absolute;
-        }
-
-        & .mask {
-            color: #000;
-        }
-    }
-}
-
-#game .layer,
-#game span {
-    display: inline-block;
-    font-size: 12px;
-    line-height: 12px;
-}
-
-#game.lean-effect {
-    position: relative;
-}
-
-#game.lean-effect::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg,
-        rgba(187, 1, 187, 0.493) 0%,
-        rgba(147, 0, 211, 0.15) 25%,
-        rgba(131, 25, 230, 0.11) 50%,
-        rgba(128, 0, 128, 0.15) 75%,
-        rgba(113, 3, 160, 0.486) 100%);
-    animation: leanWave 3s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 5;
-}
-
-#game.lean-effect > .layer {
-    animation-name: leanWaveContent;
-    animation-duration: 3s;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-}
-
-@keyframes leanWave {
-    0%, 100% {
-        transform: translateX(0) skewX(0deg);
-        filter: hue-rotate(0deg);
-    }
-    25% {
-        transform: translateX(2px) skewX(0.5deg);
-        filter: hue-rotate(10deg);
-    }
-    50% {
-        transform: translateX(-1px) skewX(-0.3deg);
-        filter: hue-rotate(-5deg);
-    }
-    75% {
-        transform: translateX(1px) skewX(0.2deg);
-        filter: hue-rotate(5deg);
-    }
-}
-
-@keyframes leanWaveContent {
-    0%, 100% {
-        transform: translateX(0) skewX(0deg) scaleY(1);
-    }
-    25% {
-        transform: translateX(5px) skewX(0.3deg) scaleY(1.01);
-    }
-    50% {
-        transform: translateX(-0.8px) skewX(-0.2deg) scaleY(0.995);
-    }
-    75% {
-        transform: translateX(0.8px) skewX(0.1deg) scaleY(1.005);
-    }
 }
 
 #animTorch {
@@ -1379,8 +1196,6 @@ a:link {
 
 #viewportAnimation {
     z-index: 10;
-/*    width: 368px;
-    height: 335px;*/
     height: auto;
 
     /* Fit the video within the viewport, below the "Viewport" header bar */
@@ -1626,8 +1441,7 @@ a:link {
     }
 }
 
-#minimap,
-#portraitArtOverlay {
+#minimap {
     padding: 2px;
     white-space: pre;
     font-size: 12px;
@@ -1664,24 +1478,9 @@ a:link {
     100% { color: #FF0700; }
 }
 
-@keyframes sigilGlowBackground {
-      0% { background-color: #FF9E4B; }
-     20% { background-color: #D90077; }
-     40% { background-color: #C00500; }
-     60% { background-color: #FF7600; }
-     80% { background-color: #DF4298; }
-    100% { background-color: #FF0700; }
-}
-
 .sigil {
     animation: sigilGlow 8s ease-in-out infinite;
     color: #FF0700;
-}
-
-.scene_character_sigil {
-    animation: sigilGlowBackground 8s ease-in-out infinite;
-    background-color: #FF0700;
-    color: #fff;
 }
 
 #minimap .vampire,
@@ -1774,53 +1573,29 @@ a:link {
     }
 }
 
-#portraitArtOverlay.portrait-art {
-    position: absolute;
-    top: 107px;
-    pointer-events: none;
-    font-size: 5px;
-    line-height: 1;
-    color: #bff;
+/* Portrait sprite-sheet animations */
+#portraitContainer {
+    --portrait-frame-height: 156px;
 
-    &.zoom2x {
-        &.flipped {
-            transform: scale(-2, 2) translate(-13ch, -3ch);
-        }
-        &:not(.flipped) {
-            transform: scale(2) translate(-3ch, -3ch);
-        }
-    }
-    &:not(.zoom2x).flipped {
+    height: 184px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#portraitHeader {
+    text-transform: uppercase;
+}
+
+#portraitImage {
+    display: block;
+    height: 156px;
+    margin: 6px auto auto;
+    image-rendering: pixelated;
+
+    &.flipped {
         transform: scaleX(-1);
     }
-}
-
-#portraitArtOverlay.chest {
-    color: #FAEB4A;
-}
-
-#portraitArtOverlay.settings {
-    color: #eef;
-}
-
-#portraitArtOverlay.inventory {
-    color: #fc8;
-}
-
-#portraitArtOverlay.erokPet,
-#portraitArtOverlay.erokIdle {
-    color: #ffd68a;
-    top: 104px; /* lazy fix for clipping over border */
-}
-
-#portraitArtOverlay.deathVampire{
-    color: #f0f;
-    top: 135px; /* lazy fix for vampire portrait positioning */
-    left: 20px;
-}
-
-#portraitArtOverlay.pigeon {
-    color: rgb(79, 194, 146);
 }
 
 .hidden {
@@ -1982,19 +1757,15 @@ a:link {
 #party          { grid-area: party; overflow: hidden; }
 #rightSidebar   { grid-area: rightSidebar; }
 #playerInput    { grid-area: playerInput; }
-#viewport {
-    grid-area: viewport;
-    background-image: url('assets/backgrounds/bg1.png');
-    background-size: 1472px 341px;
-    background-repeat: repeat-x;
-    background-position: 0px 0px;
-    position: relative;
-    overflow: hidden;
-}
-#bottomBar     {
+#viewport       { grid-area: viewport; }
+#bottomBar {
     grid-area: bottomBar;
     display: flex;
     flex-direction: column;
+}
+
+#topLeft {
+    overflow: hidden;
 }
 
 @keyframes nowPlaying_notes {
@@ -2274,7 +2045,6 @@ a:link {
     color: #000;
 }
 
-#viewport > .layer,
 #viewport > #animation,
 #viewport > #animTorch,
 #viewport > #menu,
@@ -2924,6 +2694,9 @@ a:link {
     &.items-lodeGun .icon {
         background-image: url(assets/interface/items/lode-gun.png);
     }
+    &.items-ballzooka .icon {
+        background-image: url(assets/interface/items/ballzooka.png);
+    }
 
     /** Weapons Section **/
     &.weapons-fingerNail .icon {
@@ -3384,145 +3157,12 @@ a:link {
     color: #EC4134;
 }
 
-/**
-    * Rendered scene class names
-    * These are derived from the names in sceneRenderer.getEntityName()
-    * which is also used to identify specific pieces of sceneArt
-    *
-    * The renderer adds <span> elements around each rendered character with
-    * a "scene_character_" prefix. So for example, a "wall"
-    */
-.scene_character_darkness {
-    color: #0009 !important;
-    filter: blur(2px);
-}
-
-.scene_character_void {
-    color: #000 !important;
-}
-
-.scene_character_iceWall {
-    color: #e8e8ff !important;
-    opacity: .8;
-}
-
-.scene_character_crackedFloorSlight,
-.scene_character_crackedFloor,
-.scene_character_crackedFloorSevere {
-    color: #000;
-}
-
-.layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble1,
-.layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble2 {
-    display: initial;
-}
-
-.scene_character_rubble1,
-.scene_character_rubble2 {
-    display: none;
-    background-color: transparent !important;
-    mix-blend-mode: lighten;
-    opacity: .2;
-}
-
-@keyframes scene_healingTileGlow {
-    0% {
-        color: #6CFF74;
-    }
-    25% {
-        color: #02B60E;
-    }
-    50% {
-        color: #02868C;
-    }
-    75% {
-        color: #00920A;
-    }
-    100% {
-        color: #8DD702;
-    }
-}
-
-.scene_character_healingTile {
-    animation: scene_healingTileGlow 5s linear alternate infinite;
-}
-
-.scene_character_pit {
-    color: #6664;
-}
-
-@keyframes scene_exitGlow {
-    0% {
-        color: #FFF000;
-    }
-    25% {
-        color: #FF7400;
-    }
-    50% {
-        color: #FFF000;
-    }
-    75% {
-        color: #CD0074;
-    }
-    100% {
-        color: #FF0000;
-    }
-}
-
-.scene_character_exit {
-    animation-name: scene_exitGlow;
-    animation-duration: 5s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: linear;
-}
-
-@keyframes scene_treasureChestGlow {
-    0% {
-        color: #FFD700;
-    }
-    100% {
-        color: #FFF;
-    }
-}
-
-.scene_character_treasureChest {
-    animation-name: scene_treasureChestGlow;
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: ease-out;
-    background-color: #793311;
-    color: #ffd700;
-}
-
-.scene_character_destroyedTreasureChest {
-    color: #630;
-    background-color: transparent !important;
-}
-
-.scene_character_tardspireBanner {
-    color: #edc949 !important;
-    background: #000;
-    mix-blend-mode: luminosity;
-}
-
 .crater {
     color: #555;
 }
 
-.scene_character_crater {
-    color: #0009 !important;
-    background-color: transparent !important;
-}
-
 .bloodyCrater {
     color: #900;
-}
-
-.scene_character_bloodyCrater {
-    color: #9009 !important;
-    background-color: #3003 !important;
 }
 
 /* Tooltip styles */

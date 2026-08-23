@@ -17,7 +17,7 @@ function EntityMovementPlanner_distractedMovementTest()
         preferLeftTurnFirst: true,
     };
 
-    gameMap.addEntity(BuildMapEntityLemming(2, 2, 2));
+    gameMap.addEntity(BuildMapEntityLemming(), 2, 2, 2);
     gameMap.entities[0].testId = 1;
     gameMap.entities[0] = { ...gameMap.entities[0], ...commonSettings };
     gameMap.entities[0].setPatrolPoints(
@@ -30,7 +30,7 @@ function EntityMovementPlanner_distractedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(8, 5, 0));
+    gameMap.addEntity(BuildMapEntityLemming(), 8, 5, 0);
     gameMap.entities[1].testId = 2;
     gameMap.entities[1] = { ...gameMap.entities[1], ...commonSettings };
     gameMap.entities[1].setPatrolPoints(
@@ -43,7 +43,7 @@ function EntityMovementPlanner_distractedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(12, 5, 0));
+    gameMap.addEntity(BuildMapEntityLemming(), 12, 5, 0);
     gameMap.entities[2].testId = 3;
     gameMap.entities[2] = { ...gameMap.entities[2], ...commonSettings };
     gameMap.entities[2].setPatrolPoints(
@@ -56,7 +56,7 @@ function EntityMovementPlanner_distractedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(18, 2, 2));
+    gameMap.addEntity(BuildMapEntityLemming(), 18, 2, 2);
     gameMap.entities[3].testId = 4;
     gameMap.entities[3] = { ...gameMap.entities[3], ...commonSettings };
     gameMap.entities[3].setPatrolPoints(
@@ -69,7 +69,7 @@ function EntityMovementPlanner_distractedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(22, 2, 2));
+    gameMap.addEntity(BuildMapEntityLemming(), 22, 2, 2);
     gameMap.entities[4].testId = 5;
     gameMap.entities[4] = { ...gameMap.entities[4], ...commonSettings };
     gameMap.entities[4].setPatrolPoints(
@@ -82,7 +82,7 @@ function EntityMovementPlanner_distractedMovementTest()
         ]
     );
 
-    gameMap.addEntity(BuildMapEntityLemming(28, 5, 0));
+    gameMap.addEntity(BuildMapEntityLemming(), 28, 5, 0);
     gameMap.entities[5].testId = 6;
     gameMap.entities[5] = { ...gameMap.entities[5], ...commonSettings };
     gameMap.entities[5].setPatrolPoints(
@@ -105,7 +105,7 @@ function EntityMovementPlanner_distractedMovementTest()
 
 
     const runner = {
-        ...MapEntityBuilder("creature", 2, 1, 2),
+        ...MapEntityBuilder("creature"),
         testId: 7,
         output: [],
         preferLeftTurnFirst: true,
@@ -157,7 +157,7 @@ function EntityMovementPlanner_distractedMovementTest()
 
     for (let i = 0; i < 128; i++) {
         if (i === 1) {
-            gameMap.addEntity(runner);
+            gameMap.addEntity(runner, 2, 1, 2);
             console.log("🏃‍♂️ Runner has entered the map", { id: runner.testId });
         }
 

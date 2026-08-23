@@ -4,7 +4,7 @@ const menu = new Menu();
 menu.setMenuElement(document.getElementById("menu"));
 menu.setDefaultItemsPerPage(15);
 menu.setOnOpen(() => {
-    document.getElementById("game").classList.add("hidden");
+    document.getElementById("scene").classList.add("hidden");
     InventorySidebar.close();
     GameControl.update();
     updateViewportHeader();
@@ -23,7 +23,7 @@ menu.setOnCancel(() => {
     updateViewportHeader();
 });
 menu.setOnClose(() => {
-    document.getElementById("game").classList.remove("hidden");
+    document.getElementById("scene").classList.remove("hidden");
     InventorySidebar.open("main");
     GameControl.update();
     updateViewportHeader();
@@ -121,7 +121,7 @@ menu.setMenus({
         title: "GAME SETTINGS",
         onOpen: () => {
             GameSettingsButton.opened();
-            Portrait.show("settings");
+            Portrait.show("settings", { text: "Settings" });
         },
         onClose: () => {
             GameSettingsButton.closed();
@@ -587,7 +587,7 @@ menu.setMenus({
             menu.open(selectedOptionId);
         },
         onOpen: () => {
-            Portrait.show("inventory");
+            Portrait.show("inventory", { text: "Inventory" });
         },
         onClose: () => {
             Portrait.hide();
@@ -1209,7 +1209,7 @@ menu.setMenus({
     merchant: {
         title: "MERCHANT",
         onOpen: (menuData) => {
-            Portrait.show("merchant", menuData.merchant.leader.color);
+            Portrait.show("merchant", { text: "Merchant" });
             menuData.merchant.leader.say("Welcome to SlobMart!", false);
             music.play("merchantTheme");
         },
@@ -2026,7 +2026,7 @@ menu.setMenus({
                 return;
             }
 
-            Portrait.show("gambler", gambler.leader.color);
+            Portrait.show("gambler", { text: "Gambler" });
             const playerHasGamblerRingEquipped = Object
                 .values(playerEntity.leader.equipped.ring)
                 .includes("ringGamble");
@@ -2116,7 +2116,7 @@ menu.setMenus({
         onOpen: () => {
             const erok = menu.getMenuData().erok;
             if (! erok.isPetting) {
-                Portrait.show("erokIdle", erok.leader.color);
+                Portrait.show("erokIdle", { text: "Erok The Dog" });
             }
 
             music.play("erokTheme");
@@ -2165,7 +2165,7 @@ menu.setMenus({
 
             if (selectedOptionId === "pet") {
                 erok.isPetting = true;
-                Portrait.show("erokPet", erok.leader.color);
+                Portrait.show("erokPet", { text: "Erok The Dog" });
                 erok.leader.say(
                     "holy crap oh my god pet me pet me oh my god holy shit " +
                     "oh god oh fuck oh god",
@@ -2173,16 +2173,9 @@ menu.setMenus({
                 );
                 setTimeout(() => {
                     erok.isPetting = false;
-                    const showErok =
-                        menu.isOpen() &&
-                        // @TODO Use a flag instead of the title text
-                        menu.getCurrentMenuData()?.title === "EROK";
-
-                    if (showErok) {
-                        Portrait.show("erokIdle", erok.leader.color);
-                    }
                     menu.render();
                 }, 2000);
+
             } else if (selectedOptionId === "leave") {
                 menu.close();
             }
@@ -2193,7 +2186,7 @@ menu.setMenus({
         title: "CARRIER PIGEON",
         onOpen: () => {
             const { pigeon, message } = menu.getMenuData();
-            Portrait.show("pigeon", pigeon.leader.color);
+            Portrait.show("pigeon", { text: "Messenger Pigeon" });
             pigeon.leader.say(
                 "Coo coo! " + (
                     message
@@ -2270,7 +2263,7 @@ menu.setMenus({
         title: "TREASURE CHEST",
         defaultCloseOption: "resistTemptation",
         onOpen: () => {
-            Portrait.show("chest");
+            Portrait.show("chest", { text: "Treasure Chest" });
         },
         onClose: () => {
             Portrait.hide();

@@ -1,11 +1,11 @@
 // Tests MapEntity inventory management
+// @TODO See if this test is even functional anymore. Party members aren't used
 function GameMap_mapEntityInventoryManagement()
 {
     const testMap = new GameMap(50, 40);
     testMap.fill(0, 0, 12, 22, "wall");
     testMap.fill(1, 1, 11, 21, "floor");
 
-    const mapEntities = [];
     const wanderingImpParty = [];
 
     wanderingImpParty.push(
@@ -52,10 +52,8 @@ function GameMap_mapEntityInventoryManagement()
             .build()
     );
 
-    mapEntities.push(MapEntityBuilder("wanderingImp", 1, 1));
-    mapEntities.push(MapEntityBuilder("treasureChest", 14, 7));
-
-    testMap.setEntities(mapEntities);
+    testMap.addEntity(MapEntityBuilder("wanderingImp"), 1, 1);
+    testMap.addEntity(MapEntityBuilder("treasureChest"), 14, 7);
 
     test(
         "No inventory has been set",

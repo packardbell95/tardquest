@@ -38,6 +38,15 @@
  *
  *   SET MAP FLOOR
  *   /setfloor [floor number], eg: /setfloor 13
+ *
+ *   DEMO MAP: HALLWAY of DOOM
+ *   /demomap hod
+ *
+ *   DEMO MAP: MOSS DUNGEON
+ *   /demomap moss
+ *
+ *   DEMO MAP: GO UNDER THE SEA
+ *   /demomap bb
  */
 const Cheat = {
     isCheat: function (input) {
@@ -104,8 +113,8 @@ const Cheat = {
             }
 
             const entity = entityType === "v"
-                ? entityFunction(floor, coordinate.x, coordinate.y)
-                : entityFunction(coordinate.x, coordinate.y);
+                ? entityFunction(floor)
+                : entityFunction();
 
             if (entity.type === "pigeon") {
                 entity.message = randomEntry([
@@ -121,14 +130,14 @@ const Cheat = {
                 ]);
             }
 
-            MAP.addEntity(entity);
+            MAP.addEntity(entity, coordinate.x, coordinate.y);
             playSFX("healingTile");
             render();
 
             Cheat._log(
-                `<span class="${entity.getSceneArtId()}">` +
+                `<span class="${entity?.type || ""}">` +
                 `${entity.getDisplayName()}</span> spawned at ` +
-                `<span class="good">(${entity.x}, ${entity.y}).</span>`
+                `<span class="good">(${coordinate.x}, ${coordinate.y}).</span>`
             );
         },
 
@@ -217,8 +226,7 @@ const Cheat = {
                 return;
             }
 
-            playerEntity.x = x;
-            playerEntity.y = y;
+            playerEntity.teleportTo(x, y);
             playSFX("healingTile");
 
             // Fire onEnter events for anything that the player may land on
@@ -360,8 +368,8 @@ const Cheat = {
                     continue;
                 }
 
-                const npc = npcs.shift()(x, y);
-                MAP.addEntity(npc);
+                const npc = npcs.shift()();
+                MAP.addEntity(npc, x, y);
                 spawnedNpcNames.push(npc.getDisplayName());
 
                 if (npcs.length === 0) {
@@ -407,6 +415,31 @@ const Cheat = {
             Cheat._log(
                 `Moved to Floor ${floorNumber.toLocaleString(undefined)}.`
             );
+        },
+
+        demomap: function(mapName) {
+            if (mapName === "hod") {
+                Cheat._log("Entering the Hallway of Doom.");
+                TardQuestMapGenerator.generateHallwayOfDoom(MAP, 1);
+                MAP.refreshMinimap(true);
+                return;
+            }
+
+            if (mapName === "moss") {
+                Cheat._log("Entering the mossy crypt.");
+                TardQuestMapGenerator.generateRandomMossyDungeon(MAP, 1);
+                MAP.refreshMinimap(true);
+                return;
+            }
+
+            if (mapName === "bb") {
+                Cheat._log("Entering Bikini Bottom.");
+                TardQuestMapGenerator.generateBikiniBottom(MAP, 1);
+                MAP.refreshMinimap(true);
+                return;
+            }
+
+            Cheat._logError("Try naming a map that actually exists, DUMBASS.");
         },
     },
 };

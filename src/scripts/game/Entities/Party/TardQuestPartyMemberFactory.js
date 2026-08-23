@@ -8,16 +8,15 @@ const TardQuestPartyMemberFactory = {
      * PLAYER
      */
     player: function(baseStats = {}) {
-        const partyMember = this._buildPartyMember("Player");
-        partyMember.type = "player";
-        partyMember.color = "#2aff00";
+        const partyMember = this._buildPartyMember("Player", "player");
+
         partyMember.stats = structuredClone(baseStats);
         partyMember.traits.canUse = true;
         partyMember.traits.sightRange = 2;
         partyMember.traits.fieldOfView = 90;
         partyMember.traits.hearingRange = 2;
         partyMember.traits.persuasionAttempts = 2;
-
+        partyMember.portrait.tint = "#bbffff";
         partyMember.voice = {
             pitch: 38,
             speed: 153,
@@ -34,9 +33,8 @@ const TardQuestPartyMemberFactory = {
      * MERCHANT
      */
     merchant: function() {
-        const partyMember = this._buildPartyMember("Merchant");
-        partyMember.type = "merchant";
-        partyMember.color = "#f7f";
+        const partyMember = this._buildPartyMember("Merchant", "merchant");
+
         partyMember.stats = {
             progression: {
                 level: 7,
@@ -56,6 +54,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.traits.sightRange = 5;
         partyMember.traits.fieldOfView = 90;
         partyMember.traits.hearingRange = 4;
+        partyMember.portrait.tint = "#ff77ff";
         partyMember.voice = {
             pitch: 48,
             speed: 45,
@@ -72,9 +71,7 @@ const TardQuestPartyMemberFactory = {
      * GAMBLER
      */
     gambler: function() {
-        const partyMember = this._buildPartyMember("Gambler");
-        partyMember.type = "gambler";
-        partyMember.color = "#ffd700";
+        const partyMember = this._buildPartyMember("Gambler", "gambler");
         partyMember.stats = {
             progression: {
                 level: 3,
@@ -94,6 +91,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.traits.sightRange = 4;
         partyMember.traits.fieldOfView = 90;
         partyMember.traits.hearingRange = 9;
+        partyMember.portrait.tint = "#ffcc00";
         partyMember.voice = {
             pitch: 26,
             speed: 55,
@@ -110,9 +108,7 @@ const TardQuestPartyMemberFactory = {
      * EROK
      */
     erok: function() {
-        const partyMember = this._buildPartyMember("Erok");
-        partyMember.type = "erok";
-        partyMember.color = "#ffd68a";
+        const partyMember = this._buildPartyMember("Erok", "erok");
         partyMember.stats = {
             progression: {
                 level: 1,
@@ -132,6 +128,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.traits.sightRange = 4;
         partyMember.traits.fieldOfView = 120;
         partyMember.traits.hearingRange = 8;
+        partyMember.portrait.tint = "#ffd68a";
         partyMember.voice = {
             pitch: 200,
             speed: 50,
@@ -168,9 +165,7 @@ const TardQuestPartyMemberFactory = {
      * (CARRIER) PIGEON
      */
     pigeon: function() {
-        const partyMember = this._buildPartyMember("Carrier Pigeon");
-        partyMember.type = "pigeon";
-        partyMember.color = "#4fc292";
+        const partyMember = this._buildPartyMember("Carrier Pigeon", "pigeon");
         partyMember.stats = {
             progression: {
                 level: 1,
@@ -191,6 +186,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.traits.fieldOfView = 120;
         partyMember.traits.hearingRange = 8;
         partyMember.traits.isFlying = true;
+        partyMember.portrait.tint = "#4fc292";
         partyMember.voice = {
             pitch: 89,
             speed: 70,
@@ -211,9 +207,8 @@ const TardQuestPartyMemberFactory = {
      * SNAIL SENTINEL
      */
     snailSentinel: function(level = 1) {
-        const partyMember = this._buildPartyMember("Snail Sentinel");
-        partyMember.type = "snailSentinel";
-        partyMember.color = "#f78080";
+        const partyMember =
+            this._buildEnemyPartyMember("Snail Sentinel", "snailSentinel");
 
         partyMember.stats = {
             progression: {
@@ -269,9 +264,8 @@ const TardQuestPartyMemberFactory = {
      * STUPID DOG
      */
     stupidDog: function(level = 1) {
-        const partyMember = this._buildPartyMember("Stupid Dog");
-        partyMember.type = "stupidDog";
-        partyMember.color = "#f78080";
+        const partyMember =
+            this._buildEnemyPartyMember("Stupid Dog", "stupidDog");
 
         partyMember.stats = {
             progression: {
@@ -322,9 +316,7 @@ const TardQuestPartyMemberFactory = {
      * WANG RAT
      */
     wangRat: function(level = 1) {
-        const partyMember = this._buildPartyMember("Wang Rat");
-        partyMember.type = "wangRat";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember("Wang Rat", "wangRat");
 
         partyMember.stats = {
             progression: {
@@ -375,9 +367,10 @@ const TardQuestPartyMemberFactory = {
      * KEEPER OF THE TOILET BOWL
      */
     keeperOfTheToiletBowl: function(level = 1) {
-        const partyMember = this._buildPartyMember("Keeper of the Toilet Bowl");
-        partyMember.type = "keeperOfTheToiletBowl";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember(
+            "Keeper of the Toilet Bowl",
+            "keeperOfTheToiletBowl"
+        );
 
         partyMember.stats = {
             progression: {
@@ -435,9 +428,10 @@ const TardQuestPartyMemberFactory = {
      * MYSTERIOUS SCOOTER
      */
     mysteriousScooter: function(level = 1) {
-        const partyMember = this._buildPartyMember("Mysterious Scooter");
-        partyMember.type = "mysteriousScooter";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember(
+            "Mysterious Scooter",
+            "mysteriousScooter"
+        );
 
         partyMember.stats = {
             progression: {
@@ -501,9 +495,10 @@ const TardQuestPartyMemberFactory = {
      * BADASS FLAMING SKELETON
      */
     badassFlamingSkeleton: function(level = 1) {
-        const partyMember = this._buildPartyMember("Badass Flaming Skeleton");
-        partyMember.type = "badassFlamingSkeleton";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember(
+            "Badass Flaming Skeleton",
+            "badassFlamingSkeleton"
+        );
 
         partyMember.stats = {
             progression: {
@@ -557,9 +552,10 @@ const TardQuestPartyMemberFactory = {
      * FRIDGE of FORGOTTEN LEFTOVERS
      */
     fridgeOfForgottenLeftovers: function(level = 1) {
-        const partyMember = this._buildPartyMember("Fridge of Forgotten Leftovers");
-        partyMember.type = "fridgeOfForgottenLeftovers";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember(
+            "Fridge of Forgotten Leftovers",
+            "fridgeOfForgottenLeftovers"
+        );
 
         partyMember.stats = {
             progression: {
@@ -613,9 +609,7 @@ const TardQuestPartyMemberFactory = {
      * LUGHEAD
      */
     lughead: function(level = 1) {
-        const partyMember = this._buildPartyMember("Lughead");
-        partyMember.type = "lughead";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember("Lughead", "lughead");
 
         partyMember.stats = {
             progression: {
@@ -670,9 +664,10 @@ const TardQuestPartyMemberFactory = {
      * PISSED-OFF POULTRY
      */
     pissedOffPoultry: function(level = 1) {
-        const partyMember = this._buildPartyMember("Pissed-Off Poultry");
-        partyMember.type = "pissedOffPoultry";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember(
+            "Pissed-Off Poultry",
+            "pissedOffPoultry"
+        );
 
         partyMember.stats = {
             progression: {
@@ -723,9 +718,8 @@ const TardQuestPartyMemberFactory = {
      * KRAMPUS ELF
      */
     krampusElf: function(level = 1) {
-        const partyMember = this._buildPartyMember("Krampus Elf");
-        partyMember.type = "krampusElf";
-        partyMember.color = "#f78080";
+        const partyMember =
+            this._buildEnemyPartyMember("Krampus Elf", "krampusElf");
 
         partyMember.stats = {
             progression: {
@@ -767,9 +761,7 @@ const TardQuestPartyMemberFactory = {
      * MIMIC
      */
     mimic: function(level = 1) {
-        const partyMember = this._buildPartyMember("Mimic");
-        partyMember.type = "mimic";
-        partyMember.color = "#f78080";
+        const partyMember = this._buildEnemyPartyMember("Mimic", "mimic");
 
         partyMember.stats = {
             progression: {
@@ -812,9 +804,10 @@ const TardQuestPartyMemberFactory = {
      * VAMPIRE
      */
     vampire: function(level = 1) {
-        const partyMember = this._buildPartyMember("Gay Cocksucking Vampire");
-        partyMember.type = "vampire";
-        partyMember.color = "#f0f";
+        const partyMember = this._buildEnemyPartyMember(
+            "Gay Cocksucking Vampire",
+            "vampire"
+        );
 
         partyMember.stats = {
             progression: {
@@ -837,7 +830,7 @@ const TardQuestPartyMemberFactory = {
         partyMember.traits.fieldOfView = 90;
         partyMember.traits.hearingRange = 7;
         partyMember.traits.isFlying = true;
-
+        partyMember.portrait.tint = "#ff00ff";
         partyMember.voice = {
             pitch: 92,
             speed: 80,
@@ -853,14 +846,26 @@ const TardQuestPartyMemberFactory = {
         return partyMember;
     },
 
-    _buildPartyMember: function(type) {
-        const partyMember = PartyMemberBuilder(type);
+    _buildPartyMember: function(name, type) {
+        const partyMember = PartyMemberBuilder(name);
+        partyMember.type = type;
+
+        partyMember.portrait.name = partyMember.type;
 
         partyMember.onDie = function() {
             if (this.$stats instanceof Element) {
                 this.$stats.classList.add("dead");
             }
         }
+
+        return partyMember;
+    },
+
+    _buildEnemyPartyMember: function(name, type) {
+        const partyMember = this._buildPartyMember(name, type);
+
+        partyMember.portrait.tint = "#f78080";
+        partyMember.portrait.flipped = true;
 
         return partyMember;
     },

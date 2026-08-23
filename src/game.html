@@ -28,7 +28,15 @@
     <div id="interface" class="hidden">
         <div id="battleLog"></div>
         <div id="topLeft">
-            <pre id="portraitArtOverlay" class="portrait-art hidden"></pre>
+            <div id="portraitContainer" class="hidden">
+                <div
+                    id="portraitHeader"
+                    class="ui-header space-between"
+                >
+                    Portrait
+                </div>
+                <canvas id="portraitDisplay" width="220" height="168"></canvas>
+            </div>
             <div id="minimapContainer">
                 <div id="minimapHeader" class="ui-header space-between">
                     <span>Dungeon Floor <span id="dungeonFloor">--</span></span>
@@ -278,7 +286,7 @@
         </div>
         <div id="viewport">
             <div class="ui-header space-between">Viewport</div>
-            <div id="game" class="render"></div>
+            <canvas id="scene" class="render" width="368" height="348"></canvas>
             <video
                 id="viewportAnimation"
                 width="368"
@@ -656,16 +664,16 @@
     <script src="scripts/Modal.js"></script>
     <script src="scripts/Music.js"></script>
     <script src="scripts/PlayerInput.js"></script>
+    <script src="scripts/Portrait.js"></script>
     <script src="scripts/sam.js"></script>
     <script src="scripts/Tooltip.js"></script>
     <script src="data/inventory/armor.js"></script>
     <script src="data/inventory/items.js"></script>
     <script src="data/inventory/rings.js"></script>
     <script src="data/inventory/weapons.js"></script>
-    <script src="data/enemyart.js"></script>
     <script src="data/music.js"></script>
     <script src="data/portraits.js"></script>
-    <script src="data/sceneArt.js"></script>
+    <script src="data/sprites.js"></script>
     <script src="data/title-screen.js"></script>
     <script src="scripts/InventorySidebar.js"></script>
     <script src="scripts/ItemUsageUiRouter.js"></script>
@@ -728,12 +736,20 @@
                                 cue.text.slice(0, 1).toUpperCase() +
                                 cue.text.slice(1);
 
-                            ViewportAnimation.events[eventName]
-                                ? ViewportAnimation.events[eventName]?.()
-                                : console.error(
+                            if (! ViewportAnimation.events[eventName]) {
+                                console.error(
                                     "🎬️ Event not found!",
                                     { eventName }
                                 );
+                                continue;
+                            }
+
+                            const mediaTime = $video.currentTime;
+                            const cueLatenessMs =
+                                Math.max(0, (mediaTime - cue.startTime) * 1000);
+
+                            ViewportAnimation.events[eventName]
+                                ?.({ cue, mediaTime, cueLatenessMs });
                         }
                     };
 
@@ -855,90 +871,10 @@
         document.querySelectorAll("[data-tooltiphtml]")
             .forEach($e => Tooltip.initialize($e));
 
-        const Portrait = {
-            activeFrame: 0,
-            frameAdvance: 1,
-            timer: null,
-            hide: () => {
-                clearTimeout(Portrait.timer);
-                document.getElementById("portraitArtOverlay")
-                    .classList.add("hidden");
-                document.getElementById("minimapContainer")
-                    .classList.remove("invisible");
-            },
-            show: (portraitName, colorOverride = null, flipped = false) => {
-                const $overlay = document.getElementById("portraitArtOverlay");
-                if (! $overlay) {
-                    console.error("Could not find portraitArtOverlay");
-                    return;
-                }
-
-                $overlay.style.color = colorOverride || "";
-
-                const animation = Portrait.animations =
-                    window.PORTRAIT_ANIMATIONS[portraitName];
-                if (typeof animation !== "object") {
-                    console.error("Could not find specified portrait", {
-                        portraitName,
-                    });
-                    return;
-                }
-
-                document.getElementById("minimapContainer")
-                    .classList.add("invisible");
-
-                clearTimeout(Portrait.timer);
-                Portrait.activeFrame = 0;
-                Portrait.frameAdvance = 1;
-                const zoomClass = animation.zoom2x ? " zoom2x" : "";
-                const flippedClass = flipped ? " flipped" : "";
-                $overlay.className =
-                    `portrait-art ${portraitName}${zoomClass}${flippedClass}`
-
-                function drawFrame() {
-                    const formattedFrame =
-                        ('\n'.repeat(animation.padding.y)) +
-                        (animation.frames[Portrait.activeFrame]
-                            .split("\n")
-                            .map(l => " ".repeat(animation.padding.x || 0) + l)
-                            .join('\n')
-                    );
-
-                    $overlay.textContent = formattedFrame;
-
-                    const frameDelayMs =
-                        typeof animation.frameDelayMs === "number"
-                            ? animation.frameDelayMs
-                            : animation.frameDelayMs[Portrait.activeFrame];
-
-                    Portrait.timer = setTimeout(drawFrame, frameDelayMs);
-                    Portrait.activeFrame += Portrait.frameAdvance;
-
-                    const endOfAnimation =
-                        Portrait.frameAdvance > 0 &&
-                        Portrait.activeFrame >= animation.frames.length;
-                    if (endOfAnimation) {
-                        if (animation.playbackMode === "repeat") {
-                            Portrait.activeFrame = 0;
-                        } else if (animation.playbackMode === "bidirectional") {
-                            Portrait.activeFrame--;
-                            Portrait.frameAdvance = -1;
-                        } else {
-                            clearTimeout(Portrait.timer);
-                        }
-                    }
-
-                    const startOfAnimation =
-                        Portrait.frameAdvance < 0 &&
-                        Portrait.activeFrame < 0;
-                    if (startOfAnimation) {
-                        Portrait.activeFrame++;
-                        Portrait.frameAdvance = 1;
-                    }
-                }
-                drawFrame();
-            },
-        };
+        Portrait.initialize(
+            document.getElementById("portraitContainer"),
+            TARDQUEST_PORTRAIT_ANIMATIONS
+        );
 
         const SpeechSynthesizer = {
             enabled: true,
@@ -1455,7 +1391,8 @@
         });
 
         const playerEntity = (() => {
-            const playerEntity = MapEntityBuilder("player", 1, 1);
+            const playerEntity = MapEntityBuilder("player");
+            playerEntity.turningDirection = null;
 
             playerEntity.inventory.contents.items = {
                 canOfHamms: 2,
@@ -1532,14 +1469,28 @@
 
             playerEntity.onDie = function(killedByEntity) {
                 gameOver = true;
+                GameControl.disableControls();
+
                 animTorchEnd();
-                Portrait.show("death");
+                Portrait.show("death", { text: "Game Over" });
+
+                const animationName = currentEnemy?.id === "vampire"
+                    ? "deathVampire"
+                    : "death";
+                Portrait.show(animationName, { text: "Game Over" });
+
+                updateBattleLog(
+                    `Good job! <span class="action">You died</span> on ` +
+                    `<span class="action">floor ${floor}</span>`
+                );
+
+                setTimeout(() => TardBoard.openModal(), 3000);
+
                 render();
             };
 
             const playerPartyMember =
                 TardQuestPartyMemberFactory.player(baseStats);
-            playerPartyMember.color = "#bff";
 
             document.querySelector("#stats .core").dataset.partyMemberId =
                 playerPartyMember.id;
@@ -1617,10 +1568,11 @@
                 gameOver = true;
                 animTorchEnd();
                 // @TODO Track the enemy that killed the player with the BattleSystem
-                const deathPortrait = currentEnemy?.id === "vampire"
+                // Use the current enemy's portrait tinting here if applicable
+                const animationName = currentEnemy?.id === "vampire"
                     ? "deathVampire"
                     : "death";
-                Portrait.show(deathPortrait);
+                Portrait.show(animationName, { text: "Game Over" });
             };
 
             playerPartyMember.onGiveExperience = function() {
@@ -1682,10 +1634,20 @@
             ) {
                 if (previousRingId) {
                     InventorySidebar.refreshRing(previousRingId);
+                    const dynamicId = `${hand}-${previousRingId}`;
+                    this.parent.removeEnvironmentDynamics(dynamicId);
                 }
 
                 if (currentRingId) {
                     InventorySidebar.refreshRing(currentRingId);
+
+                    if (RINGS?.[currentRingId]?.environmentDynamics) {
+                        const dynamicId = `${hand}-${currentRingId}`;
+                        this.parent.applyEnvironmentDynamics(
+                            dynamicId,
+                            RINGS?.[currentRingId]?.environmentDynamics
+                        );
+                    }
                 }
 
                 this.parent.inventory?.onInventoryContentsChanged?.("rings");
@@ -1702,7 +1664,20 @@
                 return `You <span class="player lets-go">ヽ(°٢° )ノ</span>`;
             };
 
+            playerEntity.setTurningDirection = function(direction) {
+                this.turningDirection = direction;
+                MAP.entityChanged(playerEntity);
+            };
+
             playerEntity.getDisplayCharacter = function() {
+                if (this?.turningDirection) {
+                    return (
+                        this.turningDirection === "left"
+                            ? ["◤", "◥", "◢", "◣"][this.direction]
+                            : ["◥", "◢", "◣", "◤"][this.direction]
+                    ) || "?";
+                }
+
                 return ["▲", "▶", "▼", "◀"][this.direction] || "?";
             };
 
@@ -1784,21 +1759,21 @@
                     return;
                 }
 
-                // Bright, non-red colors to avoid confusing allies with enemies
-                const partyMemberPalette = [
-                    "#0080ff", "#00ffcc", "#00ffff", "#00ff00",
-                    "#ff00ff", "#ff8000", "#cc80ff", "#ffff00",
-                    "#ffcc00", "#ffccff", "#00ccff", "#ccff00",
+                // Bright, non-red tints to avoid confusing allies with enemies
+                const partyMemberTints = [
+                    "#0080ff", "#00ffcc", "#00ffff", "#00ff00", "#ff8000",
+                    "#cc80ff", "#ffff00", "#ffccff", "#00ccff", "#ccff00",
                 ];
 
-                const usedColors = this.party.map(e => e.color).filter(e => e);
-                const availableColors = partyMemberPalette.filter(e =>
-                    ! usedColors.includes(e)
-                );
+                const usedPortraitTints =
+                    this.party.map(e => e.portrait.tint).filter(e => e);
+                const availableTints = partyMemberTints
+                    .filter(e => ! usedPortraitTints.includes(e));
 
-                partyMember.color = availableColors.length > 0
-                    ? randomEntry(availableColors)
-                    : "beige";
+                partyMember.portrait.tint = availableTints.length > 0
+                    ? randomEntry(availableTints)
+                    : "white";
+                partyMember.portrait.flipped = false;
 
                 const $stats = this.getPartyMemberPlaceholder();
                 partyMember.$stats = $stats;
@@ -1840,7 +1815,10 @@
 
                 const $portrait = $stats.querySelector(".portrait");
                 $portrait.classList.add(partyMember.type);
-                $portrait.style.setProperty("--tint-color", partyMember.color);
+                $portrait.style.setProperty(
+                    "--tint-color",
+                    partyMember.portrait.tint
+                );
 
                 const $name = $stats.querySelector(".name");
                 const level = partyMember.stats.progression.level;
@@ -2264,6 +2242,9 @@
             }
 
             music.stop();
+            SceneRenderer.fadeCeilingDarkness(1);
+            SceneRenderer.fadeWallDarkness(1);
+            SceneRenderer.fadeEntityDarkness(1);
 
             ViewportAnimation.play(
                 "battle-start-curtain-drop.webm",
@@ -2274,7 +2255,8 @@
                     onCurtainClose: () => {
                         console.log("🎭️ Curtain has closed");
                         enemyEntity.onEncounter?.();
-                        SceneRenderer.enemyLayerEnabled = true;
+                        SceneRenderer.setBattleParty(enemyEntity);
+                        SceneRenderer.disableMapSprites();
                         render();
                     },
                     onEnd: () => {
@@ -2295,7 +2277,7 @@
 
                 const canMove = partyMember && ! partyMember.isDead();
                 if (canMove) {
-                    Portrait.show(partyMember.type, partyMember.color);
+                    Portrait.showPartyMember(partyMember);
                     this.playerEntity?.highlightPartyMember?.(partyMember.id);
                     break;
                 }
@@ -2357,7 +2339,7 @@
 
             const index = this.playerPartyMemberIndex;
             const partyMember = this.playerEntity.party[index];
-            Portrait.show(partyMember.type, partyMember.color);
+            Portrait.showPartyMember(partyMember);
             this.playerEntity?.highlightPartyMember?.(partyMember.id);
             BattleQueueSidebar.refresh();
             GameControl.showPlayerPartySection();
@@ -2367,7 +2349,7 @@
 
         BattleSystem.onRequeueMove = function(playerPartyMemberIndex) {
             const partyMember = this.playerEntity.party[playerPartyMemberIndex];
-            Portrait.show(partyMember.type, partyMember.color);
+            Portrait.showPartyMember(partyMember);
             this.playerEntity?.highlightPartyMember?.(partyMember.id);
             BattleQueueSidebar.refresh();
             GameControl.update();
@@ -2579,7 +2561,8 @@
             GameControl.clearEnemyPartySection(enemyEntity);
 
             const refreshUi = () => {
-                SceneRenderer.enemyLayerEnabled = false;
+                SceneRenderer.enableMapSprites();
+                SceneRenderer.clearBattleParty();
                 playerEntity.purgeDeadPartyMembers();
                 enemyEntity.purgeDeadPartyMembers();
 
@@ -2596,6 +2579,10 @@
                 enemyEntity.onEncounterEnd?.();
                 refreshUi();
                 BattleQueueSidebar.close();
+                SceneRenderer.fadeCeilingDarkness(0);
+                SceneRenderer.fadeWallDarkness(0);
+                SceneRenderer.fadeEntityDarkness(0);
+                MAP.refreshMinimap(true);
                 render();
             };
 
@@ -2633,7 +2620,8 @@
                                     playerEntity,
                                     enemyEntity
                                 );
-                                SceneRenderer.enemyLayerEnabled = false;
+                                SceneRenderer.enableMapSprites();
+                                SceneRenderer.clearBattleParty();
                                 render();
                             },
                             onCurtainOpening: () => {
@@ -2690,12 +2678,7 @@
                 ? GameControl.showEnemyPartySection()
                 : GameControl.showPlayerPartySection();
 
-            // @TODO Handle the enemy color on the actor, not here as a fallback
-            Portrait.show(
-                move.actor.type,
-                move.actor.color || "#f78080",
-                isEnemy
-            );
+            Portrait.showPartyMember(move.actor);
             move.actor?.parent?.highlightPartyMember?.(move.actor.id);
             BattleQueueSidebar.highlight(move.actor.id, move?.target?.id);
 
@@ -2716,24 +2699,16 @@
         ) {
             function onEnd() {
                 const id = target.id;
-                const selector =
-                    `.layer.enemy [data-party-member-id="${id}"]`;
-                const $target = document.querySelector(selector);
-                if ($target) {
-                    SceneRenderer.drawSprite(
-                        $target,
-                        window.ENEMY_ART[target.type]
-                    );
 
-                    $target.classList.remove(
-                        "poked",
-                        "crt-flashed",
-                        "dance-club-hits"
-                    );
-                }
-
+                SceneRenderer.resetBattleSpriteAnimation(id);
+                SceneRenderer.clearBattleSpriteEffect(id);
                 Portrait.hide();
                 actor?.parent?.highlightPartyMember?.();
+
+                if (attackWasFatal) {
+                    SceneRenderer.hideBattleSprite(id);
+                }
+
                 console.info("Playback complete!");
                 render();
                 SceneRenderer.highlightEntities();
@@ -2760,17 +2735,32 @@
                 ViewportAnimation.play(
                     animation,
                     {
-                        onAttackPeak: () => {
+                        onAttackPeak: ({
+                            cue,
+                            mediaTime,
+                            cueLatenessMs,
+                        } = {}) => {
                             const id = target.id;
-                            const selector =
-                                `.layer.enemy [data-party-member-id="${id}"]`;
+                            const timingCorrectionMs =
+                                Math.min(cueLatenessMs, 50);
 
-                            const $target = document.querySelector(selector);
-                            SceneRenderer.drawSprite(
-                                $target,
-                                window.ENEMY_ART[`${target.type}Hurt`]
+                            console.debug(
+                                "Attack peak timing",
+                                {
+                                    id,
+                                    cueStartTime: cue?.startTime,
+                                    mediaTime,
+                                    cueLatenessMs,
+                                }
                             );
-                            $target.classList.add("damaged");
+
+                            // @TODO Use fatal animation on final blow
+                            SceneRenderer.playBattleSpriteReaction(
+                                id,
+                                "hurt",
+                                "damageReaction",
+                                performance.now() - timingCorrectionMs
+                            );
 
                             target.updateHp();
 
@@ -2786,19 +2776,11 @@
                         onCrtFlash: () => {
                             console.log("📸 CRT flash!");
                             const id = target.id;
-                            const selector =
-                                `.layer.enemy [data-party-member-id="${id}"]`;
-                            const $target = document.querySelector(selector);
-                            if (! $target) {
-                                console.warn(
-                                    "No target element found",
-                                    { target }
-                                );
-                                return;
-                            }
-
-                            $target.classList.remove("crt-flashed");
-                            $target.classList.add("crt-flashed");
+                            SceneRenderer.playBattleSpriteReaction(
+                                id,
+                                "hurt",
+                                "crtFlash"
+                            );
                         },
                         // Note that "poke" is used by the fingerNail which does
                         // not have an attackPeak event, so target statuses are
@@ -2806,15 +2788,8 @@
                         onPoke: () => {
                             console.log("🍢 Poked!");
                             const id = target.id;
-                            const selector =
-                                `.layer.enemy [data-party-member-id="${id}"]`;
-
-                            const $target = document.querySelector(selector);
-                            SceneRenderer.drawSprite(
-                                $target,
-                                window.ENEMY_ART[`${target.type}Hurt`]
-                            );
-                            $target.classList.add("poked");
+                            SceneRenderer
+                                .playBattleSpriteReaction(id, "hurt", "poke");
 
                             target.updateHp();
 
@@ -2830,19 +2805,9 @@
                         onDanceClubHits: () => {
                             console.log("🪩 Dance club hit!");
                             const id = target.id;
-                            const selector =
-                                `.layer.enemy [data-party-member-id="${id}"]`;
-                            const $target = document.querySelector(selector);
-                            if (! $target) {
-                                console.warn(
-                                    "No target element found",
-                                    { target }
-                                );
-                                return;
-                            }
 
-                            $target.classList.remove("dance-club-hits");
-                            $target.classList.add("dance-club-hits");
+                            SceneRenderer
+                                .playBattleSpriteEffect(id, "danceClubHits");
                         },
                         onEnd,
                     }
@@ -3036,7 +3001,8 @@
             updateBattleLog(`${actorName} ${verb} ${targetName} ${message}!`);
         };
 
-        BattleSystem.onRunEnd = function(actor, successful) {
+        BattleSystem.onRunEnd = function(actor, xsuccessful) {
+            successful = true;
             const actorIsInPlayerParty =
                 playerEntity.party.some(e => e.id === actor.id);
             const actorClass = actorIsInPlayerParty ? "friendly" : "enemy";
@@ -3142,6 +3108,7 @@
             runFailed: new Audio("audio/sfx/runFailed.ogg"),
             pitDrop: new Audio("audio/sfx/pitDrop.ogg"),
             fly: new Audio("audio/sfx/fly.ogg"),
+            demo01Pickup: new Audio("audio/sfx/demo-01-pickup.ogg"),
         };
 
         const sfxAmb = {
@@ -3192,14 +3159,14 @@
             }
         };
 
-        MAP.addEntity(playerEntity);
+        MAP.addEntity(playerEntity, 1, 1);
         MAP.setMinimap(document.getElementById("minimap"));
 
         const music = new Music(
             TARDQUEST_MUSIC_TRACKS,
             {
                 play: (trackId, info) => {
-                    const $nowPlaying = document.getElementById('nowPlaying');
+                    const $nowPlaying = document.getElementById("nowPlaying");
                     if (! $nowPlaying) {
                         console.error("Now Playing section not found");
                         return;
@@ -3211,7 +3178,7 @@
                 },
 
                 stop: () => {
-                    const $nowPlaying = document.getElementById('nowPlaying');
+                    const $nowPlaying = document.getElementById("nowPlaying");
                     if (! $nowPlaying) {
                         console.error("Now Playing section not found");
                         return;
@@ -3287,11 +3254,8 @@
             while (attempts++ < maxAttempts) {
                 TardQuestMapGenerator.generate(MAP, floor);
 
-                const player =
-                    MAP.entities.find(e => e.type === "player");
-                const exit =
-                    MAP.entities.find(e => e.type === "exit");
-
+                const player = MAP.entities.find(e => e.type === "player");
+                const exit = MAP.entities.find(e => e.type === "exit");
                 if (! player || ! exit) {
                     console.error("Failed to place entities", { player, exit });
                     continue;
@@ -3299,12 +3263,12 @@
 
                 const path =
                     MAP.findPath([player.x, player.y], [exit.x, exit.y]);
-
                 if (path === null) {
                     console.error("Failed to generate a traversable map");
                     continue;
                 }
 
+                MAP.refreshMinimap(true);
                 return;
             }
 
@@ -3458,35 +3422,90 @@
         }
 
         function updateViewportHeader() {
-            document.querySelector('#viewport .ui-header').textContent =
+            document.querySelector("#viewport .ui-header").textContent =
                 menu.getFullTitle() ?? "Viewport";
         }
 
+        const RenderProfiler = {
+            enabled: false,
+            count: 0,
+            reportEvery: 120,
+            totals: Object.create(null),
+            maximums: Object.create(null),
+
+            measure: function(name, callback) {
+                if (! this.enabled) {
+                    callback();
+                    return;
+                }
+
+                const startTimeMs = performance.now();
+                callback();
+                const elapsedMs = performance.now() - startTimeMs;
+
+                this.totals[name] = (this.totals[name] ?? 0) + elapsedMs;
+                this.maximums[name] =
+                    Math.max(this.maximums[name] ?? 0, elapsedMs);
+            },
+
+            complete: function() {
+                if (! this.enabled) {
+                    return;
+                }
+
+                this.count++;
+
+                if (this.count < this.reportEvery) {
+                    return;
+                }
+
+                const rows = Object.keys(this.totals).map(name => ({
+                    section: name,
+                    "average ms":
+                        Number((this.totals[name] / this.count).toFixed(3)),
+                    "maximum ms": Number(this.maximums[name].toFixed(3)),
+                })).sort((a, b) => b["average ms"] - a["average ms"]);
+
+                console.group("Game render profiling");
+                console.table(rows);
+                console.groupEnd();
+
+                this.count = 0;
+                this.totals = Object.create(null);
+                this.maximums = Object.create(null);
+            },
+        };
+
         function render() {
-            MAP.refreshMinimap();
-            updateBreathingSFX();
-            updateSkyboxPosition();
+            const renderStartTimeMs = performance.now();
+            RenderProfiler
+                .measure("refreshMinimap", () => MAP.refreshMinimap());
+            RenderProfiler
+                .measure("updateBreathingSFX", () => updateBreathingSFX());
+            RenderProfiler
+                .measure("updateSkyboxPosition", () => updateSkyboxPosition());
+            RenderProfiler
+                .measure("SceneRenderer", () => SceneRenderer.render(MAP));
+            RenderProfiler
+                .measure("torchOverlay", () => setTorchOverlayVisibility());
 
-            if (gameOver) {
-                GameControl.disableControls();
-
-                const deathPortrait = currentEnemy?.id === "vampire"
-                    ? "deathVampire"
-                    : "death";
-                Portrait.show(deathPortrait);
-
-                updateBattleLog(
-                    `Good job! <span class="action">You died</span> on ` +
-                    `<span class="action">floor ${floor}</span>`
-                );
-
-                setTimeout(() => TardBoard.openModal(), 3000);
+            if (RenderProfiler.enabled) {
+                const elapsedMs = performance.now() - renderStartTimeMs;
+                RenderProfiler.totals.render =
+                    (RenderProfiler.totals.render ?? 0) + elapsedMs;
+                RenderProfiler.maximums.render =
+                    Math.max(RenderProfiler.maximums.render ?? 0, elapsedMs);
             }
 
-            document.getElementById("game").innerHTML =
-                SceneRenderer.render(MAP, playerEntity);;
-            setTorchOverlayVisibility();
+            RenderProfiler.complete();
         }
+
+/*
+        RenderProfiler.enabled = true;
+        SceneRenderer.resetProfiling();
+        SceneRenderer.profilingEnabled = true;
+        SceneRenderer.profilingCountersEnabled = false;
+*/
 
         document.addEventListener("keydown", function (event) {
             const titleScreenIsVisible = document
@@ -3523,15 +3542,52 @@
         // Update animTorchStart to always use setTorchOverlayVisibility
         function animTorchStart() {
             playerEntity.isHoldingTorch = true;
+            playerEntity.applyEnvironmentDynamics("holdingTorch", [
+                {
+                    light: {
+                        red: 128,
+                        green: 128,
+                        blue: 128,
+                        intensity: 0.3,
+                        radius: 5,
+                        softness: 3,
+                        pulseAmount: 0.2,
+                        pulseSpeed: 1,
+                    }
+                }, {
+                    light: {
+                        red: 64,
+                        green: 64,
+                        blue: 0,
+                        intensity: 0.5,
+                        radius: 4,
+                        softness: 2,
+                        pulseAmount: 0.8,
+                        pulseSpeed: 2,
+                    }
+                }, {
+                    light: {
+                        red: 64,
+                        green: 0,
+                        blue: 0,
+                        intensity: 0.8,
+                        radius: 3,
+                        softness: 1,
+                        pulseAmount: 0.6,
+                        pulseSpeed: 5,
+                    }
+                }
+            ]);
             setTorchOverlayVisibility();
             playSFX("torch");
-            document.getElementById("game").classList.add("torch");
+            document.getElementById("scene").classList.add("torch");
         }
 
         function animTorchEnd() {
             playerEntity.isHoldingTorch = false;
+            playerEntity.removeEnvironmentDynamics("holdingTorch");
             setTorchOverlayVisibility();
-            document.getElementById("game").classList.remove("torch");
+            document.getElementById("scene").classList.remove("torch");
         }
 
         function animTromboneStart() {
@@ -3610,56 +3666,6 @@
             $overlay.style.display = "flex";
         }
 
-
-        function shakeScreen() {
-            // Randomly pick a small vertical offset: -2, -1, 0, 1, or 2px
-            const offset = randomEntry([-2, -1, 0, 1, 2]);
-            for (const $child of document.getElementById("viewport").children) {
-                if ($child.classList.contains("ui-header")) {
-                    continue;
-                }
-
-                const childIsVisible =
-                    ! $child.classList.contains("hidden") &&
-                    ! $child.classList.contains("offscreen") &&
-                    ! $child.classList.contains("fixed");
-
-                if (! childIsVisible) {
-                    continue;
-                }
-
-                $child.style.transition =
-                    "transform 0.08s cubic-bezier(.36, .07, .19, .97)";
-                $child.style.transform = `translateY(${offset}px)`;
-                setTimeout(() => $child.style.transform = "", 80);
-            }
-        }
-
-        function slideScreen(direction) {
-            // Slide effect pixel amount (-x is left, x is right)
-            const offset = direction === "left" ? -2 : 2;
-
-            for (const $child of document.getElementById("viewport").children) {
-                if ($child.classList.contains("ui-header")) {
-                    continue;
-                }
-
-                const childIsVisible =
-                    ! $child.classList.contains("hidden") &&
-                    ! $child.classList.contains("offscreen") &&
-                    ! $child.classList.contains("fixed");
-
-                if (! childIsVisible) {
-                    continue;
-                }
-
-                $child.style.transition =
-                    "transform 0.12s cubic-bezier(.36,.07,.19,.97)";
-                $child.style.transform = `translateX(${offset}px)`;
-                setTimeout(() => $child.style.transform = "", 120);
-            }
-        }
-
         function updateSkyboxPosition() {
             const $viewport = document.getElementById("viewport");
             if (! $viewport) {
@@ -3677,27 +3683,98 @@
             return new Promise(resolve => setTimeout(resolve, durationMs));
         }
 
-        async function endOfPlayerMove() {
+        function waitForPaint() {
+            return new Promise(resolve =>
+                requestAnimationFrame(() => requestAnimationFrame(resolve))
+            );
+        }
+
+        function snapshotTurnBasedEntityPoses() {
+            const poses = new Map();
+
+            for (const entity of MAP.entities) {
+                const skipSnapshot =
+                    entity === playerEntity ||
+                    entity.isRealtime ||
+                    ! Number.isFinite(entity.x) ||
+                    ! Number.isFinite(entity.y);
+                if (skipSnapshot) {
+                    continue;
+                }
+
+                poses.set(
+                    entity.id,
+                    {
+                        x: entity.x,
+                        y: entity.y,
+                        direction: entity.direction,
+                    }
+                );
+            }
+
+            return poses;
+        }
+
+        async function endOfPlayerMove(completePlayerPose = false) {
             const startMs = performance.now();
 
-            await npcMove();
+            await npcMove(completePlayerPose);
 
             const elapsedMs = performance.now() - startMs;
-            const remainingMs =
-                Math.max(0, GameControl.getInputDelayMs() - elapsedMs);
+            const remainingMs = Math.max(
+                0,
+                GameControl.getInputDelayMs() - elapsedMs
+            );
 
             if (remainingMs > 0) {
                 await sleepMs(remainingMs);
             }
         }
 
-        // After the player has moved, the NPCs may need to move too
-        // @TODO Step this function so that progress happens gradually
-        //       Currently, enemies can feel like they teleport slightly to
-        //       initiate battles if they move fast and encounter the player
-        async function npcMove() {
+        async function npcMove(completePlayerPose = false) {
+            const previousPoses = snapshotTurnBasedEntityPoses();
+
             MAP.updateEntities();
+
+            const overriddenEntityIds =
+                SceneRenderer.setEntityMidpointPoseOverrides(
+                    MAP.entities.filter(entity => ! entity.isRealtime),
+                    previousPoses
+                );
+
+            if (overriddenEntityIds.length > 0) {
+                render();
+                await waitForPaint();
+
+                const midpointHoldMs =
+                    GameControl.getInputDelayMs() / 2;
+
+                if (midpointHoldMs > 0) {
+                    await sleepMs(midpointHoldMs);
+                }
+            }
+
+            SceneRenderer.clearEntityPoseOverrides(overriddenEntityIds);
+
+            if (completePlayerPose) {
+                SceneRenderer.clearEntityPoseOverride(playerEntity.id);
+            }
+
             render();
+            await waitForPaint();
+        }
+
+        function directionToCoordinate(direction) {
+            switch (direction) {
+                case "forward":
+                    return playerEntity.getCoordinateInFront();
+                case "strafeLeft":
+                    return playerEntity.getCoordinateLeft();
+                case "strafeRight":
+                    return playerEntity.getCoordinateRight();
+                default:
+                    return playerEntity.getCoordinateBehind();
+            }
         }
 
         async function move(direction) {
@@ -3711,22 +3788,9 @@
             }
 
             playerEntity.movementDisabled = true;
+            // MapEntityRealtimeMovementHandler.suspend();
 
-            let coordinate;
-            if (direction === "forward") {
-                coordinate = playerEntity.getCoordinateInFront();
-                shakeScreen();
-            } else if (direction === "strafeLeft") {
-                coordinate = playerEntity.getCoordinateLeft();
-                slideScreen("left");
-            } else if (direction === "strafeRight") {
-                coordinate = playerEntity.getCoordinateRight();
-                slideScreen("right");
-            } else {
-                coordinate = playerEntity.getCoordinateBehind();
-                shakeScreen();
-            }
-
+            const coordinate = directionToCoordinate(direction);
             const tangibleEntity = MAP.entities.find(e =>
                 e.isAlive &&
                 e.x === coordinate.x &&
@@ -3736,7 +3800,6 @@
 
             if (tangibleEntity) {
                 tangibleEntity.onTouch(MAP, playerEntity);
-
                 playerEntity.movementDisabled = false;
                 GameControl.update();
                 return;
@@ -3745,22 +3808,27 @@
             if (MAP.isObstructed(coordinate.x, coordinate.y)) {
                 // Don't add steps or move creatures when touching something
             } else {
+                // const moveStartMs = performance.now();
                 playSFX("footstep");
-                playerEntity.x = coordinate.x;
-                playerEntity.y = coordinate.y;
-                updateSeenTiles();
-                playerEntity.stepsTakenOnCurrentFloor++;
-
-                const passableEntity = MAP.entities.find(e =>
-                    e.x === playerEntity.x &&
-                    e.y === playerEntity.y &&
-                    e.id !== playerEntity.id &&
-                    typeof e.onEnter === "function"
+                const { x, y, direction } = playerEntity;
+                SceneRenderer.setEntityPoseOverride(
+                    playerEntity.id,
+                    {
+                        x: x - ((x - coordinate.x) / 2),
+                        y: y - ((y - coordinate.y) / 2),
+                    }
                 );
+                render();
+                await waitForPaint();
 
-                if (passableEntity) {
-                    passableEntity.onEnter(MAP, playerEntity);
-                }
+                playerEntity.setCoordinate(
+                    playerEntity.gameMap,
+                    {
+                        x: coordinate.x,
+                        y: coordinate.y
+                    }
+                );
+                updateSeenTiles();
 
                 GameControl.update();
 
@@ -3768,7 +3836,7 @@
                 const shouldSkipNpc = BattleSystem.isActive || menu.isOpen();
 
                 if (! shouldSkipNpc) {
-                    await endOfPlayerMove();
+                    await endOfPlayerMove(true);
                 } else {
                     const timeDelayMs = GameControl.getInputDelayMs();
                     await sleepMs(timeDelayMs);
@@ -3778,29 +3846,92 @@
             playerEntity.movementDisabled = false;
             GameControl.update();
 
+            SceneRenderer.clearEntityPoseOverride(playerEntity.id);
             render();
         }
 
-        function turnLeft() {
-            if (BattleSystem.isActive || gameOver) {
+        async function turnLeft() {
+            const movementPrevented =
+                playerEntity.movementDisabled ||
+                BattleSystem.isActive ||
+                gameOver;
+
+            if (movementPrevented) {
                 return;
             }
+
+            playerEntity.movementDisabled = true;
+            playerEntity.setTurningDirection("left");
+
             playSFX("turn");
-            slideScreen("left");
+
+            const angle = SceneRenderer.getCameraAngle(playerEntity.direction);
+            SceneRenderer.setEntityPoseOverride(
+                playerEntity.id,
+                { angle: angle + Math.PI / 4 }
+            );
+
+            render();
+            await waitForPaint();
+
+            const timeDelayMs = GameControl.getInputDelayMs() / 2;
+            if (timeDelayMs > 0) {
+                await sleepMs(timeDelayMs);
+            }
+
             playerEntity.turnLeft();
-            GameControl.update();
+            playerEntity.turningDirection = null;
+
+            SceneRenderer.clearEntityPoseOverride(playerEntity.id);
+
             render();
+            await waitForPaint();
+
+            playerEntity.movementDisabled = false;
+            GameControl.update();
         }
 
-        function turnRight() {
-            if (BattleSystem.isActive || gameOver) {
+        async function turnRight() {
+            const movementPrevented =
+                playerEntity.movementDisabled ||
+                BattleSystem.isActive ||
+                gameOver;
+
+            if (movementPrevented) {
                 return;
             }
+
+            playerEntity.movementDisabled = true;
+            playerEntity.setTurningDirection("right");
+
             playSFX("turn");
-            slideScreen("right");
-            playerEntity.turnRight();
-            GameControl.update();
+
+            const angle = SceneRenderer.getCameraAngle(playerEntity.direction);
+            SceneRenderer.setEntityPoseOverride(
+                playerEntity.id,
+                { angle: angle - Math.PI / 4 }
+            );
+
             render();
+            await waitForPaint();
+
+            const timeDelayMs = GameControl.getInputDelayMs() / 2;
+            if (timeDelayMs > 0) {
+                await sleepMs(timeDelayMs);
+            }
+
+            playerEntity.turnRight();
+            playerEntity.turningDirection = null;
+
+            SceneRenderer.clearEntityPoseOverride(
+                playerEntity.id
+            );
+
+            render();
+            await waitForPaint();
+
+            playerEntity.movementDisabled = false;
+            GameControl.update();
         }
 
         async function wait() {
@@ -3813,7 +3944,9 @@
                 return;
             }
 
+            // const moveStartMs = performance.now();
             playerEntity.movementDisabled = true;
+            // MapEntityRealtimeMovementHandler.suspend();
             playerEntity.stepsTakenOnCurrentFloor++;
 
             updateBattleLog(
@@ -4336,7 +4469,7 @@
                 music.playRandom("exploration");
             });
 
-            document.getElementById("game")
+            document.getElementById("scene")
                 .classList.add("descendingToNextFloor");
 
             const floorBoost = Math.floor(floor / 2);
@@ -4378,7 +4511,7 @@
             TardAPI.updateProgress();
         }
 
-        document.getElementById("game").addEventListener("animationend", e => {
+        document.getElementById("scene").addEventListener("animationend", e => {
             const removeClass =
                 e.target.classList.contains("descendingToNextFloor") &&
                 e.animationName === "descendFromCeiling";
@@ -4407,6 +4540,13 @@
         updateSeenTiles();
         music.playRandom("exploration");
         scheduleNextAmbientSfx();
+        SceneRenderer.setCanvas(document.getElementById("scene"));
+        SceneRenderer.initialize(playerEntity);
+        SceneRenderer.setStripSquare(8);
+        const backgroundImage = new Image();
+        backgroundImage.src = "assets/backgrounds/bg1.png";
+        SceneRenderer.setBackgroundImage(backgroundImage);
+
         render();
 
         let isLevelUpAllocation = false;
@@ -4783,7 +4923,7 @@
             ['▄▀▀▀ ', '█▀▀▄ ', '▀▄▄▀ '], // 6
         ];
 
-
+        SceneRenderer.loadSpriteDefinitions(TARDQUEST_SPRITES);
 
         // --- TITLE SCREEN LOGIC ---
         const $titleScreen = document.getElementById("titleScreen");
