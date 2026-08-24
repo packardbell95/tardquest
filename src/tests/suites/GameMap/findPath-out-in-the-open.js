@@ -1,7 +1,7 @@
 // Test pathfinding diagonally through an open space using GameMap.findPath()
 function GameMap_findPathOutInTheOpen()
 {
-    const testMap = new GameMap();
+    const testMap = new GameMap(30, 30);
 
     testMap.fill(0, 0, 20, 20, "wall");
     testMap.fill(1, 1, 19, 19, "floor");

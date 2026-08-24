@@ -13,7 +13,10 @@ class Menu {
     #currentPage = 0;
     #defaultItemsPerPage = 10;
     #isOpen = false;
+    #isFocused = false;
 
+    // @TODO Make sure that menuData is passed to each of these
+    // It's currently only passed to onOpen(), onClose(), and onCancel()
     #onOpen = null;
     #onPageChange = null;
     #onHighlight = null;
@@ -117,18 +120,38 @@ class Menu {
         this.#onClose = onClose;
     }
 
+    focus() {
+        if (! this.isOpen()) {
+            return;
+        }
+
+        this.#isFocused = true;
+        this.#elements.$menu.classList.remove("blurred");
+        this.render();
+    }
+
+    blur() {
+        if (! this.isOpen()) {
+            return;
+        }
+
+        this.#isFocused = false;
+        this.#elements.$menu.classList.add("blurred");
+        this.render();
+    }
+
     initializeMenu($menu) {
         this.#elements.$menu = $menu;
-        this.#elements.$landing = document.createElement('div');
+        this.#elements.$landing = document.createElement("div");
         this.#elements.$landing.classList.add("landing");
 
-        this.#elements.$list = document.createElement('div');
+        this.#elements.$list = document.createElement("div");
         this.#elements.$list.classList.add("list");
 
-        this.#elements.$selectionDescription = document.createElement('div');
+        this.#elements.$selectionDescription = document.createElement("div");
         this.#elements.$selectionDescription.classList.add("selectionDescription");
 
-        this.#elements.$escapeMessage = document.createElement('div');
+        this.#elements.$escapeMessage = document.createElement("div");
         this.#elements.$escapeMessage.classList.add("escapeMessage");
         this.#elements.$escapeMessage.innerText = "Press Escape to go back";
 
@@ -163,9 +186,13 @@ class Menu {
         return this.#isOpen;
     }
 
-    open(menuName, onClose) {
-        if (typeof this.#menus[menuName] === 'undefined') {
-            console.error('The requested menu does not exist', { menuName });
+    isFocused() {
+        return this.isOpen() && this.#isFocused;
+    }
+
+    open(menuName, menuData = {}, onClose) {
+        if (typeof this.#menus[menuName] === "undefined") {
+            console.error("The requested menu does not exist", { menuName });
             return;
         }
 
@@ -174,6 +201,7 @@ class Menu {
 
         const breadcrumb = {
             menuName,
+            menuData,
             selectionIndex: this.#selectionIndex,
             currentPage: this.#currentPage,
         };
@@ -188,32 +216,35 @@ class Menu {
         this.#currentPage = 0; // Reset to the first page
 
         // @TODO Adjust selectors
-        this.#elements.$menu.classList.remove('hidden');
-        this.#elements.$selectionDescription.textContent = '';
+        this.#elements.$menu.classList.remove("hidden");
+        this.#elements.$selectionDescription.textContent = "";
 
-        this.#onOpen?.();
-        activeMenu.onOpen?.();
+        this.#onOpen?.(menuData);
+        activeMenu.onOpen?.(menuData);
+        this.focus();
         this.render();
     }
 
     close() {
+        const menuData = this.getMenuData();
         const previousMenu = this.#breadcrumbs.pop();
+
         if (previousMenu) {
             if (typeof previousMenu.onClose === "function") {
-                previousMenu.onClose();
+                previousMenu.onClose(menuData);
             }
-            this.#menus[previousMenu.menuName].onClose?.();
+            this.#menus[previousMenu.menuName].onClose?.(menuData);
             this.#selectionIndex = previousMenu.selectionIndex;
             this.#currentPage = previousMenu.currentPage;
         }
 
         if (this.#breadcrumbs.length === 0) {
-            this.#elements.$menu.classList.add('hidden');
+            this.#elements.$menu.classList.add("hidden");
             this.#isOpen = false;
 
-            this.#onClose?.();
+            this.#onClose?.(menuData);
         } else {
-            this.#onCancel?.();
+            this.#onCancel?.(menuData);
         }
     }
 
@@ -238,13 +269,17 @@ class Menu {
             }
             this.#menus[previousMenu.menuName].onClose?.();
         }
-        this.#elements.$menu.classList.add('hidden');
+        this.#elements.$menu.classList.add("hidden");
         this.#isOpen = false;
         this.#onClose?.();
     }
 
     highlightOption(index) {
         this.#selectionIndex = index;
+    }
+
+    getMenuData() {
+        return this.#breadcrumbs.at(-1)?.menuData || {};
     }
 
     getItemsPerPage() {
@@ -257,12 +292,15 @@ class Menu {
     }
 
     getTotalPages() {
-        const optionsLength = this.getActiveMenu()?.getOptions()?.length || 0;
+        const menuData = this.getMenuData();
+        const optionsLength =
+            this.getActiveMenu()?.getOptions(menuData)?.length || 0;
         return Math.ceil(optionsLength / this.getItemsPerPage());
     }
 
     getPagination() {
-        const options = this.getActiveMenu()?.getOptions();
+        const menuData = this.getMenuData();
+        const options = this.getActiveMenu()?.getOptions(menuData);
         const itemsPerPage = this.getItemsPerPage();
         const totalPages = this.getTotalPages();
         const itemsOnCurrentPage = (this.#currentPage + 1) >= totalPages
@@ -287,17 +325,22 @@ class Menu {
 
         return this.#breadcrumbs.map((m) => {
             const title = this.#menus[m.menuName]?.title;
-            return (typeof title === 'function' ? title() : title) || "???";
+            return (
+                typeof title === "function"
+                    ? title(m.menuData)
+                    : title
+            ) || "???";
         }).join(" > ");
     }
 
     render() {
         const activeMenu = this.getActiveMenu();
-        if (typeof activeMenu === 'undefined') {
+        if (typeof activeMenu === "undefined") {
             return;
         }
 
-        const options = activeMenu.getOptions();
+        const menuData = this.getMenuData();
+        const options = activeMenu.getOptions(menuData);
 
         const itemsPerPage = this.getItemsPerPage();
         const totalPages = this.getTotalPages();
@@ -305,15 +348,17 @@ class Menu {
         const endIndex = startIndex + itemsPerPage;
         const paginatedOptions = options.slice(startIndex, endIndex);
         this.#elements.$landing.innerHTML =
-            `<div>${activeMenu?.landingHtml?.() || ''}</div>`;
+            `<div>${activeMenu?.landingHtml?.(menuData) || ""}</div>`;
 
+        // @TODO Have the menu list scroll rather than use pagination
+        //       Pagination can be visually subtle and confusing for players
         const paginationText = totalPages > 1 ? (
-            (this.#currentPage > 0 ? '◀ ' : '  ') +
+            (this.#currentPage > 0 ? "◀ " : "  ") +
             `Page ${this.#currentPage + 1} of ${totalPages}` +
-            (this.#currentPage + 1 < totalPages ? ' ▶' : '  ')
-        ) : '';
+            (this.#currentPage + 1 < totalPages ? " ▶" : "  ")
+        ) : "";
 
-        const $list = document.createElement('div');
+        const $list = document.createElement("div");
         $list.className = "list";
 
         const $pageNumber = document.createElement("div");
@@ -336,12 +381,17 @@ class Menu {
             $option.onmouseover = () => this.setSelection(index);
             $option.onclick = () => this.select(index);
 
-            const trailText = option.trailText ? `${option.trailText}` : '';
+            const trailText = option.trailText ? `${option.trailText}` : "";
 
             const maxLineLength = 56; // Max "." trail width
+            const repetitionLength = Math.max(
+                0,
+                maxLineLength - option.displayText.length - trailText.length - 4
+            );
+
             const dots = trailText
-                ? '.'.repeat(Math.max(0, maxLineLength - option.displayText.length - trailText.length - 4))
-                : '';
+                ? ".".repeat(repetitionLength)
+                : "";
 
             const $cursor = document.createElement("span");
             $cursor.className = "cursor";
@@ -352,25 +402,39 @@ class Menu {
             if (option.className) {
                 $text.classList.add(option.className);
             }
-            $text.textContent = `${option.displayText}${dots}${trailText}`;
-            $option.append($text);
 
+            const $displayText = document.createElement("span");
+            $displayText.textContent = option.displayText;
+            $text.append($displayText);
+
+            if (dots.length > 0) {
+                const $dots = document.createElement("span");
+                $dots.classList.add("gray");
+                $dots.textContent = dots;
+                $text.append($dots);
+            }
+
+            if (trailText.length > 0) {
+                const $trailText = document.createElement("span");
+                $trailText.textContent = trailText;
+                $text.append($trailText);
+            }
+
+            $option.append($text);
             $list.appendChild($option);
 
             if (isSelectedLine) {
-                this.#elements.$selectionDescription.innerHTML = option.description;
+                this.#elements.$selectionDescription.innerHTML =
+                    option.description;
             }
         });
 
         this.#elements.$list.replaceWith($list);
         this.#elements.$list = $list; // Make sure the reference is updated too
-        const escapeDisabled = this.checkIfEscapeIsDisabled(activeMenu);
 
-        if (escapeDisabled) {
-            this.#elements.$escapeMessage.classList.add("hidden");
-        } else {
-            this.#elements.$escapeMessage.classList.remove("hidden");
-        }
+        this.checkIfEscapeIsDisabled(activeMenu)
+            ? this.#elements.$escapeMessage.classList.add("hidden")
+            : this.#elements.$escapeMessage.classList.remove("hidden");
     }
 
     checkIfEscapeIsDisabled(activeMenu = null) {
@@ -389,6 +453,8 @@ class Menu {
     }
 
     refreshList() {
+        const menuData = this.getMenuData();
+
         for (const $el of this.#elements.$list.children) {
             if (! $el.classList.contains("option")) {
                 continue;
@@ -396,7 +462,7 @@ class Menu {
 
             if (parseInt($el.dataset.index, 10) === this.#selectionIndex) {
                 $el.classList.add("selected");
-                const options = this.getActiveMenu().getOptions();
+                const options = this.getActiveMenu().getOptions(menuData);
                 this.#elements.$selectionDescription.innerHTML =
                     options[this.getItemIndex()].description;
             } else if ($el.classList.contains("selected")) {
@@ -441,17 +507,19 @@ class Menu {
         }
     }
 
-    handleInput(key) {
-        switch (key) {
-            case 'escape':
+    handleInput(action) {
+        switch (action) {
+            case "cancel":
                 const activeMenu = this.getActiveMenu();
                 const defaultCloseOption =
                     activeMenu?.defaultCloseOption || null;
 
                 if (defaultCloseOption !== null) {
-                    const closeOptionIndex = activeMenu.getOptions().findIndex(
-                        (option) => option.id === defaultCloseOption
-                    );
+                    const menuData = this.getMenuData();
+                    const closeOptionIndex =
+                        activeMenu.getOptions(menuData).findIndex(
+                            option => option.id === defaultCloseOption
+                        );
 
                     if (closeOptionIndex === -1) {
                         console.error(
@@ -469,28 +537,26 @@ class Menu {
 
                 this.goToPreviousMenu();
                 break;
-            case 'w':
-            case 'arrowup':
+
+            case "up":
                 this.selectPreviousItem();
                 break;
-            case 's':
-            case 'arrowdown':
+
+            case "down":
                 this.selectNextItem();
                 break;
-            case 'a':
-            case 'arrowleft':
+
+            case "left":
                 this.previousPage();
                 break;
-            case 'd':
-            case 'arrowright':
+
+            case "right":
                 this.nextPage();
                 break;
-            case ' ':
-            case 'e':
-            case 'enter': {
+
+            case "primary":
                 this.select();
                 break;
-            }
         }
     }
 
@@ -515,10 +581,11 @@ class Menu {
             : parseInt(index, 10);
         const activeMenu = this.getActiveMenu();
         const key = this.#currentPage * this.getItemsPerPage() + selectedIndex;
-        const selectedOptionId = activeMenu.getOptions()?.[key]?.id;
-        if (selectedOptionId === '_back') {
+        const menuData = this.getMenuData();
+        const selectedOptionId = activeMenu.getOptions(menuData)?.[key]?.id;
+        if (selectedOptionId === "_back") {
             this.close();
-        } else if (selectedOptionId === '_exitAll') {
+        } else if (selectedOptionId === "_exitAll") {
             this.closeAll();
         } else {
             activeMenu?.select(selectedOptionId, this);

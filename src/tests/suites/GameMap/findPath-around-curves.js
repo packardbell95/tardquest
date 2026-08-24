@@ -1,7 +1,7 @@
 // Test pathfinding around a curved wall in a 20x20 map using GameMap.findPath()
 function GameMap_findPathAroundCurves()
 {
-    const testMap = new GameMap();
+    const testMap = new GameMap(50, 40);
 
     testMap.fill(0, 0, 20, 20, "wall");
     testMap.fill(1, 1, 19, 19, "floor");

@@ -100,9 +100,28 @@ const Tooltip = {
         }
 
         $element.dataset.tooltipid = `tq_tooltip_${crypto.randomUUID()}`;
-        $element.addEventListener("mouseenter", (e) => Tooltip._display(e));
-        $element.addEventListener("click", (e) => Tooltip._checkInteraction(e));
-        $element.addEventListener("mouseleave", (e) => Tooltip._hide(e));
+        $element.addEventListener(
+            "mouseenter",
+            e => Tooltip._show(e?.target)
+        );
+        $element.addEventListener(
+            "click",
+            e => Tooltip._checkInteraction(e?.target)
+        );
+        $element.addEventListener(
+            "mouseleave",
+            e => Tooltip._hide(e?.target)
+        );
+
+        Tooltip._uiActiveState.set(
+            $element,
+            $element.classList.contains(Tooltip._uiActiveClassname)
+        );
+
+        Tooltip._observer.observe($element, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
     },
 
     /**
@@ -114,6 +133,10 @@ const Tooltip = {
      * @param $element The DOM element with an existing tooltip to update
      */
     refresh: ($element) => {
+        if (! $element.dataset.tooltipid) {
+            Tooltip.initialize($element);
+        }
+
         if (! $element.dataset.tooltipid) {
             console.warn("Cannot reload a nonexistent tooltip", { $element });
             return;
@@ -148,6 +171,29 @@ const Tooltip = {
     _lastElementForGroup: {},
     _lastGroupDisplayMs: {},
     _lastGroupHideMs: {},
+    _openTooltipIds: new Set(),
+    _orphanedTooltipPollingIntervalMs: 1000,
+    _orphanedTooltipIntervalId: null,
+
+    _uiActiveClassname: "ui-active",
+    _uiActiveState: new WeakMap(),
+
+    _observer: new MutationObserver(mutationRecords => {
+        for (const mutationRecord of mutationRecords) {
+            const $element = mutationRecord.target;
+            const wasActive = Tooltip._uiActiveState.get($element);
+            const isActive =
+                $element.classList.contains(Tooltip._uiActiveClassname);
+
+            if (isActive === wasActive) {
+                continue;
+            }
+
+            Tooltip._uiActiveState.set($element, isActive);
+
+            isActive ? Tooltip._show($element) : Tooltip._hide($element);
+        }
+    }),
 
     _isVisible: ($element) => {
         const computedStyle = window.getComputedStyle($element);
@@ -156,9 +202,9 @@ const Tooltip = {
             && computedStyle.opacity !== "0";
     },
 
-    _getTooltip: ($target) => {
+    _getTooltip: ($e) => {
         const $existingTooltip =
-            document.getElementById($target.dataset.tooltipid);
+            document.getElementById($e.dataset.tooltipid);
         if ($existingTooltip) {
             const animations = $existingTooltip.getAnimations();
             if (animations.length > 0) {
@@ -169,15 +215,15 @@ const Tooltip = {
         }
 
         const $tooltip = document.createElement("div");
-        $tooltip.id = $target.dataset.tooltipid;
+        $tooltip.id = $e.dataset.tooltipid;
         $tooltip.setAttribute("role", "tooltip");
         $tooltip.setAttribute("inert", true);
-        $tooltip.innerHTML = $target.dataset.tooltiphtml;
+        $tooltip.innerHTML = $e.dataset.tooltiphtml;
         $tooltip.style.visibility = "hidden";
         $tooltip.style.position = "absolute";
         document.body.appendChild($tooltip);
 
-        const positions = Tooltip._getPosition($target, $tooltip);
+        const positions = Tooltip._getPosition($e, $tooltip);
         $tooltip.style.top = `${positions.top}px`;
         $tooltip.style.left = `${positions.left}px`;
         $tooltip.style.removeProperty("visibility");
@@ -198,9 +244,9 @@ const Tooltip = {
         return timeSinceLastGroupDisplay < delayMs;
     },
 
-    _updateGroup: ($target, $tooltip) => {
-        const tooltipId = $target.dataset?.tooltipid;
-        const groupId = $target.dataset?.tooltipgroupid;
+    _updateGroup: ($e, $tooltip) => {
+        const tooltipId = $e.dataset?.tooltipid;
+        const groupId = $e.dataset?.tooltipgroupid;
         if (! tooltipId || ! groupId) {
             return true;
         }
@@ -237,9 +283,17 @@ const Tooltip = {
         return lastDismissedMs < Tooltip._dismissalMs;
     },
 
-    _display: (e) => {
-        const $target = e.target;
-        const groupId = $target.dataset?.tooltipgroupid;
+    _isActive: ($e) => $e instanceof Element && (
+        Tooltip._uiActiveState.get($e) ||
+        $e.matches(":hover")
+    ),
+
+    _show: $e => {
+        if (! ($e instanceof Element) || ! Tooltip._isActive($e)) {
+            return;
+        }
+
+        const groupId = $e.dataset?.tooltipgroupid;
 
         if (groupId) {
             // Block the display if the group has been dismissed
@@ -250,7 +304,23 @@ const Tooltip = {
             delete Tooltip._dismissedGroups[groupId];
         }
 
-        const $tooltip = Tooltip._getTooltip($target);
+        const $tooltip = Tooltip._getTooltip($e);
+        Tooltip._openTooltipIds.add($tooltip.id);
+        if (Tooltip._orphanedTooltipIntervalId) {
+            clearInterval(Tooltip._orphanedTooltipIntervalId);
+        }
+
+        Tooltip._orphanedTooltipIntervalId = setInterval(() => {
+            for (const id of Tooltip._openTooltipIds) {
+                const isOrphaned =
+                    ! document.querySelector(`[data-tooltipid="${id}"]`);
+
+                if (isOrphaned) {
+                    Tooltip._hideById(id);
+                }
+            }
+        }, Tooltip._orphanedTooltipPollingIntervalMs);
+
         const delayMs = parseInt(
             Tooltip.groupSettings?.[groupId]?.delayMs ||
             0,
@@ -260,7 +330,7 @@ const Tooltip = {
         $tooltip.style.zIndex = "100";
         $tooltip.classList.add("active");
 
-        if (! Tooltip._updateGroup($target, $tooltip)) {
+        if (! Tooltip._updateGroup($e, $tooltip)) {
             const animation = $tooltip.animate([
                 { opacity: 0, offset: 0, },
                 { opacity: 0, offset: delayMs / (delayMs + 200) },
@@ -276,43 +346,50 @@ const Tooltip = {
         }
     },
 
-    _checkInteraction: (e) => {
-        if (! Tooltip._shouldHideAfterInteraction(e)) {
+    _checkInteraction: ($e) => {
+        if (! Tooltip._shouldHideAfterInteraction($e)) {
             return;
         }
 
-        const groupId = e.target.dataset?.tooltipgroupid;
+        const groupId = $e.dataset?.tooltipgroupid;
         if (groupId) {
             Tooltip._dismissedGroups[groupId] = true;
         }
 
-        Tooltip._hide(e);
+        Tooltip._hide($e);
     },
 
-    _shouldHideAfterInteraction: (e) => {
-        if (e.target.dataset?.hideafterinteraction) {
+    _shouldHideAfterInteraction: ($e) => {
+        if ($e.dataset?.hideafterinteraction) {
             return true;
         }
 
-        const groupId = e.target.dataset?.tooltipgroupid;
-        if (Tooltip.groupSettings?.[groupId]?.hideAfterInteraction) {
-            return true;
-        }
-
-        return false;
+        const groupId = $e.dataset?.tooltipgroupid;
+        return Tooltip.groupSettings?.[groupId]?.hideAfterInteraction;
     },
 
-    _hide: (e) => {
-        const tooltipId = e.target?.dataset?.tooltipid;
+    _hide: ($e) => {
+        if (! ($e instanceof Element) || Tooltip._isActive($e)) {
+            return;
+        }
+
+        Tooltip._hideById($e.dataset?.tooltipid, $e.dataset?.tooltipgroupid);
+    },
+
+    _hideById: (tooltipId, groupId = null) => {
+        Tooltip._openTooltipIds.delete(tooltipId);
+        if (Tooltip._openTooltipIds.size < 1) {
+            clearInterval(Tooltip._orphanedTooltipIntervalId);
+        }
+
         if (! tooltipId) {
             console.warn(
                 "Cannot hide tooltip: No tooltip ID exists on the target",
-                { target: e.target }
+                { tooltipId, groupId }
             );
             return;
         }
 
-        const groupId = e.target.dataset?.tooltipgroupid;
         if (groupId) {
             Tooltip._lastGroupHideMs[groupId] = performance.now();
         }
@@ -343,12 +420,12 @@ const Tooltip = {
         $tooltip.classList.remove("active");
     },
 
-    _getPosition: ($target, $tooltip) => {
+    _getPosition: ($e, $tooltip) => {
         const tooltipRect = $tooltip.getBoundingClientRect();
-        const targetRect = $target.getBoundingClientRect();
-        const marginPx = parseInt($target.dataset?.tooltipmarginpx || 10, 10);
-        const groupId = $target.dataset?.tooltipgroupid;
-        const position = $target.dataset?.tooltipposition ||
+        const targetRect = $e.getBoundingClientRect();
+        const marginPx = parseInt($e.dataset?.tooltipmarginpx || 10, 10);
+        const groupId = $e.dataset?.tooltipgroupid;
+        const position = $e.dataset?.tooltipposition ||
             Tooltip.groupSettings?.[groupId]?.position ||
             "right";
 

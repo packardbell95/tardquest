@@ -1,0 +1,368 @@
+"use strict";
+
+/**
+ * Progress Bar Element for TardQuest
+ *
+ * This is a custom HTML element that displays a progress bar to represent a
+ * quantifiable value between 0 and a specified maximum
+ *
+ * @element progress-bar
+ *
+ * Values
+ * @attribute {number} [value=0] - Current value shown by the progress bar
+ * @attribute {number} [max=100] - Maximum value the bar can reach
+ * @attribute {number} [height=14] - Height of the bar in pixels
+ *
+ * Special Attributes
+ * @attribute {boolean} [placeholder] - If set, will display the bar as a
+ *  placeholder instead of showing any values
+ *
+ * Thresholds
+ * @attribute {number} [cautionAtOrAbovePercentage] - Triggers caution animation
+ *  if percentage meets or exceeds this value
+ * @attribute {number} [cautionAbovePercentage] - Triggers caution animation if
+ *  percentage exceeds this value
+ * @attribute {number} [cautionAtOrBelowPercentage] - Triggers caution animation
+ *  if percentage meets or is below this value
+ * @attribute {number} [cautionBelowPercentage] - Triggers caution animation if
+ *  percentage is below this value
+ * @attribute {number} [dangerAtOrAbovePercentage] - Triggers danger animation
+ *  if percentage meets or exceeds this value
+ * @attribute {number} [dangerAbovePercentage] - Triggers danger animation if
+ *  percentage exceeds this value
+ * @attribute {number} [dangerAtOrBelowPercentage] - Triggers danger animation
+ *  if percentage meets or is below this value
+ * @attribute {number} [dangerBelowPercentage] - Triggers danger animation if
+ *  percentage is below this value
+ *
+ * Colors
+ * @attribute {string} [emptyColor="#900"] - CSS color for the unfilled portion
+ * @attribute {string} [filledColor="#090"] - CSS color for the filled portion
+ */
+class ProgressBar extends HTMLElement {
+    #updateScheduled = false;
+    #old = {
+        label: "",
+        percentage: 0,
+        value: 0,
+        max: 0,
+    };
+
+    static get observedAttributes() {
+        return [
+            "height",
+            "placeholder",
+            "emptyColor",
+            "filledColor",
+            "cautionAtOrAbovePercentage",
+            "cautionAbovePercentage",
+            "cautionAtOrBelowPercentage",
+            "cautionBelowPercentage",
+            "dangerAtOrAbovePercentage",
+            "dangerAbovePercentage",
+            "dangerAtOrBelowPercentage",
+            "dangerBelowPercentage",
+            "value",
+            "max",
+            "label",
+        ];
+    }
+
+    constructor() {
+        super();
+
+        this.#old.label = String(this.getAttribute("label") || "");
+        this.#old.value = parseFloat(this.getAttribute("value"));
+        this.#old.max = parseFloat(this.getAttribute("max"));
+        if (this.#old.max !== 0) {
+            this.#old.percentage = Math.min(Math.ceil(
+                (this.#old.value / this.#old.max) * 100
+            ), 100);
+        }
+
+        const shadow = this.attachShadow({ mode: "open" });
+        const style = document.createElement("style");
+        style.textContent = `
+            @keyframes fade {
+                50% { opacity: 0; }
+            }
+            .container {
+                padding: 0 10px;
+                color: #fff;
+                text-align: right;
+                height: 20px;
+                position: relative;
+            }
+            .container > div {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .container > .empty {
+                z-index: 1;
+            }
+            .container > .filled {
+                z-index: 2;
+            }
+            .container > .text {
+                z-index: 3;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            .container > .text > .label {
+                margin-left: 10px;
+            }
+            .container > .text > .value {
+                margin-right: 10px;
+            }
+            .caution {
+                animation: fade 1s linear infinite;
+            }
+            .danger {
+                animation: fade .25s linear infinite;
+            }
+        `;
+        shadow.appendChild(style);
+
+        this.container = document.createElement("div");
+        this.container.classList.add("container");
+
+        const $emptyBar = document.createElement("div");
+        $emptyBar.className = "empty";
+
+        const $filledBar = document.createElement("div");
+        $filledBar.className = "filled";
+
+        const $text = document.createElement("div");
+        $text.className = "text";
+
+        const $label = document.createElement("div");
+        $label.className = "label";
+        $label.textContent = String(this.getAttribute("label") || "");
+        $text.append($label);
+
+        const $value = document.createElement("div");
+        $value.className = "value";
+        $text.append($value);
+
+        this.container.appendChild($emptyBar);
+        this.container.appendChild($filledBar);
+        this.container.appendChild($text);
+
+        this.shadowRoot.appendChild(this.container);
+    }
+
+    connectedCallback() {
+        this.updateDisplay();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue) {
+            return;
+        }
+
+        if (Object.keys(this.#old).includes(name)) {
+            this.#old[name] = name === "label"
+                ? String(oldValue)
+                : parseFloat(oldValue);
+        }
+
+        this.scheduleUpdate();
+    }
+
+    scheduleUpdate() {
+        if (this.#updateScheduled) {
+            return;
+        }
+
+        this.#updateScheduled = true;
+
+        requestAnimationFrame(() => {
+            this.#updateScheduled = false;
+            this.updateDisplay();
+        });
+    }
+
+    updateDisplay() {
+        const isPlaceholder = this.hasAttribute("placeholder");
+        const $empty = this.container.querySelector(".empty");
+        const $filled = this.container.querySelector(".filled");
+        const $label = this.container.querySelector(".text .label");
+        const $value = this.container.querySelector(".text .value");
+
+        const duration = 250;
+        const oldValue = this.#old.value;
+        const newValue = parseFloat(this.getAttribute("value"));
+        const oldMax = this.#old.max;
+        const newMax = parseFloat(this.getAttribute("max"));
+        const height = parseInt(this.getAttribute("height") || 14) + "px";
+        this.container.style.height = height;
+        this.container.style.lineHeight = height;
+
+        const filledColor = isPlaceholder
+            ? "#1A1A1A"
+            : this.getAttribute("filledColor") || "#090";
+        const emptyColor = isPlaceholder
+            ? "#1A1A1A"
+            : this.getAttribute("emptyColor") || "#900";
+        const value = parseFloat(this.#old.value || 0);
+        const max = parseFloat(this.getAttribute("max") || 100);
+        const oldPercentage = oldMax
+            ? Math.min(Math.ceil((oldValue / oldMax) * 100), 100)
+            : 0;
+        const newPercentage = newMax
+            ? Math.min(Math.ceil((newValue / newMax) * 100), 100)
+            : 0;
+
+        this.container.style.setProperty("--filledColor", filledColor);
+        this.container.style.setProperty("--emptyColor", emptyColor);
+        this.container.style.setProperty("--cutoff", `${oldPercentage}%`);
+        this.container.style.transition = "--cutoff 3s";
+
+        $empty.style.backgroundColor = emptyColor;
+
+        $filled.style.background =
+            `linear-gradient(
+                90deg,
+                var(--filledColor) 0%,
+                var(--filledColor) var(--cutoff),
+                transparent var(--cutoff),
+                transparent 100%
+            )`;
+
+        const precision = 1;
+        const displayValue = Number(newValue.toFixed(precision)).toString();
+        const displayMax = Number(max.toFixed(precision)).toString();
+
+        $label.textContent = String(this.getAttribute("label") || "");
+        $value.textContent = ! isPlaceholder
+            ? `${displayValue}/${displayMax}`
+            : "";
+
+        const startTime = performance.now();
+
+        const animate = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Linear interpolation between oldPercentage and newPercentage
+            const currentValue = (
+                oldPercentage + (newPercentage - oldPercentage) * progress
+            ).toFixed(2);
+            this.container.style.setProperty("--cutoff", `${currentValue}%`);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Animation has ended
+                this.#old.value = newValue;
+                this.#old.max = parseFloat(this.getAttribute("max"));
+                this.#old.percentage = newPercentage;
+
+                const status = this.getStatus(newPercentage);
+                $empty.classList.toggle(
+                    "caution",
+                    status?.direction === "below" && status?.level === "caution"
+                );
+
+                $empty.classList.toggle(
+                    "danger",
+                    status?.direction === "below" && status?.level === "danger"
+                );
+
+                $filled.classList.toggle(
+                    "caution",
+                    status?.direction === "above" && status?.level === "caution"
+                );
+
+                $filled.classList.toggle(
+                    "danger",
+                    status?.direction === "above" && status?.level === "danger"
+                );
+            }
+        }
+
+        if (oldPercentage !== newPercentage) {
+            requestAnimationFrame(animate);
+        }
+    }
+
+    getStatus(activePercentage) {
+        if (activePercentage === 0) {
+            return null;
+        }
+
+        const dangerAtOrAbove = this.getAttribute("dangerAtOrAbovePercentage");
+        if (dangerAtOrAbove !== null && activePercentage >= dangerAtOrAbove) {
+            return {
+                level: "danger",
+                direction: "above",
+            };
+        }
+
+        const dangerAbove = this.getAttribute("dangerAbovePercentage");
+        if (dangerAbove !== null && activePercentage > dangerAbove) {
+            return {
+                level: "danger",
+                direction: "above",
+            };
+        }
+
+        const dangerAtOrBelow = this.getAttribute("dangerAtOrBelowPercentage");
+        if (dangerAtOrBelow !== null && activePercentage <= dangerAtOrBelow) {
+            return {
+                level: "danger",
+                direction: "below",
+            };
+        }
+
+        const dangerBelow = this.getAttribute("dangerBelowPercentage");
+        if (dangerBelow !== null && activePercentage < dangerBelow) {
+            return {
+                level: "danger",
+                direction: "below",
+            };
+        }
+
+        const cautionAtOrAbove =
+            this.getAttribute("cautionAtOrAbovePercentage");
+        if (cautionAtOrAbove !== null && activePercentage >= cautionAtOrAbove) {
+            return {
+                level: "caution",
+                direction: "above",
+            };
+        }
+
+        const cautionAbove = this.getAttribute("cautionAbovePercentage");
+        if (cautionAbove !== null && activePercentage > cautionAbove) {
+            return {
+                level: "caution",
+                direction: "above",
+            };
+        }
+
+        const cautionAtOrBelow =
+            this.getAttribute("cautionAtOrBelowPercentage");
+        if (cautionAtOrBelow !== null && activePercentage <= cautionAtOrBelow) {
+            return {
+                level: "caution",
+                direction: "below",
+            };
+        }
+
+        const cautionBelow = this.getAttribute("cautionBelowPercentage");
+        if (cautionBelow !== null && activePercentage < cautionBelow) {
+            return {
+                level: "caution",
+                direction: "below",
+            };
+        }
+
+        return null;
+    }
+}
+
+customElements.define("progress-bar", ProgressBar);

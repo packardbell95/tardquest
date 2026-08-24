@@ -1,120 +1,147 @@
-class MapCell {
-    static getCellId(x, y) {
-        return `map_cell_${x}_${y}`;
-    }
+"use strict";
 
+class MapCell {
     constructor(type = "floor", options = {}) {
         const defaults = {
             $element: null,
             x: null,
             y: null,
+            // @TODO Obviously change this
+            sceneArtId: type === "floor"
+                ? "void"
+                : "wall",
             displayName: "Unknown",
             mapCharacter: "?",
-            isSolid: false,
-            canBeRolledOverByBouldingBall: null,
+            isWall: false,
             onEnter: null,
             onTouch: null,
             onExplode: null,
             isExplored: true,
-            isVisible: null,
         };
 
         this.$element = options?.$element || defaults.$element;
-        this.x = typeof(options?.x === "number") ? options.x : defaults.x;
-        this.y = typeof(options?.y === "number") ? options.y : defaults.y;
+        this.x = Number.isInteger(options?.x) ? options.x : defaults.x;
+        this.y = Number.isInteger(options?.y) ? options.y : defaults.y;
         this.type = type;
         this.displayName = options?.displayName || defaults.displayName;
         this.mapCharacter = options?.mapCharacter || defaults.mapCharacter;
-        this.isSolid = typeof options?.isSolid === "boolean"
-            ? options.isSolid
-            : defaults.isSolid;
-        this.canBeRolledOverByBouldingBall =
-            typeof options?.canBeRolledOverByBouldingBall === "boolean"
-                ? options.canBeRolledOverByBouldingBall
-                : ! this.isSolid;
+        this.isWall = typeof options?.isWall === "boolean"
+            ? options.isWall
+            : defaults.isWall;
         this.onEnter = options?.onEnter || defaults.onEnter;
         this.onTouch = options?.onTouch || defaults.onTouch;
         this.onExplode = options?.onExplode || defaults.onExplode;
         this.isExplored = typeof options?.isExplored === "boolean"
             ? options.isExplored
             : defaults.isExplored;
-        this.isVisible = options?.isVisible || defaults.isVisible;
+
+        this.ceilingTextureId = null;
+        this.floorTextureId = "floor";
+
+        // Default wall texture for all faces
+        this.wallTextureId = "default";
+        // Specific texture IDs, keyed by "north", "east", "south", or "west"
+        this.wallTextureIds = {};
     }
 
-    refreshElement(overrides) {
-        if (!this.$element) {
+    refreshElement(cellEntities = []) {
+        if (! this.$element) {
             console.warn("MapCell has no element to refresh");
             return;
         }
 
-        const cellProperties = {
-            ...{
+        if (this.isExplored) {
+            // Try sorting by zIndex, but fall back to interaction presence
+            cellEntities.sort((a, b) => {
+                const aZIndex = a.zIndex ?? -1;
+                const bZIndex = b.zIndex ?? -1;
+                if (aZIndex < bZIndex) {
+                    return 1;
+                } else if (bZIndex < aZIndex) {
+                    return -1;
+                }
+
+                function scoreEntity(e) {
+                    if (typeof e.onTouch === "function") {
+                        return 2;
+                    }
+
+                    return typeof e.onEnter === "function" ? 1 : 0;
+                }
+
+                const aFunctionIndex = scoreEntity(a);
+                const bFunctionIndex = scoreEntity(b);
+
+                if (aFunctionIndex < bFunctionIndex) {
+                    return 1;
+                } else if (bFunctionIndex < aFunctionIndex) {
+                    return -1;
+                }
+
+                const aId = a.id ?? -1;
+                const bId = b.id ?? -1;
+
+                if (aId < bId) {
+                    return 1;
+                } else if (bId < aId) {
+                    return -1;
+                }
+
+                // We should never reach this point since entities should at
+                // least have unique integer IDs
+                return 0;
+            });
+        }
+
+        const cellProperties = cellEntities.length === 0
+            ? {
+                id: null,
                 displayName: this.displayName,
-                isExplored: this.isExplored,
-                isVisible: this.isVisible,
                 mapCharacter: this.mapCharacter,
+                className: this.isExplored
+                    ? (this.isWall ? "wall" : "floor")
+                    : "unexplored",
                 type: this.type,
-            },
-            ...overrides,
-        }
-
-        let tile = '';
-        let tileClass = '';
-        let displayName = '';
-        if (!cellProperties.isExplored) {
-            tile = '?';
-            tileClass = 'unexplored';
-            displayName = "Unexplored";
-        } else {
-            // Use a visibility function if one is available
-            // Otherwise, assume that the tile is visible
-            const isVisible =
-                typeof cellProperties.isVisible !== 'function' ||
-                cellProperties.isVisible();
-
-            if (isVisible) {
-                tile = cellProperties.mapCharacter || '?';
-                tileClass = cellProperties.type || 'unknown';
-                tileClass = tileClass === 'mimic' ? 'treasureChest' : tileClass;
-                displayName = cellProperties.displayName;
-            } else {
-                tile = ".";
-                tileClass = "floor";
-                displayName = "Floor";
+                target: null,
             }
-        }
+            : {
+                id: cellEntities[0].id || "❌ NO ID",
+                displayName: cellEntities[0].getDisplayName(),
+                mapCharacter: cellEntities[0].getDisplayCharacter(),
+                className: this.isExplored
+                    ? cellEntities[0]?.getClassName()
+                    : "unexplored",
+                type: cellEntities[0].type,
+                target: cellEntities[0]?.hasTarget?.()
+                    ? cellEntities[0].target
+                    : null,
+            };
 
-        this.$element.className = tileClass;
+        this.$element.className = cellProperties.className || "unknown";
 
         const hasCoordinates =
             typeof this.x === "number" &&
             typeof this.y === "number";
 
         if (hasCoordinates) {
-            this.$element.setAttribute(
-                'data-tooltipHtml',
-                `<div class="mapCellDetails">
-                    <div class="enlargedTile ${tileClass}">${tile}</div>
-                    <div class="details">
-                        <div class="name">${displayName}</div>
-                        <div class="coordinates">(${this.x}, ${this.y})</div>
-                    </div>
-                </div>`
+            TardQuestMinimapTooltipGenerator.setCellDetails(
+                this,
+                cellEntities[0] || null
             );
-
-            this.$element.setAttribute('data-tooltipPosition', 'right');
-            this.$element.setAttribute('data-tooltipGroupId', 'minimap');
+            this.$element.setAttribute("data-tooltipPosition", "right");
+            this.$element.setAttribute("data-tooltipGroupId", "minimap");
         } else {
             console.warn("No coordinates found for cell", {
                 cellProperties,
                 x: this.x,
                 y: this.y,
             });
-            this.$element.removeAttribute('data-tooltipHtml');
-            this.$element.removeAttribute('data-tooltipPosition');
+            this.$element.removeAttribute("data-tooltipHtml");
+            this.$element.removeAttribute("data-tooltipPosition");
         }
 
-        this.$element.innerText = tile;
+        this.$element.innerText =
+            (this.isExplored && cellProperties.mapCharacter) || "?";
         Tooltip.initialize(this.$element);
     }
 
@@ -123,46 +150,41 @@ class MapCell {
          * A MapCell can have the following properties:
          *
          * displayName
-         *   The name that is displayed for the tile when hovering it on
+         *   The name that is displayed for the cell when hovering it on
          *   the minimap
          *
          * mapCharacter
-         *   The character that represents the tile on the minimap
+         *   The character that represents the cell on the minimap
          *
-         * isSolid
-         *   If true, acts like a wall and does not allow the player to
+         * isWall
+         *   If true, the cell is a wall and does not allow entities to
          *   step onto it
          *
          * onEnter
-         *   A function that runs when the player steps onto the tile.
+         *   A function that runs when the player steps onto the cell.
          *   Always called with its own x, y coordinates. Won't work
-         *   when isSolid = true
+         *   when isWall = true
          *
          * onTouch
-         *   A function that runs when the player touches the tile.
-         *   Won't work when isSolid = false
+         *   A function that runs when the player touches the cell.
+         *   Won't work when isWall = false
          *
          * onExplode
-         *   A function that runs when the player has blasted the tile
+         *   A function that runs when the player has blasted the cell
          *   with a brick of C4. Always called with its own x, y
          *   coordinates
          *
          * isExplored
          *   When false, the cell appears as "Unexplored" on the minimap
-         *
-         * isVisible
-         *   A function that determines if the tile is visible. If it
-         *   returns false, the tile appears as a generic floor instead
          */
         const defaults = {
             displayName: "Unknown",
             mapCharacter: "?",
-            isSolid: false,
+            isWall: false,
             onEnter: null,
             onTouch: null,
             onExplode: null,
             isExplored: true,
-            isVisible: null,
         };
 
         return { ...defaults, ...(types[type] || {}) };
@@ -174,8 +196,18 @@ class MapCell {
  * The game's map
  */
 class GameMap {
+    // The EntityMovementPlanner instance used to plan entity movements
+    #EntityMovementPlanner;
+
+    // A counter to track how many times the map has been updated in a session
+    #revision = 0;
+
     // How many spaces from the edge are expected in the map
     #margin = 2;
+
+    // The map's dimensions
+    #width = null;
+    #height = null;
 
     // The 2D array of map data, initialized by generate()
     #cells = [];
@@ -189,7 +221,7 @@ class GameMap {
         wall: {
             displayName: "Wall",
             mapCharacter: "#",
-            isSolid: true,
+            isWall: true,
         },
         floor: {
             displayName: "Floor",
@@ -199,25 +231,95 @@ class GameMap {
 
     // Entities that exist within the map that are not fixed in place, such as
     // the player or any wandering NPCs
-    #entities = {};
+    #entities = [];
 
     // The reference to the game's minimap element, set by setMinimap()
     #$minimap = null;
+    #minimapRerenderCoordinates = new Set();
 
-    // A list of object coordinates for cells that need to be rerendered
-    #rerenderList = [];
-
-    getWidth() {
-        return this.#cells[0]?.length || 0;
+    #coordinateKey(x, y) {
+        return `${x}_${y}`;
     }
 
-    getHeight() {
-        return this.#cells.length;
+    #markMinimapCoordinateForRerender(x, y) {
+        if (this.inBounds(x, y)) {
+            this.#minimapRerenderCoordinates.add(this.#coordinateKey(x, y));
+        }
+    }
+
+    coordinateChanged(x, y) {
+        this.#markMinimapCoordinateForRerender(x, y);
+    }
+
+    entityChanged(entity) {
+        this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+    }
+
+    entityMoved(entity, previousX, previousY) {
+        this.#markMinimapCoordinateForRerender(previousX, previousY);
+        this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+    }
+
+    constructor(width, height) {
+        if (! Number.isInteger(width) || ! Number.isInteger(height)) {
+            console.error(
+                "Map dimensions must be provided as integers",
+                { width, height }
+            );
+            return;
+        }
+
+        const minSize = (this.#margin * 2) + 1;
+        if (width < minSize || width < minSize) {
+            throw new Error(
+                `GameMap size must be at least ${minSize}x${minSize}`
+            );
+        }
+
+        this.#EntityMovementPlanner = EntityMovementPlanner;
+        this.#width = width;
+        this.#height = height;
+        this.#cells = [];
+
+        for (let y = 0; y < height; y++) {
+            this.#cells[y] = [];
+            for (let x = 0; x < width; x++) {
+                const isMapEdge =
+                    x === 0 || y === 0 ||
+                    x === width - 1 || y === height - 1;
+                const cellType = isMapEdge ? "wall" : "floor";
+
+                this.#cells[y][x] = this.generateCell(
+                    cellType,
+                    { x, y, isExplored: false }
+                );
+            }
+        }
+    }
+
+    get width() {
+        return this.#width;
+    }
+
+    get height() {
+        return this.#height;
+    }
+
+    get cells() {
+        return this.#cells;
+    }
+
+    get revision() {
+        return this.#revision;
     }
 
     // Sets the reference to the game's minimap element
     setMinimap($element) {
         this.#$minimap = $element instanceof Element ? $element : null;
+
+        if (this.#$minimap !== null) {
+            this.initializeMinimap();
+        }
     }
 
     // Sets the types of cells available in the map
@@ -225,20 +327,108 @@ class GameMap {
         this.#cellTypes = { ...this.#cellTypes, ...cellTypes };
     }
 
+    /**
+     * Determines if a coordinate is obstructed
+     * Obstruction means that the cell is impassible due to it being a wall or
+     * if there is an entity that's occupying it
+     *
+     * @param x Map coordinate
+     * @param y Map coordinate
+     * @return bool True if the map is impassible at the given coordinates
+     */
+    isObstructed(x, y) {
+        return Boolean(
+            this.getCell(x, y).isWall ||
+            this.#entities.some(e =>
+                e.x === x &&
+                e.y === y &&
+                e.isAlive &&
+                typeof e.onTouch === "function"
+            )
+        );
+    }
+
+    isExplored(x, y) {
+        return this.#cells?.[y]?.[x].isExplored || true;
+    }
+
     // Returns a cell at a given coordinate
     // Will return a wall if out of bounds/undefined to simulate blocking
     getCell(x, y) {
-        return this.#cells[y]?.[x] || this.generateCell('wall');
+        return this.#cells[y]?.[x] || this.generateCell("wall");
     }
 
-    #inBounds(x, y) {
-        return Boolean(this.#cells?.[y]?.[x]);
+    // Returns a cell at a given coordinate with entities and handlers attached
+    getPopulatedCell(x, y) {
+        const cell = this.getCell(x, y);
+        cell.entities = this.getEntitiesAt(x, y);
+
+        cell.onTouch = function(gameMap, actorEntity) {
+            for (const entity of this.entities) {
+                const canTouch = typeof entity.onTouch === "function";
+
+                if (canTouch) {
+                    entity.onTouch(gameMap, actorEntity);
+                }
+            }
+        };
+
+        cell.onEnter = function(gameMap, actorEntity) {
+            for (const entity of this.entities) {
+                const canEnter = typeof entity.onEnter === "function";
+
+                if (canEnter) {
+                    entity.onEnter(gameMap, actorEntity);
+                }
+            }
+        }
+
+        cell.onExplode = function(gameMap, actorEntity) {
+            for (const entity of this.entities) {
+                const canExplode = typeof entity.onExplode === "function";
+
+                if (canExplode) {
+                    entity.onExplode(gameMap, actorEntity);
+                }
+            }
+
+            // @TODO Add overrides or settings for how the wall should crumble
+            // and for how floors should be affected
+            if (this.isWall) {
+                this.isWall = false;
+                this.type = "floor";
+                this.sceneArtId = "floor";
+                this.displayName = "Floor";
+                this.mapCharacter = ".";
+                gameMap.coordinateChanged(this.x, this.y);
+            }
+
+            this.wallTextureIds = {};
+        };
+
+        return cell;
+    }
+
+    inBounds(x, y) {
+        return (
+            Number.isInteger(x) &&
+            Number.isInteger(y) &&
+            Boolean(this.#cells?.[y]?.[x])
+        );
+    }
+
+    coordinateInBounds(coordinate) {
+        return (
+            Number.isInteger(coordinate.x) &&
+            Number.isInteger(coordinate.y) &&
+            Boolean(this.#cells?.[coordinate.y]?.[coordinate.x])
+        );
     }
 
     // Sets a cell on the map at a given coordinate
     // This can only overwrite cells in locations that already exist on the map
     setCell(x, y, type = "floor", options = {}) {
-        if (!this.#inBounds(x, y)) {
+        if (! this.inBounds(x, y)) {
             console.warn(
                 "Cell is outside of map boundaries and cannot be set",
                 { x, y, type, options }
@@ -257,7 +447,8 @@ class GameMap {
             ...options
         });
 
-        this.#rerenderList.push({x, y});
+        this.#revision++;
+        this.#markMinimapCoordinateForRerender(x, y);
     }
 
     // Helper function to set up MapCell objects based on defined cell types
@@ -282,18 +473,25 @@ class GameMap {
         return null;
     }
 
+    // @TODO Ensure that not all entities contribute to a cell being occupied
     cellIsOccupied(x, y) {
-        return Boolean(Object.entries(this.#entities).find(
-            ([id, entity]) => entity.x === x && entity.y === y
-        ) || this.getCell(x, y)?.type !== "floor");
+        return Boolean(
+            this.#entities.some(e =>
+                e?.x === x &&
+                e?.y === y &&
+                e.isAlive &&
+                typeof e.onTouch === "function"
+            ) ||
+            this.getCell(x, y)?.type !== "floor"
+        );
     }
 
     getEmptyCellCoordinates() {
         const coordinates = [];
 
-        for (let y=0; y<this.#cells.length; y++) {
-            for (let x=0; x<this.#cells[y].length; x++) {
-                if (!this.cellIsOccupied(x, y)) {
+        for (let y = 0; y < this.#cells.length; y++) {
+            for (let x = 0; x < this.#cells[y].length; x++) {
+                if (! this.cellIsOccupied(x, y)) {
                     coordinates.push({ x, y });
                 }
             }
@@ -302,100 +500,300 @@ class GameMap {
         return coordinates;
     }
 
-    countPassableCells() {
-        let total = 0;
+    // @TODO Handle (x, y) position here instead of on the entity itself
+    addEntity(entity, x = null, y = null, direction = 0) {
+        if (typeof entity !== "object") {
+            console.error(
+                "Entity must be an object",
+                { entity, x, y, direction }
+            );
+            return;
+        }
 
-        for (let y=0; y<this.#cells.length; y++) {
-            for (let x=0; x<this.#cells[y].length; x++) {
-                if (! this.#cells[y][x]?.isSolid) {
-                    total++;
+        if (! Number.isInteger(x) || ! Number.isInteger(y)) {
+            console.error(
+                "Coordinates must be finite numbers",
+                { x, y, entity }
+            );
+            return;
+        }
+
+        entity.gameMap = this;
+        entity.x = x;
+        entity.y = y;
+        entity.direction = direction;
+        this.#entities.push(entity);
+        this.#markMinimapCoordinateForRerender(x, y);
+        this.onEntityChange?.();
+    }
+
+    sortEntities(entities = []) {
+        return entities.sort((a, b) => {
+            const aIsPlayer = a.type === "player";
+            const bIsPlayer = b.type === "player";
+
+            if (aIsPlayer && ! bIsPlayer) {
+                return -1;
+            } else if (! aIsPlayer && bIsPlayer) {
+                return 1;
+            }
+
+            const aIsTangible = typeof a.onTouch === "function";
+            const bIsTangible = typeof b.onTouch === "function";
+
+            if (aIsTangible && ! bIsTangible) {
+                return -1;
+            } else if (! aIsTangible && bIsTangible) {
+                return 1;
+            }
+
+            const aIsEnterable = typeof a.onEnter === "function";
+            const bIsEnterable = typeof b.onEnter === "function";
+
+            if (aIsEnterable && ! bIsEnterable) {
+                return -1;
+            } else if (! aIsEnterable && bIsEnterable) {
+                return 1;
+            }
+
+            if (a.id > b.id) {
+                return -1;
+            } else if (a.id < b.id) {
+                return 1;
+            }
+
+            return 0;
+        });
+    }
+
+    getEntitiesAt(x, y) {
+        const out = this.entities.filter(e => e.x === x && e.y === y);
+
+        if (out.length === 0) {
+            return [];
+        }
+
+        return this.sortEntities(out);
+    }
+
+    /**
+     * Getter for entities on the map
+     *
+     * This filters out "deactivated" entities by checking the isActive flag.
+     * This flag is set on entities that should no longer be included within
+     * the game's map and will be purged in the next cycle anyways.
+     * @see clearDeactivatedEntities()
+     */
+    get entities() {
+        return this.#entities.filter(e => e.isActive);
+    }
+
+    filterEntities(preserveTypes = []) {
+        if (! Array.isArray(preserveTypes)) {
+            console.error("preserveTypes must be an array", { preserveTypes });
+            return;
+        }
+
+        const removedEntities =
+            this.#entities.filter(e => ! preserveTypes.includes(e.type));
+
+        for (const entity of removedEntities) {
+            this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+        }
+
+        this.#entities =
+            this.#entities.filter(e => preserveTypes.includes(e.type));
+
+        if (removedEntities.length > 0) {
+            this.onEntityChange?.();
+        }
+    }
+
+    updateEntities() {
+        this.moveEntities();
+        this.tickEntities();
+    }
+
+    moveEntities() {
+        this.clearDeactivatedEntities();
+
+        this.#EntityMovementPlanner.planMovement(this);
+        const moves = this.#EntityMovementPlanner.getNextPlannedMove();
+
+        const plan = this.#EntityMovementPlanner.currentPlan;
+        if (plan.length === 0) {
+            return;
+        }
+
+        const entityIdsToMove = plan[0].map(e => e.entityId);
+
+        for (const id of entityIdsToMove) {
+            const entity =
+                this.#entities.find(e => e.id === id);
+            if (! entity) {
+                console.error(
+                    "Entity disappeared before move!",
+                    { entityId: move.entityId }
+                );
+                continue;
+            }
+
+            for (let i = 0; i < entity.movesPerTurn && i < plan.length; i++) {
+                const move = plan[i].find(e => e.entityId === id);
+                if (! move) {
+                    console.log("Entity ran out of moves", { entity, plan });
+                    break;
                 }
+
+                const hasCoordinate =
+                    Number.isInteger(move.x) &&
+                    Number.isInteger(move.y);
+
+                if (! hasCoordinate) {
+                    console.error(
+                        "No coordinate set for move",
+                        { move, moves }
+                    );
+                    return;
+                }
+
+                this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+                entity.moveTowards(move, this);
             }
         }
 
-        return total;
+        this?.onMoveEntitiesEnd?.();
     }
 
-    // Sets details for entities, such as the player or any wandering NPCs
-    setEntities(entities) {
-        const changedCoordinates = this.getChangedCoordinates(
-            this.#entities,
-            entities
+    tickEntities() {
+        for (const entity of this.entities) {
+            entity.tick?.(this);
+        }
+    }
+
+    planRealtimeEntityMoves() {
+        this.clearDeactivatedEntities();
+
+        const allEntities = this.entities;
+        const realtimeEntities =
+            allEntities.filter(e => e.isAlive && e.isRealtime);
+
+        /*
+         * These are mutable copies. Planning may change the
+         * virtual direction or location without affecting the
+         * real entity.
+         */
+        const virtualPoses = new Map(allEntities.map(entity => [
+            entity.id,
+            {
+                x: entity.x,
+                y: entity.y,
+                direction: entity.direction,
+            },
+        ]));
+
+        const movementPlans = [];
+
+        for (const entity of realtimeEntities) {
+            if (typeof entity.planRealtimeMove !== "function") {
+                continue;
+            }
+
+            const movementPlan = entity.planRealtimeMove(this, virtualPoses);
+            if (movementPlan) {
+                movementPlans.push(movementPlan);
+            }
+        }
+
+        return movementPlans;
+    }
+
+    moveRealtimeEntities() {
+        this.clearDeactivatedEntities();
+        const entities = this.entities.filter(e => e.isAlive && e.isRealtime);
+
+        for (const entity of entities) {
+            const previousX = entity.x;
+            const previousY = entity.y;
+
+            entity.move(this);
+
+            const moved =
+                previousX !== entity.x ||
+                previousY !== entity.y;
+
+            if (moved) {
+                this.#markMinimapCoordinateForRerender(previousX, previousY);
+                this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+            }
+        }
+    }
+
+    clearDeactivatedEntities() {
+        const deactivatedEntities = this.#entities.filter(e => ! e.isActive);
+        for (const entity of deactivatedEntities) {
+            this.#markMinimapCoordinateForRerender(entity.x, entity.y);
+        }
+
+        this.#entities = this.#entities.filter(e => e.isActive);
+
+        if (deactivatedEntities.length > 0) {
+            this.onEntityChange?.();
+        }
+    }
+
+    /**
+     * Helper function to force an onEnter() event on behalf of a given entity
+     * for any other entities that are on top of it
+     *
+     * Used for instances where a new enterable entity is placed on the map
+     * beneath other entities, eg: the pit of spikes
+     *
+     * @param Object entity The entity whose onEnter event should be fired
+     */
+    triggerOnEnterEvent(entity) {
+        if (! entity.isActive) {
+            console.error("Entity is inactive", { entity });
+            return;
+        }
+
+        if (typeof entity.onEnter !== "function") {
+            console.error("Entity has no onEnter() function", { entity });
+            return;
+        }
+
+        const actorEntities = this.entities.filter(e =>
+            e.x === entity.x &&
+            e.y === entity.y &&
+            e.id !== entity.id
         );
 
-        this.#rerenderList.push(...changedCoordinates);
-        this.#entities = entities;
+        for (const actorEntity of actorEntities) {
+            entity.onEnter(this, actorEntity);
+        }
     }
 
-    // Given two sets of entities, returns a list of coordinates of spots that
-    // have changed on the map. Used to determine which entity cells to rerender
-    getChangedCoordinates(oldEntities, newEntities) {
-        const allKeys = new Set([
-            ...Object.keys(oldEntities),
-            ...Object.keys(newEntities)
-        ]);
+    triggerEnterEventsForActor(actorEntity) {
+        const enterableEntities = this.entities.filter(entity =>
+            entity.id !== actorEntity.id &&
+            entity.x === actorEntity.x &&
+            entity.y === actorEntity.y &&
+            typeof entity.onEnter === "function"
+        );
 
-        const isDuplicate = (arr, coordinates) =>
-            arr.some(c => c.x === coordinates.x && c.y === coordinates.y);
-
-        return Array.from(allKeys).reduce((acc, key) => {
-            const oldCoordinates = oldEntities[key];
-            const newCoordinates = newEntities[key];
-
-            // Entity has been removed
-            if (newCoordinates === undefined) {
-                if (!isDuplicate(acc, oldCoordinates)) {
-                    acc.push(oldCoordinates);
-                }
-                return acc;
-            }
-
-            if (newCoordinates.forceRefresh) {
-                if (!isDuplicate(acc, newCoordinates)) {
-                    acc.push(newCoordinates);
-                }
-            }
-
-            if (!oldCoordinates && newCoordinates) {
-                if (!isDuplicate(acc, newCoordinates)) {
-                    acc.push(newCoordinates);
-                }
-            } else if (oldCoordinates && !newCoordinates) {
-                if (!isDuplicate(acc, oldCoordinates)) {
-                    acc.push(oldCoordinates);
-                }
-            } else if (
-                oldCoordinates.x !== newCoordinates.x ||
-                oldCoordinates.y !== newCoordinates.y
-            ) {
-                if (!isDuplicate(acc, oldCoordinates)) {
-                    acc.push(oldCoordinates);
-                }
-
-                if (!isDuplicate(acc, newCoordinates)) {
-                    acc.push(newCoordinates);
-                }
-            }
-
-            return acc;
-        }, []);
+        for (const entity of enterableEntities) {
+            entity.onEnter(this, actorEntity);
+        }
     }
 
     // Generates the map
-    // sizeX and sizeY determine the width and height of the map
     // playerStartX and playerStartY point to where the player resides, so this
     // spot should not be filled in
-    generate(sizeX, sizeY, playerStartX, playerStartY) {
-        const minSize = (this.#margin * 2) + 1;
-        if (sizeX < minSize || sizeY < minSize) {
-            throw new Error(
-                `GameMap size must be at least ${minSize}x${minSize}`
-            );
-        }
-
+    // @TODO Replace playerStart position with entities
+    generate(playerStartX, playerStartY) {
         const playerPositionOutOfBounds =
-            playerStartX < 0 || playerStartX >= sizeX ||
-            playerStartY < 0 || playerStartY >= sizeY;
+            playerStartX < 0 || playerStartX >= this.width ||
+            playerStartY < 0 || playerStartY >= this.height;
 
         if (playerPositionOutOfBounds) {
             throw new Error(
@@ -409,27 +807,35 @@ class GameMap {
         };
 
         const exitPosition = this.#getExitPosition(
-            sizeX,
-            sizeY,
             playerStartX,
             playerStartY
         );
 
         // Fill in walls
-        this.fill(0, 0, sizeX, sizeY, "wall");
+        this.fill(0, 0, this.width, this.height, "wall");
 
         // Carve out a path
         let position = { x: playerStartX, y: playerStartY };
         let stack = null;
 
         do {
-            stack = this.carvePath(sizeX, sizeY, exitPosition, [position]);
+            stack = this.carvePath(
+                this.width,
+                this.height,
+                exitPosition,
+                [position]
+            );
         } while (stack === null);
 
-        for (let i in stack) {
-            this.#cells[stack[i].y][stack[i].x] = this.generateCell(
+        for (const coordinate of stack) {
+            if (! this.inBounds(coordinate.x, coordinate.y)) {
+                console.warn("Out of bounds", { coordinate, width: this.width, height: this.height, });
+                continue;
+            }
+
+            this.#cells[coordinate.y][coordinate.x] = this.generateCell(
                 'floor',
-                { x: stack[i].x, y: stack[i].y, isExplored: false }
+                { x: coordinate.x, y: coordinate.y, isExplored: false }
             );
         }
 
@@ -451,8 +857,6 @@ class GameMap {
                 isExplored: false,
             }
         );
-
-        this.initializeMinimap();
     }
 
     getEntrance() {
@@ -476,10 +880,10 @@ class GameMap {
             cellType = "wall",
         } = options;
 
-        let dx = Math.abs(endX - startX);
-        let dy = Math.abs(endY - startY);
-        let sx = startX < endX ? 1 : -1;
-        let sy = startY < endY ? 1 : -1;
+        const dx = Math.abs(endX - startX);
+        const dy = Math.abs(endY - startY);
+        const sx = startX < endX ? 1 : -1;
+        const sy = startY < endY ? 1 : -1;
         let err = dx - dy;
 
         // Decide preferred split direction if needed
@@ -546,10 +950,16 @@ class GameMap {
         }
     }
 
+    /**
+     * @TODO Rename to rect?
+     */
     fill(startX, startY, endX, endY, cellType = "wall") {
         for (let y = startY; y < endY; y++) {
-            this.#cells[y] = [];
             for (let x = startX; x < endX; x++) {
+                if (! this.inBounds(x, y)) {
+                    continue;
+                }
+
                 this.#cells[y][x] = this.generateCell(
                     cellType,
                     { x, y, isExplored: false }
@@ -592,347 +1002,6 @@ class GameMap {
         return { x, y, w, h, center };
     }
 
-    // --- Corridors -----------------------------------------------------------
-    /**
-     * Carves a 4-connected corridor of FLOOR cells between two points/rooms.
-     * By default, prefers the dominant axis first ("auto").
-     */
-    connectPoints(ax, ay, bx, by, options = {}) {
-        const {
-            splitOrder = "auto",
-            floorCellType = "floor",
-        } = options;
-
-        this.line(ax, ay, bx, by, {
-            fourConnected: true,
-            splitOrder,
-            cellType: floorCellType,
-        });
-    }
-
-    /**
-     * Connects two rooms from center-to-center (or accepts overrides),
-     * carving a walkable corridor.
-     */
-    connectRooms(roomA, roomB, options = {}) {
-        const {
-            from = roomA.center,
-            to   = roomB.center,
-            splitOrder = "auto",
-            floorCellType  = "floor",
-        } = options;
-
-        connectPoints(
-            from.x,
-            from.y,
-            to.x,
-            to.y,
-            { splitOrder, floorCellType }
-        );
-    }
-
-    // --- Door carving --------------------------------------------------------
-    /**
-     * Carves a single-tile doorway by turning a wall tile into a floor tile.
-     * Optionally thickens the notch by 1 extra tile outward (useful for emphasis).
-     */
-    carveDoor(x, y, options = {}) {
-        const {
-            floorCellType = "floor",
-            outwardDir = null, // {dx, dy} if you want to thicken outward
-            thickness = 1,     // how many tiles to carve, including the wall
-        } = options;
-
-        // Always carve the wall tile itself into a floor.
-        this.setCell(x, y, floorCell);
-
-        if (outwardDir && (outwardDir.dx || outwardDir.dy)) {
-            let cx = x, cy = y;
-            for (let i = 1; i < thickness; i++) {
-                cx += outwardDir.dx;
-                cy += outwardDir.dy;
-
-                if (! this.#inBounds(cx, cy)) {
-                    break;
-                }
-
-                this.setCell(cx, cy, floorCell);
-            }
-        }
-    }
-
-    // --- Finding sensible wall-to-wall connection points ---------------------
-    /**
-     * Return candidate doorway cells along a room's perimeter where:
-     *   - The perimeter cell is WALL
-     *   - The tile immediately inside the room is FLOOR
-     *   - The tile immediately outside is not FLOOR (so corridor will carve)
-     * Each candidate includes the outward direction vector {dx, dy}.
-     * You can ignore corners if you don't want diagonal corner doors.
-     */
-    findRoomDoorCandidates(room, options = {}) {
-        const {
-            ignoreCorners = true,
-        } = options;
-
-        const { x, y, w, h } = room;
-        const x2 = x + w - 1;
-        const y2 = y + h - 1;
-        const results = [];
-
-        const pushIfDoor = (
-            wx, wy, inx, iny, outx, outy, dx, dy, isCorner = false
-        ) => {
-            if (ignoreCorners && isCorner) {
-                return;
-            }
-            const wall = this.getCell(wx, wy);
-            const inside = this.getCell(inx, iny);
-            const outside = this.getCell(outx, outy);
-            if (wall?.isSolid && !inside?.isSolid && outside?.isSolid) {
-                results.push({ x: wx, y: wy, outward: { dx, dy } });
-            }
-        };
-
-        // Top edge (y), inside is (y+1), outside is (y-1)
-        for (let cx = x; cx <= x2; cx++) {
-            const isCorner = (cx === x) || (cx === x2);
-            pushIfDoor(cx, y,  cx, y + 1, cx, y - 1, 0, -1, isCorner);
-        }
-
-        // Bottom edge (y2), inside is (y2-1), outside is (y2+1)
-        for (let cx = x; cx <= x2; cx++) {
-            const isCorner = (cx === x) || (cx === x2);
-            pushIfDoor(cx, y2, cx, y2 - 1, cx, y2 + 1, 0, 1, isCorner);
-        }
-
-        // Left edge (x), inside is (x+1), outside is (x-1)
-        for (let cy = y; cy <= y2; cy++) {
-            const isCorner = (cy === y) || (cy === y2);
-            pushIfDoor(x, cy,  x + 1, cy, x - 1, cy, -1, 0, isCorner);
-        }
-
-        // Right edge (x2), inside is (x2-1), outside is (x2+1)
-        for (let cy = y; cy <= y2; cy++) {
-            const isCorner = (cy === y) || (cy === y2);
-            pushIfDoor(x2, cy, x2 - 1, cy, x2 + 1, cy, 1, 0, isCorner);
-        }
-
-        return results;
-    }
-
-    /**
-     * Choose the "best" pair of doorway candidates between two rooms.
-     * Strategy: minimize Manhattan distance between door tiles (simple & effective).
-     * Returns { a, b } or null if no candidates.
-     */
-    chooseBestDoorPair(candsA, candsB) {
-        if (!candsA.length || !candsB.length) {
-            return null;
-        }
-
-        let best = null;
-        let bestDist = Infinity;
-
-        for (const a of candsA) {
-            for (const b of candsB) {
-                const d = Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-                if (d < bestDist) {
-                    bestDist = d;
-                    best = { a, b };
-                }
-            }
-        }
-
-        return best;
-    }
-
-    /**
-     * Connect rooms by:
-     *   1) Finding plausible doorway cells on each perimeter
-     *   2) Picking the closest pair
-     *   3) Carving both doors (+ optional outward thickening)
-     *   4) Carving a 4-connected corridor between the doors
-     */
-    connectRoomsSmart(roomA, roomB, options = {}) {
-        const {
-            splitOrder = "auto",
-            doorThickness = 1, // 1 means just the wall tile; >1 thickens outward
-            carveOutward = true,
-        } = options;
-
-        const candsA = this.findRoomDoorCandidates(roomA);
-        const candsB = this.findRoomDoorCandidates(roomB);
-        const pair = this.chooseBestDoorPair(candsA, candsB);
-        if (!pair) {
-            return false;
-        }
-
-        // Carve the door tiles (turn wall -> floor)
-        this.carveDoor(pair.a.x, pair.a.y, {
-            outwardDir: carveOutward ? pair.a.outward : null,
-            thickness: Math.max(1, doorThickness),
-        });
-        this.carveDoor(pair.b.x, pair.b.y, {
-            outwardDir: carveOutward ? pair.b.outward : null,
-            thickness: Math.max(1, doorThickness),
-        });
-
-        // Corridor from door to door
-        this.connectPoints(pair.a.x, pair.a.y, pair.b.x, pair.b.y, { splitOrder });
-
-        return true;
-    }
-
-    // --- Maze carving (recursive backtracker on a 2D cell lattice) -----------
-    /**
-     * Carves a 4-connected maze inside the rectangle [x, y, w, h].
-     * The region is treated as a lattice with corridors on odd coordinates.
-     * - Ensures outer border stays walls (good for rooms/corridors connection later).
-     * - Optionally "braids" the maze to remove some dead-ends (adds loops).
-     *
-     * Options:
-     *  - floorCell:    cell used for passages (default FLOOR)
-     *  - wallCell:     cell used for walls (default WALL)
-     *  - seed:         number; if provided, carving is deterministic
-     *  - braid:        0..1; probability to remove each detected dead-end (default 0)
-     *  - entryExit:    { openTop?:boolean, openBottom?:boolean, openLeft?:boolean, openRight?:boolean }
-     *                  If set, will punch a single-tile opening centered on that side.
-     *  - mask:         (x,y)=>boolean; return true to allow carving at that tile, false to keep wall.
-     *                  (Mask is applied to *cells* not walls; walls still kept as walls.)
-     */
-    carveMazeRegion(x, y, w, h, options = {}) {
-        const {
-            floorCellType = "floor",
-            wallCellType = "wall",
-            seed = null,
-            braid = 0,
-            entryExit = null,
-            mask = null,
-        } = options;
-
-        const rng = seed == null ? Math.random : this.mulberry32(seed);
-
-        // Clamp and ensure region big enough for a maze
-        if (w < 3 || h < 3) {
-            return;
-        }
-
-        // 1) Initialize region as solid walls
-        for (let yy = y; yy < y + h; yy++) {
-            for (let xx = x; xx < x + w; xx++) {
-                this.setCell(xx, yy, wallCellType);
-            }
-        }
-
-        // 2) Lattice coordinates: carve only on odd offsets inside the border
-        const xMin = x + 1, yMin = y + 1;
-        const xMax = x + w - 2, yMax = y + h - 2;
-
-        // Visited set for lattice cells (odd grid)
-        const visited = new Set();
-        const key = (cx, cy) => `${cx},${cy}`;
-
-        // Pick a random valid starting cell on odd coords that passes mask (if any)
-        const candidates = [];
-        for (let cy = yMin; cy <= yMax; cy += 2) {
-            for (let cx = xMin; cx <= xMax; cx += 2) {
-                if (! this.#inBounds(cx, cy)) {
-                    continue;
-                }
-
-                if (mask && !mask(cx, cy)) {
-                    continue;
-                }
-
-                candidates.push({ cx, cy });
-            }
-        }
-
-        if (candidates.length === 0) {
-            return;
-        }
-
-        const start = candidates[(rng() * candidates.length) | 0];
-
-        // Depth-first search (recursive backtracker via explicit stack)
-        const stack = [start];
-        visited.add(key(start.cx, start.cy));
-        this.setCell(start.cx, start.cy, floorCellType);
-
-        const dirs = [
-            { dx:  2, dy:  0 }, // right
-            { dx: -2, dy:  0 }, // left
-            { dx:  0, dy:  2 }, // down
-            { dx:  0, dy: -2 }, // up
-        ];
-
-        while (stack.length) {
-            const cur = stack[stack.length - 1];
-            // Shuffle directions each step for good randomness
-            this.shuffleInPlace(dirs, rng);
-
-            // Find an unvisited neighbor two steps away (on odd coords)
-            let advanced = false;
-            for (const { dx, dy } of dirs) {
-                const nx = cur.cx + dx;
-                const ny = cur.cy + dy;
-
-                if (nx < xMin || nx > xMax || ny < yMin || ny > yMax) {
-                    continue;
-                }
-
-                if (mask && !mask(nx, ny)) {
-                    continue;
-                }
-
-                const k = key(nx, ny);
-                if (visited.has(k)) {
-                    continue;
-                }
-
-                // Carve wall between (step of 1) and the neighbor cell
-                const wx = cur.cx + dx / 2;
-                const wy = cur.cy + dy / 2;
-                this.setCell(wx, wy, floorCellType); // corridor
-                this.setCell(nx, ny, floorCellType); // new cell
-
-                visited.add(k);
-                stack.push({ cx: nx, cy: ny });
-                advanced = true;
-                break;
-            }
-
-            if (!advanced) {
-                stack.pop();
-            }
-        }
-
-        // 3) Optional braiding: remove some dead ends to make loops
-        if (braid > 0) {
-            this.braidDeadEnds(x, y, w, h, braid, floorCellType);
-        }
-
-        // 4) Optional entry/exit openings on the region border (one-tile notches)
-        if (entryExit) {
-            const midX = Math.floor((x + (x + w - 1)) / 2);
-            const midY = Math.floor((y + (y + h - 1)) / 2);
-
-            if (entryExit.openTop) {
-                // find nearest floor beneath the top border and connect
-                this.carveCenteredOpening(map, midX, y, 0, 1, floorCellType);
-            }
-            if (entryExit.openBottom) {
-                this.carveCenteredOpening(map, midX, y + h - 1, 0, -1, floorCellType);
-            }
-            if (entryExit.openLeft) {
-                this.carveCenteredOpening(map, x, midY, 1, 0, floorCellType);
-            }
-            if (entryExit.openRight) {
-                this.carveCenteredOpening(map, x + w - 1, midY, -1, 0, floorCellType);
-            }
-        }
-    }
 
     // Fisher–Yates shuffle
     shuffleInPlace(arr, rng) {
@@ -942,219 +1011,18 @@ class GameMap {
         }
     }
 
-    // Create a single-tile opening on a border and ensure it meets a corridor
+    // Create a single cell opening on a border and ensure it meets a corridor
     carveCenteredOpening(bx, by, dx, dy, floorCellType) {
         // bx,by is on the border; step one inward until we hit non-wall or go out of bounds
         const x1 = bx + dx, y1 = by + dy;
-        if (! this.#inBounds(bx, by)) {
+        if (! this.inBounds(bx, by)) {
             return;
         }
 
         this.setCell(bx, by, floorCellType);
-        if (this.#inBounds(x1, y1)) {
+        if (this.inBounds(x1, y1)) {
             this.setCell(map, x1, y1, floorCell);
         }
-    }
-
-    // Remove some dead ends with probability p (0..1) by punching through one adjacent wall
-    braidDeadEnds(x, y, w, h, p, floorCellType) {
-        const ends = [];
-        for (let yy = y + 1; yy < y + h - 1; yy++) {
-            for (let xx = x + 1; xx < x + w - 1; xx++) {
-                if (getCell(map, xx, yy)?.isSolid) {
-                    continue;
-                }
-
-                const neighbors = this.countFloorNeighbors(xx, yy);
-                if (neighbors === 1) {
-                    ends.push({ xx, yy });
-                }
-            }
-        }
-
-        for (const d of ends) {
-            if (Math.random() <= p) {
-                // Try punch one adjacent wall into a second floor (avoid backtracking into the single neighbor if possible)
-                const dirs = [
-                    { dx:  1, dy:  0 },
-                    { dx: -1, dy:  0 },
-                    { dx:  0, dy:  1 },
-                    { dx:  0, dy: -1 },
-                ];
-
-                this.shuffleInPlace(dirs, Math.random); // braiding can be non-deterministic unless you want to seed this too
-
-                for (const { dx, dy } of dirs) {
-                    const wx = d.xx + dx;
-                    const wy = d.yy + dy;
-                    const bx = d.xx + 2 * dx;
-                    const by = d.yy + 2 * dy;
-                    if (! this.#inBounds(bx, by)) {
-                        continue;
-                    }
-
-                    // Punch through wall if beyond it is floor (creates a loop)
-                    if (getCell(wx, wy)?.isSolid && ! getCell(bx, by)?.isSolid) {
-                        this.setCell(wx, wy, floorCellType);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    countFloorNeighbors(x, y) {
-        return (
-            ! this.getCell(x + 1, y)?.isSolid +
-            ! this.getCell(x - 1, y)?.isSolid +
-            ! this.getCell(x, y + 1)?.isSolid +
-            ! this.getCell(x, y - 1)?.isSolid
-        );
-    }
-
-    // --- Utilities to build masks from rooms ---------------------------------
-    /**
-     * Creates a mask function that DISALLOWS carving inside the given rectangles.
-     * By default, it protects the whole room including its perimeter walls.
-     *
-     * Options:
-     *  - padding: number >= 0 -> expand the protected rectangle by this many tiles
-     *                             (useful to keep corridors from hugging walls)
-     *  - protectInteriorOnly: boolean -> if true, protects only the interior (not walls)
-     */
-    makeRoomMask(rooms, options = {}) {
-        const {
-            padding = 0,
-            protectInteriorOnly = false,
-        } = options;
-
-        // Normalize rectangles; each room is { x, y, w, h }
-        const rects = rooms.map(r => {
-            // include walls by default; interior-only shrinks by 1 each side
-            const offset = protectInteriorOnly ? 1 : 0;
-
-            // perimeter-inclusive bounds
-            let x1 = r.x - padding + offset;
-            let y1 = r.y - padding + offset;
-            let x2 = (r.x + r.w - 1) + padding - offset;
-            let y2 = (r.y + r.h - 1) + padding - offset;
-
-            // If interior-only and padding over-shrinks, clamp back to empty exclusion
-            if (x1 > x2 || y1 > y2) {
-                // Nothing to protect for this rect
-                return null;
-            }
-
-            return { x1, y1, x2, y2 };
-        }).filter(Boolean);
-
-        // Return a mask: true -> allowed to carve; false -> keep wall (protected)
-        return function mask(x, y) {
-            for (const r of rects) {
-                if (x >= r.x1 && x <= r.x2 && y >= r.y1 && y <= r.y2) {
-                    return false; // disallow carving in protected area
-                }
-            }
-
-            return true; // carving allowed elsewhere
-        };
-    }
-
-    /**
-     * Combines multiple mask functions with logical AND.
-     * Carving is allowed only if EVERY mask allows it.
-     */
-    combineMasks(...masks) {
-        return function combined(x, y) {
-            for (const m of masks) {
-                if (m && ! m(x, y)) {
-                    return false;
-                }
-            }
-            return true;
-        };
-    }
-
-    /**
-     * Connects a room to the nearest existing floor (e.g., maze corridor)
-     * that lies OUTSIDE the protected mask (e.g., room + padding).
-     *
-     * Options:
-     *  - mask:        function(x,y)->boolean  // true = allowed to carve (outside rooms/padding)
-     *  - splitOrder:  "auto" | "horizontal-first" | "vertical-first"
-     *  - doorThickness: number >= 1           // outward thickening
-     *  - carveOutward: boolean                // apply outward thickening along candidate's outward vector
-     *
-     * Returns true on success, false if no connection was made.
-     */
-    connectRoomToNearestMaze(room, options = {}) {
-        const {
-            mask = null,
-            splitOrder = "auto",
-            doorThickness = 1,
-            carveOutward = true,
-        } = options;
-
-        // 1) Gather room door candidates (perimeter wall cells with floor inside).
-        const cands = this.findRoomDoorCandidates(room, { ignoreCorners: true });
-        if (!cands.length) {
-            return false;
-        }
-
-        // 2) Build a list of all eligible target floor tiles (maze corridors)
-        //    We only target tiles for which mask(x,y) === true (i.e., not inside protected areas).
-        const targets = [];
-        for (let y = 0; y < this.#cells.length; y++) {
-            for (let x = 0; x < this.#cells[y].length; x++) {
-                if (! this.#inBounds(x, y)) {
-                    continue;
-                }
-
-                // skip protected zones (room + padding)
-                if (mask && !mask(x, y)) {
-                    continue;
-                }
-
-                if (! this.getCell(x, y)?.isSolid) {
-                    targets.push({ x, y });
-                }
-            }
-        }
-
-        if (! targets.length) {
-            return false;
-        }
-
-        // 3) Choose (door, target) pair minimizing Manhattan distance
-        let best = null;
-        let bestDist = Infinity;
-
-        for (const d of cands) {
-            for (const t of targets) {
-                const dist = Math.abs(d.x - t.x) + Math.abs(d.y - t.y);
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = { door: d, target: t };
-                }
-            }
-        }
-
-        if (! best) {
-            return false;
-        }
-
-        // 4) Carve the door notch (wall -> floor), optionally thickening outward
-        this.carveDoor(best.door.x, best.door.y, {
-            outwardDir: carveOutward ? best.door.outward : null,
-            thickness: Math.max(1, doorThickness),
-        });
-
-        // 5) Carve a 4-connected corridor from the door tile to the chosen target
-        this.connectPoints(best.door.x, best.door.y, best.target.x, best.target.y, {
-            splitOrder,
-        });
-
-        return true;
     }
 
     /**
@@ -1215,7 +1083,7 @@ class GameMap {
         }
 
         const pts = this.circlePerimeterPoints(cx, cy, r)
-            .filter(p => this.#inBounds(p.x, p.y));
+            .filter(p => this.inBounds(p.x, p.y));
 
         if (!fourConnected) {
             for (const p of pts) {
@@ -1243,7 +1111,7 @@ class GameMap {
 
     /**
      * Fill a solid disk of radius r.
-     * Always 4-connected as a region (walkable if cell.isSolid === false).
+     * Always 4-connected as a region (walkable if cell.isWall === false).
      */
     fillCircle(cx, cy, r, options = {}) {
         const { cellType = "wall" } = options;
@@ -1254,65 +1122,12 @@ class GameMap {
         const r2 = r * r;
         for (let y = cy - r; y <= cy + r; y++) {
             for (let x = cx - r; x <= cx + r; x++) {
-                if (! this.#inBounds(x, y)) {
+                if (! this.inBounds(x, y)) {
                     continue;
                 }
 
                 const dx = x - cx, dy = y - cy;
                 if (dx * dx + dy * dy <= r2) {
-                    this.setCell(x, y, cellType);
-                }
-            }
-        }
-    }
-
-    /**
-     * Draw a thick ring (annulus) centered at (cx, cy) with "thickness" tiles.
-     * thickness = 1 approximates a thin ring; >1 makes a chunkier band.
-     * This produces a continuous 4-connected band as a region.
-     *
-     * Options:
-     *   - cell:   cell object to place (default CELL.WALL)
-     *   - mode:   "centered" | "outer" | "inner"
-     *             where the thickness is centered on r, or extends outward, or inward.
-     */
-    ring(cx, cy, r, thickness = 1, options = {}) {
-        const {
-            cellType = "wall",
-            mode = "centered",
-        } = options;
-
-        if (r < 0 || thickness < 1) {
-            return;
-        }
-
-        // Determine inner/outer radius (integer) for the annulus
-        let rIn, rOut;
-        if (mode === "outer") {
-            rIn = Math.max(0, r);
-            rOut = r + thickness - 1;
-        } else if (mode === "inner") {
-            rIn = Math.max(0, r - thickness + 1);
-            rOut = Math.max(r, rIn);
-        } else { // centered
-            const half = (thickness - 1) / 2;
-            rIn = Math.max(0, Math.floor(r - half));
-            rOut = Math.floor(r + Math.ceil(half));
-        }
-
-        const rIn2  = rIn * rIn;
-        const rOut2 = rOut * rOut;
-
-        // Rasterize by distance check within bounding box
-        for (let y = cy - rOut; y <= cy + rOut; y++) {
-            for (let x = cx - rOut; x <= cx + rOut; x++) {
-                if (! this.#inBounds(x, y)) {
-                    continue;
-                }
-
-                const dx = x - cx, dy = y - cy;
-                const d2 = dx * dx + dy * dy;
-                if (d2 >= rIn2 && d2 <= rOut2) {
                     this.setCell(x, y, cellType);
                 }
             }
@@ -1332,6 +1147,14 @@ class GameMap {
                 // L2 (euclidean)
                 return Math.hypot(dx, dy);
         }
+    }
+
+    manhattan(x1, y1, x2, y2) {
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+
+    coordinatedManhattan(start, end) {
+        return Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
     }
 
     perimeterPointsMetric(cx, cy, r, metric = "euclidean") {
@@ -1401,7 +1224,7 @@ class GameMap {
         const rBox = r; // bounding square half-size
         for (let y = cy - rBox; y <= cy + rBox; y++) {
             for (let x = cx - rBox; x <= cx + rBox; x++) {
-                if (! this.#inBounds(x, y)) {
+                if (! this.inBounds(x, y)) {
                     continue;
                 }
 
@@ -1438,7 +1261,7 @@ class GameMap {
         const rBox = rOut;
         for (let y = cy - rBox; y <= cy + rBox; y++) {
             for (let x = cx - rBox; x <= cx + rBox; x++) {
-                if (! this.#inBounds(x, y)) {
+                if (! this.inBounds(x, y)) {
                     continue;
                 }
 
@@ -1458,7 +1281,7 @@ class GameMap {
         splitOrder = "auto",
     } = {}) {
         const pts = this.perimeterPointsMetric(cx, cy, r, metric)
-            .filter(p => this.#inBounds(p.x, p.y));
+            .filter(p => this.inBounds(p.x, p.y));
 
         if (!fourConnected) {
             for (const p of pts) {
@@ -1515,11 +1338,11 @@ class GameMap {
     }
 
     // Generates and returns a set of coordinates for where the exit should be
-    #getExitPosition(sizeX, sizeY, playerStartX, playerStartY) {
+    #getExitPosition(playerStartX, playerStartY) {
         const margin = this.#margin;
         const exit = {
-            x: sizeX - margin,
-            y: sizeY - margin,
+            x: this.width - margin,
+            y: this.height - margin,
         };
         const possiblePositions = [['x', 'y'], ['x'], ['y']];
         const positions = possiblePositions[
@@ -1529,15 +1352,15 @@ class GameMap {
         for (let p in positions) {
             if (positions[p] === 'x') {
                 const exitOffsetX =
-                    Math.round(Math.random() * Math.round(sizeX / 10));
-                exit.x = playerStartX < sizeX / margin
-                    ? sizeX - margin - exitOffsetX
+                    Math.round(Math.random() * Math.round(this.width / 10));
+                exit.x = playerStartX < this.width / margin
+                    ? this.width - margin - exitOffsetX
                     : margin + exitOffsetX;
             } else {
                 const exitOffsetY =
-                    Math.round(Math.random() * Math.round(sizeY / 10));
-                exit.y = playerStartY < sizeY / margin
-                    ? sizeY - margin - exitOffsetY
+                    Math.round(Math.random() * Math.round(this.height / 10));
+                exit.y = playerStartY < this.height / margin
+                    ? this.height - margin - exitOffsetY
                     : margin + exitOffsetY;
             }
         }
@@ -1550,14 +1373,14 @@ class GameMap {
     }
 
     carvePath(mapSizeX, mapSizeY, exitPosition, stack) {
-        const direction = Math.random() < 0.5 ? 'horizontal' : 'vertical';
+        const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
         const step = Math.random() < 0.5 ? -1 : 1;
         let lastPosition = stack[stack.length - 1];
 
-        for (let i=0; i<2; i++) {
+        for (let i = 0; i < 2; i++) {
             const nextPosition = {
-                x: lastPosition.x + (direction === 'horizontal' ? step : 0),
-                y: lastPosition.y + (direction === 'vertical' ? step : 0),
+                x: lastPosition.x + (direction === "horizontal" ? step : 0),
+                y: lastPosition.y + (direction === "vertical" ? step : 0),
             };
 
             const atMapEdge =
@@ -1570,7 +1393,7 @@ class GameMap {
                 return null;
             }
 
-            const alreadyVisited = stack.find((seenPosition) =>
+            const alreadyVisited = stack.find(seenPosition =>
                 seenPosition.x === nextPosition.x &&
                 seenPosition.y === nextPosition.y
             );
@@ -1592,7 +1415,7 @@ class GameMap {
         }
 
         let result;
-        for (let i=0; i<100; i++) {
+        for (let i = 0; i<100; i++) {
             result = this.carvePath(mapSizeX, mapSizeY, exitPosition, stack);
             if (result) {
                 break;
@@ -1630,8 +1453,6 @@ class GameMap {
     // Returns a list of coordinates where the map could be dissolved
     // A dissolve point is any spot on the map that's not at the map's edge, but
     // is a wall that has three surrounding walls
-    // @TODO Make sure this works for other types of walls, eg iceWall
-    //       Maybe check for isSolid instead of type === 'wall'
     getMapDissolvePoints() {
         const margin = this.#margin;
         const dissolvePoints = [];
@@ -1639,10 +1460,10 @@ class GameMap {
         for (let y = margin; y < this.#cells.length - margin; y++) {
             for (let x = margin; x < this.#cells[0].length - margin; x++) {
                 const isDissolvePoint = this.#cells[y][x]?.type === 'wall' && (
-                    (this.#cells[y - 1][x]?.type === 'wall' ? 1 : 0) +
-                    (this.#cells[y + 1][x]?.type === 'wall' ? 1 : 0) +
-                    (this.#cells[y][x - 1]?.type === 'wall' ? 1 : 0) +
-                    (this.#cells[y][x + 1]?.type === 'wall' ? 1 : 0)
+                    (this.#cells[y - 1][x]?.isWall ? 1 : 0) +
+                    (this.#cells[y + 1][x]?.isWall ? 1 : 0) +
+                    (this.#cells[y][x - 1]?.isWall ? 1 : 0) +
+                    (this.#cells[y][x + 1]?.isWall ? 1 : 0)
                 ) === 3;
 
                 if (isDissolvePoint) {
@@ -1656,7 +1477,7 @@ class GameMap {
 
     // Sets up the minimap element if the element has been defined
     initializeMinimap() {
-        if (!this.#$minimap) {
+        if (! this.#$minimap) {
             console.debug(
                 "Cannot generate minimap because no minimap element has " +
                 "been defined"
@@ -1669,101 +1490,222 @@ class GameMap {
         for (let y = 0; y < this.#cells.length; y++) {
             for (let x = 0; x < this.#cells[y].length; x++) {
                 const $cell = document.createElement('span');
-                $cell.id = MapCell.getCellId(x, y);
+                $cell.id = `map_cell_${x}_${y}`;
                 this.#$minimap.append($cell);
 
                 // Track the minimap element in the corresponding map cell
                 this.#cells[y][x].$element = $cell;
 
                 // Make sure we render the cell
-                this.#rerenderList.push({x, y});
+                this.#markMinimapCoordinateForRerender(x, y);
             }
 
-            this.#$minimap.append(document.createElement('br'));
+            this.#$minimap.append(document.createElement("br"));
         }
     }
 
-    // Updates the cells on the minimap based on coordinates in the rerenderList
-    refreshMinimap() {
-        if (!this.#$minimap) {
+    #getRerenderCoordinates(forceFullRefresh = false) {
+        if (forceFullRefresh) {
+            const coordinates = [];
+
+            for (let y = 0; y < this.height; y++) {
+                for (let x = 0; x < this.width; x++) {
+                    coordinates.push({ x, y });
+                }
+            }
+
+            return coordinates;
+        }
+
+        return [...this.#minimapRerenderCoordinates].map(key => {
+            const [x, y] = key.split("_").map(Number);
+            return { x, y };
+        });
+    }
+
+    // Updates the cells on the minimap
+    refreshMinimap(forceFullRefresh = false) {
+        if (! this.#$minimap) {
             console.warn("No minimap defined. Cannot rerender");
             return;
         }
 
-        this.#rerenderList.forEach((cellCoords) => {
-            const cell = this.#cells[cellCoords.y]?.[cellCoords.x];
+        const coords = this.#getRerenderCoordinates(forceFullRefresh);
+        this.#minimapRerenderCoordinates.clear();
 
-            if (!cell) {
+        coords.forEach(coordinate => {
+            const { x, y } = coordinate;
+            const cell = this.#cells[y]?.[x];
+
+            if (! cell) {
                 console.error("Could not find cell to rerender", {
-                    cellCoords,
+                    coordinate,
                     cells: this.#cells,
                 });
                 return;
             }
 
-            const overrides = Object.entries(this.#entities).find(
-                ([id, entity]) =>
-                    entity.x === cellCoords.x &&
-                    entity.y === cellCoords.y
-            )?.[1] || {};
+            const cellEntities = this.entities.filter(e =>
+                e.x === x &&
+                e.y === y &&
+                e.isVisibleOnMinimap
+            );
 
-            cell.refreshElement(overrides);
+            cell.refreshElement(cellEntities);
         });
+    }
 
-        this.#rerenderList = [];
+    isExplored(x, y) {
+        return this.#cells?.[y]?.[x].isExplored ?? false;
     }
 
     // Reveals a spot on the map, regardless of walls
-    revealSpot(spotX, spotY, radius) {
-        for (let y=spotY-radius; y<=spotY+radius; y++) {
-            for (let x=spotX-radius; x<=spotX+radius; x++) {
+    revealSpot(spotX, spotY, radius = 0) {
+        for (let y = spotY - radius; y <= spotY + radius; y++) {
+            for (let x = spotX - radius; x <= spotX + radius; x++) {
                 if (typeof this.#cells[y]?.[x] !== "undefined") {
                     this.#cells[y][x].isExplored = true;
-                    this.#rerenderList.push({x, y});
+                    this.#markMinimapCoordinateForRerender(x, y);
                 }
             }
         }
     }
 
+    // Hides the entire map
+    conceal() {
+        this.#changeCellVisibility(false);
+    }
+
     // Reveals the entire map
     reveal() {
-        for (let y=0; y<this.#cells.length; y++) {
-            for (let x=0; x<this.#cells[y].length; x++) {
-                this.#cells[y][x].isExplored = true;
-                this.#rerenderList.push({x, y});
+        this.#changeCellVisibility(true);
+    }
+
+    #changeCellVisibility(isExplored) {
+        for (let y = 0; y < this.#cells.length; y++) {
+            for (let x = 0; x < this.#cells[y].length; x++) {
+                this.#cells[y][x].isExplored = isExplored;
+                this.#markMinimapCoordinateForRerender(x, y);
             }
         }
     }
 
     // Reveals the field of view around a point
     // Does not reveal anything obscured by solid surfaces
-    revealFieldOfView(px, py, radius) {
-        // Reveal the player's own tile
-        this.revealSpot(px, py, 0);
+    revealFieldOfView(x, y, radius) {
+        // Reveal the player's own cell
+        this.revealSpot(x, y, 0);
 
         for (let angle = 0; angle < 360; angle += 5) {
             const rad = angle * Math.PI / 180;
-            let blocked = false;
             for (let r = 1; r <= radius; r++) {
-                const tx = Math.round(px + Math.cos(rad) * r);
-                const ty = Math.round(py + Math.sin(rad) * r);
-                const cell = this.getCell(tx, ty);
-                if (!cell) {
-                    break;
-                }
-
+                const tx = Math.round(x + Math.cos(rad) * r);
+                const ty = Math.round(y + Math.sin(rad) * r);
                 this.revealSpot(tx, ty, 0);
-                if (cell.isSolid) {
+                if (this.getCell(tx, ty).isWall) {
                     break;
                 }
             }
         }
     }
 
+    #seeFrom(x, y, direction, visionDistance, fieldOfView, returnEntities) {
+        const defaultFieldOfView = 90;
+        const seen = [];
+        const mappedEntities = returnEntities
+            ? Object.entries(this.entities).map(e => {
+                const o = e[1];
+                // @TODO It should not be necessary to set IDs here
+                return { id: o.id || e[0], x: o.x, y: o.y, type: o.type };
+            })
+            : [];
+
+        const isValidFov =
+            typeof fieldOfView === "number" &&
+            fieldOfView > 0 &&
+            fieldOfView <= 360;
+
+        const fov = isValidFov ? fieldOfView : defaultFieldOfView;
+        const halfFov = fov / 2;
+
+        // The direction is an integer from 0-3 starting north, moving clockwise
+        // 0 => N, 1 => E, 2 => S, W => 3
+        const startingDirection = -90 + (90 * (direction % 4));
+        const angleStart = startingDirection - halfFov;
+        const angleEnd = startingDirection + halfFov;
+
+        for (let angle = angleStart; angle <= angleEnd; angle++) {
+            const rad = angle * Math.PI / 180;
+            let previousX = x;
+            let previousY = y;
+
+            for (let d = 1; d <= visionDistance; d++) {
+                const tx = Math.round(x + Math.cos(rad) * d);
+                const ty = Math.round(y + Math.sin(rad) * d);
+                if (tx === previousX && ty === previousY) {
+                    continue;
+                }
+
+                const deltaX = tx - previousX;
+                const deltaY = ty - previousY;
+
+                // Prevent rays from moving between touching corners
+                if (deltaX !== 0 && deltaY !== 0) {
+                    const isBlockedByCorner =
+                        this.getCell(previousX + deltaX, previousY).isWall &&
+                        this.getCell(previousX, previousY + deltaY).isWall;
+                    if (isBlockedByCorner) {
+                        break;
+                    }
+                }
+
+                if (! returnEntities) {
+                    if (! seen.find(e => e.x === tx && e.y === ty)) {
+                        seen.push({ x: tx, y: ty });
+                    }
+                } else {
+                    if (seen.find(e => e.x === tx && e.y === ty)) {
+                        continue;
+                    }
+
+                    const seenEntities =
+                        mappedEntities.filter(e => e.x === tx && e.y === ty);
+
+                    if (seenEntities.length > 0) {
+                        seen.push(...seenEntities);
+                    }
+                }
+
+                if (this.getCell(tx, ty).isWall) {
+                    break;
+                }
+
+                previousX = tx;
+                previousY = ty;
+            }
+        }
+
+        return seen;
+    }
+
+    seeFrom(x, y, direction, visionDistance, fieldOfView) {
+        return this
+            .#seeFrom(x, y, direction, visionDistance, fieldOfView, false);
+    }
+
+    seeEntitiesFrom(x, y, direction, visionDistance, fieldOfView) {
+        return this
+            .#seeFrom(x, y, direction, visionDistance, fieldOfView, true);
+    }
+
     /**
+     * @TODO Make sure this can handle ignoring entities
+     * @TODO Also consolidate this with findPathCoordinated() which should be
+     *       used instead
+     *
      * Find a path with the A* pathfinding algorithm
-     * - this.#cells[y][x].isSolid === true  -> wall (blocked)
-     * - this.#cells[y][x].isSolid === false -> floor (walkable)
+     * - this.#cells[y][x].isWall === true  -> wall (blocked)
+     * - this.#cells[y][x].isWall === false -> floor (walkable)
      *
      * Returns: Array<[x, y]> path from start to goal (inclusive),
      *          or null if unreachable.
@@ -1773,43 +1715,57 @@ class GameMap {
      *
      * @param start An array of the starting coordinates ([x, y])
      * @param goal An array of the target coordinates ([x, y])
+     * @param blockedCoordinates Pairs of X, Y coordinates that are inaccessible
+     * @return array|null Array of [x, y] steps, or null if path is impossible
      */
-    findPath(start, goal) {
+    findPath(start, goal, blockedCoordinates = []) {
         const width = this.#cells[0]?.length ?? 0;
         const height = this.#cells.length;
 
-        // Basic validation
         if (width === 0 || height === 0) {
+            console.error("The map is empty", { width, height });
             return null;
         }
 
         const [sx, sy] = start;
         const [gx, gy] = goal;
         if (
-            !inBounds(sx, sy, width, height) ||
-            !inBounds(gx, gy, width, height)
+            ! this.inBounds(sx, sy, width, height) ||
+            ! this.inBounds(gx, gy, width, height)
         ) {
-            return null;
-        }
-
-        // Exit early if the start or end is a fall
-        if (this.#cells[sy][sx].isSolid || this.#cells[gy][gx].isSolid) {
+            console.error(
+                "Coordinates are not in bounds",
+                { start, goal, mapDimensions: [width, height] }
+            );
             return null;
         }
 
         if (sx === gx && sy === gy) {
+            console.info("Target acquired", {sx, sy});
             return [[sx, sy]];
         }
 
-        // Helpers
-        function inBounds(x, y, w, h) {
-            return x >= 0 && y >= 0 && x < w && y < h;
+        // Exit early if the start or end is a wall
+        const isObstructed =
+            this.#cells[sy][sx].isWall ||
+            this.#cells[gy][gx].isWall ||
+            blockedCoordinates.some(e =>
+                (e.x === sx && e.y === sy) ||
+                (e.x === gx && e.y === gy)
+            );
+
+        if (isObstructed) {
+            console.info(
+                "Hit an obstruction",
+                {
+                    start: `(${sx}, ${sy})`,
+                    goal: `(${gx}, ${gy})`,
+                }
+            );
+            return null;
         }
 
-        function manhattan(x1, y1, x2, y2) {
-            return Math.abs(x1 - x2) + Math.abs(y1 - y2);
-        }
-
+        // Index helper
         function idx(x, y) {
             return y * width + x;
         }
@@ -1828,7 +1784,7 @@ class GameMap {
         const sIndex = idx(sx, sy);
         const gIndex = idx(gx, gy);
         gScore[sIndex] = 0;
-        fScore[sIndex] = manhattan(sx, sy, gx, gy);
+        fScore[sIndex] = this.manhattan(sx, sy, gx, gy);
 
         // Min-heap priority queue by fScore
         const heap = new MinHeap((a, b) => fScore[a] - fScore[b]);
@@ -1864,11 +1820,11 @@ class GameMap {
                 const nx = cx + dirs[i][0];
                 const ny = cy + dirs[i][1];
 
-                if (!inBounds(nx, ny, width, height)) {
+                if (! this.inBounds(nx, ny, width, height)) {
                     continue;
                 }
 
-                if (this.#cells?.[ny]?.[nx]?.isSolid ?? true) {
+                if (this.#cells?.[ny]?.[nx]?.isWall ?? true) {
                     continue;
                 }
 
@@ -1877,50 +1833,324 @@ class GameMap {
                     continue;
                 }
 
-                const tentativeG = gScore[current] + 1; // uniform cost for 4-dir grid
+                // Uniform cost for 4-directional grid
+                const tentativeG = gScore[current] + 1;
 
                 if (tentativeG < gScore[nIndex]) {
                     cameFrom[nIndex] = current;
                     gScore[nIndex] = tentativeG;
-                    fScore[nIndex] = tentativeG + manhattan(nx, ny, gx, gy);
+                    fScore[nIndex] =
+                        tentativeG + this.manhattan(nx, ny, gx, gy);
 
                     if (!openSetFlag[nIndex]) {
                         heap.push(nIndex);
                         openSetFlag[nIndex] = 1;
                     } else {
-                        heap.rescore(nIndex); // decrease-key
+                        // Decrease-key
+                        heap.rescore(nIndex);
                     }
                 }
             }
         }
 
-        // No path
+        // No path was found
         return null;
 
         function reconstructPath(cameFrom, currentIndex, width) {
             const path = [];
-            let cur = currentIndex;
-            while (cur !== -1) {
-                const x = cur % width;
-                const y = (cur / width) | 0;
+            let current = currentIndex;
+            while (current !== -1) {
+                const x = current % width;
+                const y = (current / width) | 0;
                 path.push([x, y]);
-                cur = cameFrom[cur];
+                current = cameFrom[current];
             }
             path.reverse();
             return path;
         }
     }
 
-    /**
-     * Helper function to only grab the next step coordinates from a starting
-     * point towards a target goal without returning the full list of steps
-     * @see findPath()
-     *
-     * @param start An array of the starting coordinates ([x, y])
-     * @param goal An array of the target coordinates ([x, y])
-     */
-    findNextStep(start, goal) {
-        return this.findPath(start, goal)?.[1] ?? null;
+    findPathCoordinated(
+        start,
+        goal,
+        claimedSpacesInTime = [],
+        corridors = {},
+        availableCorridorEntrances = {},
+        entity
+    ) {
+        const width = this.#cells[0]?.length ?? 0;
+        const height = this.#cells.length;
+
+        if (width === 0 || height === 0) {
+            console.error("The map is empty", { width, height });
+            return null;
+        }
+
+        if (
+            ! this.coordinateInBounds(start) ||
+            ! this.coordinateInBounds(goal)
+        ) {
+            console.error(
+                "Coordinates are not in bounds",
+                { start, goal, mapDimensions: [width, height] }
+            );
+            return null;
+        }
+
+        if (start.x === goal.x && start.y === goal.y) {
+            console.info("Already on the goal", { start, goal });
+            return null;
+        }
+
+        // Planning horizon: we only reason about reservations inside this window.
+        // If window is 8, valid times are 0..7 and moves advance time by +1.
+        const maxTime = Math.max(0, claimedSpacesInTime.length - 1);
+        if (maxTime < 1) {
+            console.info("Planning horizon is empty");
+            return null;
+        }
+
+        const cellCount = width * height;
+        const stateCount = cellCount * (maxTime + 1);
+
+        function cellIndex(coordinate) {
+            return coordinate.y * width + coordinate.x;
+        }
+
+        function stateIndex(cellIdx, time) {
+            return time * cellCount + cellIdx;
+        }
+
+        function decodeStateIndex(index) {
+            const time = (index / cellCount) | 0;
+            const cellIdx = index - (time * cellCount);
+            const x = cellIdx % width;
+            const y = (cellIdx / width) | 0;
+            return { x, y, time, cellIdx };
+        }
+
+        function isClaimedAt(time, x, y) {
+            if (time < 0 || time >= claimedSpacesInTime.length) {
+                return false;
+            }
+
+            return claimedSpacesInTime[time].some(e =>
+                e.x === x &&
+                e.y === y &&
+                e.entityId !== entity?.id &&
+                e.entityId !== entity?.targetEntityId
+            );
+        }
+
+        function reconstructPath(cameFrom, endStateIndex) {
+            const path = [];
+            let current = endStateIndex;
+
+            while (current !== -1) {
+                const decoded = decodeStateIndex(current);
+                path.push({ x: decoded.x, y: decoded.y });
+                current = cameFrom[current];
+            }
+
+            path.reverse();
+
+            return path;
+        }
+
+        // Scores & bookkeeping
+        const gScore = new Float32Array(stateCount);
+        const fScore = new Float32Array(stateCount);
+        const openSetFlag = new Uint8Array(stateCount);
+        const closedSet = new Uint8Array(stateCount);
+        const cameFrom = new Int32Array(stateCount);
+
+        cameFrom.fill(-1);
+        gScore.fill(Infinity);
+        fScore.fill(Infinity);
+
+        const startCellIdx = cellIndex(start);
+        const goalCellIdx = cellIndex(goal);
+
+        const startState = stateIndex(startCellIdx, 0);
+        gScore[startState] = 0;
+        fScore[startState] = this.coordinatedManhattan(start, goal);
+
+        const heap = new MinHeap((a, b) => fScore[a] - fScore[b]);
+        heap.push(startState);
+        openSetFlag[startState] = 1;
+
+        // 4-directional + wait
+        const dirs = [
+            [ 1,  0],
+            [-1,  0],
+            [ 0,  1],
+            [ 0, -1],
+            [ 0,  0],
+        ];
+
+        let expansions = 0;
+        let bestState = startState;
+        let bestH = Infinity; // this.coordinatedManhattan(start, goal);
+
+        while (heap.size() > 0 && expansions++ < 100000) {
+            const currentState = heap.pop();
+            openSetFlag[currentState] = 0;
+
+            if (closedSet[currentState]) {
+                continue;
+            }
+
+            closedSet[currentState] = 1;
+
+            const currentDecoded = decodeStateIndex(currentState);
+            const currentCoordinate = {
+                x: currentDecoded.x,
+                y: currentDecoded.y
+            };
+            const currentTime = currentDecoded.time;
+            const h = this.coordinatedManhattan(currentDecoded, goal);
+
+            if (h < bestH) {
+                bestH = h;
+                bestState = currentState;
+            }
+
+            // If we reached the goal at any time within the horizon, we're done
+            if (currentDecoded.cellIdx === goalCellIdx) {
+                return reconstructPath(cameFrom, currentState);
+            }
+
+            // We can't expand beyond the horizon
+            if (currentTime >= maxTime) {
+                continue;
+            }
+
+            const currentCorridorId = this.identifyCorridor(
+                currentCoordinate.x,
+                currentCoordinate.y,
+                corridors
+            );
+
+            for (const dir of dirs) {
+                const nextX = currentCoordinate.x + dir[0];
+                const nextY = currentCoordinate.y + dir[1];
+                const nextTime = currentTime + 1;
+
+                if (
+                    nextX < 0 ||
+                    nextY < 0 ||
+                    nextX >= width ||
+                    nextY >= height
+                ) {
+                    continue;
+                }
+
+                if (this.getCell(nextX, nextY).isWall) {
+                    continue;
+                }
+
+                // Blocked at the time we would arrive
+                if (isClaimedAt(nextTime, nextX, nextY)) {
+                    continue;
+                }
+
+                // Prevent edge-swap collisions:
+                // If someone is in (nextX, nextY) at currentTime and is in the
+                // current cell at nextTime, entities would be swapping
+                const wouldSwap =
+                    isClaimedAt(currentTime, nextX, nextY) &&
+                    isClaimedAt(
+                        nextTime,
+                        currentCoordinate.x,
+                        currentCoordinate.y
+                    );
+
+                if (wouldSwap) {
+                    continue;
+                }
+
+                const nextCorridorId = this.identifyCorridor(
+                    nextX,
+                    nextY,
+                    corridors
+                );
+
+                const isEnteringCorridor =
+                    currentCorridorId === null &&
+                    nextCorridorId !== null;
+
+                const corridorOpeningIsBlocked =
+                    isEnteringCorridor &&
+                    availableCorridorEntrances.hasOwnProperty(nextCorridorId) &&
+                    (
+                        availableCorridorEntrances[nextCorridorId].x !==
+                            nextX ||
+                        availableCorridorEntrances[nextCorridorId].y !==
+                            nextY
+                    );
+
+                if (corridorOpeningIsBlocked) {
+                    continue;
+                }
+
+                const nextCellIdx = nextY * width + nextX;
+                const nextState = stateIndex(nextCellIdx, nextTime);
+
+                if (closedSet[nextState]) {
+                    continue;
+                }
+
+                const tentativeG = gScore[currentState] + 1;
+
+                if (tentativeG < gScore[nextState]) {
+                    cameFrom[nextState] = currentState;
+                    gScore[nextState] = tentativeG;
+
+                    fScore[nextState] =
+                        tentativeG +
+                        this.coordinatedManhattan({ x: nextX, y: nextY }, goal);
+
+                    if (! openSetFlag[nextState]) {
+                        heap.push(nextState);
+                        openSetFlag[nextState] = 1;
+                    } else {
+                        heap.rescore(nextState);
+                    }
+                }
+            }
+        }
+
+        // If we didn't reach the goal within the horizon, still return a partial route
+        const bestPath = reconstructPath(cameFrom, bestState);
+
+        // If the best path is just "stand still", treat as no move
+        if (bestPath.length <= 1) {
+            console.warn("The best path is to stand still apparently", { cameFrom, bestState, bestPath });
+            return null;
+        }
+
+        console.info("Returning the best path", { bestPath });
+        return bestPath;
+    }
+
+
+
+    identifyCorridor(x, y, corridors) {
+        const corridorIds = Object.keys(corridors);
+
+        for (const id of corridorIds) {
+            const corridor = corridors[id];
+            if (! Array.isArray(corridor)) {
+                console.error("Corridor is not an array", { corridor, id });
+                continue;
+            }
+
+            if (corridor.some(e => e.x === x && e.y === y)) {
+                return id;
+            }
+        }
+
+        return null;
     }
 }
 

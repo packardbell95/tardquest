@@ -1,12 +1,80 @@
 // Renders a GameMap object as a DOM element
-const renderGameMapContext = (mapObject, path = []) => {
+const renderGameMapContext = (mapObject, path = [], mode, extraData) => {
+    const modeSettings = {
+        path: {
+            start: {
+                character: "🚩",
+                shadowColor: "#c00",
+                titleSuffix: "Start",
+            },
+            end: {
+                character: "🏁",
+                shadowColor: "#333",
+                titleSuffix: "End",
+            },
+        },
+        fov: {
+            step: {
+                character: "•",
+                color: "#FFC800",
+                titleSuffix: "(Observed Space)",
+            },
+        },
+    };
+
+    const defaultCell = {
+        character: "•",
+        color: "#1a8",
+        titleSuffix: "(Step)",
+    };
+
+    const availableModes = Object.keys(modeSettings);
+    const activeModeKey = availableModes.includes(mode) ? mode : "path";
+    const activeMode = modeSettings[activeModeKey];
+
     const $map = document.createElement("div");
-    $map.className = "blocky cellular";
+    $map.className = "blocky cellular margin-auto";
     $map.style.backgroundColor = "#000";
 
-    for (let y = 0; y < mapObject.getHeight(); y++) {
-        for (let x = 0; x < mapObject.getWidth(); x++) {
+    for (let y = 0; y < mapObject.height; y++) {
+        for (let x = 0; x < mapObject.width; x++) {
             const coordinates = `(${x}, ${y})`;
+
+            const drawFovArrow =
+                mode === "fov" &&
+                extraData?.x === x &&
+                extraData?.y === y;
+            if (drawFovArrow) {
+                const $fovArrow = document.createElement("span");
+                const titleText =
+                    `${coordinates} Viewing Position; ` +
+                    (
+                        Number.isInteger(extraData?.visionDistance)
+                            ? `Vision Distance: ${extraData.visionDistance}`
+                            : "Unknown vision distance"
+                    ) +
+                    "; " +
+                    (
+                        Number.isInteger(extraData?.direction)
+                            ? `Direction: ${extraData.direction}`
+                            : "Unknown direction"
+                    ) +
+                    "; " +
+                    (
+                        typeof extraData?.fov === "number"
+                            ? `FOV: ${extraData.fov} degrees`
+                            : "Default FOV"
+                    );
+
+                $fovArrow.setAttribute("title", titleText);
+                $fovArrow.textContent = Number.isInteger(extraData?.direction)
+                    ? ["🔼", "▶️", "🔽", "◀️"][extraData.direction % 4]
+                    : "❓️";
+
+                $map.appendChild($fovArrow);
+                continue;
+            }
+
             const cell = mapObject.getCell(x, y);
             const pathIndex = Array.isArray(path) &&
                 path.findIndex((c) => c[0] === x && c[1] === y);
@@ -15,22 +83,37 @@ const renderGameMapContext = (mapObject, path = []) => {
                 const $step = document.createElement("span");
                 const isStart = pathIndex === 0;
                 const isEnd = pathIndex === path.length - 1;
-                const title = `${coordinates} Step`;
 
+                const styleSource = (() => {
+                    if (isStart && activeMode?.start) {
+                        return activeMode.start;
+                    }
 
-                if (isStart) {
-                    $step.textContent = "🚩";
-                    $step.style.textShadow = "2px 2px 2px #c00";
-                    $step.setAttribute("title", `${title} (Start)`);
-                } else if (isEnd) {
-                    $step.textContent = "🏁";
-                    $step.style.textShadow = "2px 2px 2px #333";
-                    $step.setAttribute("title", `${title} (End)`);
-                } else {
-                    $step.style.color = "#1a8";
-                    $step.textContent = "•";
-                    $step.setAttribute("title", title);
+                    if (isEnd && activeMode?.end) {
+                        return activeMode.end;
+                    }
+
+                    return activeMode.step;
+                })();
+
+                $step.textContent =
+                    styleSource?.character ||
+                    defaultCell.character;
+
+                $step.style.color =
+                    styleSource?.color ||
+                    defaultCell.color;
+
+                if (typeof styleSource?.shadowColor === "string") {
+                    $step.style.textShadow =
+                        `2px 2px 2px ${styleSource.shadowColor}`;
                 }
+
+                const suffix =
+                    styleSource?.titleSuffix ||
+                    defaultCell.titleSuffix;
+                const title = `${coordinates} ${suffix}`.trim();
+                $step.setAttribute("title", title);
 
                 $map.appendChild($step);
             } else if (cell.type === "wall") {

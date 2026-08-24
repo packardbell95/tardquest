@@ -68,8 +68,57 @@ button:disabled:hover {
     cursor: not-allowed;
 }
 
+.button {
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    background-position: 50% 50%;
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    &:disabled:hover {
+        background-color: unset;
+    }
+
+    &:not(:disabled) {
+        background-color: #000;
+        &:hover  { border-color: #999 #333 #333 #999; }
+        &:active { border-color: #333 #999 #999 #333; }
+    }
+
+    &.primary:not(:disabled) {
+        background-color: #00f;
+        &:hover  { border-color: #99f #00c #00c #99f; }
+        &:active { border-color: #00c #99f #99f #00c; }
+    }
+
+    &.success:not(:disabled) {
+        color: #fff;
+        background-color: #090;
+        &:hover  { border-color: #3c3 #090 #090 #3c3; }
+        &:active { border-color: #090 #3c3 #3c3 #090; }
+    }
+
+    &.danger:not(:disabled) {
+        background-color: #f00;
+        &:hover  { border-color: #f99 #c00 #c00 #f99; }
+        &:active { border-color: #c00 #f99 #f99 #c00; }
+    }
+
+    &:not(:disabled):active {
+        background-position: calc(50% + 2px) calc(50% + 2px);
+    }
+
+    &:disabled {
+        opacity: 0.25;
+    }
+}
+
 .strikethrough {
     text-decoration: line-through;
+}
+
+.flipped {
+    transform: scaleX(-1);
 }
 
 .upside-down {
@@ -86,8 +135,100 @@ a:link {
     color: #fff;
 }
 
+@keyframes loadingSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    border: 16px solid #fff3;
+    border-top: 16px solid #61C9F6;
+    border-radius: 50%;
+    width: 50px;
+    aspect-ratio: 1;
+    animation: loadingSpin .5s linear infinite;
+}
+
 #ui {
     display: flex;
+}
+
+@keyframes tqUiCursor_flicker {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.tq-ui-cursor {
+    width: 44px;
+    height: 30px;
+    image-rendering: pixelated;
+    background-image: url(assets/interface/ui/cursor.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    position: absolute;
+    pointer-events: none;
+    z-index: 1000;
+
+    /** Corners **/
+    &.left-top,
+    &.start-start,
+    &.start-top {
+        transform: rotate(45deg);
+    }
+
+    &.right-top,
+    &.end-top,
+    &.end-start {
+        transform: rotate(135deg) scaleY(-1);
+    }
+
+    &.left-bottom,
+    &.start-end,
+    &.start-bottom {
+        transform: rotate(-45deg);
+    }
+
+    &.right-bottom,
+    &.end-bottom,
+    &.end-end {
+        transform: rotate(225deg) scaleY(-1);
+    }
+
+    /** Edges **/
+    &.middle-top,
+    &.middle-start {
+        transform: rotate(90deg);
+    }
+
+    &.middle-end,
+    &.middle-bottom {
+        transform: rotate(-90deg);
+    }
+
+    &.left-start,
+    &.left-middle,
+    &.left-end,
+    &.start-middle {
+        transform: rotate(0);
+    }
+
+    &.right-start,
+    &.right-middle,
+    &.right-end,
+    &.end-middle {
+        transform: scaleX(-1);
+    }
+
+    &.flicker {
+        animation: tqUiCursor_flicker 80ms steps(2, end) infinite;
+        filter: brightness(.5);
+    }
 }
 
 @keyframes darken {
@@ -187,7 +328,7 @@ a:link {
         scaleX(6%)
         scaleY(40%)
         rotateZ(-43deg);
-    z-index: 9999;
+    z-index: 1000;
 }
 
 #titleScreen .distantLightning {
@@ -236,8 +377,8 @@ a:link {
     border-style: solid;
     border-width: 2px;
     border-top-width: 10px;
-    border-color: #ffffff;
-    background-color: #000000;
+    border-color: #fff;
+    background-color: #000;
     font-size: 12px;
     z-index: 999;
 
@@ -792,7 +933,7 @@ a:link {
     transform: translateY(-7em);
 }
 
-.top {
+#spire .top {
     transition: transform 1s linear;
 
     &:nth-child(1) {
@@ -817,7 +958,7 @@ a:link {
     }
 }
 
-.go .top {
+.go #spire .top {
     &:nth-child(1) {
         transform: translateY(-4em) rotateX(90deg) translateY(-40px) translateZ(120px);
     }
@@ -837,7 +978,7 @@ a:link {
 
 /** END OF TITLE SCREEN STYLES **/
 
-#game {
+#scene {
     width: 100%;
     height: 100%;
     white-space: pre;
@@ -881,7 +1022,7 @@ a:link {
     }
 }
 
-#game.descendingIntoFloor {
+#scene.descendingIntoFloor {
     animation: descendIntoFloor 1.2s forwards linear;
 }
 
@@ -898,20 +1039,10 @@ a:link {
 }
 
 
-#game.descendingToNextFloor {
+#scene.descendingToNextFloor {
     animation:
         descendIntoFloor 1.2s linear,
         descendFromCeiling 1.2s linear 1.21s;
-}
-
-#game.terrain_iceCavern {
-    background: linear-gradient(
-        180deg,
-        rgb(100, 113, 182) 0%,
-        rgb(0, 0, 0) 30%,
-        rgb(0, 0, 0) 70%,
-        rgb(49, 41, 106) 100%
-    );
 }
 
 @keyframes torchFlicker {
@@ -933,7 +1064,7 @@ a:link {
     }
 }
 
-#game.torch::after {
+#scene.torch::after {
     content: "";
     position: absolute;
     top: 0;
@@ -944,193 +1075,6 @@ a:link {
     background: radial-gradient(circle, #fff0 30%, #f2bb20cc 80%);
     mix-blend-mode: screen;
     animation: torchFlicker 3s infinite ease-in-out;
-}
-
-#game:not(.sightliness) {
-    filter: saturate(0.6);
-}
-
-#game > .layer {
-    position: absolute;
-    margin-left: 3.5px;
-    top: 0;
-    left: 0;
-}
-
-#game > .layer.dark {
-    filter: brightness(0);
-}
-
-#game:not(.lean-effect) > .layer.darkening {
-    animation-name: darken;
-    animation-duration: .5s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-}
-
-#game.lean-effect > .layer.darkening {
-    animation-name: darken, leanWaveContent;
-    animation-duration: .5s, 3s;
-    animation-fill-mode: forwards, none;
-    animation-timing-function: linear, ease-in-out;
-    animation-iteration-count: 1, infinite;
-}
-
-#game:not(.lean-effect) > .layer.lightening {
-    animation-name: lighten;
-    animation-duration: .5s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-}
-
-#game.lean-effect > .layer.lightening {
-    animation-name: lighten, leanWaveContent;
-    animation-duration: .5s, 3s;
-    animation-fill-mode: forwards, none;
-    animation-timing-function: linear, ease-in-out;
-    animation-iteration-count: 1, infinite;
-}
-
-#game > .layer.enemy > span {
-    color: #fff;
-}
-
-.layer.enemy {
-    position: absolute !important;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 10;
-}
-.layer.enemy pre {
-    margin: 0;
-    line-height: 1;
-    display: inline-block;
-    font-size: 12px;
-    transform: scale(0.5);
-    transform-origin: center center;
-    color: #fff;
-}
-
-@keyframes layerHealingAnimation {
-    from { transform: translateY(0); }
-    to { transform: translateY(-100%) };
-}
-
-#game > .layer.healing {
-    background: linear-gradient(
-        0deg,
-        #0b00 0%,
-        #0b00 10%,
-        #0b0f 50%,
-        #ffff 55%,
-        #080f 60%,
-        #0800 90%,
-        #0800 100%
-    );
-    animation-name: layerHealingAnimation;
-    animation-duration: 0.76s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-    mix-blend-mode: screen;
-    width: 100%;
-    height: 1000%;
-}
-
-#game .layer,
-#game span {
-    display: inline-block;
-    font-size: 12px;
-    line-height: 12px;
-}
-
-#game.lean-effect {
-    position: relative;
-}
-
-#game.lean-effect::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg,
-        rgba(187, 1, 187, 0.493) 0%,
-        rgba(147, 0, 211, 0.15) 25%,
-        rgba(131, 25, 230, 0.11) 50%,
-        rgba(128, 0, 128, 0.15) 75%,
-        rgba(113, 3, 160, 0.486) 100%);
-    animation: leanWave 3s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 5;
-}
-
-#game.lean-effect > .layer {
-    animation-name: leanWaveContent;
-    animation-duration: 3s;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-}
-
-@keyframes leanWave {
-    0%, 100% {
-        transform: translateX(0) skewX(0deg);
-        filter: hue-rotate(0deg);
-    }
-    25% {
-        transform: translateX(2px) skewX(0.5deg);
-        filter: hue-rotate(10deg);
-    }
-    50% {
-        transform: translateX(-1px) skewX(-0.3deg);
-        filter: hue-rotate(-5deg);
-    }
-    75% {
-        transform: translateX(1px) skewX(0.2deg);
-        filter: hue-rotate(5deg);
-    }
-}
-
-@keyframes leanWaveContent {
-    0%, 100% {
-        transform: translateX(0) skewX(0deg) scaleY(1);
-    }
-    25% {
-        transform: translateX(5px) skewX(0.3deg) scaleY(1.01);
-    }
-    50% {
-        transform: translateX(-0.8px) skewX(-0.2deg) scaleY(0.995);
-    }
-    75% {
-        transform: translateX(0.8px) skewX(0.1deg) scaleY(1.005);
-    }
-}
-
-#animBattleTransition {
-    position: absolute;
-    background-repeat: no-repeat;
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-    left: 0;
-    top: 0;
-    background-image: url(assets/transitions/battle-transition.gif);
-    background-size: cover;
-    background-position: bottom;
-    transform: translateY(-100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 15;
-}
-
-#animBattleTransition.active {
-    transform: translateY(0);
-}
-
-#animBattleTransition.reveal {
-    transform: translateY(-100%);
 }
 
 #animTorch {
@@ -1169,7 +1113,7 @@ a:link {
     transform: translate(200px, 100px);
 }
 
-#animBoulderHit {
+#animBouldingBallStrike {
     position: absolute;
     background-repeat: no-repeat;
     width: 41px;
@@ -1177,7 +1121,7 @@ a:link {
     image-rendering: pixelated;
     right: 20px;
     top: -200px;
-    background-image: url(assets/interface/ui/boulder-hit.gif);
+    background-image: url(assets/interface/ui/boulding-ball-strike.gif);
     background-size: contain;
     background-position: center;
     transform: translateY(0);
@@ -1186,7 +1130,7 @@ a:link {
     z-index: 1000;
 }
 
-#animBoulderHit.onscreen {
+#animBouldingBallStrike.onscreen {
     transform: translateY(220px);
 }
 
@@ -1237,6 +1181,9 @@ a:link {
 #mouseControl .touch {
     clip-path: polygon(10% 15%, 90% 15%, 90% 85%, 10% 85%);
     cursor: url(assets/cursors/touch.cur), grab;
+    &.attack {
+        cursor: url(assets/cursors/attack.cur), crosshair;
+    }
 }
 
 #mouseControl .touch:active {
@@ -1245,6 +1192,44 @@ a:link {
 
 #mouseControl .attack {
     cursor: url(assets/cursors/attack.cur), crosshair;
+}
+
+#viewportAnimation {
+    z-index: 10;
+    height: auto;
+
+    /* Fit the video within the viewport, below the "Viewport" header bar */
+    position: absolute;
+    top: 13px;
+    left: 0;
+}
+
+@keyframes highlightColor {
+  0%   { background-color: #00f; }
+  20%  { background-color: #90f; }
+  40%  { background-color: #00f; }
+  60%  { background-color: #99f; }
+  80%  { background-color: #00f; }
+  100% { background-color: #000; }
+}
+
+.highlight {
+    background-color: #00f;
+    animation: highlightColor 9s infinite alternate linear;
+}
+
+@keyframes targetHighlightColor {
+  0%   { background-color: #f00; }
+  20%  { background-color: #f09; }
+  40%  { background-color: #f00; }
+  60%  { background-color: #f99; }
+  80%  { background-color: #f00; }
+  100% { background-color: #000; }
+}
+
+.target-highlight {
+    background-color: #f00;
+    animation: targetHighlightColor 9s infinite alternate linear;
 }
 
 /** Menu Styles **/
@@ -1288,7 +1273,7 @@ a:link {
 }
 
 #menu .option.selected {
-    background-color: #003;
+    background-color: #006;
 }
 
 #menu .option .cursor {
@@ -1305,7 +1290,8 @@ a:link {
 }
 
 #menu .selectionDescription {
-    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #menu .escapeMessage {
@@ -1314,6 +1300,63 @@ a:link {
     width: 100%;
     text-align: end;
 }
+
+#menu.blurred {
+    color: #ccc;
+
+    & .option.selected {
+        background-color: #224;
+    }
+}
+
+.description {
+    min-height: 3em;
+}
+
+.stats-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 4ch;
+}
+
+.stats-container {
+    border: 1px solid #fff;
+    margin-bottom: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    & table {
+        border-collapse: collapse;
+        width: 100%;
+
+        & th,
+        & td {
+            border: 1px solid #fff;
+            border-bottom: none;
+            padding: 0 1ch;
+            min-width: 4ch;
+
+            &:last-child {
+                border-right: none;
+            }
+
+            &:first-child {
+                border-left: none;
+            }
+        }
+
+        & td.value {
+            text-align: right;
+        }
+
+        & th:first-child {
+            border: none;
+        }
+    }
+}
+
 /** End of Menu Styles **/
 
 #animation:not(.hidden) {
@@ -1330,48 +1373,6 @@ a:link {
     align-items: center;
     justify-content: center;
     z-index: 9;
-}
-
-@keyframes explosionColors {
-    0% {
-        background-color: #FFF5AD;
-        opacity: 1;
-    }
-
-    32% {
-        background-color: #F00;
-        opacity: 1;
-    }
-
-    38% {
-        background-color: #FFBC14;
-        opacity: 1;
-    }
-
-    45% {
-        background-color: #FFF;
-        opacity: 1;
-    }
-
-    50% {
-        background-color: #464FFC;
-        opacity: 1;
-    }
-
-    100% {
-        background-color: #000;
-        opacity: 0;
-    }
-}
-
-#animation.explosion {
-    font-size: 12px;
-    mix-blend-mode: lighten;
-    animation-name: explosionColors;
-    animation-duration: 240ms;
-    animation-iteration-count: 1;
-    animation-direction: forwards;
-    animation-timing-function: linear;
 }
 
 @keyframes fadeGradient {
@@ -1412,30 +1413,35 @@ a:link {
     word-wrap: break-word;
     white-space: pre-wrap;
     overflow-y: scroll;
+    text-indent: 2ch hanging;
+
+    & ul {
+        margin: 0;
+        padding-left: 3ch;
+    }
+
+    & > * {
+        filter: brightness(.5) saturate(.5);
+    }
+
+    & > :nth-child(1) {
+        filter: brightness(1) saturate(1);
+    }
+
+    & > :nth-child(2) {
+        filter: brightness(.8) saturate(.8);
+    }
+
+    & > :nth-child(3) {
+        filter: brightness(.7) saturate(.7);
+    }
+
+    & > :nth-child(4) {
+        filter: brightness(.6) saturate(.6);
+    }
 }
 
-#battleLog > * {
-    filter: brightness(.5) saturate(.5);
-}
-
-#battleLog > :nth-child(1) {
-    filter: brightness(1) saturate(1);
-}
-
-#battleLog > :nth-child(2) {
-    filter: brightness(.8) saturate(.8);
-}
-
-#battleLog > :nth-child(3) {
-    filter: brightness(.7) saturate(.7);
-}
-
-#battleLog > :nth-child(4) {
-    filter: brightness(.6) saturate(.6);
-}
-
-#minimap,
-#portraitArtOverlay {
+#minimap {
     padding: 2px;
     white-space: pre;
     font-size: 12px;
@@ -1463,8 +1469,22 @@ a:link {
     color: #f00;
 }
 
+@keyframes sigilGlow {
+      0% { color: #FF9E4B; }
+     20% { color: #D90077; }
+     40% { color: #C00500; }
+     60% { color: #FF7600; }
+     80% { color: #DF4298; }
+    100% { color: #FF0700; }
+}
+
+.sigil {
+    animation: sigilGlow 8s ease-in-out infinite;
+    color: #FF0700;
+}
+
 #minimap .vampire,
-.mapCellDetails .enlargedTile.vampire {
+.mapCellDetails .enlargedCell.vampire {
     position: relative;
 
     &::before {
@@ -1506,8 +1526,8 @@ a:link {
     }
 }
 
-#minimap .boulder,
-.mapCellDetails .enlargedTile.boulder {
+#minimap .bouldingBall,
+.mapCellDetails .enlargedCell.bouldingBall {
     position: relative;
 
     &::before {
@@ -1518,75 +1538,64 @@ a:link {
         overflow: hidden;
         content: " ";
         display: inline-block;
-        animation: boulderRoll 0.6s infinite;
+        animation: bouldingBallRoll 0.6s infinite;
         color: #8B5A28;
     }
 }
 
-.mapCellDetails .enlargedTile.boulder::before {
+.mapCellDetails .enlargedCell.bouldingBall::before {
     top: 0.4ch !important;
 }
 
-#minimap .boulder {
+#minimap .bouldingBall {
     width: 1ch;
 }
 
-@keyframes boulderRoll {
+@keyframes bouldingBallRoll {
     0%, 25% {
-        content: "o";
-        transform: scaleY(1);
+        content: "⚉";
+        transform: rotate(45deg) scaleX(1) scaleY(1);
     }
 
     25.01%, 50% {
-        content: "o";
-        transform: scaleY(-1);
+        content: "⚈";
+        transform: rotate(90deg) scaleX(1) scaleY(-1);
     }
 
     50.01%, 75% {
-        content: "o";
-        transform: scaleY(1);
+        content: "●";
+        transform: rotate(135deg) scaleX(1) scaleY(1);
     }
 
     75.01%, 100% {
-        content: "o";
-        transform: scaleY(-1);
+        content: "⚈";
+        transform: rotate(90deg) scaleX(-1) scaleY(-1);
     }
 }
 
-#portraitArtOverlay.portrait-art {
-    position: absolute;
-    top: 107px;
-    pointer-events: none;
-    font-size: 5px;
-    line-height: 1;
+/* Portrait sprite-sheet animations */
+#portraitContainer {
+    --portrait-frame-height: 156px;
+
+    height: 184px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-#portraitArtOverlay.chest {
-    color: #FAEB4A;
+#portraitHeader {
+    text-transform: uppercase;
 }
 
-#portraitArtOverlay.settings {
-    color: #eef;
-}
+#portraitImage {
+    display: block;
+    height: 156px;
+    margin: 6px auto auto;
+    image-rendering: pixelated;
 
-#portraitArtOverlay.inventory {
-    color: #fc8;
-}
-
-#portraitArtOverlay.erokPet,
-#portraitArtOverlay.erokIdle {
-    color: #ffd68a;
-    top: 104px; /* lazy fix for clipping over border */
-}
-
-#portraitArtOverlay.deathVampire{
-    color: #f0f;
-    top: 135px; /* lazy fix for vampire portrait positioning */
-    left: 20px;
-}
-
-#portraitArtOverlay.pigeon {
-    color: rgb(79, 194, 146);
+    &.flipped {
+        transform: scaleX(-1);
+    }
 }
 
 .hidden {
@@ -1595,6 +1604,15 @@ a:link {
 
 .invisible {
     visibility: hidden !important;
+}
+
+.offscreen-pixel {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }
 
 #inputBox {
@@ -1671,8 +1689,8 @@ a:link {
     grid-template-rows: 110px 184px 162px 148px 30px;
     grid-template-areas:
         "battleLog  battleLog   battleLog"
-        "topLeft    viewport    inventory"
-        "stats      viewport    inventory"
+        "topLeft    viewport    rightSidebar"
+        "stats      viewport    rightSidebar"
         "controls   party       playerInput"
         "bottomBar  bottomBar   bottomBar";
 }
@@ -1712,8 +1730,15 @@ a:link {
     justify-content: space-around;
 }
 
-#dungeonFloor::before {
-    content: "Dungeon Floor ";
+.minimap-footer {
+    display: flex;
+    flex-direction: row;
+    gap: 1ch;
+    background-color: #a30000;
+    color: #ffffff;
+    margin: 1px;
+    padding: 0 4px;
+    justify-content: center;
 }
 
 #killCounter::before {
@@ -1730,21 +1755,17 @@ a:link {
 #stats          { grid-area: stats; }
 #controls       { grid-area: controls; }
 #party          { grid-area: party; overflow: hidden; }
-#inventory      { grid-area: inventory; }
+#rightSidebar   { grid-area: rightSidebar; }
 #playerInput    { grid-area: playerInput; }
-#viewport {
-    grid-area: viewport;
-    background-image: url('assets/backgrounds/bg1.png');
-    background-size: 1472px 341px;
-    background-repeat: repeat-x;
-    background-position: 0px 0px;
-    position: relative;
-    overflow: hidden;
-}
-#bottomBar     {
+#viewport       { grid-area: viewport; }
+#bottomBar {
     grid-area: bottomBar;
     display: flex;
     flex-direction: column;
+}
+
+#topLeft {
+    overflow: hidden;
 }
 
 @keyframes nowPlaying_notes {
@@ -1951,15 +1972,46 @@ a:link {
     justify-content: right;
 }
 
-#partyMembers {
+#playerParty,
+#enemyParty {
+    height: 153px;
+    transition: transform 300ms ease;
+}
+
+#playerParty:not(.active),
+#enemyParty.active {
+    transform: translateY(-153px);
+}
+
+.party-members {
     display: flex;
     flex-direction: column;
     padding: 4px;
     margin-top: 2px;
 }
 
-#partyMembers:empty::after {
-    content: "You ain't got no party. Go persuade some fools!";
+#enemyParty .party-members {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 2ch;
+    padding: 2px;
+    cursor: pointer;
+
+    & .party-member.button {
+        & > * {
+            position: relative;
+        }
+
+        &:not(:disabled):active {
+            & > * {
+                top: 2px;
+                left: 2px;
+            }
+        }
+    }
+}
+
+.party-members:empty::after {
     display: block;
     margin-top: 50px;
     text-align: center;
@@ -1967,27 +2019,32 @@ a:link {
     font-style: italic;
 }
 
-#partyMembers > [data-partyMemberId] {
-    background-color: #000;
+.party-members > [data-party-member-id] {
     clip-path: rect(0 100% 100% 0);
     height: 35px;
     margin-bottom: 8px;
     overflow: hidden;
-    transition:
-        background-color .5s linear,
-        clip-path .5s linear,
-        height .5s linear .5s,
-        margin-bottom .5s linear .5s;
+
+    &.sweepItUp {
+        transition:
+            background-color .5s linear,
+            clip-path .5s linear,
+            height .5s linear .5s,
+            margin-bottom .5s linear .5s;
+        background-color: #900;
+        clip-path: rect(0 0% 100% 0);
+        height: 0;
+        margin-bottom: 0;
+    }
 }
 
-#partyMembers > [data-partyMemberId].sweepItUp {
-    background-color: #900;
-    clip-path: rect(0 0% 100% 0);
-    height: 0;
-    margin-bottom: 0;
+/* Not aesthetic, but visible. Will change later */
+.ui-active {
+    background-color: orange !important;
+    border-color: darkorange !important;
+    color: #000;
 }
 
-#viewport > .layer,
 #viewport > #animation,
 #viewport > #animTorch,
 #viewport > #menu,
@@ -2005,8 +2062,8 @@ a:link {
     gap: 4px;
     padding: 4px;
     grid-template-columns: 1fr 2fr;
-    margin: 0px 2px;
-    position: absolute;
+    margin: 4px 2px;
+    line-height: 1.9ch;
 }
 
 #controlsMenu .control-list {
@@ -2202,6 +2259,269 @@ a:link {
     background-image: url(assets/interface/ui/next.png);
 }
 
+.portrait {
+    aspect-ratio: 1;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-color: #000;
+    transition: transform 1s ease-in-out;
+    &::after {
+        content: "";
+        display: block;
+        aspect-ratio: 1;
+        background-color: var(--tint-color, #fff);
+        mix-blend-mode: multiply;
+    }
+
+    background-image: url(assets/portraits/placeholder.png);
+
+    &.player {
+        background-image: url(assets/portraits/player.png);
+    }
+    &.snailSentinel {
+        background-image: url(assets/portraits/snailSentinel.png);
+    }
+    &.stupidDog {
+        background-image: url(assets/portraits/stupidDog.png);
+    }
+    &.keeperOfTheToiletBowl {
+        background-image: url(assets/portraits/keeperOfTheToiletBowl.png);
+    }
+    &.mysteriousScooter {
+        background-image: url(assets/portraits/mysteriousScooter.png);
+    }
+    &.badassFlamingSkeleton {
+        background-image: url(assets/portraits/badassFlamingSkeleton.png);
+    }
+    &.wangRat {
+        background-image: url(assets/portraits/wangRat.png);
+    }
+    &.fridgeOfForgottenLeftovers {
+        background-image: url(assets/portraits/fridgeOfForgottenLeftovers.png);
+    }
+    &.lughead {
+        background-image: url(assets/portraits/lughead.png);
+    }
+    &.pissedOffPoultry {
+        background-image: url(assets/portraits/pissedOffPoultry.png);
+    }
+    &.krampusElf {
+        background-image: url(assets/portraits/krampusElf.png);
+    }
+    &.mimic {
+        background-image: url(assets/portraits/mimic.png);
+    }
+    &.vampire {
+        background-image: url(assets/portraits/vampire.png);
+    }
+}
+
+.portrait-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    cursor: help;
+
+    &.clickable {
+        cursor: pointer;
+
+        &:hover {
+            border-color: #ffd700;
+        }
+    }
+
+    & .portrait {
+        width: 36px;
+        height: 36px;
+    }
+
+    & > .foreground {
+        display: none;
+        pointer-events: none;
+        width: 50px;
+        height: 46.8px;
+        position: absolute;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    &.dead {
+        & .portrait {
+            filter: grayscale(1);
+        }
+
+        & .foreground {
+            display: initial;
+            background-image: url(assets/portraits/overlays/x.png);
+        }
+    }
+
+    & .turn-number {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+    }
+}
+
+
+#rightSidebar {
+    overflow-y: hidden;
+}
+
+#battleQueueSection {
+    box-sizing: border-box;
+    border-bottom: 1px solid #fff;
+    height: 250px;
+    overflow: hidden;
+}
+
+#battleQueueSection,
+#battleQueueSection + #inventory {
+    transition: transform .1s ease-in;
+}
+
+#battleQueueSection:not(.open),
+#battleQueueSection:not(.open) + #inventory {
+    transform: translateY(-250px);
+}
+
+#battleQueueSection.open,
+#battleQueueSection.open + #inventory {
+    transform: translateY(0);
+}
+
+#battleQueueSection #battleQueue {
+    filter: brightness(0);
+    transition: filter .4s ease-in;
+}
+
+#battleQueueSection.open #battleQueue {
+    filter: brightness(1);
+}
+
+#battleQueue {
+    height: 234px;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    & > div {
+        --x: 0;
+        --y: 0;
+
+        position: absolute;
+
+        transform: translate(var(--x), var(--y));
+        transition: transform 300ms ease;
+
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+    /*
+        width: 36px;
+        height: 36px;
+    */
+
+        width: 50px;
+        height: 46.8px;
+
+
+
+
+
+        /*
+
+
+        --translate-x: 0;
+        --scroll-duration: 5s;
+        --steps: 1;
+
+        width: fit-content;
+        height: 23.4px;
+        padding: 0 1ch;
+        line-height: 23.4px;
+        transform: translateX(0);
+        transition: transform var(--scroll-duration);
+        transition-timing-function: steps(var(--steps));
+
+        &:hover {
+            transform: translateX(var(--translate-x ));
+        }
+        */
+    }
+}
+
+.battle-queue-modal {
+    display: flex;
+    flex-direction: row;
+    border: 4px double #fff9;
+    min-width: 300px;
+
+    &.friendly {
+        color: #fff;
+        background:
+            linear-gradient(#000, #000) padding-box,
+            linear-gradient(#00f, #00f) border-box;
+    }
+
+    &.enemy {
+        color: #fff;
+        background:
+            linear-gradient(#000, #000) padding-box,
+            linear-gradient(#f00, #f00) border-box;
+    }
+
+    & .column {
+        display: flex;
+        flex-direction: column;
+
+        &.left .portrait {
+            width: 72px;
+            height: 72px;
+            mask-size: contain;
+        }
+
+        &.right {
+            gap: 1em;
+            padding: 0 1ch;
+            flex-grow: 1;
+        }
+    }
+
+    & .actor {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+
+        & .top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1ch;
+        }
+
+        & .name {
+            font-size: 1.5em;
+        }
+
+        & .stat {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1ch;
+
+            & progress-bar {
+                flex-grow: 1;
+            }
+        }
+    }
+}
+
 #inventorySidebarCloseButton {
     width: 100%;
 
@@ -2257,6 +2577,50 @@ a:link {
     flex-direction: column;
     height: 273px;
     overflow: hidden;
+
+    &[name="weapons"] {
+        & > [data-id="goldenWang"]              { order:  0; }
+        & > [data-id="magicPencil"]             { order:  1; }
+        & > [data-id="cathodeRayTubeMonitor"]   { order:  2; }
+        & > [data-id="danceClub"]               { order:  3; }
+        & > [data-id="bludgeoningMace"]         { order:  4; }
+        & > [data-id="atlatlSpear"]             { order:  5; }
+        & > [data-id="nunchucks"]               { order:  6; }
+        & > [data-id="wiffleBallBat"]           { order:  7; }
+        & > [data-id="pointyStick"]             { order:  8; }
+        & > [data-id="fingerNail"]              { order:  9; }
+    }
+
+    &[name="armor"] {
+        & > [data-id="nokiaMail"]               { order:  0; }
+        & > [data-id="blackPlateArmor"]         { order:  1; }
+        & > [data-id="milaneseArmor"]           { order:  2; }
+        & > [data-id="leatherArmor"]            { order:  3; }
+        & > [data-id="barrelWithSuspenders"]    { order:  4; }
+        & > [data-id="graphicTee"]              { order:  5; }
+        & > [data-id="pectoralMass"]            { order:  6; }
+    }
+
+    &[name="rings"] {
+        & > [data-id="ringOfSexyUnderwear"]     { order:  0; }
+        & > [data-id="ringOfFrenchAccent"]      { order:  1; }
+        & > [data-id="ringValentines"]          { order:  2; }
+        & > [data-id="ringBloodstream"]         { order:  3; }
+        & > [data-id="ringOfHardening"]         { order:  4; }
+        & > [data-id="ringPectoralPiercing"]    { order:  5; }
+        & > [data-id="ringPinkyToe"]            { order:  6; }
+        & > [data-id="ringCrack"]               { order:  7; }
+        & > [data-id="ringGamble"]              { order:  8; }
+        & > [data-id="ringEscobar"]             { order:  9; }
+        & > [data-id="ringOfSightliness"]       { order: 10; }
+        & > [data-id="ringOfStinky"]            { order: 11; }
+        & > [data-id="ringOfAmplifiedAudio"]    { order: 12; }
+    }
+
+    & button.unequippable {
+        background-color: #900;
+        border-color: #c00 #600 #600 #c00;
+    }
 }
 
 #inventory > [name="main"] {
@@ -2324,8 +2688,14 @@ a:link {
     &.items-carrierPigeon .icon {
         background-image: url(assets/interface/items/carrier-pigeon.png);
     }
-    &.items-seedPhial .icon {
+    &.items-phialOfSeed .icon {
         background-image: url(assets/interface/items/seed.png);
+    }
+    &.items-lodeGun .icon {
+        background-image: url(assets/interface/items/lode-gun.png);
+    }
+    &.items-ballzooka .icon {
+        background-image: url(assets/interface/items/ballzooka.png);
     }
 
     /** Weapons Section **/
@@ -2517,10 +2887,60 @@ a:link {
     opacity: 0.25;
 }
 
-.party-member {
-    gap: 2px;
+#inventory .empty-message {
     display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    color: #aaa;
+    text-wrap: auto;
     flex-direction: column;
+    text-align: center;
+    font-size: 1.5em;
+    padding: 1ch;
+
+    & .left-pad {
+        padding-left: 0.5ch;
+    }
+
+    & .large {
+        font-size: 1.5em;
+    }
+}
+
+@keyframes tqUi_flyAway {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
+}
+
+.tq-ui-fly {
+    position: absolute;
+    top: 440px;
+    left: 620px;
+    pointer-events: none;
+
+    width: 6px;
+    height: 6px;
+    image-rendering: pixelated;
+    background-image: url(assets/interface/ui/fly.gif);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    offset-path: path(
+        "M 0.20886855,-0.06675415 C 40.456208,-97.118023 -54.251021,-168.98913 \
+        -29.125009,-221.88764 9.1398253,-302.4477 3.0065923,-311.92452 \
+        -12.332906,-358.86617 -26.968823,-403.65474 -25.257239,-544.86478 \
+        55.528491,-642.52549"
+    );
+    offset-rotate: auto;
+    animation: tqUi_flyAway 2s ease-in-out forwards;
+    transform: rotate(45deg) scale(2);
+}
+
+.party-member {
+    gap: 1ch;
+    display: flex;
+    flex-direction: row;
 
     &.placeholder {
         & .name {
@@ -2534,20 +2954,57 @@ a:link {
             border-color: #262626 #1A1A1A #1A1A1A #262626;
         }
     }
+
+    &:not(.ui-active) .name.clickable {
+        color: #fff;
+        cursor: pointer;
+        text-decoration: underline;
+
+        &:hover {
+            background-color: #126d00;
+        }
+    }
+
+    &.ui-active .info button {
+        visibility: hidden;
+    }
+
+    & > .portrait {
+        width: 35px;
+        height: 35px;
+    }
+
+    &.dead {
+        filter: grayscale(1);
+
+        & > .portrait {
+            background-image: url(assets/portraits/overlays/x.png);
+            &::after {
+                display: none;
+            }
+        }
+    }
+
+    & > .container {
+        flex-grow: 1;
+        gap: 2px;
+        display: flex;
+        flex-direction: column;
+    }
 }
 
-.party-member > .info {
+.party-member .info {
     display: flex;
     flex-direction: row;
     gap: 10px;
     align-items: center;
 }
 
-.party-member > .info > progress-bar {
+.party-member .info > progress-bar {
     flex-grow: 1;
 }
 
-.party-member > .info > .buttons {
+.party-member .info > .buttons {
     display: flex;
     flex-direction: row;
     gap: 4px;
@@ -2563,10 +3020,31 @@ a:link {
 .player {
     color: #2aff00;
 }
+
+@keyframes minimap_healingTileGlow {
+    0% {
+        color: #6cff74;
+    }
+    25% {
+        color: #42f64e;
+    }
+    50% {
+        color: #42c6cc;
+    }
+    75% {
+        color: #40d24a;
+    }
+    100% {
+        color: #cdff42;
+    }
+}
+
 .healingTile {
     color: #6cff74;
+    animation: minimap_healingTileGlow 5s linear alternate infinite;
 }
-.treasureChest {
+.treasureChest,
+.destroyedTreasureChest {
     color: #f19b32;
 }
 .wall,
@@ -2580,13 +3058,26 @@ a:link {
 .unexplored {
     color: #545454;
 }
-.exit {
+.exit,
+.pit {
     color: #f00;
 }
+
+@keyframes stunned {
+      0%    { color: #f78080; }
+     33%    { color: #e687bd; }
+     67%    { color: #ffd6a0; }
+    100%    { color: #e687bd; }
+}
+
+.stunned {
+    animation: stunned 1s linear alternate infinite;
+}
+
 .merchant {
     color: #f7f;
 }
-.gambler {
+.gambler, .gold {
     color: #ffd700;
 }
 .erok {
@@ -2600,8 +3091,18 @@ a:link {
     color: #666;
     text-decoration: line-through;
 }
+.good {
+    color: #0f0;
+}
+.bad,
 .tooExpensive {
     color: #f00;
+}
+.run {
+    color: #00f;
+}
+.gray {
+    color: #888;
 }
 
 .alignRight {
@@ -2637,7 +3138,7 @@ a:link {
 .STR {
     color: #f7603b;
 }
-.PRS {
+.PRS, .persuasion {
     color: #A23AB4;
 }
 .END {
@@ -2656,132 +3157,12 @@ a:link {
     color: #EC4134;
 }
 
-/**
-    * Rendered scene class names
-    * These are derived from the names in sceneRenderer.getEntityName()
-    * which is also used to identify specific pieces of sceneArt
-    *
-    * The renderer adds <span> elements around each rendered character with
-    * a "scene_character_" prefix. So for example, a "wall"
-    */
-.scene_character_darkness {
-    color: #0009 !important;
-    filter: blur(2px);
+.crater {
+    color: #555;
 }
 
-.scene_character_void {
-    color: #000 !important;
-}
-
-.scene_character_iceWall {
-    color: #e8e8ff !important;
-    opacity: .8;
-}
-
-.scene_character_crackedFloorSlight,
-.scene_character_crackedFloor,
-.scene_character_crackedFloorSevere {
-    color: #000;
-}
-
-.layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble1,
-.layer:not(.darkening):not(.dark):not(.lightening) > .scene_character_rubble2 {
-    display: initial;
-}
-
-.scene_character_rubble1,
-.scene_character_rubble2 {
-    display: none;
-    background-color: transparent !important;
-    mix-blend-mode: lighten;
-    opacity: .2;
-}
-
-@keyframes scene_healingTileGlow {
-    0% {
-        color: #6CFF74;
-    }
-    25% {
-        color: #02B60E;
-    }
-    50% {
-        color: #02868C;
-    }
-    75% {
-        color: #00920A;
-    }
-    100% {
-        color: #8DD702;
-    }
-}
-
-.scene_character_healingTile {
-    animation-name: scene_healingTileGlow;
-    animation-duration: 5s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: linear;
-}
-
-@keyframes scene_exitGlow {
-    0% {
-        color: #FFF000;
-    }
-    25% {
-        color: #FF7400;
-    }
-    50% {
-        color: #FFF000;
-    }
-    75% {
-        color: #CD0074;
-    }
-    100% {
-        color: #FF0000;
-    }
-}
-
-.scene_character_exit {
-    animation-name: scene_exitGlow;
-    animation-duration: 5s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: linear;
-}
-
-@keyframes scene_treasureChestGlow {
-    0% {
-        color: #FFD700;
-    }
-    100% {
-        color: #FFF;
-    }
-}
-
-.scene_character_treasureChest {
-    animation-name: scene_treasureChestGlow;
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-timing-function: ease-out;
-    background-color: #793311;
-    color: #ffd700;
-}
-
-.scene_character_tardspireBanner {
-    color: #edc949 !important;
-    background: #000;
-    mix-blend-mode: luminosity;
-}
-
-.scene_character_crater {
-    color: #0009 !important;
-    background-color: transparent !important;
-}
-
-.scene_character_bloodyCrater {
-    color: #9009 !important;
-    background-color: #3003 !important;
+.bloodyCrater {
+    color: #900;
 }
 
 /* Tooltip styles */
@@ -2804,7 +3185,7 @@ a:link {
     border: 2px solid #fff;
 }
 
-.mapCellDetails .enlargedTile {
+.mapCellDetails .enlargedCell {
     width: 40px;
     height: 40px;
     aspect-ratio: 1;
@@ -2821,19 +3202,32 @@ a:link {
 }
 
 .mapCellDetails .details {
+    margin-top: 8px;
     display: flex;
     flex-direction: column;
-    height: 44px;
-}
 
-.mapCellDetails .details .coordinates {
-    font-size: 12px;
-    font-style: italic;
-    line-height: 16px;
-}
+    & .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 2ch;
+    }
 
-.mapCellDetails .details .name {
-    font-size: 18px;
+    & .coordinates {
+        font-style: italic;
+    }
+
+    & .name {
+        font-size: 18px;
+    }
+
+    & .party {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 40ch;
+        padding: 0 3ch;
+    }
 }
 
 @keyframes letsGo {
@@ -2881,6 +3275,13 @@ a:link {
     flex-direction: column;
 }
 
+.inventoryTooltip .info {
+    display: flex;
+    flex-direction: column;
+    gap: .5em;
+    margin-top: 1em;
+}
+
 .genericTooltip {
     padding: 0 1ch;
     max-width: 500px;
@@ -2888,12 +3289,38 @@ a:link {
     color: #000;
     background: #fff;
 
+    &.good {
+        background: #090;
+        color: #fff;
+    }
+
+    &.bad {
+        background: #f00;
+        color: #fff;
+    }
+
     &.warning {
         background: #ff0;
     }
 }
 
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 0.5);
+    z-index: 999;
+    pointer-events: auto;
+}
+
 dialog.modal {
+    position: fixed;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+
     user-select: none;
     font-size: 14px;
     min-width: 400px;
@@ -2984,29 +3411,29 @@ dialog.modal {
                         calc(4ch  + 2px);
                 }
 
-                &.primary {
+                &.primary:not(:disabled) {
                     color: #fff;
 
-                    &:not(:disabled):hover {
+                    &:hover {
                         background-color: #090;
                         border-color: #3c3 #090 #090 #3c3;
                     }
 
-                    &:not(:disabled):active {
+                    &:active {
                         background-color: #090;
                         border-color: #090 #3c3 #3c3 #090;
                     }
                 }
 
-                &.danger {
+                &.danger:not(:disabled) {
                     color: #fff;
 
-                    &:not(:disabled):hover {
+                    &:hover {
                         background-color: #f00;
                         border-color: #f99 #c00 #c00 #f99;
                     }
 
-                    &:not(:disabled):active {
+                    &:active {
                         background-color: #f00;
                         border-color: #c00 #f99 #f99 #c00;
                     }
@@ -3025,12 +3452,69 @@ dialog.modal::backdrop {
     opacity: 0.8;
 }
 
-.layer.enemy.damaged {
-    animation: enemyDamaged 0.168s; /* VOCAP: 168ms is how long attack.mp3 is. */
+dialog.modal .body .tardboard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 1ch;
+    margin-bottom: 2em;
+
+    & > * {
+        margin: 0 auto;
+
+        &:last-child {
+            margin-bottom: 2ch;
+        }
+    }
 }
 
-.layer.enemy.damaged pre {
-    color: red !important;
+@keyframes rumble {
+     0% { transform: translate(0); }
+     1% { transform: translate(0); }
+    10% { transform: translate(3px, 1px); }
+    20% { transform: translate(-1px, 3px); }
+    30% { transform: translate(3px, -1px); }
+    20% { transform: translate(-1px, -3px); }
+    50% { transform: translate(3px, 1px); }
+    60% { transform: translate(-1px, 3px); }
+    70% { transform: translate(3px, -1px); }
+    80% { transform: translate(1px, 3px); }
+    90% { transform: translate(-1px, -1px); }
+    100%{ transform: translate(0);} }
+
+.rumble {
+    animation:
+        rumble 1ms cubic-bezier(0.680, -0.550, 0.265, 1.550) 0s 800
+        normal forwards;
+}
+
+@keyframes damage-rumble {
+     0% { background-color: #ffff; transform: translate(0); }
+     1% { background-color: #900f; transform: translate(0); }
+    10% { background-color: #900d; transform: translate(-2px, -2px); }
+    20% { background-color: #900b; transform: translate(2px, -2px); }
+    30% { background-color: #9009; transform: translate(-2px, 2px); }
+    40% { background-color: #9007; transform: translate(2px, 2px); }
+    50% { background-color: #9005; transform: translate(-2px, -2px); }
+    60% { background-color: #9004; transform: translate(2px, -2px); }
+    70% { background-color: #9003; transform: translate(-2px, 2px); }
+    80% { background-color: #9002; transform: translate(-2px, -2px); }
+    90% { background-color: #9001; transform: translate(2px, -2px); }
+    100%{ background-color: #9000; transform: translate(0);} }
+
+.damage-rumble {
+    animation:
+        damage-rumble 1ms cubic-bezier(0.680, -0.550, 0.265, 1.550) 0s 800
+        normal forwards;
+}
+
+.layer.enemy .damaged {
+    --duration: 0.168s;
+    animation: enemyDamaged var(--duration);
+
+    & .art {
+        animation: enemyDamagedColor var(--duration);
+    }
 }
 
 @keyframes enemyDamaged {
@@ -3040,6 +3524,181 @@ dialog.modal::backdrop {
     60%  { transform: translate(-4px,0) skewX(-8deg) rotate(-3deg); }
     80%  { transform: translate(4px,0) skewX(8deg) rotate(3deg); }
     100% { transform: translate(0,0) skewX(0deg) rotate(0deg); }
+}
+
+@keyframes enemyDamagedColor {
+    from { color: #f00; }
+    to { color: unset; }
+}
+
+@keyframes enemyCrtFlashed {
+    0%, 9.999% {
+        filter: invert(1);
+    }
+
+    10%, 19.999% {
+        filter: invert(0);
+    }
+
+    20%, 29.999% {
+        filter: invert(1);
+    }
+
+    30%, 39.999% {
+        filter: invert(0);
+    }
+
+    40%, 49.999% {
+        filter: invert(1);
+    }
+
+    50%, 59.999% {
+        filter: invert(0);
+    }
+
+    60%, 69.999% {
+        filter: invert(1);
+    }
+
+    70%, 79.999% {
+        filter: invert(0);
+    }
+
+    80%, 89.999% {
+        filter: invert(1);
+    }
+
+    90%, 100% {
+        filter: invert(0);
+    }
+}
+
+.layer.enemy .crt-flashed {
+    --duration: 0.5s;
+    animation: enemyCrtFlashed var(--duration);
+}
+
+.layer.enemy .poked {
+    --duration: 0.6s;
+    animation: enemyPoked var(--duration) linear;
+}
+
+.layer.enemy .poked .art {
+    animation: enemyPokedColor var(--duration) linear;
+}
+
+@keyframes enemyPoked {
+    0% {
+        transform: matrix3d(
+            1, 0, 0, 0.001,
+            0, 1, 0, 0.0005,
+            0, 0, 1, 0,
+            1, 1, 0, 1
+        );
+    }
+
+    50% {
+        transform: matrix3d(
+            0.7, 0.2, 0, 0.003,
+            0, 1, 0, 0.001,
+            0, 0, 1, 0,
+            1, 1, 0, 0.9
+        );
+    }
+
+    20%, 49.999%,
+    70%, 100% {
+        transform: matrix3d(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            1, 1, 0, 1
+        );
+    }
+}
+
+@keyframes enemyPokedColor {
+    0%, 50% {
+        color: #f00;
+    }
+
+    10%,
+    49.999%, 60%,
+    100% {
+        color: #f78080;
+    }
+}
+
+@keyframes enemyDanceClubHits {
+    /* Riser */
+    0% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(0);
+    }
+
+    14.15% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(5) brightness(1) hue-rotate(0);
+    }
+
+    /* Kick, slide */
+    18.78% {
+        transform: translateX(-90px) skewX(20deg) scale(1, 1);
+        filter: contrast(1) brightness(5) hue-rotate(2000deg);
+    }
+
+    /* Pre-Bass, end slide */
+    33.85% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(3) hue-rotate(1800deg);
+    }
+
+    /* Bass */
+    33.86% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(1340.2deg);
+    }
+
+    /* Clap, slide */
+    48% {
+        transform: translateX(90px) skewX(-20deg) scale(1, 1);
+        filter: contrast(1) brightness(5) hue-rotate(1340deg);
+    }
+
+    62.45% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(3) hue-rotate(1140deg);
+    }
+
+    62.46% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(660.2deg);
+    }
+
+    70% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(5) hue-rotate(660deg);
+    }
+
+    77.515% {
+        transform: translateX(0) skewX(0) scale(-1, 1);
+        filter: contrast(1) brightness(3) hue-rotate(460deg);
+    }
+
+    92.49% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(260deg);
+    }
+
+    100% {
+        transform: translateX(0) skewX(0) scale(1, 1);
+        filter: contrast(1) brightness(1) hue-rotate(0);
+    }
+}
+
+.layer.enemy .dance-club-hits {
+    --duration: 1.332s;
+    animation: enemyDanceClubHits var(--duration);
 }
 
 @keyframes PlayerDamaged {
@@ -3052,23 +3711,6 @@ dialog.modal::backdrop {
 }
 
 #interface.shake {
-    animation: PlayerDamaged 0.168s;
-}
-
-#animDamageTaken {
-    position: absolute;
-    width: 692px;
-    height: 642px;
-    padding: -4px;
-    background: rgba(255,0,0,0.33) !important;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 69420;
-    transition: opacity 0.168s;
-}
-
-#animDamageTaken.active {
-    opacity: 1;
     animation: PlayerDamaged 0.168s;
 }
 
@@ -3148,6 +3790,10 @@ dialog.modal::backdrop {
     --contrastMaxPct: 120%;
 
     animation: wave-text-phase var(--speedSec) linear infinite;
+
+    & > * {
+        min-width: 1ch;
+    }
 }
 
 /* Each letter sits on its own phase offset via --i (we set this in markup) */
@@ -3194,6 +3840,7 @@ dialog.modal::backdrop {
     inset: 0;
     pointer-events: none;
     background: #f00;
+    mix-blend-mode: darken;
 
     --center-x: 50%;
     --center-y: 50%;
@@ -3294,17 +3941,6 @@ dialog.modal::backdrop {
     animation-duration: 700ms;
     animation-timing-function: cubic-bezier(0.22, 1, 0.66, 1);
     animation-fill-mode: forwards;
-}
-
-.clickable-name {
-    color: #fff;
-    cursor: pointer;
-    text-decoration: underline;
-}
-
-.clickable-name:hover {
-    color: #fff;
-    background-color: #126d00;
 }
 
 /* Party Member Menu Styles */

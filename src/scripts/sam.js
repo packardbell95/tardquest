@@ -3581,8 +3581,13 @@
          *
          * @return {Promise}
          */
-        this.speak = function (text, phonetic) {
-            return PlayBuffer(this$1.buf32(text, phonetic), opts);
+        this.speak = function (text, phonetic, onEnded = null) {
+            const playbackOptions = {
+                onEnded: typeof onEnded === "function" ? onEnded : undefined,
+                ...opts,
+            };
+
+            return PlayBuffer(this$1.buf32(text, phonetic), playbackOptions);
         };
 
         /**

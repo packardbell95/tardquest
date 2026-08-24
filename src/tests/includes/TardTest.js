@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Simple test runner for TardQuest
  *
@@ -16,7 +18,8 @@
  *      test(
  *          "Context example",
  *          () => Assert.isTrue(1 === -1 + 2),
- *          $myContext
+ *          $myContext,
+ *          true // Set this to auto-open the context (useful for development)
  *      );
  *
  *  Print the results of the tests. Call it after all tests have been conducted:
@@ -110,7 +113,7 @@ function testGroup(name) {
     console.log(`💼 ${name}`);
 }
 
-function test(name, testFunction, $context) {
+function test(name, testFunction, $context, autoOpenContext = false) {
     if (__TestResults.length === 0) {
         __createTestGroup("Untitled Group");
     }
@@ -124,6 +127,7 @@ function test(name, testFunction, $context) {
             passed: true,
             error: null,
             $context,
+            autoOpenContext,
         });
 
         console.log(`✅ ${name}`);
@@ -133,11 +137,86 @@ function test(name, testFunction, $context) {
             passed: false,
             error,
             $context,
+            autoOpenContext,
         });
 
         console.error(`❌ ${name}`);
         console.error(error);
     }
+}
+
+function copyTextToClipboard(textToCopy) {
+    if (! textToCopy) {
+        return false;
+    }
+
+    const hasClipboardApi =
+        typeof navigator?.clipboard?.writeText === "function";
+
+    if (hasClipboardApi) {
+        return navigator.clipboard.writeText(textToCopy).catch(function () {
+            return fallbackCopyTextToClipboard(textToCopy);
+        }) || false;
+    }
+
+    return fallbackCopyTextToClipboard(textToCopy);
+}
+
+function fallbackCopyTextToClipboard(textToCopy) {
+    const textareaElement = document.createElement("textarea");
+
+    textareaElement.value = textToCopy;
+    textareaElement.setAttribute("readonly", "");
+    textareaElement.style.position = "absolute";
+    textareaElement.style.left = "-9999px";
+
+    document.body.appendChild(textareaElement);
+    textareaElement.select();
+
+    try {
+        document.execCommand("copy");
+    } catch (error) {
+        console.warn("Clipboard copy failed", error);
+        document.body.removeChild(textareaElement);
+        return false;
+    }
+
+    document.body.removeChild(textareaElement);
+    return true;
+}
+
+function toast(message, classes, $parentElement = null) {
+    const displayDurationMs = 3000;
+    const fadeDurationMs = 500;
+
+    function getContainer($parentElement) {
+        const containerClass = "toast-container";
+        const $container =
+            $parentElement.querySelector(`:scope > .${containerClass}`);
+
+        if ($container) {
+            return $container;
+        }
+
+        const $newContainer = document.createElement("div");
+        $newContainer.className = containerClass;
+        $parentElement.appendChild($newContainer);
+
+        return $newContainer;
+    }
+
+    const $toastContainer = getContainer($parentElement ?? document.body);
+    const $message = document.createElement("div");
+    $message.classList.add("toast-message", classes);
+    $message.innerText = message;
+    $toastContainer.prepend($message);
+
+    setTimeout(() => $message.classList.add("open"), 10);
+    setTimeout(() => $message.classList.remove("open"), displayDurationMs);
+    setTimeout(
+        () => $toastContainer.removeChild($message),
+        displayDurationMs + fadeDurationMs
+    );
 }
 
 function printResults() {
@@ -149,6 +228,195 @@ function printResults() {
             .replace(/([a-z])([A-Z])/g, '$1 $2')
             .charAt(0)
             .toUpperCase() + spacedInput.slice(1);
+    }
+
+    function isPlainObject(value) {
+        if (value === null || typeof value !== "object") {
+            return false;
+        }
+
+        return Object.getPrototypeOf(value) === Object.prototype;
+    }
+
+    function formatValueForDisplay(value) {
+        if (value === undefined) {
+            return 'undefined';
+        }
+
+        if (typeof value === 'string') {
+            return value;
+        }
+
+        if (
+            typeof value === 'number' ||
+            typeof value === 'boolean' ||
+            value === null
+        ) {
+            return String(value);
+        }
+
+        if (Array.isArray(value) || isPlainObject(value)) {
+            try {
+                return JSON.stringify(value, null, 4);
+            } catch (error) {
+                return '[Unserializable Object]';
+            }
+        }
+
+        if (value instanceof Date) {
+            return value.toISOString();
+        }
+
+        if (value instanceof Error) {
+            return value.stack || value.message;
+        }
+
+        if (typeof value === 'function') {
+            return value.toString();
+        }
+
+        // Fallback for everything else (Map, Set, class instances, etc.)
+        try {
+            return String(value);
+        } catch (error) {
+            return '[Unknown Value]';
+        }
+    }
+
+    function createErrorDialog(rowData) {
+        const error = rowData.error;
+        const $dialog = document.createElement("dialog");
+        $dialog.className = "error-details";
+
+        createErrorDialog.dialogId = (createErrorDialog.dialogId || 0);
+        $dialog.id = `errorDialog${createErrorDialog.dialogId}`;
+
+        const $header = document.createElement("div");
+        $header.className = "header";
+        const $headerIcon = document.createElement("span");
+        $headerIcon.innerText = "🪲 ";
+        $header.appendChild($headerIcon);
+        const $headerText = document.createElement("em");
+        $headerText.textContent = `Error Details for ${rowData.name}`;
+        $header.appendChild($headerText);
+        $dialog.appendChild($header);
+
+        const $details = document.createElement("div");
+        $details.className = "details";
+
+        const $summary = document.createElement("div");
+        $summary.className = "summary";
+        $summary.textContent = error.message;
+        $details.appendChild($summary);
+
+        const $dataContainer = document.createElement("div");
+        $dataContainer.className = "data";
+
+        const $expectedContainer = document.createElement("div");
+        const $expectedHeader = document.createElement("div");
+        $expectedHeader.className = "section-header";
+        const $expectedTitle = document.createElement("span");
+        $expectedTitle.textContent = "Expected";
+        $expectedHeader.appendChild($expectedTitle);
+
+        if (error?.cause?.expected) {
+            const $copyToClipboardButton = document.createElement("button");
+            $copyToClipboardButton.textContent = "Copy to Clipboard";
+            $copyToClipboardButton.addEventListener("click", () => {
+                const textToCopy = formatValueForDisplay(error.cause.expected);
+                copyTextToClipboard(textToCopy)
+                    ? toast(
+                        "Expected result copied to the clipboard",
+                        ["success"],
+                        $dialog
+                    )
+                    : toast(
+                        "Could not copy the expected result to the clipboard!",
+                        ["danger"],
+                        $dialog
+                    );
+            });
+            $expectedHeader.appendChild($copyToClipboardButton);
+        }
+
+        $expectedContainer.appendChild($expectedHeader);
+        const $expectedData = document.createElement("textarea");
+        $expectedData.textContent =
+            formatValueForDisplay(error?.cause?.expected);
+        $expectedData.readOnly = true;
+        $expectedContainer.appendChild($expectedData);
+        $dataContainer.appendChild($expectedContainer);
+
+        const $actualContainer = document.createElement("div");
+        const $actualHeader = document.createElement("div");
+        $actualHeader.className = "section-header";
+        const $actualTitle = document.createElement("span");
+        $actualTitle.textContent = "Actual";
+        $actualHeader.appendChild($actualTitle);
+
+        if (error?.cause?.actual) {
+            const $copyToClipboardButton = document.createElement("button");
+            $copyToClipboardButton.textContent = "Copy to Clipboard";
+            $copyToClipboardButton.addEventListener("click", () => {
+                const textToCopy = formatValueForDisplay(error.cause.actual);
+                copyTextToClipboard(textToCopy)
+                    ? toast(
+                        "Actual result copied to the clipboard",
+                        ["success"],
+                        $dialog
+                    )
+                    : toast(
+                        "Could not copy the actual result to the clipboard!",
+                        ["danger"],
+                        $dialog
+                    );
+            });
+            $actualHeader.appendChild($copyToClipboardButton);
+        }
+
+        $actualContainer.appendChild($actualHeader);
+        const $actualData = document.createElement("textarea");
+        $actualData.textContent =
+            formatValueForDisplay(error?.cause?.actual);
+        $actualData.readOnly = true;
+        $actualContainer.appendChild($actualData);
+        $dataContainer.appendChild($actualContainer);
+
+        let isSyncingScroll = false;
+
+        function syncScroll(sourceTextarea, targetTextarea) {
+            if (isSyncingScroll) {
+                return;
+            }
+
+            isSyncingScroll = true;
+            targetTextarea.scrollTop = sourceTextarea.scrollTop;
+            isSyncingScroll = false;
+        }
+
+        $expectedData.addEventListener('scroll', () => {
+            syncScroll($expectedData, $actualData);
+        });
+
+        $actualData.addEventListener('scroll', () => {
+            syncScroll($actualData, $expectedData);
+        });
+
+        $details.appendChild($dataContainer);
+        $dialog.appendChild($details);
+
+        const $footer = document.createElement("div");
+        $footer.className = "footer";
+
+        const $closeButton = document.createElement("button");
+        $closeButton.textContent = "Close";
+        $closeButton.addEventListener("click", () => {
+            $dialog.close();
+        });
+        $footer.appendChild($closeButton);
+        $dialog.appendChild($footer);
+
+        return $dialog;
     }
 
     function getResults(results) {
@@ -206,6 +474,9 @@ function printResults() {
                         $toggleSwitch.id = switchId;
                         $toggleSwitch.setAttribute("type", "checkbox");
                         $toggleSwitch.className = "toggle";
+                        $toggleSwitch.checked =
+                            Boolean(rowData.autoOpenContext) ||
+                            rowData.error;
                         $toggleSwitch.onchange = function() {
                             const $context = document.getElementById(contextId);
                             this.checked
@@ -229,6 +500,26 @@ function printResults() {
                     $row.appendChild($cell);
 
                     return;
+                } else if (rowName === "error" && rowData.error) {
+                    const $cell = document.createElement("td");
+
+                    const $dialog = createErrorDialog(rowData);
+                    $cell.appendChild($dialog);
+
+                    const $errorButton =
+                        document.createElement("button");
+                    $errorButton.textContent = "Show Error";
+
+                    const $details =
+                        document.querySelector("#errorDetails .details");
+
+                    $errorButton.addEventListener("click", () => {
+                        $dialog.showModal();
+                    });
+
+                    $cell.appendChild($errorButton);
+                    $row.appendChild($cell);
+                    return;
                 }
 
                 const value = rowData[rowName];
@@ -241,8 +532,12 @@ function printResults() {
             $tbody.appendChild($row);
 
             const $contextRow = document.createElement("tr");
-            $contextRow.className = "context hidden";
             $contextRow.id = contextId;
+
+            $contextRow.classList.add("context");
+            if (! rowData.autoOpenContext && ! rowData.error) {
+                $contextRow.classList.add("hidden");
+            }
 
             const $contextCell = document.createElement("td");
             $contextCell.setAttribute("colspan", cells.length.toString());
@@ -307,7 +602,12 @@ function printResults() {
         $details.appendChild($summary);
         $details.appendChild(getResults(group.results));
 
-        if (results.total === 0 || results.total !== results.passed) {
+        const shouldOpenSection =
+            results.total === 0 ||
+            results.total !== results.passed ||
+            group.results.some(e => e.autoOpenContext);
+
+        if (shouldOpenSection) {
             allTestsPassed = false;
             $details.setAttribute("open", true);
         }
@@ -335,6 +635,9 @@ const Assert = (() => {
         Object.prototype.toString.call(v) === "[object Object]";
 
     const _sameNaN = (a, b) => Number.isNaN(a) && Number.isNaN(b);
+
+    const _getDefinedKeys = (value) =>
+        Object.keys(value).filter((key) => value[key] !== undefined);
 
     const _deepEqual = (a, b, seen = new WeakMap()) => {
         if (a === b || _sameNaN(a, b)) {
@@ -425,23 +728,21 @@ const Assert = (() => {
 
             seen.set(a, b);
 
-            const ka = Object.keys(a);
-            const kb = Object.keys(b);
-            if (ka.length !== kb.length) {
+            const keysA = _getDefinedKeys(a).sort();
+            const keysB = _getDefinedKeys(b).sort();
+
+            if (keysA.length !== keysB.length) {
                 return false;
             }
 
-            ka.sort();
-            kb.sort();
-
-            for (let i = 0; i < ka.length; i++) {
-                if (ka[i] !== kb[i]) {
+            for (let i = 0; i < keysA.length; i++) {
+                if (keysA[i] !== keysB[i]) {
                     return false;
                 }
             }
 
-            for (const k of ka) {
-                if (!_deepEqual(a[k], b[k], seen)) {
+            for (const key of keysA) {
+                if (!_deepEqual(a[key], b[key], seen)) {
                     return false;
                 }
             }
@@ -489,34 +790,35 @@ const Assert = (() => {
             : message.includes(String(expected));
     };
 
-    const _fail = (message, userMessage) => {
-        throw new Error(userMessage ? `${message} :: ${userMessage}` : message);
+    const _fail = (message, actual, expected) => {
+        throw new Error(message, {cause: { actual, expected }});
     };
 
     return {
         // --- Equality ---
         equals(expected, actual, message) {
-            if (!(actual === expected || _sameNaN(actual, expected))) {
-                _fail(
-                    `Expected ${_fmt(expected)} but got ${_fmt(actual)}`,
-                    message
-                );
+            if (! (actual === expected || _sameNaN(actual, expected))) {
+                _fail("Expected the two values to be equal", actual, expected);
             }
         },
 
         notEquals(expected, actual, message) {
             if (actual === expected && !_sameNaN(actual, expected)) {
-                _fail(`Did not expect ${_fmt(expected)}`, message);
+                _fail(
+                    "Did not expect these two values to be equivalent",
+                    actual,
+                    expected
+                );
             }
         },
 
         deepEquals(expected, actual, message) {
             if (!_deepEqual(actual, expected)) {
                 _fail(
-                    `Expected deep equality.\n` +
-                    `Expected: ${_fmt(expected)}\n` +
-                    `Actual:   ${_fmt(actual)}`,
-                    message
+                    "Expected these two values to be equivalent under a " +
+                        "deep comparison",
+                    actual,
+                    expected
                 );
             }
         },
@@ -524,9 +826,10 @@ const Assert = (() => {
         notDeepEquals(expected, actual, message) {
             if (_deepEqual(actual, expected)) {
                 _fail(
-                    `Expected values to differ (deep) but both were ` +
-                    `${_fmt(actual)}`,
-                    message
+                    "Did not expect these two values to be equivalent under " +
+                        "a deep comparison",
+                    actual,
+                    expected
                 );
             }
         },
@@ -534,8 +837,8 @@ const Assert = (() => {
         approximately(expected, actual, delta = 1e-9, message) {
             if (!(Math.abs(actual - expected) <= delta)) {
                 _fail(
-                    `Expected ${actual} to be within ±${delta} of ${expected}`,
-                    message
+                    `Expected the value to be within ±${delta} of ${expected}`,
+                    actual,
                 );
             }
         },
@@ -543,58 +846,56 @@ const Assert = (() => {
         // --- Truthiness & Types ---
         isTrue(value, message) {
             if (value !== true) {
-                _fail(`Expected true but got ${_fmt(value)}`, message);
+                _fail("Expected the value to be true", value, true);
             }
         },
 
         isFalse(value, message) {
             if (value !== false) {
-                _fail(`Expected false but got ${_fmt(value)}`, message);
+                _fail("Expected the value to be false", value, false);
             }
         },
 
         isNull(value, message) {
             if (value !== null) {
-                _fail(`Expected null but got ${_fmt(value)}`, message);
+                _fail("Expected the value to be null", value, null);
             }
         },
 
         notNull(value, message) {
             if (value === null) {
-                _fail(`Expected non-null value`, message);
+                _fail("Expected the value to not be null", value);
             }
         },
 
         isUndefined(value, message) {
             if (value !== undefined) {
-                _fail(`Expected undefined but got ${_fmt(value)}`, message);
+                _fail("Expected the value to be undefined", value);
             }
         },
 
         isDefined(value, message) {
             if (value === undefined) {
-                _fail(`Expected value to be defined`, message);
+                _fail("Expected the value to be defined", value);
             }
         },
 
         isType(type, value, message) {
             if (typeof value !== type) {
-                _fail(
-                    `Expected typeof ${type} but got ${typeof value}`,
-                    message
-                );
+                _fail(`Expected type of ${type}`, typeof value, type);
             }
         },
 
         instanceOf(expectedConstructor, value, message) {
-            if (!(value instanceof expectedConstructor)) {
+            if (! (value instanceof expectedConstructor)) {
                 const result = value?.constructor?.name || typeof value;
                 const constructorName =
                     expectedConstructor?.name || "(anonymous)";
 
                 _fail(
-                    `Expected instance of ${constructorName} but got ${result}`,
-                    message
+                    `Expected an instance of ${constructorName}`,
+                    result,
+                    constructorName
                 );
             }
         },
@@ -605,7 +906,7 @@ const Assert = (() => {
                 if (! haystack.includes(String(needle))) {
                     _fail(
                         `Expected "${haystack}" to contain "${needle}"`,
-                        message
+                        needle
                     );
                 }
                 return;
@@ -614,9 +915,8 @@ const Assert = (() => {
             if (Array.isArray(haystack)) {
                 if (! haystack.some(x => _deepEqual(x, needle))) {
                     _fail(
-                        `Expected array to contain ${_fmt(needle)}\n` +
-                        `Array: ${_fmt(haystack)}`,
-                        message
+                        `Expected the array to contain "${_fmt(needle)}"`,
+                        needle
                     );
                 }
                 return;
@@ -625,14 +925,14 @@ const Assert = (() => {
             if (_isObjectLike(haystack) && typeof haystack.has === "function") {
                 if (! haystack.has(needle)) {
                     _fail(
-                        `Expected collection to contain ${_fmt(needle)}`,
-                        message
+                        `Expected the collection to contain "${_fmt(needle)}"`,
+                        needle
                     );
                 }
                 return;
             }
 
-            _fail(`Unsupported haystack type for contains()`, message);
+            _fail(`Unsupported haystack type for contains()`, message, needle);
         },
 
         notContains(needle, haystack, message) {
@@ -643,7 +943,10 @@ const Assert = (() => {
                 return;
             }
 
-            _fail(`Did not expect to find ${_fmt(needle)} in haystack`, message);
+            _fail(
+                `Did not expect to find "${_fmt(needle)}" in the haystack`,
+                needle
+            );
         },
 
         hasKey(key, obj, message) {
@@ -651,33 +954,53 @@ const Assert = (() => {
                 obj != null &&
                 Object.prototype.hasOwnProperty.call(obj, key);
 
-            if (!hasOwnKey) {
-                _fail(`Expected object to have own key "${key}"`, message);
+            if (! hasOwnKey) {
+                _fail(
+                    `Expected the object to have a key of "${key}"`,
+                    "",
+                    key
+                );
             }
         },
 
         // --- Comparisons ---
         greaterThan(min, actual, message) {
-            if (!(actual > min)) {
-                _fail(`Expected ${actual} to be > ${min}`, message);
+            if (! (actual > min)) {
+                _fail(
+                    `Expected ${actual} to be > ${min}`,
+                    actual,
+                    `Greater than ${min}`
+                );
             }
         },
 
         greaterThanOrEqual(min, actual, message) {
             if (!(actual >= min)) {
-                _fail(`Expected ${actual} to be ≥ ${min}`, message);
+                _fail(
+                    `Expected ${actual} to be ≥ ${min}`,
+                    actual,
+                    `Greater than or equal to ${min}`
+                );
             }
         },
 
         lessThan(max, actual, message) {
             if (!(actual < max)) {
-                _fail(`Expected ${actual} to be < ${max}`, message);
+                _fail(
+                    `Expected ${actual} to be < ${max}`,
+                    actual,
+                    `Less than ${max}`
+                );
             }
         },
 
         lessThanOrEqual(max, actual, message) {
             if (!(actual <= max)) {
-                _fail(`Expected ${actual} to be ≤ ${max}`, message);
+                _fail(
+                    `Expected ${actual} to be ≤ ${max}`,
+                    actual,
+                    `Less than or equal to ${max}`
+                );
             }
         },
 
@@ -685,7 +1008,10 @@ const Assert = (() => {
         count(expectedCount, value, message) {
             const n = _sizeOf(value);
             if (n !== expectedCount) {
-                _fail(`Expected count ${expectedCount} but got ${n}`, message);
+                _fail(
+                    `Expected a count of ${expectedCount} but got ${n}`,
+                    value
+                );
             }
         },
 
@@ -699,16 +1025,16 @@ const Assert = (() => {
                 thrown = err;
             }
 
-            if (!thrown) {
-                _fail(`Expected function to throw`, message);
+            if (! thrown) {
+                _fail(`Expected function to throw`);
             }
 
-            if (!_matchErr(thrown, expectedMessageOrRegex)) {
+            if (! _matchErr(thrown, expectedMessageOrRegex)) {
                 const formattedMessage = _fmt(expectedMessageOrRegex);
                 _fail(
-                    `Error message didn't match ${formattedMessage}; ` +
-                    `got "${thrown.message}"`,
-                    message
+                    "Error messages don't match",
+                    thrown.message,
+                    formattedMessage
                 );
             }
         },
@@ -718,9 +1044,8 @@ const Assert = (() => {
                 fn();
             } catch (err) {
                 _fail(
-                    `Did not expect function to throw; ` +
-                    `got "${err && err.message}"`,
-                    message
+                    "Did not expect the function to throw",
+                    err && err.message
                 );
             }
         },
@@ -733,14 +1058,14 @@ const Assert = (() => {
 
             try {
                 await p;
-                _fail(`Expected promise to reject`, message);
+                _fail(`Expected promise to reject`);
             } catch (err) {
                 if (!_matchErr(err, expectedMessageOrRegex)) {
                     const formattedMessage = _fmt(expectedMessageOrRegex);
                     _fail(
-                        `Rejection message didn't match ${formattedMessage}; ` +
-                        `got "${err && err.message}"`,
-                        message
+                        "Rejection messages don't match",
+                        err && err.message,
+                        formattedMessage
                     );
                 }
             }
@@ -755,9 +1080,8 @@ const Assert = (() => {
                 await p;
             } catch (err) {
                 _fail(
-                    `Expected promise to resolve but it rejected with ` +
-                    `"${err && err.message}"`,
-                    message
+                    "Expected promise to resolve, but it was rejected",
+                    err && err.message
                 );
             }
         }

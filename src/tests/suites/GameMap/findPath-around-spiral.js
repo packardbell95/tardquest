@@ -1,7 +1,7 @@
 // Test pathfinding around a spiral in a 40x40 map using GameMap.findPath()
 function GameMap_findPathAroundSpiral()
 {
-    const testMap = new GameMap();
+    const testMap = new GameMap(50, 40);
     const mapSize = 40;
 
     testMap.fill(0, 0, mapSize, mapSize, "wall");

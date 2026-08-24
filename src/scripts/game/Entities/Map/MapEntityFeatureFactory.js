@@ -1,0 +1,978 @@
+"use strict";
+
+/**
+ * This factory is used to create map features, such as exits, signs, special
+ * tiles, or whatever else
+ */
+const MapEntityFeatureFactory = {
+    /**
+     * EXIT
+     */
+    exit: function() {
+        const exit = MapEntityBuilder("exit");
+        exit.spriteIds = ["exitArrow", "crater"];
+
+        exit.getDisplayName = () => "🏁 Exit";
+        exit.getDisplayCharacter = () => "E";
+        exit.onEnter = function(gameMap, entity) {
+            console.log("onEnter()", { entity });
+            if (entity?.type === "player") {
+                descend();
+            } else {
+                console.log(
+                    `🏁 Entered by ${entity.id}`,
+                    { gameMap, entity, entered: this }
+                );
+            }
+        };
+
+        return exit;
+    },
+
+    /**
+     * HEALING TILE
+     */
+    healingTile: function() {
+        const healingTile = MapEntityBuilder("healingTile");
+        healingTile.getDisplayName = () => "🟩 Healing Tile";
+        healingTile.getDisplayCharacter = () => "H";
+        healingTile.spriteIds = [ "healingTile" ];
+
+        healingTile.environmentDynamics = [{
+            light: {
+                red: 66,
+                green: 247,
+                blue: 79,
+                intensity: 0.4,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.3,
+                pulseSpeed: 0.2,
+            },
+
+            fog: {
+                red: 107,
+                green: 255,
+                blue: 116,
+                density: 0.15,
+                radius: 0.5,
+                softness: 0,
+                pulseAmount: 0.2,
+                pulseSpeed: 0.2,
+            },
+        }];
+
+        healingTile.onEnter = function(gameMap, entity) {
+            function performHeal() {
+                const results = {
+                    leaderHealed: false,
+                    partyHealed: false,
+                };
+
+                for (let i = 0; i < entity.party.length; i++) {
+                    const partyMember = entity.party[i];
+                    const isLeader = i === 0;
+
+                    const healAmount = Math.ceil(
+                        partyMember.getEffectiveCoreStat("maxHp") *
+                        (isLeader ? 0.3 : 0.1)
+                    );
+
+                    const willHeal =
+                        partyMember.getEffectiveCoreStat("hp") <
+                        partyMember.getEffectiveCoreStat("maxHp");
+
+                    if (willHeal) {
+                        const key = isLeader ? "leaderHealed" : "partyHealed";
+                        results[key] = true;
+                    }
+
+                    partyMember.heal(healAmount);
+                }
+
+                return results;
+            }
+
+            console.log("onEnter()", { entity });
+            if (entity?.type === "player") {
+                // @TODO Update the video player to handle video interruptions
+                // so that effects like this don't have to be locked
+                GameControl.disableControls();
+
+                ViewportAnimation.play(
+                    "heal.webm",
+                    {
+                        onFlashed: () => {
+                            this.spriteIds = [];
+                            this.environmentDynamics = [];
+                            render();
+
+                            const { leaderHealed, partyHealed } = performHeal();
+
+                            if (! leaderHealed && ! partyHealed) {
+                                updateBattleLog(
+                                    `The strange glowing floor tile ` +
+                                    `<span class="enemy">simply evaporates` +
+                                    `</span> as your toes graze the ` +
+                                    `dungeon floor. <em>Whelp...</em>`
+                                );
+
+                                return;
+                            }
+
+                            const healed =
+                                ( leaderHealed ? "you" : "" ) +
+                                ( leaderHealed && partyHealed ? " and " : "") +
+                                ( partyHealed ? "your party" : "");
+
+                            updateBattleLog(
+                                `An oddly colored, perfectly square ` +
+                                `floor tile <span class="friendly">` +
+                                `heals ${healed}!</span>`
+                            );
+                        },
+                        onEnd: () => {
+                            console.info("Playback complete!");
+                            GameControl.enableControls();
+                            this.die();
+                            render();
+                        },
+                    }
+                );
+            } else {
+                console.log(
+                    `🏁 Entered by ${entity.id}`,
+                    { gameMap, entity, entered: this }
+                );
+
+                // @TODO Make this a proximity sound
+                playSFX("healingTile");
+                performHeal();
+                this.die();
+            }
+        };
+
+        return healingTile;
+    },
+
+    /**
+     * CRATER
+     */
+    crater: function() {
+        const crater = MapEntityBuilder("crater");
+        crater.spriteIds = ["crater"];
+        crater.getDisplayName = () => "⚫️ Crater";
+        crater.getDisplayCharacter = () => "●";
+
+        return crater;
+    },
+
+    /**
+     * BLOODY CRATER
+     */
+    bloodyCrater: function() {
+        const bloodyCrater = MapEntityBuilder("bloodyCrater");
+        bloodyCrater.spriteIds = ["bloodyCrater", "skeleton"];
+        bloodyCrater.getDisplayName = () => "🔴 Bloody Crater";
+        bloodyCrater.getDisplayCharacter = () => "◌";
+
+        bloodyCrater.onExplode = function(gameMap, entity) {
+            this.spriteIds = ["bloodyCrater"];
+        };
+
+        return bloodyCrater;
+    },
+
+    /**
+     * TREASURE CHEST
+     */
+    treasureChest: function() {
+        const treasureChest = MapEntityBuilder("treasureChest");
+        treasureChest.spriteIds = [ "treasureChest", "circularShadow" ];
+        treasureChest.getDisplayName = () => "🎁 Treasure Chest";
+        treasureChest.getDisplayCharacter = () => "T";
+        treasureChest.onTouch = function(gameMap, entity) {
+            if (entity?.type === "player") {
+                const treasureChest = this;
+                menu.open("treasureChest", { treasureChest });
+            } else {
+                console.log(
+                    `🏁 Touched by ${entity.id}`,
+                    { gameMap, entity, touched: this }
+                );
+            }
+        };
+
+        treasureChest.onEncounter = function() {
+            music.playRandom("battle");
+        };
+
+        treasureChest.onEncounterEnd = function() {
+            music.resumeTag("exploration");
+        };
+
+        treasureChest.open = function(entity) {
+            if (this.party.length > 0) {
+                if (entity?.type === "player") {
+                    menu.closeAll();
+                    updateBattleLog(
+                        `Holy shit! It was actually a <span class="enemy">` +
+                        `MIMIC</span>!!!`
+                    );
+
+                    BattleSystem.startEncounter(
+                        entity,
+                        this,
+                        // Surprise attack unless the player already knows that
+                        // this is a mimic from a previous encounter
+                        this.encounteredByPlayer ? null : "enemy"
+                    );
+                } else {
+                    entity.die();
+                }
+            } else {
+                this.plunder(entity);
+            }
+        };
+
+        // @TODO Handle phrasing for multiple of the same item/weapon/etc
+        // Eg: "12 cups of lean"
+        treasureChest.plunder = function(entity) {
+            const treasure = this.getFullInventoryContents();
+            const transferredContents = [];
+
+            if (treasure?.bitcoins > 0) {
+                transferredContents.push(
+                    `<span class="BTC">₿ ${treasure.bitcoins}</span>`
+                );
+                entity.inventory.giveBitcoins(treasure.bitcoins);
+            }
+
+            for (const itemId in treasure.items) {
+                const item = ITEMS?.[itemId];
+                if (! item) {
+                    console.error(
+                        "Treasure chest has an unknown item",
+                        { itemId }
+                    );
+                    continue;
+                }
+
+                const quantity = treasure.items[itemId];
+                const displayedQuantity = quantity !== 1
+                    ? ` (x${quantity.toLocaleString(undefined)})`
+                    : "";
+
+                transferredContents.push(
+                    `${item.article} <span class="friendly">${item.name}` +
+                    `${displayedQuantity}</span>`
+                );
+
+                entity.inventory.addItem(itemId, quantity);
+            }
+
+            for (const weaponId in treasure.weapons) {
+                const weapon = WEAPONS?.[weaponId];
+                if (! weapon) {
+                    console.error(
+                        "Treasure chest has an unknown weapon",
+                        { weaponId }
+                    );
+                    continue;
+                }
+
+                transferredContents.push(
+                    `${weapon.article} <span class="friendly">${weapon.name}` +
+                    `</span>`
+                );
+
+                entity.inventory
+                    .addWeapon(weaponId, treasure.weapons[weaponId]);
+            }
+
+            for (const armorId in treasure.armor) {
+                const armor = ARMOR[armorId];
+                if (! armor) {
+                    console.error(
+                        "Treasure chest has an unknown piece of armor",
+                        { armorId }
+                    );
+                    continue;
+                }
+
+                transferredContents.push(
+                    `${armor.article} <span class="friendly">${armor.name}` +
+                    `</span>`
+                );
+
+                entity.inventory.addArmor(armorId, treasure.armor[armorId]);
+            }
+
+            for (const ringId in treasure.rings) {
+                const ring = RINGS[ringId];
+                if (! ring) {
+                    console.error(
+                        "Treasure chest has an unknown ring",
+                        { ringId }
+                    );
+                    continue;
+                }
+
+                transferredContents.push(
+                    `${ring.article} <span class="friendly">${ring.name}` +
+                    `</span>`
+                );
+
+                entity.inventory.addRing(ringId, treasure.rings[ringId]);
+            }
+
+            if (entity?.type === "player") {
+                if (transferredContents.length === 0) {
+                    updateBattleLog(randomEntry([
+                        `Inside the chest, you find a piece of paper that ` +
+                            `says: "IOU one piece of treasure."`,
+                        `The chest is full of nothing but crusty issues of ` +
+                            `Hustler Magazine. You decide to just close the ` +
+                            `lid.`,
+                        `You discover that the chest has been pre-plundered. ` +
+                            `How convenient!`,
+                    ]));
+                } else if (transferredContents.length === 1) {
+                    updateBattleLog(
+                        `Inside the chest, you find ${transferredContents[0]}!`
+                    );
+                } else {
+                    const contentsList = `<ul>` +
+                        transferredContents.map(e => `<li>${e}</li>`) + `</ul>`;
+
+                    updateBattleLog(
+                        `<div>Inside the chest, you find:${contentsList}</div>`
+                    );
+                }
+            }
+
+            this.die(entity);
+        }
+
+        treasureChest.onExplode = function(gameMap, entity) {
+            const treasureChestWasMimic = this.leader?.type === "mimic";
+            const killedByPlayer = entity.id === playerEntity.id;
+
+            if (treasureChestWasMimic) {
+                const treasure = this.getFullInventoryContents();
+                playSFX("scream");
+
+                if (killedByPlayer) {
+                    updateBattleLog(
+                        `<span class="action">WHAT THE FUCK? That was a ` +
+                        `mimic?!</span> You obtained <span class="BTC">₿ ` +
+                        `${treasure.bitcoins}</span> from the intestines ` +
+                        `spilled from its gaping maw.`
+                    );
+                }
+
+                entity.inventory.giveBitcoins(treasure.bitcoins);
+
+                const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
+                gameMap.addEntity(bloodyCrater, this.x, this.y);
+            } else {
+                if (killedByPlayer) {
+                    updateBattleLog(
+                        `Gee willikers! You just <span class="action">` +
+                        `destroyed</span> a <span class="friendly">perfectly ` +
+                        `good treasure chest!</span> Oh well.</span>`
+                    );
+                }
+
+                const crater = MapEntityFeatureFactory.crater();
+                gameMap.addEntity(crater, this.x, this.y);
+            }
+
+            this.die(entity);
+        };
+
+        return treasureChest;
+    },
+
+    /**
+     * DESTROYED TREASURE CHEST
+     */
+    destroyedTreasureChest: function() {
+        const destroyedTreasureChest =
+            MapEntityBuilder("destroyedTreasureChest");
+        destroyedTreasureChest.getDisplayName =
+            () => "🪹 Destroyed Treasure Chest";
+        destroyedTreasureChest.getDisplayCharacter = () => "◌";
+
+        destroyedTreasureChest.onExplode = function(gameMap, entity) {
+            this.die(entity);
+        };
+
+        return destroyedTreasureChest;
+    },
+
+    /**
+     * SIGIL
+     */
+    sigil: function() {
+        const sigil = MapEntityBuilder("sigil");
+        sigil.spriteIds = ["sigil"];
+        sigil.environmentDynamics = [{
+            light: {
+                red: 255,
+                green: 255,
+                blue: 128,
+                intensity: 0.2,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.3,
+                pulseSpeed: 0.2,
+            },
+
+            fog: {
+                red: 96,
+                green: 32,
+                blue: 32,
+                density: 0.4,
+                radius: 0.5,
+                softness: 0,
+                pulseAmount: 0.2,
+                pulseSpeed: 0.2,
+            },
+        }];
+
+
+        sigil.getDisplayName = () => "✡️ Sigil";
+        sigil.getDisplayCharacter = () => "✡";
+
+        return sigil;
+    },
+
+    /**
+     * PIT
+     */
+    pit: function() {
+        const pit = MapEntityBuilder("pit");
+        pit.getDisplayName = () => "🕳️ Pit";
+        pit.getDisplayCharacter = () => "●";
+        pit.spriteIds = ["crater"];
+        pit.collapseAfterSomethingFallsIn = true;
+        pit.closeAfterTurns = Infinity;
+
+        pit.onEnter = function(gameMap, entity) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            console.log("onEnter()", { entity });
+            if (entity?.type === "player") {
+                music.stop();
+                animTorchEnd();
+                Portrait.show("death", { text: "Game Over" });
+                GameControl.disableControls();
+
+                document.getElementById("scene").classList
+                    .add("descendingIntoFloor");
+                document.getElementById("viewport").classList
+                    .add("playerFellIntoAPitAndDied");
+                updateBattleLog(
+                    `<span class="action">AUUUUUGH!</span> You scream out as ` +
+                    `you plunge into a pit waiting beneath!`
+                );
+
+                playSFX("floorBreakScreamDie");
+                playerEntity.die(this);
+
+                if (this.collapseAfterSomethingFallsIn) {
+                    this.die(entity);
+                }
+            } else {
+                // @TODO Replace with tag check once that has been implemented
+                const shouldFallIntoPit = ! (
+                    entity.leader?.traits.isFlying ||
+                    [
+                        "exit",
+                        "healingTile",
+                        "crater",
+                        "bloodyCrater",
+                        "destroyedTreasureChest",
+                        "sigil",
+                        "pit",
+                        "crackedFloor",
+                    ].includes(entity.type)
+                );
+
+                if (shouldFallIntoPit) {
+                    playSFX("pitDrop");
+                    const interfaceClassList =
+                        document.getElementById("interface")?.classList;
+
+                    // @TODO Maybe make this its own weaker rumble
+                    if (interfaceClassList) {
+                        setTimeout(() => interfaceClassList.add("rumble"), 700);
+                        setTimeout(() => interfaceClassList.remove("rumble"), 1600);
+                    }
+
+                    if (this.collapseAfterSomethingFallsIn) {
+                        this.die(entity);
+                    }
+                }
+
+                entity.die(this);
+            }
+        };
+
+        pit.tick = function(gameMap) {
+            if (this.closeAfterTurns-- <= 0) {
+                this.die();
+            }
+        };
+
+        return pit;
+    },
+
+    /**
+     * CRACKED FLOOR
+     */
+    crackedFloor: function() {
+        const crackedFloor = MapEntityBuilder("crackedFloor");
+        crackedFloor.spriteIds = ["crackedFloorSlight"];
+
+        crackedFloor.crackedLevel = 1;
+        crackedFloor.getDisplayName = function() {
+            switch (this.crackedLevel) {
+                case 1:
+                    return "🚧 Slightly-Cracked Floor";
+                case 2:
+                    return "⚠️ Cracked Floor";
+                case 3:
+                    return "⚠️ Severely-Cracked Floor";
+                default:
+                    return "🚧 Ambiguously-Cracked Floor";
+            }
+        };
+
+        crackedFloor.getDisplayCharacter = function() {
+            return this.crackedLevel === 3 ? "✖" : "✕";
+        };
+
+        // @TODO Move this to onEnter
+        crackedFloor.getSceneArtId = function() {
+            switch (this.crackedLevel) {
+                case 1:
+                    return "crackedFloorSlight";
+                case 2:
+                    return "crackedFloor";
+                case 3:
+                    return "crackedFloorSevere";
+                default:
+                    return "crackedFloorSlight";
+            }
+        };
+
+        crackedFloor.onEnter = function(gameMap, entity) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            this.crackedLevel += ({
+                normal: 1,
+                warning: 2,
+                danger: 3,
+            })[entity.getWeightLevel()] || 0;
+
+            playSFX("floorCrackSlight");
+
+            const spriteId = [
+                "crackedFloorSlight",
+                "crackedFloorModerate",
+                "crackedFloorSevere"
+            ][this.crackedLevel - 1] ?? "crackedFloorSevere";
+
+            this.spriteIds = [ spriteId ];
+            gameMap.entityChanged(this);
+
+            if (this.crackedLevel > 3) {
+                const pitOfSpikes = MapEntityFeatureFactory.pit();
+                pitOfSpikes.getDisplayName = () => "🕳️ Pit of Spikes";
+
+                if (entity?.type === "player") {
+                    updateBattleLog(
+                        `The flimsy floor collapses beneath your feet!`
+                    );
+                }
+
+                gameMap.addEntity(pitOfSpikes, this.x, this.y);
+                this.die(entity);
+
+                gameMap.triggerOnEnterEvent(pitOfSpikes);
+            } else if (entity?.type === "player") {
+                const cautionText = this.crackedLevel > 1
+                    ? " It would be a good idea to avoid stepping here again."
+                    : "";
+                const message =
+                    `<span class="action">The floor cracks under your feet!` +
+                    `</span>${cautionText}`;
+
+                updateBattleLog(message);
+            }
+        };
+
+        return crackedFloor;
+    },
+
+    /**
+     * BOULDING BALL
+     */
+    bouldingBall: function() {
+        const bouldingBall = MapEntityBuilder("bouldingBall");
+        MapEntityTrait_AttachRealtimeMovement_BackAndForth(bouldingBall);
+
+        bouldingBall.getDisplayName = () => "🪨 Boulding Ball";
+        // Empty character because this is styled by a CSS rule
+        bouldingBall.getDisplayCharacter = () => " ";
+
+        bouldingBall.previewRealtimeTouch = function(
+            gameMap,
+            entity,
+            virtualPoses
+        ) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            if (entity.type !== "bouldingBall") {
+                return;
+            }
+
+            const thisPose = virtualPoses.get(this.id);
+            const entityPose = virtualPoses.get(entity.id);
+
+            if (! thisPose || ! entityPose) {
+                return;
+            }
+
+            thisPose.direction = (thisPose.direction + 2) % 4;
+            entityPose.direction = (entityPose.direction + 2) % 4;
+        };
+
+        bouldingBall.onTouch = function(gameMap, entity) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            if (entity.type === "bouldingBall") {
+                this.turnAround();
+                entity.turnAround();
+            }
+        };
+
+        bouldingBall.onEnter = function(gameMap, entity) {
+            if (entity.leader?.traits.isFlying) {
+                return;
+            }
+
+            console.log("onEnter()", { entity });
+
+            if (entity?.type === "player") {
+                playSFX("bouldingBallStrike");
+                animBouldingBallStrike();
+
+                document.getElementById("interface")?.classList.add("rumble");
+                setTimeout(
+                    () => document.getElementById("interface")
+                        ?.classList.remove("rumble"),
+                    400
+                );
+
+                const damageValues = entity.damagePartyFractional(1 / 3);
+                const damageMessage =
+                    `<span class="action">YEOUCH!</span> A vicious, ` +
+                    `bloodthirsty Boulding Ball takes 1/3rd of your party's ` +
+                    `health!`;
+
+                const damageList = `<ul>` + (
+                    damageValues.map(e => {
+                        const { partyMemberId, damageHp } = e;
+
+                        const partyMember = playerEntity
+                            .party.find(p => p.id === partyMemberId);
+
+                        if (! partyMember) {
+                            return "";
+                        }
+
+                        const hpMessage = `${partyMember.name} lost ` +
+                            `<span class="enemy">${damageHp}</span>`;
+
+                        const diedMessage = partyMember.isDead()
+                            ? ` and <strong>died!</strong>`
+                            : "";
+
+                        return `<li>${hpMessage}${diedMessage}</li>`;
+                    }).filter(e => e).join("")
+                ) + `</ul>`;
+            } else if (entity.leader) {
+                // @TODO Replace after proximity audio has been implemented
+                // Calculate distance-based scream volume
+                const distance =
+                    Math.abs(playerEntity.x - entity.x) +
+                    Math.abs(playerEntity.y - entity.y);
+
+                const maxRange = 10;
+                const maxVolume = 1;
+                const minVolume = 0.1;
+
+                const volume = distance <= maxRange
+                    ? Math.max(
+                        minVolume,
+                        maxVolume -
+                            ((distance - 1) / (maxRange - 1)) *
+                                (maxVolume - minVolume))
+                    : 0; // No sound if too far
+
+                playSFX("scream", volume);
+                playSFX("bouldingBallStrike", volume);
+
+                entity.die(this);
+
+                const bloodyCrater = MapEntityFeatureFactory.bloodyCrater();
+
+                bloodyCrater.getDisplayName = () =>
+                    `🔴 Former ${entity.leader.name}`;
+
+                entity.gameMap.addEntity(bloodyCrater, entity.x, entity.y);
+            } else if (entity.type === "treasureChest") {
+                const destroyedTreasureChest =
+                    MapEntityFeatureFactory.destroyedTreasureChest();
+                entity.gameMap
+                    .addEntity(destroyedTreasureChest, entity.x, entity.y);
+                entity.die(this);
+            }
+        };
+
+        bouldingBall.onExplode = function(gameMap, entity) {
+            const killedByPlayer = entity.id === playerEntity.id;
+            if (killedByPlayer) {
+                updateBattleLog(
+                    `You reduced the boulding ball into ` +
+                    `<span class="action">dust!</span>`
+                );
+            }
+
+            this.die(entity);
+        };
+
+        return bouldingBall;
+    },
+
+    /**
+     * PIGEON
+     */
+    pigeon: function() {
+        const pigeon = MapEntityBuilder("pigeon");
+        pigeon.spriteIds = ["pigeon", "bobbingShadow"];
+        pigeon.getDisplayName = () => "🐦️ Pigeon";
+        pigeon.getDisplayCharacter = () => "P";
+        pigeon.getMovementPriority = function() {
+            return 40;
+        };
+        pigeon.addPartyMember(TardQuestPartyMemberFactory.pigeon());
+
+        MapEntityTrait_AttachMovement_Pursue(pigeon);
+        pigeon.objectsOfInterest = ["player"];
+        pigeon.targetEntity(playerEntity.id); // Chase the player
+        pigeon.isHastyMove = () => true;
+
+        pigeon.onDie = function(killedByEntity) {
+            const killedByPlayer = killedByEntity?.id === playerEntity.id;
+
+            if (killedByPlayer) {
+                PigeonMessaging?.reportMurder();
+                updateBattleLog(
+                    `The <span class="pigeon">CARRIER PIGEON</span> has been ` +
+                    `<span class="action">murdered. God is watching.</span>`
+                );
+            }
+
+            // @TODO Could this be handled in die() instead?
+            this.isActive = false;
+        };
+
+        pigeon.onTouch = function (gameMap, entity) {
+            if (entity?.type !== "player") {
+                console.log(
+                    `🏁 Touched by ${entity.id}`,
+                    { gameMap, entity, touched: this }
+                );
+
+                return;
+            }
+
+            updateBattleLog("touched da piggin");
+            menu.open("pigeon", { pigeon: this, message: this.message });
+        };
+
+        return pigeon;
+    },
+
+    /**
+     * GRAVESTONE
+     */
+    gravestone: function() {
+        const gravestone = MapEntityBuilder("gravestone");
+        gravestone.spriteIds = ["gravestone", "burialPlot"];
+        gravestone.getDisplayName = () => "🪦 Gravestone";
+        gravestone.getDisplayCharacter = () => "†";
+        gravestone.headstoneMessageHtml = "Rest in peace, nameless tard.";
+
+        gravestone.onTouch = function (gameMap, entity) {
+            if (entity?.type !== "player") {
+                console.log(
+                    `🏁 Touched by ${entity.id}`,
+                    { gameMap, entity, touched: this }
+                );
+
+                return;
+            }
+
+            updateBattleLog(this.headstoneMessageHtml);
+        };
+
+        return gravestone;
+    },
+
+    /**
+     * TORCHES (affixed to a wall)
+     */
+    torches: function() {
+        const torches = MapEntityBuilder("torches");
+        torches.isVisibleOnMinimap = false;
+        torches.getDisplayName = () => "🔥 Torches";
+        torches.getDisplayCharacter = () => "T";
+
+        torches.environmentDynamics = [
+            {
+                light: {
+                    red: 255,
+                    green: 255,
+                    blue: 142,
+                    intensity: 0.3,
+                    radius: 5,
+                    softness: 2,
+                    pulseAmount: 0.33,
+                    pulseSpeed: 0.21,
+                },
+
+                fog: {
+                    red: 212,
+                    green: 159,
+                    blue: 0,
+                    density: 0.05,
+                    radius: 0.5,
+                    softness: 0,
+                    pulseAmount: 0.26,
+                    pulseSpeed: 0.23,
+                    cappedToCeiling: true,
+                },
+            },
+            {
+                light: {
+                    red: 255,
+                    green: 144,
+                    blue: 102,
+                    intensity: 0.3,
+                    radius: 4,
+                    softness: 1,
+                    pulseAmount: 0.27,
+                    pulseSpeed: 0.19,
+                },
+
+                fog: {
+                    red: 170,
+                    green: 31,
+                    blue: 0,
+                    density: 0.035,
+                    radius: 3,
+                    softness: 2,
+                    pulseAmount: 0.18,
+                    pulseSpeed: 0.11,
+                    cappedToCeiling: true,
+                },
+            },
+        ];
+
+        torches.onExplode = function(gameMap, entity) {
+            this.die(entity);
+        };
+
+        return torches;
+    },
+
+    /**
+     * PATTY
+     */
+    demo01Patty: function() {
+        const patty = MapEntityBuilder("patty");
+        patty.getDisplayName = () => "🍔 Patty";
+        patty.getDisplayCharacter = () => "@";
+        patty.spriteIds = [ "demo01Patty", "bobbingShadow" ];
+
+        patty.environmentDynamics = [{
+            light: {
+                red: 247,
+                green: 184,
+                blue: 0,
+                intensity: 0.5,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0.7,
+                pulseSpeed: 0.8,
+            },
+        }];
+
+        patty.onEnter = function(gameMap, entity) {
+            playSFX("demo01Pickup");
+            updateBattleLog("PATTY COLLECTED");
+            this.die();
+
+            if (! gameMap.entities.some(e => e.type === "patty")) {
+                gameMap.entities.map(e => e.type === "krabs" ? e.die() : null);
+            }
+        };
+
+        return patty;
+    },
+
+    /**
+     * KRABS
+     */
+    demo01Krabs: function() {
+        const krabs = MapEntityBuilder("krabs");
+        krabs.getDisplayName = () => "🦀 Krabs";
+        krabs.getDisplayCharacter = () => "K";
+        krabs.spriteIds = [ "demo01Krabs", "circularShadow" ];
+
+        krabs.environmentDynamics = [{
+            light: {
+                red: 255,
+                green: 225,
+                blue: 255,
+                intensity: 0.2,
+                radius: 1,
+                softness: 0,
+                pulseAmount: 0,
+                pulseSpeed: 0,
+            },
+        }];
+
+        krabs.onTouch = () => updateBattleLog("FIND ME PATTIES!");
+        krabs.onDie = function () {
+            updateBattleLog("YE DID IT, ME BOY!");
+            this.isActive = false;
+            MAP.refreshMinimap(true);
+        };
+
+        return krabs;
+    },
+}
