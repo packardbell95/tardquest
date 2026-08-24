@@ -1,14 +1,13 @@
 // ============================================================================
-// TardBoard (Leaderboard + Captcha Integration)
+// TardBoard (Leaderboard + PoW Integration)
 // ============================================================================
 
 /**
- * @fileoverview TardBoard - Leaderboard and Captcha Integration System for TardQuest
+ * @fileoverview TardBoard - Leaderboard Integration System for TardQuest
  *
- * This module provides a comprehensive leaderboard system with captcha verification
- * for highscore submissions. It includes:
+ * This module provides a comprehensive leaderboard system with proof-of-work
+ * verification for highscore submissions. It includes:
  *
- * - Cloudflare Turnstile captcha integration for bot protection
  * - Modal dialog system for user interaction
  * - Automatic game state monitoring and reporting via TardAPI
  * - Highscore submission with validation
@@ -19,10 +18,10 @@
  * 2. Monitoring game progress (floor/level changes) via TardAPI
  * 3. Intercepting game resets to show leaderboard submission dialog
  * 4. Validating sessions before allowing highscore submissions
- * 5. Using captcha to prevent automated submissions
+ * 5. Using server-issued proof-of-work challenges to prevent automated submissions
  *
  * Dependencies:
- * - tardAPI.js (for session management and progress updates)
+ * - tardAPI.js (for session management, progress updates, and PoW challenges)
  */
 // --- Logging Utility ---
 
@@ -44,40 +43,6 @@ if (typeof TardAPI === 'undefined') {
 }
 
 // --- Constants --------------------------------------
-
-/** @type {Promise|null} Promise that resolves when Turnstile script is loaded */
-let _turnstileReadyPromise = null;
-
-/** @const {string} Cloudflare Turnstile site key for captcha verification */
-const TURNSTILE_SITE_KEY = '0x4AAAAAABzv0mtUXvveSKgW';
-
-/**
- * Ensures the Cloudflare Turnstile captcha script is loaded and ready
- * @returns {Promise} Promise that resolves when Turnstile is available
- */
-function ensureTurnstileScript() {
-    if (_turnstileReadyPromise) return _turnstileReadyPromise;
-    _turnstileReadyPromise = new Promise((resolve, reject) => {
-        if (window.turnstile && typeof window.turnstile.render === 'function') return resolve();
-        const existing = document.querySelector('script[data-turnstile-loaded]');
-        if (existing) {
-            const check = setInterval(() => {
-                if (window.turnstile && typeof window.turnstile.render === 'function') { clearInterval(check); resolve(); }
-            }, 100);
-            setTimeout(() => { clearInterval(check); if (!(window.turnstile && window.turnstile.render)) reject(new Error('Turnstile script timeout')); }, 10000);
-            return;
-        }
-        const s = document.createElement('script');
-        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-        s.async = true; s.defer = true; s.setAttribute('data-turnstile-loaded', '1');
-        s.onload = () => (window.turnstile && typeof window.turnstile.render === 'function') ? resolve() : reject(new Error('Turnstile global missing after load'));
-        s.onerror = () => reject(new Error('Failed to load Turnstile script'));
-        document.head.appendChild(s);
-        const poll = setInterval(() => { if (window.turnstile && typeof window.turnstile.render === 'function') { clearInterval(poll); resolve(); } }, 120);
-        setTimeout(() => clearInterval(poll), 10000);
-    });
-    return _turnstileReadyPromise;
-}
 
 // --- State ------------------------------------------------------------------
 
@@ -159,9 +124,6 @@ function createDialog({ bodyHtml, showApi = true, buttons = [], afterRender }) {
             ${showApi ? `<div class="tardboard-api"><span id="tardboard-title">🏆 TardBoard: </span><span id="tardboard-api-status" style="color:#aaa;font-size:.95em;">Checking API...</span></div>` : ''}
             <div class="tardboard-body" style="color:#fff;">${bodyHtml}</div>
             <div class="tardboard-buttons"></div>
-            <div id="hcaptcha-wrapper" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;">
-                <div id="hcaptcha-container"></div>
-            </div>
         </div>`;
     document.body.appendChild(wrap);
     const btnContainer = wrap.querySelector('.tardboard-buttons');
@@ -189,12 +151,10 @@ function removeDialog() {
 // --- Dialog / Submission Flow ----------------------------------------------
 
 /**
- * Shows the initials entry dialog with captcha verification
+ * Shows the initials entry dialog
  * @param {Function} submitCallback - Callback function called with submission data or null
  */
 function showInitialsDialog(submitCallback) {
-    let widgetId = null;
-    let captchaToken = null;
     let pendingSubmit = false;
             createDialog({
             bodyHtml: `Enter your initials (up to 5)<br><br>
@@ -227,7 +187,7 @@ function showInitialsDialog(submitCallback) {
 
     let initialsValue = '';
     function proceedIfReady() {
-        if (!pendingSubmit || !captchaToken) return;
+        if (!pendingSubmit) return;
         removeDialog();
         let val = initialsValue.trim().toUpperCase();
         if (!val) {
@@ -236,29 +196,9 @@ function showInitialsDialog(submitCallback) {
             window.location.reload();
         } else {
             // log.debug('Submitting initials:', val);
-            submitCallback({ initials: val, captcha: captchaToken });
+            submitCallback({ initials: val });
         }
     }
-
-    function onCaptchaSuccess(token) {
-        captchaToken = token;
-        log.info('Captcha verified');
-        proceedIfReady();
-    }
-
-    ensureTurnstileScript()
-        .then(() => {
-            try {
-                widgetId = window.turnstile.render('#hcaptcha-container', {
-                    sitekey: TURNSTILE_SITE_KEY,
-                    size: 'invisible',
-                    callback: onCaptchaSuccess,
-                    'error-callback': () => log.warn('Captcha error'),
-                    'timeout-callback': () => log.warn('Captcha timeout')
-                });
-            } catch { log.error('Captcha render error'); }
-        })
-        .catch(err => { log.error('Turnstile load failure', err); });
 
     const input = document.getElementById('tardboard-initials-input');
     // Build slot overlay for visual feedback
@@ -307,18 +247,14 @@ function showInitialsDialog(submitCallback) {
         const val = input.value.trim();
         if (!val) { alert('Enter initials first.'); return; }
         pendingSubmit = true;
-        // Grey out the Submit button if validation is pending
+        // Grey out the Submit button while submission is in progress
         const okBtn = document.getElementById('tardboard-dialog-ok');
         if (okBtn) {
             okBtn.disabled = true;
             okBtn.style.opacity = '0.5';
             okBtn.style.pointerEvents = 'none';
         }
-        if (captchaToken) { proceedIfReady(); return; }
-        // log.debug('Verifying captcha...');
-        if (window.turnstile && widgetId !== null) {
-            try { window.turnstile.execute(widgetId); } catch { log.error('Captcha error'); }
-        } else log.warn('Captcha unavailable');
+        proceedIfReady();
     }
     function onCancel() {
         removeDialog();
@@ -374,13 +310,12 @@ function showValidationFailDialog(reason) {
 /**
  * Validates anti-cheat session and submits highscore to leaderboard
  * @param {string} playerInitials - Player's initials (max 5 characters)
- * @param {string} captchaToken - Captcha verification token
  */
-async function submitHighscore(playerInitials, captchaToken) {
+async function submitHighscore(playerInitials) {
     showSubmissionLoadingDialog();
     try {
         // Use TardAPI to submit the score with PoW proof if available
-        const result = await TardAPI.submitScore(playerInitials, { captcha_token: captchaToken });
+        const result = await TardAPI.submitScore(playerInitials);
         removeDialog();
 
         if (result.success) {
@@ -421,7 +356,7 @@ async function submitHighscore(playerInitials, captchaToken) {
             const replacement = function() {
                 if (typeof window._inputBlocked !== 'undefined') window._inputBlocked = false;
                 showInitialsDialog(data => {
-                    if (data && data.initials) submitHighscore(data.initials, data.captcha);
+                    if (data && data.initials) submitHighscore(data.initials);
                 });
             };
             return originalSetTimeout(replacement, delay);

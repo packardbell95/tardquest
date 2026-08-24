@@ -23,10 +23,10 @@ const TardAPI = (function() {
     // --- Configuration ---
 
     /** @const {string} Base URL for all API endpoints */
-    const API_BASE = 'https://vocapepper.com:9601';
+    const API_BASE = 'https://gateway.tardquest.online';
 
     /** @const {string} Client API version (major.minor must match server) */
-    const CLIENT_API_VERSION = '3.2.260315';
+    const CLIENT_API_VERSION = '4.0.2606';
 
     /** @const {string} LocalStorage key for session ID persistence */
     const LS_SESSION_KEY = 'tardquestSID';
@@ -36,6 +36,9 @@ const TardAPI = (function() {
 
     /** @const {string} LocalStorage key for API feature toggle */
     const LS_API_FEATURES_KEY = 'tardquestApiFeaturesEnabled';
+
+    /** @const {string} LocalStorage key for authenticated account username */
+    const LS_ACCOUNT_KEY = 'tardquestAccountUser';
 
     // --- Logging Utility ---
 
@@ -50,6 +53,11 @@ const TardAPI = (function() {
 
     /** @type {string|null} Current session ID */
     let sessionId = sessionStorage.getItem(LS_SESSION_KEY) || null;
+
+    /** @type {string|null} Authenticated account username (null for guest sessions) */
+    let authUsername = (function() {
+        try { return localStorage.getItem(LS_ACCOUNT_KEY) || null; } catch { return null; }
+    })();
 
     /** @type {Object|null} Current PoW challenge data */
     let challengeData = null;
@@ -239,7 +247,7 @@ const TardAPI = (function() {
         }
 
         try {
-            const res = await fetch(`${API_BASE}/api/status`, { method: 'GET', mode: 'cors' });
+            const res = await fetch(`${API_BASE}/status`, { method: 'GET', mode: 'cors' });
             return res.ok;
         } catch {
             return false;
@@ -297,7 +305,7 @@ const TardAPI = (function() {
 
         try {
             log.info('Creating new session...');
-            const res = await fetch(`${API_BASE}/api/start`, {
+            const res = await fetch(`${API_BASE}/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ version: CLIENT_API_VERSION })
@@ -320,27 +328,7 @@ const TardAPI = (function() {
             sessionStorage.setItem(LS_SESSION_KEY, sessionId);
             log.info('Session created:', sessionId);
 
-            // Store PoW challenge if provided
-            const challengeSalt = data.challenge_salt || null;
-            const challengeDifficulty = Number.isFinite(Number(data.challenge_difficulty))
-                ? Math.max(1, Math.min(8, Math.floor(Number(data.challenge_difficulty))))
-                : 4;
-
-            if (data.challenge_secret) {
-                // Intentionally ignored: this is from the old PoW system,
-                // which will still be supported by the server for a transitional period.
-                log.warn('Ignoring legacy challenge_secret from /api/start response');
-            }
-
-            if (data.challenge_id && challengeSalt) {
-                challengeData = {
-                    challenge_id: data.challenge_id,
-                    challenge_salt: challengeSalt,
-                    challenge_difficulty: challengeDifficulty
-                };
-                sessionStorage.setItem(LS_CHALLENGE_KEY, JSON.stringify(challengeData));
-                log.info('PoW challenge received (difficulty', challengeDifficulty + ')');
-            }
+            storeChallengeFromResponse(data);
 
             // Reset game state tracking
             const state = getGameState();
@@ -364,6 +352,19 @@ const TardAPI = (function() {
 
     /**
      * Validates current session with the API
+    /**
+     * Checks whether an error string indicates an invalid or expired session.
+     * @param {string} errorMsg - Error message from the API response
+     * @returns {boolean} True if the session is invalid/expired
+     */
+    function isSessionInvalidError(errorMsg) {
+        if (!errorMsg) return false;
+        const lower = String(errorMsg).toLowerCase();
+        return lower.includes('invalid session') || lower.includes('session expired');
+    }
+
+    /**
+     * Validates current session with the API
      * Returns the session data if valid
      * @returns {Promise<Object>} Validation result with session status
      */
@@ -377,16 +378,21 @@ const TardAPI = (function() {
         }
 
         try {
-            const { floor, level } = getGameState();
-            const res = await fetch(`${API_BASE}/api/update`, {
+            const { floor, level, totalExp } = getGameState();
+            const res = await fetch(`${API_BASE}/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ session_id: sessionId, floor, level })
+                body: JSON.stringify({ session_id: sessionId, floor, level, exp: totalExp })
             });
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                return { success: false, error: data.error || `HTTP ${res.status}` };
+                const errMsg = data.error || `HTTP ${res.status}`;
+                if (isSessionInvalidError(errMsg)) {
+                    log.warn('Session invalid/expired, clearing for re-creation');
+                    clearSession();
+                }
+                return { success: false, error: errMsg };
             }
 
             const data = await res.json();
@@ -437,7 +443,7 @@ const TardAPI = (function() {
             }
 
             // Update server
-            const res = await fetch(`${API_BASE}/api/update`, {
+            const res = await fetch(`${API_BASE}/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ session_id: sessionId, floor, level, exp: totalExp })
@@ -461,6 +467,10 @@ const TardAPI = (function() {
             firstSessionAttemptTime = null;
             return { success: true, data };
         } catch (err) {
+            if (isSessionInvalidError(err.message)) {
+                log.warn('Session invalid/expired, clearing for re-creation');
+                clearSession();
+            }
             log.error(`Session creation failed (attempt ${sessionAttempts}/${MAX_SESSION_ATTEMPTS}):`, err.message);
             return { success: false, error: err.message };
         } finally {
@@ -469,13 +479,11 @@ const TardAPI = (function() {
     }
 
     /**
-     * Submits a leaderboard score with optional PoW validation
+     * Submits a leaderboard score with PoW validation
      * @param {string} name - Player name (max 5 characters)
-     * @param {Object} options - Additional submission options
-     * @param {string} [options.captcha_token] - Captcha token for verification
      * @returns {Promise<Object>} Submission result
      */
-    async function submitScore(name, options = {}) {
+    async function submitScore(name) {
         if (!apiFeaturesEnabled) {
             return getApiDisabledResult();
         }
@@ -500,12 +508,7 @@ const TardAPI = (function() {
                 body.challenge_proof = proof;
             }
 
-            // Add captcha token if provided
-            if (options.captcha_token) {
-                body.captcha_token = options.captcha_token;
-            }
-
-            const res = await fetch(`${API_BASE}/api/leaderboard`, {
+            const res = await fetch(`${API_BASE}/leaderboard`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -513,7 +516,12 @@ const TardAPI = (function() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
-                return { success: false, error: data.error || `HTTP ${res.status}` };
+                const errMsg = data.error || `HTTP ${res.status}`;
+                if (isSessionInvalidError(errMsg)) {
+                    log.warn('Session invalid/expired, clearing for re-creation');
+                    clearSession();
+                }
+                return { success: false, error: errMsg };
             }
 
             const data = await res.json();
@@ -554,8 +562,8 @@ const TardAPI = (function() {
             if (limit) params.append('limit', String(limit));
 
             const url = params.toString()
-                ? `${API_BASE}/api/leaderboard?${params.toString()}`
-                : `${API_BASE}/api/leaderboard`;
+                ? `${API_BASE}/leaderboard?${params.toString()}`
+                : `${API_BASE}/leaderboard`;
 
             log.info('Fetching leaderboard from', url);
             const res = await fetch(url, { method: 'GET', mode: 'cors' });
@@ -622,11 +630,196 @@ const TardAPI = (function() {
     function clearSession() {
         sessionId = null;
         challengeData = null;
+        authUsername = null;
         lastFloor = 1;
         lastLevel = 1;
         sessionStorage.removeItem(LS_SESSION_KEY);
         sessionStorage.removeItem(LS_CHALLENGE_KEY);
+        try { localStorage.removeItem(LS_ACCOUNT_KEY); } catch {}
         log.info('Session cleared');
+    }
+
+    // --- Account / Auth ---
+
+    function storeChallengeFromResponse(data) {
+        const challengeSalt = data.challenge_salt || null;
+        const challengeDifficulty = Number.isFinite(Number(data.challenge_difficulty))
+            ? Math.max(1, Math.min(8, Math.floor(Number(data.challenge_difficulty))))
+            : 4;
+
+        if (data.challenge_id && challengeSalt) {
+            challengeData = {
+                challenge_id: data.challenge_id,
+                challenge_salt: challengeSalt,
+                challenge_difficulty: challengeDifficulty
+            };
+            sessionStorage.setItem(LS_CHALLENGE_KEY, JSON.stringify(challengeData));
+            log.info('PoW challenge received (difficulty', challengeDifficulty + ')');
+        }
+    }
+
+    /**
+     * Logs in with an account credential. Creates an authenticated API session.
+     * @param {string} username - Account username
+     * @param {string} password - Account password
+     * @returns {Promise<Object>} { success, session_id?, username?, error? }
+     */
+    async function login(username, password) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            if (!data.session_id) {
+                return { success: false, error: 'Server did not return session_id' };
+            }
+            sessionId = data.session_id;
+            sessionStorage.setItem(LS_SESSION_KEY, sessionId);
+            authUsername = data.username || username;
+            try { localStorage.setItem(LS_ACCOUNT_KEY, authUsername); } catch {}
+            storeChallengeFromResponse(data);
+            log.info('Account login successful:', authUsername);
+            return { success: true, session_id: sessionId, username: authUsername };
+        } catch (err) {
+            log.error('Login failed:', err.message);
+            return { success: false, error: err.message };
+        }
+    }
+
+    /**
+     * Registers a new account. Does NOT auto-login.
+     * @param {string} username - Desired username
+     * @param {string} password - Desired password
+     * @returns {Promise<Object>} { success, error? }
+     */
+    async function register(username, password) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+        try {
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            log.info('Account registered:', username);
+            return { success: true };
+        } catch (err) {
+            log.error('Registration failed:', err.message);
+            return { success: false, error: err.message };
+        }
+    }
+
+    /**
+     * Logs out: clears the local session and account state.
+     */
+    function logout() {
+        clearSession();
+        log.info('Account logged out');
+    }
+
+    /**
+     * Verifies the current session's auth status with the server.
+     * @returns {Promise<Object>} { success, authenticated, username? }
+     */
+    async function checkAuth() {
+        if (!sessionId) {
+            return { success: false, authenticated: false };
+        }
+        try {
+            const res = await fetch(`${API_BASE}/auth/status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                if (data.error && (data.error.includes('expired') || data.error.includes('Invalid'))) {
+                    clearSession();
+                }
+                return { success: false, authenticated: false };
+            }
+            if (data.authenticated && data.username) {
+                authUsername = data.username;
+                try { localStorage.setItem(LS_ACCOUNT_KEY, authUsername); } catch {}
+            } else if (!data.authenticated) {
+                authUsername = null;
+                try { localStorage.removeItem(LS_ACCOUNT_KEY); } catch {}
+            }
+            return { success: true, authenticated: !!data.authenticated, username: data.username || null };
+        } catch (err) {
+            log.error('Auth check failed:', err.message);
+            return { success: false, authenticated: false };
+        }
+    }
+
+    /**
+     * Rotates (regenerates) recovery codes for the authenticated account.
+     * @param {string} password - Current account password for re-verification
+     * @returns {Promise<Object>} { success, codes?, error? }
+     */
+    async function rotateRecoveryCodes(password) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+        if (!sessionId) {
+            return { success: false, error: 'No active session' };
+        }
+        try {
+            const res = await fetch(`${API_BASE}/auth/recovery-codes/rotate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            return { success: true, codes: data.codes || [] };
+        } catch (err) {
+            log.error('Recovery code rotation failed:', err.message);
+            return { success: false, error: err.message };
+        }
+    }
+
+    /**
+     * Resets password using a recovery code.
+     * @param {string} username - Account username
+     * @param {string} recoveryCode - One-time recovery code
+     * @param {string} newPassword - New password
+     * @returns {Promise<Object>} { success, error? }
+     */
+    async function recoverPassword(username, recoveryCode, newPassword) {
+        if (!apiFeaturesEnabled) {
+            return getApiDisabledResult();
+        }
+        try {
+            const res = await fetch(`${API_BASE}/auth/recover`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, recovery_code: recoveryCode, new_password: newPassword })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                return { success: false, error: data.error || `HTTP ${res.status}` };
+            }
+            return { success: true };
+        } catch (err) {
+            log.error('Password recovery failed:', err.message);
+            return { success: false, error: err.message };
+        }
     }
 
     // --- Public API ---
@@ -647,11 +840,20 @@ const TardAPI = (function() {
         clearSession,
         setApiFeaturesEnabled,
 
+        // Account / auth
+        login,
+        register,
+        logout,
+        checkAuth,
+        rotateRecoveryCodes,
+        recoverPassword,
+
         // Utilities
         checkApiStatus,
         getGameState,
         computeSHA256,
         computePoWProof,
+        isSessionInvalidError,
 
         // State getters
         get sessionId() { return sessionId; },
@@ -659,6 +861,8 @@ const TardAPI = (function() {
         get hasActiveSession() { return !!sessionId; },
         get hasChallenge() { return !!challengeData; },
         get challenge() { return challengeData; },
+        get isLoggedIn() { return !!authUsername; },
+        get username() { return authUsername; },
 
         // Debug
         debug: {
