@@ -158,12 +158,12 @@
             return false;
         }
         try {
-            const r = await fetch(`${TardAPI.API_BASE}/api/pigeon/send`, {
+            const r = await fetch(`${TardAPI.API_BASE}/pigeon/send`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ session_id: sid, message }),
+                body: JSON.stringify({ session_id: sid, message })
             });
             const j = await r.json().catch(() => ({}));
             if (r.ok && j.stored) {
@@ -174,6 +174,19 @@
                 );
 
                 return true;
+            } else {
+                if (TardAPI.isSessionInvalidError(j.error)) {
+                    log.warn(
+                        "Session invalid during send, clearing stale session"
+                    );
+                    TardAPI.clearSession();
+                }
+                updateBattleLog(
+                    `<span class="enemy">Pigeon failed: ` +
+                    `${j.error || "Unknown error"}</span>`
+                );
+                log.warn("Send failed!", r.status, j);
+                return false;
             }
 
             updateBattleLog(
@@ -231,16 +244,23 @@
             return Promise.resolve(false);
         }
 
-        return fetch(`${TardAPI.API_BASE}/api/pigeon/murder`, {
+        return fetch(`${TardAPI.API_BASE}/pigeon/murder`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify({ SID: sid, session_id: sid }),
+            body: JSON.stringify({ SID: sid, session_id: sid })
         })
         .then(r => r.json().catch(() => ({})).then(j => ({ ok: r.ok, j })))
         .then(({ ok, j }) => {
             if (! ok) {
+                if (TardAPI.isSessionInvalidError(j.error)) {
+                    log.warn(
+                        "Session invalid during murder report, clearing " +
+                        "stale session"
+                    );
+                    TardAPI.clearSession();
+                }
                 log.warn("Murder report failed", j);
                 return false;
             }
@@ -275,15 +295,28 @@
 
         lastDeliveryAttempt = now;
         try {
-            const r = await fetch(`${TardAPI.API_BASE}/api/pigeon/delivery`, {
+            const r = await fetch(`${TardAPI.API_BASE}/pigeon/delivery`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ session_id: sid }),
+                body: JSON.stringify({ session_id: sid })
             });
 
             const data = await r.json().catch(() => ({}));
+
+            if (TardAPI.isSessionInvalidError(data.error)) {
+                // Don't clear the session here — pigeon delivery is background
+                // polling and the session may still be valid for other
+                // endpoints. The main updateProgress/submitScore flows will
+                // handle stale-session cleanup.
+                log.warn(
+                    "Delivery failed (session not found on server) — " +
+                    "will retry later"
+                );
+                return;
+            }
+
             if (data && data.pigeon_message) {
                 log.info("Received Message ID:", data.pigeon_id || "n/a");
                 stopPolling(); // Pause polling until message is displayed
