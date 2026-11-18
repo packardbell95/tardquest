@@ -65,6 +65,52 @@ const PigeonDrawing = {
 
 window.PigeonDrawing = PigeonDrawing;
 
+/**
+ * Show a delivered picture, plus any words that came with it, in a modal.
+ *
+ * @param {Object|null} drawing The delivered drawing payload
+ * @param {string} [message] The text that came with it, if any
+ * @returns {boolean} false when there was no picture to show, so the caller
+ *                    can fall back to its own handling
+ */
+const openPigeonPictureModal = function(drawing, message) {
+    const picture = PigeonDrawing.toSvg(drawing);
+    const words = typeof message === "string" ? message.trim() : "";
+
+    if (! picture) {
+        return false;
+    }
+
+    const bodyHtml =
+        `<div class="pc-viewer">` +
+        picture +
+        `<div id="pcViewerMessage" class="pc-viewer-message"></div>` +
+        `</div>`;
+
+    Modal.open("THE LETTER", bodyHtml, [{ text: "Close", type: "primary" }], {
+        onopen: () => {
+            GameControl.awaitingPlayerText = true;
+
+            const $message = document.getElementById("pcViewerMessage");
+
+            // Somebody else's words go in as text, never as markup
+            if (words) {
+                $message.textContent = words;
+            } else {
+                $message.remove();
+            }
+        },
+
+        onclose: () => {
+            GameControl.awaitingPlayerText = false;
+        },
+    });
+
+    return true;
+};
+
+window.openPigeonPictureModal = openPigeonPictureModal;
+
 const openPigeonComposerModal = function(onSend, options = {}) {
     const GRID = PigeonDrawing.GRID;
     const palette = PigeonDrawing.COLORS;

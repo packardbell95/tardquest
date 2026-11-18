@@ -3539,6 +3539,37 @@ dialog.modal .body .tardboard {
     border-color: #979797 #e3e3e3 #e3e3e3 #979797;
 }
 
+.pc-viewer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1ch;
+
+    /* The modal puts its footer directly under the body, so the picture
+       needs its own clearance above the buttons */
+    padding-bottom: 1em;
+
+    .pigeon-picture {
+        margin: 0;
+    }
+
+    .pc-viewer-message {
+        width: 220px;
+        color: #f8f8f0;
+        font-style: italic;
+        text-align: center;
+        overflow-wrap: break-word;
+
+        &::before {
+            content: "\201C";
+        }
+
+        &::after {
+            content: "\201D";
+        }
+    }
+}
+
 @keyframes rumble {
      0% { transform: translate(0); }
      1% { transform: translate(0); }
