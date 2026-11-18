@@ -667,9 +667,9 @@ const ITEMS = Object.freeze({
         usage: {
             availability: ["exploration"],
             uiRoute: {
-                path: "inputBox",
+                path: "pigeonComposer",
                 options: {
-                    placeholder: "Your message to the next adventurer...",
+                    placeholder: "Say your piece...",
                     maxLength: 100,
                 },
             },
@@ -685,21 +685,24 @@ const ITEMS = Object.freeze({
                 return false;
             }
 
-            if (! context.message) {
+            const message = (context.message || "").trim();
+            const drawing = context.drawing || null;
+
+            if (! message && ! drawing) {
                 updateBattleLog(
                     `<span class="enemy">You cannot send an empty message!` +
-                    `</span> Try typing something first.`
+                    `</span> Write something or draw a picture first.`
                 );
                 return false;
             }
 
-            const messageSent = await PigeonMessaging.send(context.message);
+            const messageSent = await PigeonMessaging.send(message, drawing);
 
             if (! messageSent) {
                 updateBattleLog(
                     `<span class="enemy">Failed to send the pigeon message!` +
                     `</span> Your message of <span class="good">&quot;` +
-                    `${context.message}&quot;</span> could not be delivered. ` +
+                    `${message}&quot;</span> could not be delivered. ` +
                     `Try again later.`
                 );
                 return false;

@@ -50,6 +50,14 @@ const ItemUsageUiRouter = {
                 );
                 break;
 
+            case "pigeonComposer":
+                openPigeonComposerModal(
+                    ({ message, drawing }) =>
+                        usageFunction(itemId, actor, null, { message, drawing }),
+                    item.usage.uiRoute?.options
+                );
+                break;
+
             case "playerPartyPicker":
                 const canOpenPartyPicker = Boolean(document.querySelector(
                     "#playerParty .party-members [data-party-member-id]" +
