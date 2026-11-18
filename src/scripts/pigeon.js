@@ -57,8 +57,9 @@
     /** @type {number} Timestamp of the last delivery attempt */
     let lastDeliveryAttempt = 0;
 
-    /** @const {string} Local storage key for pending delivered messages */
+    /** @const {string} Local storage keys for a pending delivery */
     const LS_PENDING_KEY = "pigeonPendingMessage";
+    const LS_PENDING_DRAWING_KEY = "pigeonPendingDrawing";
 
     /**
      * Pending delivered message loaded from localStorage
@@ -73,8 +74,54 @@
         }
     })();
 
-    if (pendingDeliveredMessage) {
-        log.info("Restored pending message from localStorage.");
+    /** @type {Object|null} Pending handdrawn picture, loaded from localStorage */
+    let pendingDrawing = (function() {
+        try {
+            return JSON.parse(
+                localStorage.getItem(LS_PENDING_DRAWING_KEY)
+            ) || null;
+        } catch {
+            return null;
+        }
+    })();
+
+    function hasPendingDelivery() {
+        return Boolean(
+            (typeof pendingDeliveredMessage === "string" &&
+             pendingDeliveredMessage.trim()) ||
+            pendingDrawing
+        );
+    }
+
+    function savePending() {
+        try {
+            if (pendingDeliveredMessage) {
+                localStorage.setItem(LS_PENDING_KEY, pendingDeliveredMessage);
+            } else {
+                localStorage.removeItem(LS_PENDING_KEY);
+            }
+
+            if (pendingDrawing) {
+                localStorage.setItem(
+                    LS_PENDING_DRAWING_KEY,
+                    JSON.stringify(pendingDrawing)
+                );
+            } else {
+                localStorage.removeItem(LS_PENDING_DRAWING_KEY);
+            }
+        } catch (e) {
+            log.error("Failed to persist pending delivery", e);
+        }
+    }
+
+    function clearPending() {
+        pendingDeliveredMessage = null;
+        pendingDrawing = null;
+        savePending();
+    }
+
+    if (hasPendingDelivery()) {
+        log.info("Restored pending delivery from localStorage.");
         // Re-surface pigeon so user can trigger reading, but don't duplicate if
         // already placed
 
@@ -85,20 +132,8 @@
     //       responsible for handling API data and not for interfacing directly
     //       with the game
     function placePigeon() {
-        if (! pendingDeliveredMessage) {
-            log.warn("Not placing pigeon because there is no message");
-            return;
-        }
-
-        const trimmedMessage =
-            typeof pendingDeliveredMessage === "string" &&
-            pendingDeliveredMessage.trim();
-
-        if (! trimmedMessage) {
-            log.warn(
-                "Message must be a non-empty string",
-                { pendingDeliveredMessage }
-            );
+        if (! hasPendingDelivery()) {
+            log.warn("Not placing pigeon because there is nothing to deliver");
             return;
         }
 
@@ -120,7 +155,8 @@
 
         const pigeon = MapEntityFeatureFactory.pigeon();
         pigeon.message = pendingDeliveredMessage;
-        pendingDeliveredMessage = null;
+        pigeon.drawing = pendingDrawing;
+        clearPending();
 
         MAP.addEntity(pigeon, exit.x, exit.y);
     }
@@ -144,10 +180,11 @@
     /**
      * Sends a message via the carrier pigeon API
      * @param {string} message - The message to send
+     * @param {Object} [drawing] - Optional handdrawn picture payload
      * @returns {Promise<boolean>} True if sent successfully
      */
-    async function sendPigeon(message) {
-        // log.debug("Sending...");
+    async function sendPigeon(message, drawing) {
+        log.debug("Sending...");
         const sid = getSessionId();
         if (! sid) {
             updateBattleLog(
@@ -163,7 +200,11 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ session_id: sid, message })
+                body: JSON.stringify({
+                    session_id: sid,
+                    message,
+                    ...(drawing ? { drawing } : {}),
+                })
             });
             const j = await r.json().catch(() => ({}));
             if (r.ok && j.stored) {
@@ -211,7 +252,7 @@
         if (pollTimer) {
             clearInterval(pollTimer);
             pollTimer = null;
-            // log.debug("Delivery polling stopped");
+            log.debug("Delivery polling stopped");
         }
     }
 
@@ -220,21 +261,21 @@
      * Starts polling if not already running and no pending message exists
      */
     function ensurePolling() {
-        if (pollTimer || pendingDeliveredMessage) {
-            return; // Don't poll if a message is pending
+        if (pollTimer || hasPendingDelivery()) {
+            return; // Don't poll if a delivery is pending
         }
         pollTimer = setInterval(() => {
-            if (pendingDeliveredMessage) {
+            if (hasPendingDelivery()) {
                 return;
             }
             requestDeliveryOnce();
         }, DELIVERY_POLL_INTERVAL_MS);
         setTimeout(() => {
-            if (! pendingDeliveredMessage) {
+            if (! hasPendingDelivery()) {
                 requestDeliveryOnce(true);
             }
         }, 1500);
-        // log.debug("Delivery polling started");
+        log.debug("Delivery polling started");
     }
 
     function reportMurder() {
@@ -284,7 +325,7 @@
             return;
         }
 
-        if (pendingDeliveredMessage) {
+        if (hasPendingDelivery()) {
             return; // Don't fetch new if one is pending
         }
 
@@ -317,21 +358,17 @@
                 return;
             }
 
-            if (data && data.pigeon_message) {
+            if (data && (data.pigeon_message || data.pigeon_drawing)) {
                 log.info("Received Message ID:", data.pigeon_id || "n/a");
-                stopPolling(); // Pause polling until message is displayed
-                pendingDeliveredMessage = data.pigeon_message;
-                try {
-                    localStorage.setItem(
-                        LS_PENDING_KEY,
-                        pendingDeliveredMessage
-                    );
-                } catch {}; // @TODO Log or handle the error
+                stopPolling(); // Pause polling until the delivery is displayed
+                pendingDeliveredMessage = data.pigeon_message || null;
+                pendingDrawing = data.pigeon_drawing || null;
+                savePending();
 
                 placePigeon();
             }
         } catch (e) {
-            // log.debug("Delivery request failed", e);
+            log.debug("Delivery request failed", e);
         }
     }
 
@@ -357,8 +394,8 @@
             return pendingDeliveredMessage;
         },
 
-        /** Checks if there are any pending messages */
-        hasPendingMessages: () => !! pendingDeliveredMessage,
+        /** Checks if there are any pending deliveries */
+        hasPendingMessages: () => hasPendingDelivery(),
 
         /** Ensures delivery polling is active */
         ensurePolling,

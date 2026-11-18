@@ -2198,11 +2198,11 @@ menu.setMenus({
     pigeon: {
         title: "CARRIER PIGEON",
         onOpen: () => {
-            const { pigeon, message } = menu.getMenuData();
+            const { pigeon, message, drawing } = menu.getMenuData();
             Portrait.show("pigeon", { text: "Messenger Pigeon" });
             pigeon.leader.say(
                 "Coo coo! " + (
-                    message
+                    message || drawing
                         ? "You have a message from another adventurer!"
                         : "No adventurers have sent out any messages."
                 ),
@@ -2213,14 +2213,24 @@ menu.setMenus({
             Portrait.hide();
             menu.getMenuData()?.pigeon?.die();
         },
-        landingHtml: () => menu.getMenuData().message
-            ? "You see a sealed letter below the carrier pigeon's big stinky " +
-                "feet."
-            : "You notice a carrier pigeon. It seems lost.",
+        landingHtml: () => {
+            const { message, drawing } = menu.getMenuData();
+
+            if (! message && ! drawing) {
+                return "You notice a carrier pigeon. It seems lost.";
+            }
+
+            const picture = typeof PigeonDrawing === "undefined"
+                ? ""
+                : PigeonDrawing.toSvg(drawing);
+
+            return "You see a sealed letter below the carrier pigeon's big " +
+                "stinky feet." + picture;
+        },
         getOptions: () => {
             const options = [];
 
-            if (menu.getMenuData().message) {
+            if (menu.getMenuData().message || menu.getMenuData().drawing) {
                 options.push({
                     id: "readMessages",
                     displayText: "Read the letter",
@@ -2249,7 +2259,7 @@ menu.setMenus({
             const { pigeon, message } = menu.getMenuData();
 
             if (selectedOptionId === "readMessages") {
-                if (typeof message === "string") {
+                if (typeof message === "string" && message.trim()) {
                     const punctuatedMessage = /\p{P}$/u.test(message)
                         ? message
                         : `${message}.`;
@@ -2258,9 +2268,9 @@ menu.setMenus({
                         `Message delivered! Coo coo!`
                     );
                 } else {
-                    updateBattleLog(
-                        "The letter just turned out to be a scrap of toilet " +
-                        "paper. Stupid bird!"
+                    pigeon.leader.say(
+                        `The letter is just a curious little drawing. ` +
+                        `Beautiful, in its own way. Coo coo!`
                     );
                 }
             } else if (selectedOptionId === "kill") {

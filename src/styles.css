@@ -3468,6 +3468,77 @@ dialog.modal .body .tardboard {
     }
 }
 
+.pigeon-composer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1ch;
+
+    .pc-canvas {
+        width: 220px;
+        height: 220px;
+        touch-action: none;
+        border: 2px solid;
+        border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+        cursor: crosshair;
+    }
+
+    .pc-palette {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5ch;
+        justify-content: center;
+    }
+
+    .pc-swatch {
+        width: 1.6em;
+        height: 1.6em;
+        padding: 0;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+        background-color: var(--pc);
+        cursor: pointer;
+
+        &:not(:disabled):hover {
+            background-color: var(--pc);
+            border-color: #fff;
+        }
+
+        &.active {
+            border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+        }
+    }
+
+    .pc-message {
+        width: 220px;
+        box-sizing: border-box;
+        color: #fff;
+        background-color: #000;
+        border: 2px solid #fff;
+        padding: 4px 6px;
+        outline: none;
+
+        &::placeholder {
+            color: #d8d8d8;
+        }
+    }
+
+    .pc-hint {
+        min-height: 1em;
+        color: #f00;
+        font-size: 0.9em;
+    }
+}
+
+.pigeon-picture {
+    display: block;
+    width: 220px;
+    height: 220px;
+    margin: 1ch auto;
+    border: 2px solid;
+    border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+}
+
 @keyframes rumble {
      0% { transform: translate(0); }
      1% { transform: translate(0); }
