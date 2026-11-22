@@ -122,6 +122,7 @@ const openPigeonComposerModal = function(onSend, options = {}) {
     let drawingStroke = null;
     let drawingActive = false;
     let onResize = null;
+    let sending = false;
     const strokes = [];
 
     const swatchHtml = palette
@@ -211,7 +212,21 @@ const openPigeonComposerModal = function(onSend, options = {}) {
             : null;
     }
 
-    function doSend() {
+    const setButtonsDisabled = disabled => {
+        document.querySelectorAll(
+            ".modal .header button, .modal .footer button"
+        ).forEach($b =>
+            disabled
+                ? $b.setAttribute("disabled", "disabled")
+                : $b.removeAttribute("disabled")
+        );
+    };
+
+    async function doSend() {
+        if (sending) {
+            return false;
+        }
+
         const messageInput = document.getElementById("pcMessage");
         const hint = document.getElementById("pcHint");
         const message = messageInput.value.trim();
@@ -222,12 +237,34 @@ const openPigeonComposerModal = function(onSend, options = {}) {
             return false;
         }
 
-        onSend({ message: messageInput.value, drawing });
-        return true;
+        sending = true;
+        setButtonsDisabled(true);
+        hint.textContent = "Releasing the pigeon...";
+
+        let sent = false;
+
+        try {
+            sent = await onSend({ message: messageInput.value, drawing });
+        } catch {
+            sent = false;
+        }
+
+        if (sent) {
+            Modal.close();
+            return false;
+        }
+
+        sending = false;
+        setButtonsDisabled(false);
+        hint.textContent = "The pigeon turned back. Try again.";
+        // Pull focus back so the player can hit Enter and try again.
+        document.getElementById("pcMessage").focus();
+        return false;
     }
 
     const buttons = [
-        { text: "Send", type: "primary", onclick: doSend },
+        // doSend() returns false to keep the modal open if sending fails.
+        { text: "Send", type: "primary", onclick: () => { doSend(); return false; } },
         {
             text: "Clear",
             type: "secondary",
@@ -268,10 +305,8 @@ const openPigeonComposerModal = function(onSend, options = {}) {
                 e.stopPropagation();
 
                 if (e.key === "Enter") {
-                    if (doSend()) {
-                        Modal.close();
-                    }
-                } else if (e.key === "Escape") {
+                    doSend();
+                } else if (e.key === "Escape" && ! sending) {
                     Modal.close(true);
                 }
             });
