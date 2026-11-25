@@ -23,7 +23,7 @@ const TardAPI = (function() {
     // --- Configuration ---
 
     /** @const {string} Base URL for all API endpoints */
-    const API_BASE = 'http://127.0.0.1:9601';
+    const API_BASE = 'https://gateway.tardquest.online';
 
     /** @const {string} Client API version (major.minor must match server) */
     const CLIENT_API_VERSION = '4.1.2611';
