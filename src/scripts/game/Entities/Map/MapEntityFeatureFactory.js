@@ -810,7 +810,11 @@ const MapEntityFeatureFactory = {
             }
 
             updateBattleLog("touched da piggin");
-            menu.open("pigeon", { pigeon: this, message: this.message });
+            menu.open("pigeon", {
+                pigeon: this,
+                message: this.message,
+                drawing: this.drawing,
+            });
         };
 
         return pigeon;

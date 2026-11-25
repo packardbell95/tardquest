@@ -29,6 +29,11 @@ const ItemUsageUiRouter = {
             GameControl.showPlayerPartySection(); // Reset click handlers
             GameControl.CursorUi.close();
             menu.focus();
+            
+            //VOCAP: can i get uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh..................
+            // a return value that indicates whether the item was used successfully or not?
+            // i need this for the pigeon composer modal to know whether to close or not...
+            return itemUsedSuccessfully;
         };
 
         console.log(
@@ -47,6 +52,14 @@ const ItemUsageUiRouter = {
                     ),
                     null, // @TODO Do we need to close the UI here?
                     item.usage.uiRoute?.options,
+                );
+                break;
+
+            case "pigeonComposer":
+                openPigeonComposerModal(
+                    ({ message, drawing }) =>
+                        usageFunction(itemId, actor, null, { message, drawing }),
+                    item.usage.uiRoute?.options
                 );
                 break;
 

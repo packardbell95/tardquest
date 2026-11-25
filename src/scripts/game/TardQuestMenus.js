@@ -2198,11 +2198,11 @@ menu.setMenus({
     pigeon: {
         title: "CARRIER PIGEON",
         onOpen: () => {
-            const { pigeon, message } = menu.getMenuData();
+            const { pigeon, message, drawing } = menu.getMenuData();
             Portrait.show("pigeon", { text: "Messenger Pigeon" });
             pigeon.leader.say(
                 "Coo coo! " + (
-                    message
+                    message || drawing
                         ? "You have a message from another adventurer!"
                         : "No adventurers have sent out any messages."
                 ),
@@ -2213,14 +2213,15 @@ menu.setMenus({
             Portrait.hide();
             menu.getMenuData()?.pigeon?.die();
         },
-        landingHtml: () => menu.getMenuData().message
-            ? "You see a sealed letter below the carrier pigeon's big stinky " +
-                "feet."
-            : "You notice a carrier pigeon. It seems lost.",
+        landingHtml: () =>
+            menu.getMenuData().message || menu.getMenuData().drawing
+                ? "You see a sealed letter below the carrier pigeon's big " +
+                    "stinky feet."
+                : "You notice a carrier pigeon. It seems lost.",
         getOptions: () => {
             const options = [];
 
-            if (menu.getMenuData().message) {
+            if (menu.getMenuData().message || menu.getMenuData().drawing) {
                 options.push({
                     id: "readMessages",
                     displayText: "Read the letter",
@@ -2246,10 +2247,10 @@ menu.setMenus({
             return options;
         },
         select: (selectedOptionId) => {
-            const { pigeon, message } = menu.getMenuData();
+            const { pigeon, message, drawing } = menu.getMenuData();
 
-            if (selectedOptionId === "readMessages") {
-                if (typeof message === "string") {
+            if (selectedOptionId === "readMessages" && ! drawing) {
+                if (typeof message === "string" && message.trim()) {
                     const punctuatedMessage = /\p{P}$/u.test(message)
                         ? message
                         : `${message}.`;
@@ -2258,7 +2259,7 @@ menu.setMenus({
                         `Message delivered! Coo coo!`
                     );
                 } else {
-                    updateBattleLog(
+                    pigeon.leader.say(
                         "The letter just turned out to be a scrap of toilet " +
                         "paper. Stupid bird!"
                     );
@@ -2269,6 +2270,25 @@ menu.setMenus({
 
             pigeon?.die(selectedOptionId === "kill" ? playerEntity : null);
             menu.close();
+
+            // A drawing is only ever looked at once the letter is opened,
+            // and it wants the menu out of the way first
+            if (selectedOptionId === "readMessages" && drawing) {
+                updateBattleLog(
+                    `You unfold the letter and hold it up to the light. ` +
+                    `<span class="good">Message delivered!</span> Coo coo!`
+                );
+
+                const shown = typeof openPigeonPictureModal === "function" &&
+                    openPigeonPictureModal(drawing, message);
+
+                if (! shown) {
+                    updateBattleLog(
+                        `The letter is just a curious little drawing. ` +
+                        `Beautiful, in its own way. Coo coo!`
+                    );
+                }
+            }
         },
     },
 

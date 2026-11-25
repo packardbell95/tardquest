@@ -26,7 +26,7 @@ const TardAPI = (function() {
     const API_BASE = 'https://gateway.tardquest.online';
 
     /** @const {string} Client API version (major.minor must match server) */
-    const CLIENT_API_VERSION = '4.0.2606';
+    const CLIENT_API_VERSION = '4.1.2611';
 
     /** @const {string} LocalStorage key for session ID persistence */
     const LS_SESSION_KEY = 'tardquestSID';

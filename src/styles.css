@@ -3468,6 +3468,234 @@ dialog.modal .body .tardboard {
     }
 }
 
+.pigeon-composer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75ch;
+
+    .pc-edit {
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+        gap: 0.5ch;
+        padding: 0.4ch 0.6ch;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+    }
+
+    .pc-edit-label {
+        color: #fff;
+        font-size: 0.85em;
+        margin-right: 0.25ch;
+    }
+
+    .pc-editbtn {
+        height: auto;
+        padding: 0.3em 1em;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+        background-color: #000;
+        color: #fff;
+        font-family: inherit;
+        cursor: pointer;
+
+        &:not(:disabled):hover {
+            background-color: #fff;
+            color: #000;
+        }
+    }
+
+    .pc-stage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25ch;
+    }
+
+    .pc-toolbox {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5ch;
+        padding: 0.6ch;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+    }
+
+    .pc-tool {
+        height: auto;
+        padding: 0.4em 1.2em;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+        background-color: #000;
+        color: #fff;
+        font-family: inherit;
+        cursor: pointer;
+
+        &:not(.active):not(:disabled):hover {
+            background-color: #fff;
+            color: #000;
+        }
+
+        &.active {
+            border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+        }
+    }
+
+    .pc-canvas {
+        width: 220px;
+        height: 220px;
+        touch-action: none;
+        border: 2px solid;
+        border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+        cursor: crosshair;
+    }
+
+    .pc-palette {
+        display: grid;
+        grid-template-columns: repeat(2, 1.7em);
+        gap: 0.6ch;
+        padding: 0.6ch;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+    }
+
+    .pc-swatch {
+        width: 1.7em;
+        height: 1.7em;
+        padding: 0;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+        background-color: var(--pc);
+        cursor: pointer;
+
+        &:not(:disabled):hover {
+            background-color: var(--pc);
+            border-color: #fff;
+        }
+
+        &.active {
+            border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+        }
+    }
+
+    .pc-thickness {
+        display: flex;
+        gap: 0.4ch;
+        padding-top: 0.5ch;
+    }
+
+    .pc-thick {
+        flex: 1;
+        height: 1.7em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 2px solid;
+        border-color: #e3e3e3 #979797 #979797 #e3e3e3;
+        background-color: #000;
+        cursor: pointer;
+
+        span {
+            display: block;
+            width: 70%;
+            height: var(--w);
+            background-color: #fff;
+        }
+
+        &:not(.active):not(:disabled):hover {
+            border-color: #fff;
+        }
+
+        &.active {
+            border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+        }
+    }
+
+    .pc-status {
+        align-self: stretch;
+        display: flex;
+        justify-content: space-between;
+        gap: 1ch;
+        box-sizing: border-box;
+        padding: 0.25ch 0.6ch;
+        font-size: 0.85em;
+        color: #d8d8d8;
+        border: 2px solid;
+        border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+    }
+
+    .pc-count {
+        color: #d8d8d8;
+    }
+
+    .pc-coords {
+        color: #999;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .pc-message {
+        align-self: stretch;
+        box-sizing: border-box;
+        color: #fff;
+        background-color: #000;
+        border: 2px solid #fff;
+        padding: 4px 6px;
+        outline: none;
+
+        &::placeholder {
+            color: #d8d8d8;
+        }
+    }
+
+    .pc-hint {
+        min-height: 1em;
+        color: #f00;
+        font-size: 0.9em;
+    }
+}
+
+.pigeon-picture {
+    display: block;
+    width: 220px;
+    height: 220px;
+    margin: 1ch auto;
+    border: 2px solid;
+    border-color: #979797 #e3e3e3 #e3e3e3 #979797;
+}
+
+.pc-viewer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1ch;
+
+    /* The modal puts its footer directly under the body, so the picture
+       needs its own clearance above the buttons */
+    padding-bottom: 1em;
+
+    .pigeon-picture {
+        margin: 0;
+    }
+
+    .pc-viewer-message {
+        width: 220px;
+        color: #f8f8f0;
+        font-style: italic;
+        text-align: center;
+        overflow-wrap: break-word;
+
+        &::before {
+            content: "\201C";
+        }
+
+        &::after {
+            content: "\201D";
+        }
+    }
+}
+
 @keyframes rumble {
      0% { transform: translate(0); }
      1% { transform: translate(0); }
